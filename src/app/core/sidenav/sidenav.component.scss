@@ -1,0 +1,109 @@
+.sidenav-table-link{
+  font-size: 14px;
+  padding-top: 25px;
+  padding-left: 20px;
+  a{
+    color: white;
+  }
+}
+
+.sidenav {
+  width: 220px;
+  padding: 20px 20px 20px;
+  transition: all 0.3s;
+  z-index: 9999;
+  box-shadow: 23px 0px 5px -15px rgba(0, 0, 0, 0.75);
+
+  .sidenav-options {
+    color: white;
+    font-size: 16px;
+
+    h3 {
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+
+    .sidenav-option {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+
+      ul {
+        list-style: none;
+        padding-left: 0;
+
+        li {
+          display: flex;
+          align-items: center;
+          margin-bottom: 10px;
+          font-size: 14px;
+        }
+
+        .section-item {
+          color: dimgray;
+
+          &--selected {
+            color: white;
+          }
+        }
+
+        .bullet-point {
+          min-height: 15px;
+          min-width: 15px;
+          border-radius: 50%;
+          margin-right: 10px;
+
+          // Taking background colors from theme in variable scss
+        }
+      }
+
+      li, p {
+        cursor: pointer;
+      }
+    }
+  }
+
+
+  .useful-links-wrapper {
+    margin: 20px 0;
+    width: 100%;
+
+    hr{
+      border-top: 1px solid darkgray;
+    }
+
+    .link-with-icon {
+      display: flex;
+      // justify-content: space-around;
+      align-items: center;
+      font-size: 14px;
+
+      mat-icon {
+        font-size: 16px;
+        height: auto;
+      }
+    }
+
+    p {
+      cursor: pointer;
+    }
+  }
+
+  .navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+
+    .cancel {
+      background-color: dimgray;
+      color: black;
+    }
+  }
+
+  .collapse-sidebar-icon {
+    position: absolute;
+    bottom: 12px;
+    right: 0;
+    cursor: pointer;
+  }
+}

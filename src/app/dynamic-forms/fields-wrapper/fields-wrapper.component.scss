@@ -1,0 +1,55 @@
+@mixin flexStyle($FlexPercentage) {
+  .mat-expansion-panel-body {
+    & > * {
+      flex-basis: $FlexPercentage;
+      margin-top: 5px;
+    }
+  }
+}
+
+.mat-expansion-panel-body {
+  display: flex;
+  flex-wrap: wrap;
+
+  & > * {
+    flex-basis: 100%;
+    margin-top: 5px;
+    width: 100%;
+  }
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+
+    & > * {
+      flex-basis: 100%;
+      width: 100%;
+    }
+  }
+}
+
+.section-flex {
+  &--1 {
+    .mat-expansion-panel-body {
+      & > * {
+        flex-basis: 100%;
+        margin-top: 5px;
+      }
+    }
+  }
+
+  &--4 {
+    @include flexStyle(25%)
+  }
+
+  &--3 {
+    @include flexStyle(33%)
+  }
+
+  &--2 {
+    @include flexStyle(50%)
+  }
+
+  &--1 {
+   @include flexStyle(100%)
+  }
+}

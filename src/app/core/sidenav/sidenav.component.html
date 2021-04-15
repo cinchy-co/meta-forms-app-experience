@@ -1,0 +1,49 @@
+<div class="sidenav-table-link" *ngIf="filteredTableUrl">
+  <a [href]="filteredTableUrl" target="_blank">< Back to Table View</a>
+</div>
+
+<div class="sidenav" [ngClass]="{'hide-show': toggleMenu}">
+  <div class="sidenav-options">
+    <h6 class="m-b-10">
+      Form Sections
+    </h6>
+    <div class="sidenav-option">
+      <div class="mt-10">
+        <ul>
+          <li *ngFor="let section of formSections" (click)="sectionClicked(section)">
+            <div class="bullet-point"
+                 [ngClass]="{'bullet-point--selected': selectedSection===section.sectionName}"></div>
+            <span class="section-item"
+                  [ngClass]="{'section-item--selected': selectedSection===section.sectionName}">
+              {{section.sectionName}}
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!--  <div class="navigation-buttons">
+      <button mat-raised-button class='cancel'>Cancel</button>
+      <button mat-raised-button (click)='saveForm()'>Save</button>
+    </div>-->
+
+  <div class="useful-links-wrapper">
+    <hr>
+    <p class="link-with-icon" *ngIf="(canAddNewForm && rowId && rowId != 'null')" (click)="createNewForm()">
+      <mat-icon>queue</mat-icon>
+      <span>Create New Record</span>
+    </p>
+<!--    <p class="link-with-icon" *ngIf="canAddNewContact && showNewContactLink" (click)="openAddNewContactDialog()">
+      <mat-icon>queue</mat-icon>
+      <span>Add New Contact</span>
+    </p>-->
+
+    <p class="link-with-icon" *ngIf="createNewOptionName" (click)="openAddNewOptionDialog()">
+      <mat-icon>queue</mat-icon>
+      <span>Add {{createNewOptionName}}</span>
+    </p>
+  </div>
+
+  <mat-icon class="collapse-sidebar-icon" (click)="closeSideBar.emit()">arrow_back_ios</mat-icon>
+</div>

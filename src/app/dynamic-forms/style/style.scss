@@ -1,0 +1,500 @@
+.full-width-element {
+  width: 100%;
+
+  .link-labels{
+    mat-icon{
+      font-size: 18px;
+    }
+  }
+}
+
+.checkbox-hint {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-size: 12.25px;
+}
+
+.avoid-clicks {
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.sectionHeader {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  font-size: 20px;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.formField {
+  width: 100%;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.header {
+  margin: 0px;
+  font-size: 24px;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  margin-bottom: 20px;
+}
+
+.formsCard {
+  margin-bottom: 10px
+}
+
+.table-bordered {
+  border: 1px solid gray;
+}
+
+.child-table{
+  border-left: 1px solid gray;
+  border-right: 1px solid gray;
+}
+
+.btn-dynamic-child {
+  margin-left: 6px;
+  width: 30px;
+  cursor: pointer;
+}
+
+.margin-top {
+  margin-top: 20px;
+}
+
+.action-width {
+  width: 100px
+}
+
+.primary {
+  color: #3f51b5
+}
+
+.warn {
+  color: red;
+}
+
+
+.mat-header-child {
+  margin: 0em 0 0.5em 0;
+  font-weight: normal;
+  position: relative;
+  font-size: 12px;
+  line-height: 18px;
+  background: #1a1c1d;
+  border: 1px solid #fff;
+  padding: 5px 12px;
+  color: white;
+  border-radius: 0 10px 0 10px;
+  box-shadow: inset 0 0 5px rgba(53, 86, 129, 0.5);
+  font-family: 'Muli', sans-serif;
+}
+
+.text-left {
+  float: right;
+}
+
+
+.lblSave {
+  color: green;
+}
+
+.lblError {
+  color: red;
+}
+
+.divMessage {
+  width: 100%;
+  text-align: center
+}
+
+.calculatedStyle {
+  color: gray
+}
+
+.ChoiceFilter {
+  width: 100%;
+  padding: 10px;
+  border-bottom: 1px solid gray;
+  margin-bottom: 20px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+/* This ensures that any modal dialogs appear in the center of the screen when running embedded inside of Cinchy */
+::ng-deep .cdk-global-overlay-wrapper {
+  justify-content: center;
+  align-items: center;
+}
+
+
+.selected-list .c-angle-up svg {
+  fill: #333;
+}
+
+.full-width-element {
+  .dropdown-list ul li:hover {
+    background: #f5f5f5;
+  }
+
+  .arrow-up {
+    border-bottom: 15px solid #fff;
+  }
+}
+
+.arrow-down {
+  border-bottom: 15px solid #fff;
+}
+
+.full-width-element {
+  .selected-item {
+    background: #e9f4ff;
+  }
+}
+
+.divMarginBottom {
+  margin-bottom: 5px;
+}
+
+.divMarginBottomHeader {
+  margin-bottom: 10px;
+}
+
+.linkField .ng-star-inserted {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+
+.mat-input-element {
+  display: block;
+  width: 100%;
+  padding: .375rem .75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.table-bordered {
+  border-bottom: 1px solid gray;
+}
+
+//Remove Default underline
+
+/* To remove the default underline */
+.mat-input-underline.mat-form-field-underline {
+  background: transparent;
+}
+
+/* To remove the underline ripple */
+.mat-input-ripple.mat-form-field-ripple {
+  background-color: transparent;
+}
+
+.child-table th, .child-table td {
+  border-bottom: 1px solid gray;
+}
+
+.child-table th {
+  border-top: 1px solid gray;
+}
+
+.ngx-select__item_active[_ngcontent-c6] {
+  background-color: gray;
+}
+
+.mat-checkbox-checked.mat-accent .mat-checkbox-background, .mat-checkbox-indeterminate.mat-accent .mat-checkbox-background {
+  background-color: gray;
+}
+
+
+.form-control:focus {
+  border-color: #434343;
+  box-shadow: none;
+  border-width: 1px;
+}
+
+mat-panel-title.mat-expansion-panel-header-title {
+  color: black;
+}
+
+
+/*
+.mat-form-field-appearance-legacy .mat-form-field-underline,
+.mat-form-field-appearance-legacy .mat-form-field-ripple,
+.mat-form-field-appearance-legacy.mat-focused
+.mat-form-field-underline,
+.mat-form-field-appearance-legacy.mat-focused
+.mat-form-field-ripple {
+  background-color: inherit;
+}
+*/
+
+.table-responsive {
+  width: 100%;
+  overflow-x: scroll;
+  max-height: 500px;
+
+  th{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+}
+
+article label {
+  margin-bottom: 8px;
+}
+
+.mat-dialog-title {
+  margin: 0 0 5px;
+}
+
+.mat-dialog-actions {
+  padding-top: 10px;
+  padding-bottom: 24px;;
+}
+
+.mat-checkbox-layout .mat-checkbox-label {
+  line-height: 24px;
+  color: rgba(0, 0, 0, .54);
+  font-size: 13px;
+}
+
+.checkBoxMargin {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.mat-expansion-panel-header-title h5 {
+  margin-bottom: 0px;
+}
+
+.divMarginBottom {
+  margin-bottom: 8px;
+}
+
+.divMarginBottomHeader {
+  margin-bottom: 15px;
+  padding: 2px 6px;
+}
+
+.sectionHeader[_ngcontent-c6] {
+  font-size: 18px;
+}
+
+.mat-checkbox label {
+  margin-bottom: 0px;
+}
+
+.mat-card {
+  padding-bottom: 0px;
+}
+
+.mat-input-element:focus {
+  // outline: none;
+  border-width: 1.5px;
+  border-color: #434343
+}
+
+.mat-ink-bar {
+  display: none
+}
+
+
+.child-table th {
+  background-color: #f1f1f1;
+  text-align: left;
+  font-size: 13px;
+}
+
+.child-table td {
+  font-weight: normal;
+  text-align: left;
+ /* max-width: 300px;
+  word-break: break-word;*/
+}
+
+.mat-header-child[_ngcontent-c6] {
+  font-size: 14px;
+}
+
+.formMainDiv {
+  background-color: #f1f1f1;
+  display: flow-root;
+}
+
+.cinchy-label {
+  color: rgba(0, 0, 0, .54);
+  font-size: 13px;
+}
+
+
+.mat-card-header-child {
+  margin: 0em 0 0.5em 0;
+  font-weight: normal;
+  position: relative;
+  font-size: 12px;
+  line-height: 18px;
+  background: #5a5858;
+  border: 1px solid #fff;
+  padding: 5px 12px;
+  color: white;
+  border-radius: 0 10px 0 10px;
+  box-shadow: inset 0 0 5px rgba(53, 86, 129, 0.5);
+  font-family: 'Muli', sans-serif;
+}
+
+button.btnSave.mat-raised-button {
+  margin-right: 10px;
+  height: 40px;
+
+  *{
+    font-size: 16px;
+  }
+}
+
+.btnDiv {
+  margin: 20px 0 0 0;
+}
+
+.cinchy-dynamic-forms-wrapper {
+  mat-expansion-panel {
+    //  overflow: visible;
+    margin: 10px 0;
+  }
+
+  mat-expansion-panel-header {
+    .mat-expansion-indicator::after {
+      color: #d3d3d3 ! important;
+    }
+  }
+
+  .mat-expansion-panel-body {
+    padding-top: 20px;
+  }
+
+  //border-left COMING FROM THEME COLORS
+
+  .mat-form-field-underline {
+    display: none;
+  }
+
+  .mat-form-field-appearance-legacy .mat-form-field-infix {
+    border-top: 0;
+  }
+
+  .mat-form-field-appearance-legacy .mat-form-field-wrapper {
+    padding-bottom: 0;
+  }
+}
+
+.link-labels {
+  display: flex;
+
+  label {
+    margin-right: 5px;
+  }
+
+  mat-icon {
+    line-height: 1.2 !important;
+  }
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #d3d3d3;
+  background: white;
+
+  button {
+    background: #9CD580;
+
+    &.no-bg{
+      background: transparent;
+    }
+  }
+
+  h2 {
+    margin: 0;
+    margin-left: 30px;
+  }
+}
+
+.search-input-link {
+  position: relative;
+
+  input {
+    padding-right: 25px;
+  }
+
+  mat-icon {
+    position: absolute;
+    top: 12px;
+    right: 0;
+    font-size: 14px;
+  }
+}
+
+.all-expansions-wrapper {
+  overflow: auto;
+  padding: 5px 20px;
+}
+
+.mat-select-disabled, .mat-select-disabled:hover, .mat-select-disabled:focus {
+  background-color: #e9ecef;
+  opacity: 1;
+
+  span {
+    color: #60666d
+  }
+}
+
+.multi-search{
+  .mat-select-search-input{
+    margin-left: 5px;
+    border: none;
+    outline: none;
+  }
+}
+
+.date-icon{
+  position: absolute;
+  top: 33px;
+  right: 5px;
+  cursor: pointer;
+}
+
+.relative-pos{
+  position: relative;
+}
+
+.download-link{
+  cursor: pointer;
+  color: #004d7c;
+  display: flex;
+  align-items: center;
+}
+
+.file-delete-icon {
+  margin-left: 18px;
+  cursor: pointer;
+  color: #fda5a5;
+  font-size: 20px;
+  top: 4px;
+  position: relative;
+}
+
+.file-delete-icon:hover {
+  color: #d63737;
+}

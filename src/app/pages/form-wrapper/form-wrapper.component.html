@@ -1,0 +1,62 @@
+<div *ngIf="formFieldMetadataResult" class="full-height-element form-wrapper-theme"
+     [ngClass]="'form-wrapper-theme--'+formFieldMetadataResult[0].brand"
+     [class.is-mobile]="mobileQuery.matches">
+  <!--[style.height.px]="fullScreenHeight"-->
+  <mat-toolbar color="primary" class="toolbar">
+    <mat-icon class="menu-button have-brand" (click)="sidenav.toggle()">menu</mat-icon>
+  </mat-toolbar>
+
+  <mat-drawer-container *ngIf="!mobileQuery.matches" class="sidenav-container" autosize
+                        [style.marginTop.px]="mobileQuery.matches ? 56 : 0">
+    <mat-drawer #sidenav class="side-nav have-brand" mode="side" [opened]="true">
+      <ng-container *ngTemplateOutlet="sideMainContent"></ng-container>
+    </mat-drawer>
+
+    <ng-container *ngTemplateOutlet="mainContent"></ng-container>
+
+  </mat-drawer-container>
+
+  <mat-sidenav-container *ngIf="mobileQuery.matches" class="sidenav-container"
+                         [style.marginTop.px]="mobileQuery.matches ? 10 : 0">
+    <mat-sidenav class="side-nav" #sidenav [mode]="mobileQuery.matches ? 'over' : 'side'"
+                 [fixedInViewport]="mobileQuery.matches" fixedTopGap="10">
+      <ng-container *ngTemplateOutlet="sideMainContent"></ng-container>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+      <ng-container *ngTemplateOutlet="mainContent"></ng-container>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+
+  <ng-template #sideMainContent>
+    <app-sidenav *ngIf="formSections"
+                 [formSections]="formSections"
+                 [formId]="formId"
+                 [rowId]="rowId"
+                 [tableId]="formFieldMetadataResult[0].TableId"
+                 [tableUrl]="formFieldMetadataResult[0]['tableUrl']"
+                 [formFieldMetadataResult]="formFieldMetadataResult"
+                 (closeSideBar)=sidenav.toggle()
+                 (createNewFormClicked)="setDefaultForm()">
+    </app-sidenav>
+  </ng-template>
+
+  <ng-template #mainContent>
+    <div class="form-container" *ngIf="formSections">
+      <cinchy-dynamic-forms class="full-height-element"
+                            [FormId]="formId"
+                            [RowId]="rowId"
+                            [MetaData]="formFieldMetadataResult"
+                            [formSections]="formSections"
+                            [allRows]="allRows"
+                            (EventHandler)="saveClicked($event)"
+                            (rowUpdated)="rowUpdatedFromForm($event)">
+      </cinchy-dynamic-forms>
+    </div>
+  </ng-template>
+</div>
+
+
+<ngx-spinner bdColor="rgba(21,6,44,0.8)" size="default" color="#fff" type="ball-fall" [fullScreen]="true">
+  <p style="color: white"> Loading... </p>
+</ngx-spinner>

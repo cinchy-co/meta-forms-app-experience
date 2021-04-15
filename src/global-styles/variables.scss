@@ -1,0 +1,141 @@
+$PURPLE_COLOR: rgba(71, 38, 155, 1);
+$PINK_COLOR: rgba(255, 64, 64, 1);
+$WHITE_COLOR: rgba(255, 255, 255, 1);
+$LIGHT_GRAY_COLOR: #d3d3d3;
+$ERROR_COLOR: orangered;
+$DEEP_BLUE_COLOR: #004d7c;
+$DARK_GRAY: #434343;
+$BLACK: #1A1C1D;
+
+
+$TAB-LANDSCAPE: 1040px;
+$TAB-POTRAIT: 697px;
+
+
+// COMPANY BASED themes FOR FORM
+$CINCHY_COLOR: rgba(71, 38, 155, 1);
+$GREEN: green;
+
+@mixin companyTheme($Primary_Color, $Secondary_Color, $Tertiary_Color) {
+  .mat-icon.have-brand, a.have-brand {
+    color: $Primary_Color;
+  }
+
+  .mat-checkbox-checked.mat-accent .mat-checkbox-background,
+  .side-nav.have-brand, button.have-brand, .mat-drawer {
+    background: $Primary_Color;
+    color: $Secondary_Color;
+  }
+
+  button.have-brand {
+    background: $Tertiary_Color;
+    color: $Secondary_Color;
+    width: 120px;
+
+    span {
+      font-weight: 500;
+    }
+  }
+
+  button.no-bg {
+    color: $Tertiary_Color;
+    background: transparent;
+  }
+
+  mat-panel-title.mat-expansion-panel-header-title, .mat-expansion-panel-header:hover, .mat-expansion-indicator::after,
+  .mat-expansion-panel-header.mat-expanded:focus, .mat-expansion-panel-header.mat-expanded:hover,
+  .mat-expansion-indicator, .sectionHeaderRow {
+    background-color: $Secondary_Color !important;
+    color: $Primary_Color !important;
+    font-weight: 500;
+  }
+
+  .mat-expansion-panel-header {
+    border: 1px solid $LIGHT_GRAY_COLOR;
+  }
+
+  .mat-panel-title {
+    color: $Primary_Color;
+  }
+
+  .sidenav-options {
+    color: $Secondary_Color;
+
+    h2 {
+      color: $Tertiary_Color;
+    }
+
+    .bullet-point {
+      background: dimgray;
+
+      &--selected {
+        background: $Tertiary_Color;
+      }
+    }
+  }
+
+  .navigation-icons {
+    margin-left: 20px;
+
+    .mat-icon {
+      font-size: 32px;
+      margin-right: 25px;
+      margin-top: 5px;
+      cursor: pointer;
+      color: $Tertiary_Color;
+    }
+  }
+
+  .cinchy-dynamic-forms-wrapper .mat-expansion-panel-content {
+    border-left: 5px solid $Tertiary_Color;
+  }
+
+  .download-link {
+    mat-icon, strong {
+      color: $Tertiary_Color !important;
+    }
+  }
+
+  .link-labels {
+    mat-icon {
+      color: $Tertiary_Color;
+    }
+  }
+
+  .info-icon-checkbox {
+    color: $Tertiary_Color;
+    font-size: 18px;
+  }
+
+  .form-header {
+    a {
+      color: $Tertiary_Color;
+    }
+  }
+}
+
+.form-wrapper-theme {
+  background-color: #f9f9f9;
+  @include companyTheme($BLACK, white, #E7015B);
+
+  &--CinchyPink {
+    @include companyTheme($BLACK, white, #E7015B);
+  }
+
+  &--Cinchy {
+    @include companyTheme($BLACK, white, $CINCHY_COLOR);
+  }
+
+  &--Green {
+    @include companyTheme($BLACK, white, $GREEN);
+  }
+
+  &--LightGreen {
+    @include companyTheme($BLACK, white, #9cd580);
+  }
+
+  &--Yellow {
+    @include companyTheme($BLACK, white, #fee252);
+  }
+}
+

@@ -1,0 +1,315 @@
+/* You can add global styles to this file, and also import other style files */
+@import "~ng-pick-datetime/assets/style/picker.min.css";
+@import "global-styles/variables";
+@import '~ngx-toastr/toastr.css';
+
+
+// COMMON STYLES
+
+.two-children-flex {
+  display: flex;
+  min-width: 500px;
+  padding: 20px 20px 20px;
+  border-bottom: 1px solid $LIGHT_GRAY_COLOR;
+  align-items: center;
+  justify-content: flex-start;
+
+  label {
+    color: $PURPLE_COLOR;
+  }
+
+  @media (max-width: 1040px) {
+    flex-direction: column;
+    align-items: center;
+    min-width: 100%;
+    padding: 20px 0;
+  }
+}
+
+.flex-vertical-center {
+  align-items: center;
+}
+
+.two-children-flex > * {
+  flex-basis: 50%;
+  margin-right: 10px;
+
+  @media (max-width: 1040px) {
+    margin-bottom: 10px;
+  }
+}
+
+.input-error {
+  border-width: 1px;
+  background-color: $WHITE_COLOR;
+  border-style: solid;
+  border-color: $PINK_COLOR;
+}
+
+.error-message {
+  max-width: 796px;
+  color: $ERROR_COLOR;
+}
+
+.error-color {
+  color: $ERROR_COLOR;
+}
+
+
+.bold-values {
+  font-weight: bold;
+  color: $PURPLE_COLOR;
+}
+
+.nav-buttons {
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.text-center {
+  text-align: center;
+  width: 100%;
+}
+
+.date-picker {
+  padding: 10px 5px;
+  width: 100%;
+}
+
+.max-350 {
+  width: 350px;
+}
+
+.bold {
+  font-weight: 600;
+}
+
+// INPUT AND SELECT COMPONENTS STANDARD STYLESpag
+input, select {
+  font-family: 'Open Sans', sans-serif;
+  border-radius: 4px;
+  box-sizing: border-box;
+  color: rgba(28, 26, 29, 1);
+  border: 1px solid $LIGHT_GRAY_COLOR;
+  padding: 3px;
+  margin: 0;
+  flex: 1;
+  text-overflow: ellipsis;
+}
+
+select {
+  border: 1px solid $PURPLE_COLOR;
+  height: 40px;
+}
+
+textarea {
+  font-family: 'Open Sans', sans-serif;
+  resize: none;
+  padding: 5px 2px;
+  border: 1px solid $LIGHT_GRAY_COLOR;
+}
+
+// ANGULAR MATERIAL OVERRIDE
+mat-spinner {
+  margin: 20px auto;
+}
+
+:host ::ng-deep {
+  .mat-form-field-appearance-legacy .mat-form-field-underline {
+    display: none !important;
+  }
+}
+
+.mat-form-field-appearance-legacy .mat-form-field-underline {
+  display: none !important;
+}
+
+.selected-list .c-list .c-token .c-label,
+.pure-checkbox input[type="checkbox"] + label {
+  font-size: 12px;
+}
+
+.mat-expansion-panel-content {
+  font-size: 16px;
+}
+
+.mat-expansion-panel {
+  // overflow: visible !important;
+}
+
+.table-url {
+  color: rgba(71, 38, 155, 1);
+}
+
+// SPACING CSS
+.mt-10 {
+  margin-top: 10px;
+}
+
+.m-tb-10 {
+  margin: 10px 0;
+}
+
+.mr-5 {
+  margin-right: 5px ! important;
+}
+
+.mr-15 {
+  margin-right: 15px ! important;
+}
+
+.mr-20 {
+  margin-right: 20px ! important;
+}
+
+
+// RESET
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  background-color: #fafafa;
+}
+
+h1, h2 {
+  font-weight: 300;
+}
+
+p {
+  margin-top: 1rem;
+}
+
+.mat-error-move-up-10 {
+  margin-top: -10px;
+}
+
+.mat-error-move-up-19 {
+  margin-top: -19px;
+}
+
+app-fields-wrapper {
+  textarea {
+    font-size: 14px !important;
+  }
+}
+
+.form-control {
+  font-size: 14px !important;
+}
+
+
+//Scroll bar stylesheet
+/* width */
+::-webkit-scrollbar {
+  width: 15px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.flex-row {
+  display: flex;
+  align-items: center;
+}
+
+.ml-20 {
+  margin-left: 20px;
+}
+
+.m-b-10 {
+  margin-bottom: 10px;
+}
+
+.pre-formatted {
+  white-space: pre-wrap;
+  font-size: 14px;
+}
+
+.auto-height {
+  height: auto;
+}
+
+
+.mat-select.single-select {
+  margin-top: -7px !important;
+}
+
+.is-loading {
+  margin-top: -10px;
+  text-align: left;
+
+  .mat-progress-spinner {
+    //   display: inline;
+  }
+}
+
+.mat-drawer-content {
+  // height: 100vh !important;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+}
+
+.dropdown-list {
+  // position: relative !important;
+}
+
+app-search-dropdown {
+  .mat-select-search-inner {
+    width: 487px !important;
+  }
+
+  .mat-form-field-wrapper {
+    width: 470px !important;
+  }
+}
+
+.float-right {
+  float: right;
+}
+
+.cinchy-images {
+  height: 100px;
+
+  &--min {
+    height: 20px;
+  }
+}
+
+.font-14 {
+  font-size: 14px;
+}
+
+.font-22 {
+  font-size: 22px;
+}
+
+.action-buttons {
+  display: flex;
+
+  .no-bg {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+}
