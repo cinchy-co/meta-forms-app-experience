@@ -48,7 +48,7 @@ import {NumeralPipe} from "ngx-numeral";
                 <th class="mat-row-child">Action</th>
                 <ng-container *ngFor="let key of getSortedKeys(section['MultiFields'][0])">
                   <!-- Child form dynamic table Row header -->
-                  <ng-container *ngIf="!isBinaryColumn(key)">
+                  <ng-container *ngIf="childFieldDictionary[key]?.cinchyColumn?.dataType !== 'Binary'">
                     <th *ngIf="(key !== 'Cinchy ID') && (!isLinkedColumn(section, key))">
                       {{getTableHeader(key, section)}}
                     </th>
@@ -73,8 +73,8 @@ import {NumeralPipe} from "ngx-numeral";
                 </td>
 
                 <ng-container *ngFor="let key of getSortedKeys(_field)">
-                  <ng-container *ngIf="!isBinaryColumn(key)">
-                    <td *ngIf="(key !== 'Cinchy ID') && (!isLinkedColumn(section, key))"
+                  <ng-container *ngIf="childFieldDictionary[key]?.cinchyColumn?.dataType !== 'Binary'">
+                    <td *ngIf="(key !== 'Cinchy ID') && (!isLinkedColumn(section, key))" [ngStyle]=" childFieldDictionary[key]?.cinchyColumn?.doNotWrap ? { 'white-space': 'nowrap' } : ''"
                         [innerHTML]="getDisplayValue(_field[key], section, key)">
                     </td>
                   </ng-container>
@@ -108,6 +108,8 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
   fileNameAndValueMap = {};
   destroy$: Subject<boolean> = new Subject<boolean>();
 
+  childFieldDictionary = {};
+
 
   constructor(private datePipe: DatePipe, private _cinchyService: CinchyService,
               private appStateService: AppStateService) {
@@ -131,6 +133,14 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
       }
     })
     this.getFileNames();
+
+    this.setChildFieldDictionary();
+  }
+  
+  setChildFieldDictionary() {
+    this.field.childForm.sections[0].fields.forEach(field => {
+      this.childFieldDictionary[field.cinchyColumn.name] = field;
+    });
   }
 
 
@@ -169,12 +179,6 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
       const fileNameResp = await this._cinchyService.executeCsql(query, null).toPromise();
       return fileNameResp && fileNameResp.queryResult && fileNameResp.queryResult.toObjectArray()[0] ? fileNameResp.queryResult.toObjectArray()[0]['fullName'] : null;
     }
-  }
-
-  isBinaryColumn(key) {
-    const allFields = this.field.childForm.sections[0].fields;
-    const binaryFields = allFields.filter(item => item.cinchyColumn.dataType === 'Binary');
-    return !!binaryFields.find(binaryField => binaryField.cinchyColumn.name === key);
   }
 
   isLinkedColumn(section, key) {

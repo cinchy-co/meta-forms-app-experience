@@ -507,7 +507,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         viewOnly, linkFieldId, formFieldMetadataQueryResult[i].IsDisplayColumn, attachedFileName, formFieldMetadataQueryResult[i].FileNameColumn,
         formFieldMetadataQueryResult[i].dropdownFilter, formFieldMetadataQueryResult[i].totalTextAreaRows, formFieldMetadataQueryResult[i].numberFormatter,
         formFieldMetadataQueryResult[i].attachmentURL, formFieldMetadataQueryResult[i].uploadURL, childFormParentId,
-        childFormLinkId
+        childFormLinkId, formFieldMetadataQueryResult[i].doNotWrap
       );
       const dropdownDataset: DropdownDataset = null;
       let childForm: IForm = null;

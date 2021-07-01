@@ -19,6 +19,7 @@ export interface ICinchyColumn {
   choiceOptions: string;
   FormFieldsJsonData: string; // String of json object
   dataFormatType: string;
+  doNotWrap: boolean;
   hasChanged: boolean;
   isViewOnly: boolean;
   linkedFieldId: any;
@@ -45,6 +46,7 @@ export class CinchyColumn implements ICinchyColumn {
               public hasChanged: boolean, public isViewOnly: boolean,
               public linkedFieldId: any, public IsDisplayColumn: boolean, public FileName: any, public FileNameColumn: any,
               public dropdownFilter: any, public totalTextAreaRows: number, public numberFormatter: string,
-              public attachmentUrl: string, public uploadUrl: string, public childFormParentId: string, public childFormLinkId: string) {
+              public attachmentUrl: string, public uploadUrl: string, public childFormParentId: string, public childFormLinkId: string, 
+              public doNotWrap: boolean) {
   }
 }
