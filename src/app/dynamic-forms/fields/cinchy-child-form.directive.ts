@@ -111,16 +111,22 @@ export class ChildFormDirective {
             element.value = null;
             element.noPreSelect = true;
           }
-        }else if(!element.value && element.cinchyColumn.IsDisplayColumn){
+        }else if(element.cinchyColumn.IsDisplayColumn){
           const labelInObj = `${element.cinchyColumn.linkTargetColumnName} label`;
           let selectedValue;
+          let hasDropdown = false;
           if(element.dropdownDataset && element.dropdownDataset.options){
             selectedValue = element.dropdownDataset.options.find(item => item.label ==  obj[labelInObj]);
-            element.value = selectedValue ? selectedValue.id : null;
-          }else{
+            if (selectedValue != null) {
+              hasDropdown = true;
+              element.value = selectedValue?.id;
+            }
+          }
+          
+          if (!hasDropdown){
             // Creating dummy dropdown and value using multi-field value since it's read only value
             const dummyDropdown = {id: obj[labelInObj], label: obj[labelInObj]};
-            element.dropdownDataset = {options: [dummyDropdown]};
+            element.dropdownDataset = {options: [dummyDropdown], isDummy: true};
             element.value = dummyDropdown.id;
           }
         }
@@ -152,6 +158,8 @@ export class ChildFormDirective {
           const keyForBinary = element.cinchyColumn.name + '_Name';
           this._ChildFormData.values = this._ChildFormData.values || {};
           this._ChildFormData.values[keyForBinary] = element.cinchyColumn.FileName;
+        } else if (element.cinchyColumn.IsDisplayColumn && element.dropdownDataset?.isDummy) {
+          element.dropdownDataset = null;
         }
       });
     });

@@ -1,7 +1,7 @@
 <ng-container *ngIf="!isChild">
   <mat-expansion-panel *ngFor='let section of form.sections; index as i'
                        [ngClass]="'section-flex--'+formSections[i].columnsInRow"
-                       [expanded]="i===0 || formSections[i].autoExpand" [id]="'section-' + section.label">
+                       [expanded]="formSections[i].autoExpand" [id]="'section-' + section.label">
     <mat-expansion-panel-header class="sectionHeaderRow" expandedHeight="40px" collapsedHeight="40px"
                                 (click)="expansionClicked(section)">
       <mat-panel-title>
