@@ -3,5 +3,5 @@
   "cinchyRootUrl": "https://cinchy.net/Cinchy",
   "clientId": "deals-overview",
   "redirectUri": "https://cinchy.net/dx/edit-form",
-  "version": "2.5.5"
+  "version": "2.6.0.639"
 }
