@@ -1,5 +1,5 @@
-import {Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation} from '@angular/core';
-import {AppStateService} from "../../services/app-state.service";
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import {AppStateService}                                                                from "../../services/app-state.service";
 
 @Component({
   selector: 'app-fields-wrapper',

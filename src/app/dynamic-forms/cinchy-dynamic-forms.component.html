@@ -1,4 +1,4 @@
-<form *ngIf='form != null' class="cinchy-dynamic-forms-wrapper">
+<form class="cinchy-dynamic-forms-wrapper">
   <div class='navigation-buttons form-header'>
     <!-- <button mat-raised-button>Cancel</button>-->
     <div class="flex-row ml-20">
@@ -23,7 +23,7 @@
         Export As Pdf
       </button>
       <!--<button mat-raised-button class="ml-20 navigation-buttons have-brand float-right" (click)="printCurrentForm()">Print</button>-->
-      <button mat-raised-button class='btnSave have-brand' (click)='saveForm(form, RowId)'>Save</button>
+      <button mat-raised-button class='btnSave have-brand' (click)='saveForm(form, RowId)' [disabled]="!form">Save</button>
     </div>
   </div>
 

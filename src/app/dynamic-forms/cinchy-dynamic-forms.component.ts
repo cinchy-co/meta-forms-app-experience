@@ -86,7 +86,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   ngOnInit() {
     this.appStateService.getSaveClickedObs().pipe(takeUntil(this.destroy$)).subscribe((saveClicked) => {
       saveClicked && this.saveForm(this.form, this.RowId);
-    })
+    });
   }
 
   rowSelected(row) {
@@ -355,7 +355,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       if (formdata.length > 0) {
         const tableid = formdata[0].TableId;
         this.parentTableId = formdata[0].TableId;
-        this.spinner.show();
+        // this.spinner.show();
         this._cinchyService.getTableEntitlementsById(tableid).subscribe(
           response => {
             this.tableEntitlements = response;
