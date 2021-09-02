@@ -19,7 +19,7 @@ export class CinchyQueryService {
     if (files && uploadUrl) {
       let formData = new FormData();
 
-      // Add the uploaded file to the form data collection  
+      // Add the uploaded file to the form data collection
       if (files.length > 0) {
         for (let i = 0; i < files.length; i++) {
           formData.append("files", files[i]);
@@ -35,7 +35,7 @@ export class CinchyQueryService {
 
   getFilesInCell(columnName: string, domainName: string, tableName: string, cinchyId: number): Observable<{ fileId: number, fileName: string }[]> {
     const query = `SELECT [${columnName}].[Cinchy Id] as 'fileIds', [${columnName}].[File Name] as 'fileNames'  FROM [${domainName}].[${tableName}] WHERE [Cinchy Id]=${cinchyId}`;
-    return this.cincyService.executeCsql(query, null).pipe( map( 
+    return this.cincyService.executeCsql(query, null).pipe( map(
       resp => {
         let result = [];
         const resultRecord = resp['queryResult'].toObjectArray();

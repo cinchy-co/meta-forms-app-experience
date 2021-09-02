@@ -313,3 +313,7 @@ app-search-dropdown {
     justify-content: flex-start;
   }
 }
+
+.mat-spinner.inside {
+  animation: none !important;
+}

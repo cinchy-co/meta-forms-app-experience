@@ -31,6 +31,7 @@
     <mat-accordion *ngIf="MetaData[0] && MetaData[0]['isAccordion']; else withoutAccordion">
       <app-fields-wrapper [form]="form"
                           [rowId]="RowId"
+                          [formFieldMetaDatas]="formFieldMetaDatas"
                           [formSections]="formSections"
                           (eventOccurred)="handleFieldsEvent($event)"
                           (childFormOpened)="openChildForm($event)"

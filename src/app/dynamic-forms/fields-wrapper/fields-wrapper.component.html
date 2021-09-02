@@ -9,9 +9,13 @@
       </mat-panel-title>
     </mat-expansion-panel-header>
 
-    <ng-container *ngIf="form">
+    <ng-container *ngIf="form else loading">
       <ng-container *ngTemplateOutlet="formFields; context:{section: form.sections[i]}" ></ng-container>
     </ng-container>
+
+    <ng-template #loading>
+      <mat-spinner diameter="50" class="inside"></mat-spinner>
+    </ng-template>
 
   </mat-expansion-panel>
 </ng-container>

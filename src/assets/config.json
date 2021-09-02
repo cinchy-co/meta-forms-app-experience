@@ -1,7 +1,8 @@
 {
   "authority": "https://cinchy.net/cinchysso",
   "cinchyRootUrl": "https://cinchy.net/Cinchy",
-  "clientId": "deals-overview",
-  "redirectUri": "https://cinchy.net/dx/edit-form",
+  "clientId": "angular-sample",
+  "redirectUri": "https://localhost:3000/",
   "version": "2.5.5"
 }
+
