@@ -1,0 +1,48 @@
+# Docker
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- master
+- feature/*
+- release/*
+
+resources:
+- repo: self
+
+variables:
+  imageName: 'meta-forms-app-experience'
+  tag: '$(Build.BuildId)'
+  branchAsTag: '$(Build.SourceBranchName)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: Docker@2
+      displayName: Build an image
+      inputs:
+        repository: $(imageName)
+        command: build
+        dockerfile: 'Dockerfile'
+        buildContext: .
+        tags: |
+          $(branchAsTag)
+    - task: CmdLine@2
+      inputs:
+        script: docker images 
+    
+    - task: ECRPushImage@1
+      inputs:
+        awsCredentials: 'AWS ECR'
+        regionName: 'ca-central-1'
+        imageSource: 'imagename'
+        sourceImageName: $(imageName)
+        sourceImageTag: '$(branchAsTag)'
+        repositoryName: 'cinchy.worker'
+        pushTag: '$(branchAsTag)'
