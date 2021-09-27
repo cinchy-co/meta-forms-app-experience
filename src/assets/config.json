@@ -1,7 +1,7 @@
 {
   "authority": "<cinchy-domain>/cinchysso",
   "cinchyRootUrl": "<cinchy-domain>/Cinchy",
-  "clientId": "cinchy-metaforms",
-  "redirectUri": "<cinchy-domain>/dx/edit-form",
+  "clientId": "meta-forms",
+  "redirectUri": "<cinchy-domain>/dx/meta-forms",
   "version": "3.0.0.688"
 }
