@@ -1,7 +1,7 @@
 {
-  "authority": "https://cinchy.net/cinchysso",
-  "cinchyRootUrl": "https://cinchy.net/Cinchy",
-  "clientId": "deals-overview",
-  "redirectUri": "https://cinchy.net/dx/edit-form",
-  "version": "2.5.5"
+  "authority": "<cinchy-domain>/cinchysso",
+  "cinchyRootUrl": "<cinchy-domain>/Cinchy",
+  "clientId": "meta-forms",
+  "redirectUri": "<cinchy-domain>/dx/meta-forms",
+  "version": "2.6.0.639"
 }
