@@ -44,7 +44,7 @@ export class ConfigService {
   }
 
   getEnvUrl() {
-    const url = `${this.baseUrl}assets/config/config.json`;
+    const url = `${this.baseUrl}assets/config.json`;
 
 /*    const headers = new HttpHeaders({
       'Cache-Control': 'no-cache',
