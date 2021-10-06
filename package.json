@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve --port 3000  --ssl",
     "build": "ng build",
+    "build:prod": "ng build --prod --base-href \"/dx/meta-forms/\"",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -53,7 +54,6 @@
     "@types/jasmine": "~3.5.0",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "^12.11.1",
-    "@types/ramda": "github:types/npm-ramda",
     "codelyzer": "^5.1.2",
     "jasmine-core": "~3.5.0",
     "jasmine-spec-reporter": "~4.2.1",
