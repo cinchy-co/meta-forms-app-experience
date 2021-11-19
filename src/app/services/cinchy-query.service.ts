@@ -4,6 +4,7 @@ import {Observable, of} from 'rxjs';
 import {IGetQuery} from "../models/state.model";
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -87,7 +88,26 @@ export class CinchyQueryService {
     const params = {
       '@formId': formId ? formId : sessionStorage.getItem('formId')
     };
-    return this.cincyService.executeQuery('Cinchy Forms', 'Get Form MetaData', params);
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get Form MetaDataNew', params);
+  }
+
+  getJsonDataBySectionId(formSectionId): Observable<IGetQuery> {
+    // Get JsonData using sectionId.
+    const params = {
+      '@formSectionId': formSectionId
+    };
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get JsonData', params);
+  }
+
+  // init the subject
+  public stopRequest: Subject<void> = new Subject<void>();
+    
+  getJsonDataByFormId() {
+    // Get form Meta data using form Id
+    const params = {
+      '@formId': sessionStorage.getItem('formId')
+    };
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get JsonDataByFormId', params);
   }
 
   getAllRowsOfTable(subtitleColumn, domain, table, lookupFilter?): Observable<IGetQuery> {
@@ -105,6 +125,6 @@ export class CinchyQueryService {
     const params = {
       '@formId': sessionStorage.getItem('formId')
     };
-    return this.cincyService.executeQuery('Cinchy Forms', 'Get Form Sections', params);
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get Form SectionsNew', params);
   }
 }

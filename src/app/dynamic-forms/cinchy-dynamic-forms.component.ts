@@ -39,6 +39,11 @@ import { PrintService } from './service/print/print.service';
 export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() RowId: number | string;
   @Input() FormId: number | string;
+  nonExpandedSection: boolean;
+  closedSectionData: boolean = false;
+  openSectionData: boolean = false;
+  saveBtnInd: boolean = false;
+  pendingcall: any;
 
   @Input('allRows') set allRows(value: any) {
     this.setAllRowsData(value);
@@ -74,6 +79,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   hasChildTableAccess = true;
   parentTableName: string;
   parentDomain: string;
+  JsonDataResp: any;
+  sectionIdList = [];
+  childSectionList = [];
 
   public formFieldMetaDatas = {};
 
@@ -91,13 +99,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     });
   }
 
-  rowSelected(row) {
+  async rowSelected(row) {
     this.currentRow = row ? row : this.currentRow;
     this.RowId = row ? row.id : this.RowId;
     this.rowChanged.emit(this.RowId);
     this.rowUpdated.emit(this.RowId);
     this.childDataForm = [];
-    this.getFormMetaData();
+    this.form = null;
+    let expand=true;
+    this.getFormMetaData(expand);
   }
 
   setAllRowsData(allRows) {
@@ -142,7 +152,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       /* if (!isNullOrUndefined(this.RowId)) {
          this.spinner.show();
        }*/
-      this.getFormMetaData();
+      let expand=true;
+      await this.getFormMetaData(expand);
+      console.log(new Date(), 'start wait')
+      await new Promise(f => setTimeout(f, 2000));
+      console.log(new Date(),'wait stop')
+      this.getFormMetaData(!expand);
     }
   }
 
@@ -353,7 +368,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   /**
    * using this method we load all the meta data of form.
    */
-  async getFormMetaData(childData?) {
+  async getFormMetaData(expand: boolean, childData?) {
     try {
       // Get form Meta data Only when Once.
       if (isNullOrUndefined(this.formFieldMetadataResult)) {
@@ -364,10 +379,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         const tableid = formdata[0].TableId;
         this.parentTableId = formdata[0].TableId;
         // this.spinner.show();
-        this._cinchyService.getTableEntitlementsById(tableid).subscribe(
+
+        this.cancel(this.pendingcall);
+        this.cinchyQueryService.stopRequest.next();
+        this.pendingcall =  this._cinchyService.getTableEntitlementsById(tableid).subscribe(
           response => {
             this.tableEntitlements = response;
-            this.getForm(this.FormId, null, null, null, null, childData).then((res) => {
+            this.nonExpandedSection= expand;
+            this.getForm(this.FormId, expand, null, null, null, null, childData).then((res) => {
               this.spinner.hide();
               this.form = res;
             });
@@ -392,7 +411,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   //#endregion
   //#region Get form Values by form ID and CInchy ID and NUll for new Form
-  private async getForm(FormId: number | string, displayColumns: number[] = null, isChild = false, LinkFieldId?,
+  private async getForm(FormId: number | string,  expand: boolean, displayColumns: number[] = null, isChild = false, LinkFieldId?,
                         childFilterParam?, childData?, childFormParentId?: string, childFormLinkId?: string,
                         childSortParam?: string): Promise<IForm> {
     let childFilter = childFilterParam;
@@ -468,6 +487,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     }
 
     let minSectionIter = 0;
+    let resChildNew;
+    console.log('start time:', new Date(), expand);
+    const resNew = await  this.getJsonDataSection(expand);
+
+    if(isChild){
+       resChildNew = await  this.getJsonDataSection(expand, FormId, formFieldMetadataQueryResult[0].FormSectionId);
+    }
 
     for (const formFieldMetadata of formFieldMetadataQueryResult) {
       if (displayColumns && displayColumns.length > 0) {
@@ -476,17 +502,46 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         }
       }
 
+        // bind Json data
+                for(let jsonfield of resNew)
+                  {
+                    if(jsonfield.FormFieldId === formFieldMetadata.FormFieldId)
+                    {
+                      formFieldMetadata.JsonData = jsonfield.JsonData;
+                      formFieldMetadata.FormFieldsJsonData = jsonfield.FormFieldsJsonData;
+                    }
+                  }
+                  if(resChildNew && !formFieldMetadata.JsonData){
+                    for(let jsonfield of resChildNew)
+                    {
+                      if(jsonfield.FormFieldId === formFieldMetadata.FormFieldId)
+                      {
+                        formFieldMetadata.JsonData = jsonfield.JsonData;
+                        formFieldMetadata.FormFieldsJsonData = jsonfield.FormFieldsJsonData;
+                      }
+                    }
+                  }
+                  if(!formFieldMetadata.JsonData){
+                    continue;
+                  }
+      //remove below if condition
+      if(!formFieldMetadata.JsonData){
+        debugger;
+      }
       const tableJsonData = JSON.parse(formFieldMetadata.JsonData);
       const filterData = tableJsonData.Columns.filter(x => x.columnId === formFieldMetadata.ColumnId);
+      const columnMetadata = !isNullOrUndefined(filterData[0]) ? filterData[0] : null;
 
       let allowMultiple = false;
       let validationExpression = null;
       let minValue = 0;
+      let displayFormat = null;
 
-      if (!isNullOrUndefined(filterData[0])) {
-        allowMultiple = isNullOrUndefined(filterData[0].allowMultiple) ? false : filterData[0].allowMultiple;
-        validationExpression = isNullOrUndefined(filterData[0].validationExpression) ? null : filterData[0].validationExpression;
-        minValue = isNullOrUndefined(filterData[0].minValue) ? 0 : filterData[0].minValue;
+      if (columnMetadata != null) {
+        allowMultiple = isNullOrUndefined(columnMetadata.allowMultiple) ? false : columnMetadata.allowMultiple;
+        validationExpression = isNullOrUndefined(columnMetadata.validationExpression) ? null : columnMetadata.validationExpression;
+        minValue = isNullOrUndefined(columnMetadata.minValue) ? 0 : columnMetadata.minValue;
+        displayFormat = columnMetadata.displayFormat;
       }
 
       // set entitlement canedit/canview according to the user.
@@ -537,11 +592,17 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         viewOnly, linkFieldId, formFieldMetadata.IsDisplayColumn, attachedFileName, formFieldMetadata.FileNameColumn,
         formFieldMetadata.dropdownFilter, formFieldMetadata.totalTextAreaRows, formFieldMetadata.numberFormatter,
         formFieldMetadata.attachmentURL, formFieldMetadata.uploadURL, childFormParentId,
-        childFormLinkId, formFieldMetadata.doNotWrap
+        childFormLinkId, formFieldMetadata.doNotWrap, displayFormat
       );
       const dropdownDataset: DropdownDataset = null;
       const childFormId: number = formFieldMetadata.ChildFormId;
-
+      if(displayFormat){
+        let existingFormat = sessionStorage.getItem('displayFormat');
+        if(existingFormat !== displayFormat){
+          window.location.reload();
+        }
+      }
+      displayFormat && sessionStorage.setItem('displayFormat', displayFormat);
       let childForm: IForm = null;
       childFilter = isChild ? childFilterParam : formFieldMetadata.childFormFilter;
       childSort = isChild ? childSortParam : formFieldMetadata.sortChildtable;
@@ -553,7 +614,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
         displayColumnId.push(formFieldMetadata.LinkFieldId);
 
-        await this.getForm(childFormId, displayColumnId, true,
+        await this.getForm(childFormId, expand, displayColumnId, true,
           formFieldMetadata.LinkFieldId, childFilter, null,
           formFieldMetadata.childFormParentId, formFieldMetadata.childFormLinkId, childSort).then((res) => {
           childForm = res;
@@ -625,8 +686,73 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     }
 
     this.formsData = result;
-
     return result;
+  }
+
+  public cancel(pendingcall: any) {
+    if(this.pendingcall != null) {
+      // this.pendingcall.unsubscribe();
+      // cancel the request
+      this.cinchyQueryService.stopRequest.next();
+      console.log('unsubscribed');    
+    }
+  }
+
+    async getJsonDataSection(expand: boolean, formID?, sectionId?) {
+    let JsonDataNew;
+    let SectionJsonData = [];
+    let sectionIds =[];
+    if(formID && sectionId)
+    {
+      this.childSectionList.push(sectionIds);
+      const JsonDataResp = await  this.cinchyQueryService.getJsonDataBySectionId(sectionId).toPromise();
+      JsonDataNew = JsonDataResp.queryResult.toObjectArray();
+      this.saveBtnInd = true;
+      return SectionJsonData  = JsonDataNew;
+    }
+    else if(this.formSections)
+    {
+      for(let sectionData of this.formSections)
+      {
+        JsonDataNew = null;
+            if(expand && sectionData.autoExpand === true && this.openSectionData === false)
+            {
+              if(this.sectionIdList.length ===0 )
+              {
+                this.sectionIdList.push(sectionData.FormSectionId);
+                sectionIds.push(sectionData.FormSectionId);
+                const JsonDataResp = await  this.cinchyQueryService.getJsonDataBySectionId(sectionData.FormSectionId).toPromise();
+                JsonDataNew = JsonDataResp.queryResult.toObjectArray();   
+              } else{
+                    for(let ids of this.sectionIdList){
+                      if(ids === sectionData.FormSectionId){
+                        continue;
+                      }
+                      else{
+                        sectionIds.push(sectionData.FormSectionId);
+                        this.sectionIdList.push(sectionData.FormSectionId);
+                        const JsonDataResp = await  this.cinchyQueryService.getJsonDataBySectionId(sectionData.FormSectionId).toPromise();
+                        JsonDataNew = JsonDataResp.queryResult.toObjectArray();
+                      }
+                    }
+              }
+            }
+            else if(!expand && sectionData.autoExpand === false && this.closedSectionData === false)
+            {
+              this.closedSectionData = true;
+              const JsonDataResp = await  this.cinchyQueryService.getJsonDataByFormId().toPromise();
+              JsonDataNew = JsonDataResp.queryResult.toObjectArray();
+              this.saveBtnInd = true;  
+            }
+            //check for data
+            if(JsonDataNew)
+            {
+              SectionJsonData = [ ...SectionJsonData, ...JsonDataNew];
+            }
+      }
+      this.openSectionData =  true;
+    } 
+    return SectionJsonData ;
   }
 
   async getFileName(fileNameColumn) {

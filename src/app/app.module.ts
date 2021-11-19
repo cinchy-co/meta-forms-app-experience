@@ -15,6 +15,12 @@ import {NgxSpinnerModule} from "ngx-spinner";
 import {AceEditorModule} from 'ng2-ace-editor';
 import {NumeralModule} from "ngx-numeral";
 import {ConfigService} from "./config.service";
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { DateAdapter, MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { NativeDateTimeModule } from 'ng-pick-datetime/date-time/adapter/native-date-time.module';
+import { MatInputModule } from '@angular/material';
+import { MomentDateAdapter } from "@angular/material-moment-adapter";
+import { MY_FORMATS } from './dynamic-forms/fields/cinchy-my-format';
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -42,6 +48,9 @@ export function getBaseUrl() {
     CinchyModule.forRoot(),
     NgxSpinnerModule,
     AceEditorModule,
+    NativeDateTimeModule,
+    MatDatepickerModule,
+    MatInputModule,
     NumeralModule.forRoot()
   ],
   providers: [
@@ -60,7 +69,9 @@ export function getBaseUrl() {
       },
       deps: [ConfigService]
     },
-    { provide: 'BASE_URL', useFactory: getBaseUrl }
+    { provide: 'BASE_URL', useFactory: getBaseUrl },
+    {provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE]},
+    {provide: MAT_DATE_FORMATS, useValue: MY_FORMATS},
   ],
   bootstrap: [AppComponent]
 })

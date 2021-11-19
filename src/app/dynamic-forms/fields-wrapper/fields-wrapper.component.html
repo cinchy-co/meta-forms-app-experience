@@ -17,6 +17,7 @@
       <mat-spinner diameter="50" class="inside"></mat-spinner>
     </ng-template>
 
+    <mat-spinner mode="indeterminate" *ngIf="showSpinner && !section.autoExpand" diameter="50" class="inside"></mat-spinner> 
   </mat-expansion-panel>
 </ng-container>
 

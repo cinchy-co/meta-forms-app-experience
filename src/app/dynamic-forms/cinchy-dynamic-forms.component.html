@@ -17,13 +17,13 @@
       </div>
     </div>
 
-    <div class="action-buttons">
-      <button class="no-bg mr-20" mat-button color="accent" (click)="printCurrentForm()">
+    <div class="action-buttons" matTooltip="Data is Loading.." [matTooltipDisabled]="saveBtnInd">
+      <button class="no-bg mr-20" mat-button color="accent" [disabled]="!saveBtnInd" (click)="printCurrentForm()">
         <mat-icon class="font-22" title="Export To Pdf">archive</mat-icon>
         Export As Pdf
       </button>
       <!--<button mat-raised-button class="ml-20 navigation-buttons have-brand float-right" (click)="printCurrentForm()">Print</button>-->
-      <button mat-raised-button class='btnSave have-brand' (click)='saveForm(form, RowId)' [disabled]="!form">Save</button>
+      <button mat-raised-button class='btnSave have-brand' (click)='saveForm(form, RowId)' [disabled]="!saveBtnInd">Save</button>
     </div>
   </div>
 

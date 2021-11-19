@@ -265,7 +265,11 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
       });
     }
     if (value && currentField && currentField.cinchyColumn.dataType === "Date and Time") {
-      return this.datePipe.transform(value, 'dd-MMM-yyyy');
+     let dateFormat = currentField.cinchyColumn.displayFormat;
+     console.log(`Current field (${currentField.cinchyColumn.name}) is a date, display format is: `, dateFormat);
+     dateFormat = dateFormat.replaceAll('Y','y');
+     dateFormat = dateFormat.replaceAll('D','d');
+      return this.datePipe.transform(value, dateFormat);
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
     } else if (value && currentField && currentField.cinchyColumn.dataFormatType === 'ImageUrl') {

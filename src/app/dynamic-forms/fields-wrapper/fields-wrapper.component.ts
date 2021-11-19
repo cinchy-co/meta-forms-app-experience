@@ -18,6 +18,7 @@ export class FieldsWrapperComponent implements OnInit, OnChanges {
   @Output() eventOccurred = new EventEmitter<any>();
   @Output() childFormOpened = new EventEmitter<any>();
   @Output() deleteDialogOpened = new EventEmitter<any>();
+  public showSpinner = false;
 
   constructor(private appStateService: AppStateService) { } // AppState service is outside of Dynamic forms
 
@@ -25,10 +26,36 @@ export class FieldsWrapperComponent implements OnInit, OnChanges {
   }
 
   expansionClicked(section) {
+    if(this.form)
+    {
+      if(this.form.sections[1]){
+        if(this.form.sections[1].fields.length == 0)
+        {
+          this.showSpinner = true;
+        }
+        else
+        {
+          this.showSpinner = false;
+        }
+      }
+    }
     this.appStateService.sectionClicked(section.label);
   }
 
   ngOnChanges(): void {
     console.log(this.formFieldMetaDatas);
+    if(this.form){
+      if(this.form.sections[1]){
+        if(this.form.sections[0].fields.length == 0){
+          this.form = null;
+          return;
+        }
+      if(this.form.sections[1].fields.length == 0){
+        this.showSpinner = true;
+      }else{
+        this.showSpinner = false;
+      }
+    }
+    }
   }
 }
