@@ -596,7 +596,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       );
       const dropdownDataset: DropdownDataset = null;
       const childFormId: number = formFieldMetadata.ChildFormId;
-      if(displayFormat){
+      if(displayFormat && cinchyColumn.dataType==='Date and Time'){
         let existingFormat = sessionStorage.getItem('displayFormat');
         if(existingFormat !== displayFormat){
           window.location.reload();
