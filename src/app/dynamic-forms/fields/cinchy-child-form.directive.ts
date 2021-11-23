@@ -125,9 +125,11 @@ export class ChildFormDirective {
           
           if (!hasDropdown){
             // Creating dummy dropdown and value using multi-field value since it's read only value
+            if(obj){
             const dummyDropdown = {id: obj[labelInObj], label: obj[labelInObj]};
             element.dropdownDataset = {options: [dummyDropdown], isDummy: true};
             element.value = dummyDropdown.id;
+            }
           }
         }
       });
