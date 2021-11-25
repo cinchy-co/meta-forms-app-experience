@@ -268,7 +268,7 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
       return this.datePipe.transform(value, 'dd-MMM-yyyy');
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
-    } else if (value && currentField && currentField.cinchyColumn.dataFormatType === 'ImageUrl') {
+    } else if (value && currentField && (currentField.cinchyColumn.dataFormatType === 'ImageUrl(small)' || currentField.cinchyColumn.dataFormatType === 'ImageUrl(medium)' || currentField.cinchyColumn.dataFormatType === 'ImageUrl(large)')) {
       return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
     } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
       const numeralValue = new NumeralPipe(value);

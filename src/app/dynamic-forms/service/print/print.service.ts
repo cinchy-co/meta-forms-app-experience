@@ -208,7 +208,7 @@ export class PrintService {
     if (field.cinchyColumn.dataFormatType === "LinkUrl") {
       // console.log('IMAGE', this.toDataURL(field.value, this.getFileData));
       this.content.push({columns: this.getLinkColumns(actualField)});
-    } else if (field.cinchyColumn.dataFormatType === "ImageUrl") {
+    } else if (field.cinchyColumn.dataFormatType === "ImageUrl(small)" || field.cinchyColumn.dataFormatType === "ImageUrl(medium)" || field.cinchyColumn.dataFormatType === "ImageUrl(large)") {
       const base64Img = this.getBase64ImageFromUrl(field.value);
       this.content.push({columns: this.getImageColumns(field, base64Img)});
     } else if (field.cinchyColumn.dataType === "Date and Time") {
@@ -380,7 +380,7 @@ export class PrintService {
       return this.datePipe.transform(value, 'dd-MMM-yyyy');
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
-    } else if (value && currentField && currentField.cinchyColumn.dataFormatType === 'ImageUrl') {
+    } else if (value && currentField && (currentField.cinchyColumn.dataFormatType === 'ImageUrl(small)' || currentField.cinchyColumn.dataFormatType === 'ImageUrl(medium)' || currentField.cinchyColumn.dataFormatType === 'ImageUrl(large)')) {
       return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
     } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
       const numeralValue = new NumeralPipe(value);

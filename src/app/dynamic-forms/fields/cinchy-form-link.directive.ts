@@ -163,7 +163,7 @@ export class LinkDirective implements OnInit {
   }
 
   ngOnInit(): void {
-    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl';
+    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl(small)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl(medium)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl(large)';
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
