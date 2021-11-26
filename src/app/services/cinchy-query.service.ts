@@ -88,7 +88,7 @@ export class CinchyQueryService {
     const params = {
       '@formId': formId ? formId : sessionStorage.getItem('formId')
     };
-    return this.cincyService.executeQuery('Cinchy Forms', 'Get Form MetaDataNew', params);
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get Form MetaData', params);
   }
 
   getJsonDataBySectionId(formSectionId): Observable<IGetQuery> {
@@ -96,7 +96,7 @@ export class CinchyQueryService {
     const params = {
       '@formSectionId': formSectionId
     };
-    return this.cincyService.executeQuery('Cinchy Forms', 'Get JsonData', params);
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get Json Metadata', params);
   }
 
   // init the subject
@@ -107,7 +107,7 @@ export class CinchyQueryService {
     const params = {
       '@formId': sessionStorage.getItem('formId')
     };
-    return this.cincyService.executeQuery('Cinchy Forms', 'Get JsonDataByFormId', params);
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get Json Metadata By Form Id', params);
   }
 
   getAllRowsOfTable(subtitleColumn, domain, table, lookupFilter?): Observable<IGetQuery> {

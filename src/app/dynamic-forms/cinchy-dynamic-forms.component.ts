@@ -42,7 +42,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   nonExpandedSection: boolean;
   closedSectionData: boolean = false;
   openSectionData: boolean = false;
-  saveBtnInd: boolean = false;
+  enableSaveBtn: boolean = false;
   pendingcall: any;
 
   @Input('allRows') set allRows(value: any) {
@@ -699,22 +699,22 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   }
 
     async getJsonDataSection(expand: boolean, formID?, sectionId?) {
-    let JsonDataNew;
+    let jsonDataNew;
     let SectionJsonData = [];
     let sectionIds =[];
     if(formID && sectionId)
     {
       this.childSectionList.push(sectionIds);
       const JsonDataResp = await  this.cinchyQueryService.getJsonDataBySectionId(sectionId).toPromise();
-      JsonDataNew = JsonDataResp.queryResult.toObjectArray();
-      this.saveBtnInd = true;
-      return SectionJsonData  = JsonDataNew;
+      jsonDataNew = JsonDataResp.queryResult.toObjectArray();
+      this.enableSaveBtn = true;
+      return SectionJsonData  = jsonDataNew;
     }
     else if(this.formSections)
     {
       for(let sectionData of this.formSections)
       {
-        JsonDataNew = null;
+        jsonDataNew = null;
             if(expand && sectionData.autoExpand === true && this.openSectionData === false)
             {
               if(this.sectionIdList.length ===0 )
@@ -722,7 +722,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                 this.sectionIdList.push(sectionData.FormSectionId);
                 sectionIds.push(sectionData.FormSectionId);
                 const JsonDataResp = await  this.cinchyQueryService.getJsonDataBySectionId(sectionData.FormSectionId).toPromise();
-                JsonDataNew = JsonDataResp.queryResult.toObjectArray();   
+                jsonDataNew = JsonDataResp.queryResult.toObjectArray();   
               } else{
                     for(let ids of this.sectionIdList){
                       if(ids === sectionData.FormSectionId){
@@ -732,7 +732,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                         sectionIds.push(sectionData.FormSectionId);
                         this.sectionIdList.push(sectionData.FormSectionId);
                         const JsonDataResp = await  this.cinchyQueryService.getJsonDataBySectionId(sectionData.FormSectionId).toPromise();
-                        JsonDataNew = JsonDataResp.queryResult.toObjectArray();
+                        jsonDataNew = JsonDataResp.queryResult.toObjectArray();
                       }
                     }
               }
@@ -741,13 +741,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
             {
               this.closedSectionData = true;
               const JsonDataResp = await  this.cinchyQueryService.getJsonDataByFormId().toPromise();
-              JsonDataNew = JsonDataResp.queryResult.toObjectArray();
-              this.saveBtnInd = true;  
+              jsonDataNew = JsonDataResp.queryResult.toObjectArray();
+              this.enableSaveBtn = true;  
             }
             //check for data
-            if(JsonDataNew)
+            if(jsonDataNew)
             {
-              SectionJsonData = [ ...SectionJsonData, ...JsonDataNew];
+              SectionJsonData = [ ...SectionJsonData, ...jsonDataNew];
             }
       }
       this.openSectionData =  true;

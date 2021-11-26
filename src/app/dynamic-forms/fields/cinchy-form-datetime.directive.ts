@@ -7,7 +7,7 @@ import {MAT_DATE_FORMATS} from '@angular/material/core';
 import { FormControl } from '@angular/forms';
 import * as _moment from 'moment';
 import { Moment } from 'moment';
-import { MY_FORMATS } from './cinchy-my-format';
+import { DisplayFormats } from './cinchy-my-format';
 
 const moment =  _moment;
 //#region Cinchy Dynamic DateTime Field
@@ -40,7 +40,7 @@ const moment =  _moment;
              [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
              (dateChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
              (dateInput)="checkForDate()"
-             [matDatepicker]="picker3" [value]="datenew">
+             [matDatepicker]="picker3" [value]="preSelectedDate">
              <mat-datepicker-toggle   matSuffix [for]="picker3"></mat-datepicker-toggle>
              <mat-datepicker  #picker3></mat-datepicker>
            </mat-form-field>
@@ -53,7 +53,7 @@ const moment =  _moment;
     </div>
 
   `,
-  providers: [{provide: MAT_DATE_FORMATS, useValue: MY_FORMATS},],
+  providers: [{provide: MAT_DATE_FORMATS, useValue: DisplayFormats},],
 })
 export class DateTimeDirective implements OnInit {
   @Input() field: any;
@@ -65,8 +65,7 @@ export class DateTimeDirective implements OnInit {
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
   @Output() eventHandler = new EventEmitter<any>();
-  preSelectedDate;
-  datenew = new FormControl(moment());
+  preSelectedDate = new FormControl(moment());
   showError;
 
   constructor(private datePipe: DatePipe,) {
@@ -74,12 +73,11 @@ export class DateTimeDirective implements OnInit {
   }
 
   ngOnInit() {
-    this.preSelectedDate = this.field.value ? new Date(this.field.value) : '';
-    this.datenew = this.preSelectedDate;
+    this.preSelectedDate = this.field.value ? this.field.value : '';
   }
 
   checkForDate(){
-    if(!this.datenew){
+    if(!this.preSelectedDate){
       this.field.cinchyColumn.hasChanged = true;
     }
   }
@@ -96,7 +94,7 @@ export class DateTimeDirective implements OnInit {
       'event': event,
       'HasChanged': this.field.cinchyColumn.hasChanged
     };
-    let selctedDate = value ? value : this.datenew;
+    let selctedDate = value ? value : this.preSelectedDate;
     this.field.value = this.datePipe.transform(selctedDate, 'MM-dd-yyyy');
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);

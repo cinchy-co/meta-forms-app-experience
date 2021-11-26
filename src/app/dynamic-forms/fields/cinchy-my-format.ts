@@ -1,4 +1,4 @@
-export const MY_FORMATS = {
+export const DisplayFormats = {
     parse: {
       dateInput: sessionStorage.getItem('displayFormat'),
     },

@@ -20,7 +20,7 @@ import { DateAdapter, MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE } f
 import { NativeDateTimeModule } from 'ng-pick-datetime/date-time/adapter/native-date-time.module';
 import { MatInputModule } from '@angular/material';
 import { MomentDateAdapter } from "@angular/material-moment-adapter";
-import { MY_FORMATS } from './dynamic-forms/fields/cinchy-my-format';
+import { DisplayFormats } from './dynamic-forms/fields/cinchy-my-format';
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -71,7 +71,7 @@ export function getBaseUrl() {
     },
     { provide: 'BASE_URL', useFactory: getBaseUrl },
     {provide: DateAdapter, useClass: MomentDateAdapter, deps: [MAT_DATE_LOCALE]},
-    {provide: MAT_DATE_FORMATS, useValue: MY_FORMATS},
+    {provide: MAT_DATE_FORMATS, useValue: DisplayFormats},
   ],
   bootstrap: [AppComponent]
 })

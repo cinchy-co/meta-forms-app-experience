@@ -123,17 +123,15 @@ export class PrintService {
   }
 
   async getDocDefFromForm(form) {
-    if(form!=null){
+    if(form==null){
+      return;
+    }
     if (form.sections?.length) {
       form.sections.forEach(section => {
         this.content.push({...this.sectionHeaderDefault, text: section.label});
         this.setFieldsForSection(section.fields);
       })
       }
-    }
-    else{
-      return;
-    }
     const properContent = await this.getProperContent();
     return new Promise((res, rej) => {
       const pdfContent = {

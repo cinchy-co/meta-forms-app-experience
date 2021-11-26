@@ -43,7 +43,7 @@ export class FieldsWrapperComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(): void {
-    console.log(this.formFieldMetaDatas);
+
     if(this.form){
       if(this.form.sections[1]){
         if(this.form.sections[0].fields.length == 0){
