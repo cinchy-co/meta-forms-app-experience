@@ -43,18 +43,37 @@ export class FieldsWrapperComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(): void {
-
+    let nonExpandedIndex = null;
+    let expandedIndex = null;
     if(this.form){
-      if(this.form.sections[1]){
-        if(this.form.sections[0].fields.length == 0){
+      if(this.formSections){
+        this.formSections.forEach((element, index) => {
+          if(nonExpandedIndex == null){
+          if(element.autoExpand === false){
+            nonExpandedIndex =index;
+          }
+        }
+        if(expandedIndex == null){
+          if(element.autoExpand === true){
+            expandedIndex =index;
+          }
+        }
+        });
+
+        if(nonExpandedIndex == null){
+          return;
+        }
+      if(this.form.sections[nonExpandedIndex]){
+        if(this.form.sections[expandedIndex].fields.length == 0){
           this.form = null;
           return;
         }
-      if(this.form.sections[1].fields.length == 0){
+      if(this.form.sections[nonExpandedIndex].fields.length == 0){
         this.showSpinner = true;
       }else{
         this.showSpinner = false;
       }
+    }
     }
     }
   }
