@@ -554,7 +554,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
           let cinchyIdForMatchFromParentResp = (await this._cinchyService.executeCsql(queryToGetMatchIdFromParent, null, null, QueryType.DRAFT_QUERY).toPromise()).queryResult.toObjectArray();
           let idForParentMatch = cinchyIdForMatchFromParentResp[0]['idParent'];
           if (idForParentMatch) {
-            selectQuery.query = selectQuery.query.replace('@parentCinchyIdMatch', idForParentMatch);
+            selectQuery.query = selectQuery.query.replace('@parentCinchyIdMatch', '@idForParentMatch');
+             selectQuery.params = {
+              '@idForParentMatch': idForParentMatch
+            };
           }
         }
         const selectQueryResult: Object[] = (await this._cinchyService.executeCsql(selectQuery.query,
