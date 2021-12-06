@@ -29,6 +29,7 @@ import { Subject } from 'rxjs';
 import { CinchyQueryService } from '../services/cinchy-query.service';
 import { MessageDialogComponent } from './message-dialog/message-dialog.component';
 import { PrintService } from './service/print/print.service';
+import { SectionService } from '../services/shared-service';
 
 @Component({
   selector     : 'cinchy-dynamic-forms',
@@ -89,7 +90,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               private _toastr: ToastrService, private spinner: NgxSpinnerService,
               private appStateService: AppStateService,
               private cinchyQueryService: CinchyQueryService,
-              private printService: PrintService) {
+              private printService: PrintService, private service: SectionService) {
     // AppState service and CinchyQueryService is outside of Dynamic forms and is used to interact with outer world of forms
   }
 
@@ -107,7 +108,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.childDataForm = [];
     this.form = null;
     let expand=true;
-    this.getFormMetaData(expand);
+     this.service.setExpanded(!expand);
+     this.service.setNonExpanded(!expand);
+     this.getFormMetaData(expand);
   }
 
   setAllRowsData(allRows) {
@@ -153,11 +156,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
          this.spinner.show();
        }*/
       let expand=true;
+      this.service.setNonExpanded(false);
+      this.service.setExpanded(false);
       await this.getFormMetaData(expand);
-      console.log(new Date(), 'start wait')
-      await new Promise(f => setTimeout(f, 2000));
-      console.log(new Date(),'wait stop')
-      this.getFormMetaData(!expand);
     }
   }
 
@@ -379,7 +380,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         const tableid = formdata[0].TableId;
         this.parentTableId = formdata[0].TableId;
         // this.spinner.show();
-
+        this.service.setNonExpanded(false);
         this.cancel(this.pendingcall);
         this.cinchyQueryService.stopRequest.next();
         this.pendingcall =  this._cinchyService.getTableEntitlementsById(tableid).subscribe(
@@ -388,6 +389,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
             this.nonExpandedSection= expand;
             this.getForm(this.FormId, expand, null, null, null, null, childData).then((res) => {
               this.spinner.hide();
+              this.service.setNonExpanded(this.enableSaveBtn);
+              if(res.sections){
+                for(let resSection of res.sections){
+                  if(resSection.fields.length!=0){
+                    this.service.setExpanded(true);
+                    break;
+                  }
+                }
+              }
               this.form = res;
             });
           },
@@ -488,8 +498,25 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
     let minSectionIter = 0;
     let resChildNew;
-    console.log('start time:', new Date(), expand);
     const resNew = await  this.getJsonDataSection(expand);
+    if(resNew.length > 0 && expand){
+      let expandSection = true;
+      this.service.setExpanded(expandSection);
+      this.getFormMetaData(!expand)
+    }
+    else if(resNew.length == 0 && expand){
+      let expandedSectionAvailable = true;
+      if(this.formSections){
+      this.formSections.forEach(element => {
+        if(element.autoExpand === true){
+          expandedSectionAvailable = false;
+        }
+      });
+      if(expandedSectionAvailable){
+        this.getFormMetaData(!expand)
+      }
+      }
+    }
 
     if(isChild){
        resChildNew = await  this.getJsonDataSection(expand, FormId, formFieldMetadataQueryResult[0].FormSectionId);
@@ -613,7 +640,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         });
 
         displayColumnId.push(formFieldMetadata.LinkFieldId);
-
+        this.enableSaveBtn = false;
         await this.getForm(childFormId, expand, displayColumnId, true,
           formFieldMetadata.LinkFieldId, childFilter, null,
           formFieldMetadata.childFormParentId, formFieldMetadata.childFormLinkId, childSort).then((res) => {

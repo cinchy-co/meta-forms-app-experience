@@ -1,4 +1,6 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { SectionService } from 'src/app/services/shared-service';
 import { AppStateService } from '../../services/app-state.service';
 
 @Component({
@@ -7,7 +9,7 @@ import { AppStateService } from '../../services/app-state.service';
   styleUrls    : ['./fields-wrapper.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class FieldsWrapperComponent implements OnInit, OnChanges {
+export class FieldsWrapperComponent implements OnInit {
   @Input() form;
   @Input() rowId;
   @Input() formSections;
@@ -19,33 +21,31 @@ export class FieldsWrapperComponent implements OnInit, OnChanges {
   @Output() childFormOpened = new EventEmitter<any>();
   @Output() deleteDialogOpened = new EventEmitter<any>();
   public showSpinner = false;
+  subscription: Subscription;
+  enableNonExpandedSection: any;
+  enableExpandedSection: any = false;
 
-  constructor(private appStateService: AppStateService) { } // AppState service is outside of Dynamic forms
+
+  constructor(private appStateService: AppStateService, private shared : SectionService) {
+    this.subscription =  shared.subj$.subscribe(nonexpandedSection =>{
+      this.enableNonExpandedSection = nonexpandedSection;
+      })  
+      this.subscription =  shared.subjExpanded$.subscribe(expandedSection =>{
+        this.enableExpandedSection = expandedSection;
+      })     
+   } // AppState service is outside of Dynamic forms
 
   ngOnInit(): void {
   }
 
   expansionClicked(section) {
-    if(this.form)
-    {
-      if(this.form.sections[1]){
-        if(this.form.sections[1].fields.length == 0)
-        {
-          this.showSpinner = true;
-        }
-        else
-        {
-          this.showSpinner = false;
-        }
-      }
-    }
+    this.setSpinner();
     this.appStateService.sectionClicked(section.label);
   }
 
-  ngOnChanges(): void {
+  setSpinner(){
     let nonExpandedIndex = null;
     let expandedIndex = null;
-    if(this.form != null){
       if(this.formSections){
         this.formSections.forEach((element, index) => {
           if(nonExpandedIndex == null){
@@ -63,20 +63,13 @@ export class FieldsWrapperComponent implements OnInit, OnChanges {
         if(nonExpandedIndex == null){
           return;
         }
-      if(this.form.sections[nonExpandedIndex]){
-        if(expandedIndex != null){
-          if(this.form.sections[expandedIndex].fields.length == 0){
-            this.form = null;
-            return;
-          }
+        if(this.formSections[nonExpandedIndex] != null){
+              if(this.formSections[nonExpandedIndex]!= null){
+                this.showSpinner = true;
+              }else{
+                this.showSpinner = false;
+              }
         }
-      if(this.form.sections[nonExpandedIndex].fields.length == 0){
-        this.showSpinner = true;
-      }else{
-        this.showSpinner = false;
       }
-    }
-    }
-    }
   }
 }

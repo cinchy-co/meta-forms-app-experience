@@ -21,6 +21,7 @@ import { NativeDateTimeModule } from 'ng-pick-datetime/date-time/adapter/native-
 import { MatInputModule } from '@angular/material';
 import { MomentDateAdapter } from "@angular/material-moment-adapter";
 import { DisplayFormats } from './dynamic-forms/fields/cinchy-my-format';
+import { SectionService } from './services/shared-service';
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -62,6 +63,7 @@ export function getBaseUrl() {
     },
     CinchyModule,
     CinchyService,
+    SectionService,
     {
       provide: CinchyConfig,
       useFactory: (config: ConfigService) => {

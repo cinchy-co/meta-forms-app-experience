@@ -125,6 +125,6 @@ export class CinchyQueryService {
     const params = {
       '@formId': sessionStorage.getItem('formId')
     };
-    return this.cincyService.executeQuery('Cinchy Forms', 'Get Form SectionsNew', params);
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get Form Sections', params);
   }
 }
