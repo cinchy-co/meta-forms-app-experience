@@ -43,7 +43,7 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
              [innerHTML]="field.value || '-'"></label>
 
       <ng-container *ngIf="showImage">
-      <img [ngClass]="{'cinchy-images': size === 'ImageUrl(medium)', 'cinchy-images2' : size === 'ImageUrl(large)', 'cinchy-images3' : size === 'ImageUrl(small)' }" *ngIf="field.value" [src]="field.value">
+      <img [ngClass]="{'cinchy-images': size === 'ImageUrl (medium)', 'cinchy-imagesLarge' : size === 'ImageUrl (large)', 'cinchy-imagesSmall' : size === 'ImageUrl (small)' }" *ngIf="field.value" [src]="field.value">
         <p *ngIf="!field.value">-</p>
       </ng-container>
 
@@ -76,7 +76,7 @@ export class TextBoxDirective implements OnInit {
   }
 
   ngOnInit() {
-    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl(small)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl(medium)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl(large)';
+    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl (small)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl (medium)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl (large)';
     if(this.showImage){
       this.size = this.field.cinchyColumn.dataFormatType;
     }

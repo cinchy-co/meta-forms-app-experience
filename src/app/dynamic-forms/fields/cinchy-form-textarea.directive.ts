@@ -88,9 +88,9 @@ export class TextAreaDirective implements AfterViewInit, OnInit {
     if (this.field.cinchyColumn.dataFormatType === 'JSON') {
       this.field.value = JSON.stringify(JSON.parse(this.field.value), null, 2)
     }
-    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && this.field.cinchyColumn.dataFormatType !== 'ImageUrl(small)' && this.field.cinchyColumn.dataFormatType !== 'ImageUrl(medium)' && this.field.cinchyColumn.dataFormatType !== 'ImageUrl(large)'
+    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && this.field.cinchyColumn.dataFormatType !== 'ImageUrl (small)' && this.field.cinchyColumn.dataFormatType !== 'ImageUrl (medium)' && this.field.cinchyColumn.dataFormatType !== 'ImageUrl (large)'
     && this.field.cinchyColumn.dataFormatType !== 'LinkUrl';
-    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl(small)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl(medium)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl(large)';
+    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl (small)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl (medium)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl (large)';
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
   }
