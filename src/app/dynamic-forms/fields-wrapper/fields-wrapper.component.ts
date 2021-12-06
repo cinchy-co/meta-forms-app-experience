@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { SectionService } from 'src/app/services/shared-service';
+import { SectionService } from 'src/app/services/section-service';
 import { AppStateService } from '../../services/app-state.service';
 
 @Component({

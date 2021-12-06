@@ -29,7 +29,7 @@ import { Subject } from 'rxjs';
 import { CinchyQueryService } from '../services/cinchy-query.service';
 import { MessageDialogComponent } from './message-dialog/message-dialog.component';
 import { PrintService } from './service/print/print.service';
-import { SectionService } from '../services/shared-service';
+import { SectionService } from '../services/section-service';
 
 @Component({
   selector     : 'cinchy-dynamic-forms',

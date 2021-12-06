@@ -21,7 +21,7 @@ import { NativeDateTimeModule } from 'ng-pick-datetime/date-time/adapter/native-
 import { MatInputModule } from '@angular/material';
 import { MomentDateAdapter } from "@angular/material-moment-adapter";
 import { DisplayFormats } from './dynamic-forms/fields/cinchy-my-format';
-import { SectionService } from './services/shared-service';
+import { SectionService } from './services/section-service';
 
 
 export function appLoadFactory(config: ConfigService) {
