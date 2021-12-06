@@ -14,6 +14,7 @@ import {DropdownOption} from "../service/cinchy-dropdown-dataset/cinchy-dropdown
 import { CinchyQueryService } from 'src/app/services/cinchy-query.service';
 import { ConfigService } from 'src/app/config.service';
 import { ToastrService } from 'ngx-toastr';
+import { ImageType } from '../enums/imageurl-type';
 
 //#region Cinchy Dynamic Link field
 /**
@@ -163,7 +164,7 @@ export class LinkDirective implements OnInit {
   }
 
   ngOnInit(): void {
-    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl (small)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl (medium)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl (large)';
+    this.showImage = this.field.cinchyColumn.dataFormatType === ImageType.smallURL || this.field.cinchyColumn.dataFormatType === ImageType.mediumURL || this.field.cinchyColumn.dataFormatType === ImageType.largeURL;
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {

@@ -16,6 +16,7 @@ import {AppStateService} from "../../services/app-state.service";
 import {takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs";
 import {NumeralPipe} from "ngx-numeral";
+import { ImageType } from '../enums/imageurl-type';
 
 //#region Cinchy Dynamic Child form Table
 /**
@@ -268,7 +269,7 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
       return this.datePipe.transform(value, 'dd-MMM-yyyy');
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
-    } else if (value && currentField && (currentField.cinchyColumn.dataFormatType === 'ImageUrl (small)' || currentField.cinchyColumn.dataFormatType === 'ImageUrl (medium)' || currentField.cinchyColumn.dataFormatType === 'ImageUrl (large)')) {
+    } else if (value && currentField && (currentField.cinchyColumn.dataFormatType === ImageType.smallURL || currentField.cinchyColumn.dataFormatType === ImageType.mediumURL || currentField.cinchyColumn.dataFormatType === ImageType.largeURL)) {
       return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
     } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
       const numeralValue = new NumeralPipe(value);

@@ -1,6 +1,7 @@
 import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ResponseType} from './../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
+import { ImageType } from '../enums/imageurl-type';
 
 //#region Cinchy Dynamic Textbox Field
 /**
@@ -76,7 +77,7 @@ export class TextBoxDirective implements OnInit {
   }
 
   ngOnInit() {
-    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl (small)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl (medium)' || this.field.cinchyColumn.dataFormatType === 'ImageUrl (large)';
+    this.showImage = this.field.cinchyColumn.dataFormatType === ImageType.smallURL || this.field.cinchyColumn.dataFormatType === ImageType.mediumURL || this.field.cinchyColumn.dataFormatType === ImageType.largeURL;
     if(this.showImage){
       this.size = this.field.cinchyColumn.dataFormatType;
     }
