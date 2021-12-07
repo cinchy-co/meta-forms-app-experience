@@ -43,33 +43,7 @@ export class FieldsWrapperComponent implements OnInit {
     this.appStateService.sectionClicked(section.label);
   }
 
-  setSpinner(){
-    let nonExpandedIndex = null;
-    let expandedIndex = null;
-      if(this.formSections){
-        this.formSections.forEach((element, index) => {
-          if(nonExpandedIndex == null){
-          if(element.autoExpand === false){
-            nonExpandedIndex =index;
-          }
-        }
-        if(expandedIndex == null){
-          if(element.autoExpand === true){
-            expandedIndex =index;
-          }
-        }
-        });
-
-        if(nonExpandedIndex == null){
-          return;
-        }
-        if(this.formSections[nonExpandedIndex] != null){
-              if(this.formSections[nonExpandedIndex]!= null){
-                this.showSpinner = true;
-              }else{
-                this.showSpinner = false;
-              }
-        }
-      }
+  setSpinner() {
+    this.showSpinner = this.formSections?.findIndex(_ => !_.autoExpand) > -1;
   }
 }
