@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } fro
 import { Subscription } from 'rxjs';
 import { SectionService } from 'src/app/services/section-service';
 import { AppStateService } from '../../services/app-state.service';
+import { SpinnerCondition } from '../models/cinchy-spinner.model';
 
 @Component({
   selector     : 'app-fields-wrapper',
@@ -24,15 +25,18 @@ export class FieldsWrapperComponent implements OnInit {
   subscription: Subscription;
   enableNonExpandedSection: any;
   enableExpandedSection: any = false;
-
+  sectionInfo: SpinnerCondition;
 
   constructor(private appStateService: AppStateService, private shared : SectionService) {
-    this.subscription =  shared.subj$.subscribe(nonexpandedSection =>{
-      this.enableNonExpandedSection = nonexpandedSection;
-      })  
-      this.subscription =  shared.subjExpanded$.subscribe(expandedSection =>{
-        this.enableExpandedSection = expandedSection;
-      })     
+    this.sectionInfo = new SpinnerCondition();
+    this.sectionInfo.isExpanded = true;
+    this.sectionInfo.isLoading = true;
+    this.sectionInfo.isNonExpandedLoading = true;
+    this.sectionInfo.sectionId = 0;
+
+      this.subscription =  shared.subjSpinner$.subscribe(spinnerConditions =>{
+        this.sectionInfo = spinnerConditions;
+      }) 
    } // AppState service is outside of Dynamic forms
 
   ngOnInit(): void {
@@ -44,32 +48,6 @@ export class FieldsWrapperComponent implements OnInit {
   }
 
   setSpinner(){
-    let nonExpandedIndex = null;
-    let expandedIndex = null;
-      if(this.formSections){
-        this.formSections.forEach((element, index) => {
-          if(nonExpandedIndex == null){
-          if(element.autoExpand === false){
-            nonExpandedIndex =index;
-          }
-        }
-        if(expandedIndex == null){
-          if(element.autoExpand === true){
-            expandedIndex =index;
-          }
-        }
-        });
-
-        if(nonExpandedIndex == null){
-          return;
-        }
-        if(this.formSections[nonExpandedIndex] != null){
-              if(this.formSections[nonExpandedIndex]!= null){
-                this.showSpinner = true;
-              }else{
-                this.showSpinner = false;
-              }
-        }
-      }
+    this.showSpinner = this.formSections?.findIndex(_ => !_.autoExpand) > -1;
   }
 }

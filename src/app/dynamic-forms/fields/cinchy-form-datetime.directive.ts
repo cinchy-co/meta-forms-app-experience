@@ -35,14 +35,21 @@ const moment =  _moment;
         </mat-icon>
       </div>
       <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
-        <mat-form-field class='form-control'>
+      <mat-form-field class='form-control'>
+           <input matInput readonly
+           [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly  || isDisabled)"
+           type="text" [(ngModel)]="preSelectedDate"
+           (input)="checkForDate()"
+           (change)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')">
+            <mat-datepicker-toggle   matSuffix [for]="picker3"></mat-datepicker-toggle>
+            <mat-datepicker  #picker3></mat-datepicker>
+          </mat-form-field>
+      <mat-form-field class='form-control hide-date' >
             <input matInput
              [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
              (dateChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
              (dateInput)="checkForDate()"
              [matDatepicker]="picker3" [value]="preSelectedDate">
-             <mat-datepicker-toggle   matSuffix [for]="picker3"></mat-datepicker-toggle>
-             <mat-datepicker  #picker3></mat-datepicker>
            </mat-form-field>
         <mat-error
           *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
@@ -65,15 +72,18 @@ export class DateTimeDirective implements OnInit {
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
   @Output() eventHandler = new EventEmitter<any>();
-  preSelectedDate = new FormControl(moment());
+  preSelectedDate :any;
   showError;
 
-  constructor(private datePipe: DatePipe,) {
+  constructor(private datePipe: DatePipe){
 
   }
 
   ngOnInit() {
     this.preSelectedDate = this.field.value ? this.field.value : '';
+    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('Y','y');
+    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('D','d');
+    this.preSelectedDate = this.datePipe.transform(this.preSelectedDate, this.field.cinchyColumn.displayFormat);
   }
 
   checkForDate(){
@@ -96,6 +106,11 @@ export class DateTimeDirective implements OnInit {
     };
     let selctedDate = value ? value : this.preSelectedDate;
     this.field.value = this.datePipe.transform(selctedDate, 'MM-dd-yyyy');
+    // re-assign format of date
+    this.preSelectedDate = this.field.value ? this.field.value : '';
+    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('Y','y');
+    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('D','d');
+    this.preSelectedDate = this.datePipe.transform(this.preSelectedDate, this.field.cinchyColumn.displayFormat);
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);

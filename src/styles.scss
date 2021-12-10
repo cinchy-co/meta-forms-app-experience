@@ -314,6 +314,13 @@ app-search-dropdown {
   }
 }
 
+.hide-date{
+  height: 0rem;
+  width: 0rem;
+  visibility: hidden;
+  display: block !important;
+}
+
 .mat-spinner.inside {
   animation: none !important;
 }

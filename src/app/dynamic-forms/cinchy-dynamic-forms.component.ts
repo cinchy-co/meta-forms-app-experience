@@ -30,6 +30,7 @@ import { CinchyQueryService } from '../services/cinchy-query.service';
 import { MessageDialogComponent } from './message-dialog/message-dialog.component';
 import { PrintService } from './service/print/print.service';
 import { SectionService } from '../services/section-service';
+import { SpinnerCondition } from './models/cinchy-spinner.model';
 
 @Component({
   selector     : 'cinchy-dynamic-forms',
@@ -45,6 +46,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   openSectionData: boolean = false;
   enableSaveBtn: boolean = false;
   pendingcall: any;
+  conditions: SpinnerCondition = {};
 
   @Input('allRows') set allRows(value: any) {
     this.setAllRowsData(value);
@@ -90,7 +92,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               private _toastr: ToastrService, private spinner: NgxSpinnerService,
               private appStateService: AppStateService,
               private cinchyQueryService: CinchyQueryService,
-              private printService: PrintService, private service: SectionService) {
+              private printService: PrintService, private sectionService: SectionService) {
     // AppState service and CinchyQueryService is outside of Dynamic forms and is used to interact with outer world of forms
   }
 
@@ -108,8 +110,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.childDataForm = [];
     this.form = null;
     let expand=true;
-     this.service.setExpanded(!expand);
-     this.service.setNonExpanded(!expand);
+     this.conditions.isExpanded = true;
+     this.conditions.isLoading = true;
+     this.conditions.isNonExpandedLoading = true;
+     this.conditions.sectionId = 0;
+     this.sectionService.setCondition(this.conditions);
      this.getFormMetaData(expand);
   }
 
@@ -136,6 +141,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     const newSelectedRow = this.dropdownOfAllRows[newIndex];
     this.currentRow = newSelectedRow;
     this.rowSelected(newSelectedRow);
+    this.conditions.isExpanded = true;
+    this.conditions.isLoading = true;
+    this.conditions.isNonExpandedLoading = true;
+    this.conditions.sectionId = 0;
+    this.sectionService.setCondition(this.conditions);
   }
 
   ngOnDestroy() {
@@ -156,8 +166,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
          this.spinner.show();
        }*/
       let expand=true;
-      this.service.setNonExpanded(false);
-      this.service.setExpanded(false);
       await this.getFormMetaData(expand);
     }
   }
@@ -380,7 +388,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         const tableid = formdata[0].TableId;
         this.parentTableId = formdata[0].TableId;
         // this.spinner.show();
-        this.service.setNonExpanded(false);
         this.cancel(this.pendingcall);
         this.cinchyQueryService.stopRequest.next();
         this.pendingcall =  this._cinchyService.getTableEntitlementsById(tableid).subscribe(
@@ -389,12 +396,23 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
             this.nonExpandedSection= expand;
             this.getForm(this.FormId, expand, null, null, null, null, childData).then((res) => {
               this.spinner.hide();
-              this.service.setNonExpanded(this.enableSaveBtn);
               if(res.sections){
                 for(let resSection of res.sections){
                   if(resSection.fields.length!=0){
-                    this.service.setExpanded(true);
-                    break;
+                    this.conditions.sectionId = resSection.id;
+                    this.conditions.isLoading = false;
+                    for(let forms of this.formSections){
+                        if(forms.autoExpand && forms.sectionName === resSection.label){
+                          this.conditions.isExpanded = true;
+                          this.conditions.isNonExpandedLoading = true;
+                        }
+                        else if(!forms.autoExpand && forms.sectionName === resSection.label){
+                          this.conditions.isExpanded = false;
+                          this.conditions.isNonExpandedLoading = false;
+                          this.enableSaveBtn = true;
+                        }
+                    }
+                    this.sectionService.setCondition(this.conditions);
                   }
                 }
               }
@@ -500,8 +518,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     let resChildNew;
     const resNew = await  this.getJsonDataSection(expand);
     if(resNew.length > 0 && expand){
-      let expandSection = true;
-      this.service.setExpanded(expandSection);
       this.getFormMetaData(!expand)
     }
     else if(resNew.length == 0 && expand){
@@ -623,13 +639,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       );
       const dropdownDataset: DropdownDataset = null;
       const childFormId: number = formFieldMetadata.ChildFormId;
-      if(displayFormat && cinchyColumn.dataType==='Date and Time'){
-        let existingFormat = sessionStorage.getItem('displayFormat');
-        if(existingFormat !== displayFormat){
-          window.location.reload();
-        }
-      }
-      displayFormat && sessionStorage.setItem('displayFormat', displayFormat);
       let childForm: IForm = null;
       childFilter = isChild ? childFilterParam : formFieldMetadata.childFormFilter;
       childSort = isChild ? childSortParam : formFieldMetadata.sortChildtable;
@@ -734,7 +743,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       this.childSectionList.push(sectionIds);
       const JsonDataResp = await  this.cinchyQueryService.getJsonDataBySectionId(sectionId).toPromise();
       jsonDataNew = JsonDataResp.queryResult.toObjectArray();
-      this.enableSaveBtn = true;
       return SectionJsonData  = jsonDataNew;
     }
     else if(this.formSections)
@@ -769,7 +777,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               this.closedSectionData = true;
               const JsonDataResp = await  this.cinchyQueryService.getJsonDataByFormId().toPromise();
               jsonDataNew = JsonDataResp.queryResult.toObjectArray();
-              this.enableSaveBtn = true;  
             }
             //check for data
             if(jsonDataNew)

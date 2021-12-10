@@ -1,22 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 import { Subject } from 'rxjs/Subject';
+import { SpinnerCondition } from '../dynamic-forms/models/cinchy-spinner.model';
 
 @Injectable()
 export class SectionService {
 
-  private sub = new Subject();
-  subj$ = this.sub.asObservable();
+  private subSpinner = new Subject();
+  subjSpinner$ = this.subSpinner.asObservable();
 
-  private subj = new Subject();
-  subjExpanded$ = this.subj.asObservable();
 
-  setNonExpanded(value: boolean) {
-    this.sub.next(value);
-  }
-
-  setExpanded(value: boolean) {
-    this.subj.next(value);
+  setCondition(spinnerConditions: SpinnerCondition) {
+    this.subSpinner.next(spinnerConditions);
   }
 
 }
