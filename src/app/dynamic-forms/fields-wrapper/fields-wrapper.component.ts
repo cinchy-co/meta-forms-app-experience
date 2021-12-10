@@ -47,7 +47,7 @@ export class FieldsWrapperComponent implements OnInit {
     this.appStateService.sectionClicked(section.label);
   }
 
-  setSpinner(){
+  setSpinner() {
     this.showSpinner = this.formSections?.findIndex(_ => !_.autoExpand) > -1;
   }
 }
