@@ -296,6 +296,22 @@ app-search-dropdown {
   }
 }
 
+.cinchy-imagesLarge {
+  height: 140px;
+
+  &--min {
+    height: 20px;
+  }
+}
+
+.cinchy-imagesSmall {
+  height: 40px;
+
+  &--min {
+    height: 20px;
+  }
+}
+
 .font-14 {
   font-size: 14px;
 }
