@@ -49,18 +49,14 @@ export class FormField implements IFormField {
   }
 
   setInitialValue(value: any) {
-    if (this.cinchyColumn.dataType == 'Date and Time' && !isNullOrUndefined(value)){
-      this.value = new Date(value);}
-    else if (this.cinchyColumn.dataType == 'Choice' && !isNullOrUndefined(value) && this.cinchyColumn.isMultiple){
-      let multiChoiceData = new Array();
-      for(let selected of value){
-        multiChoiceData.push(selected.itemName);
-      }
-      this.value = multiChoiceData;} 
-    else {
-      this.value = value;}
-      if (!isNullOrUndefined(this.formControl)) {
-      this.formControl.setValue(this.value);}
+    if (this.cinchyColumn.dataType == 'Date and Time' && !isNullOrUndefined(value))
+      this.value = new Date(value);
+    else
+      this.value = value;
+
+    if (!isNullOrUndefined(this.formControl)) {
+      this.formControl.setValue(this.value);
+    }
   }
 
   autoCompleteValueMapper = (id) => {

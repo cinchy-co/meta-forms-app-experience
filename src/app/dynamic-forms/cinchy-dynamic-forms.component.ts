@@ -46,7 +46,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   openSectionData: boolean = false;
   enableSaveBtn: boolean = false;
   pendingcall: any;
-  conditions: SpinnerCondition = {};
+  condition: SpinnerCondition = {};
 
   @Input('allRows') set allRows(value: any) {
     this.setAllRowsData(value);
@@ -110,11 +110,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.childDataForm = [];
     this.form = null;
     let expand=true;
-     this.conditions.isExpanded = true;
-     this.conditions.isLoading = true;
-     this.conditions.isNonExpandedLoading = true;
-     this.conditions.sectionId = 0;
-     this.sectionService.setCondition(this.conditions);
+    this.condition = this.initCondition();
+     this.sectionService.setCondition(this.condition);
      this.getFormMetaData(expand);
   }
 
@@ -141,11 +138,16 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     const newSelectedRow = this.dropdownOfAllRows[newIndex];
     this.currentRow = newSelectedRow;
     this.rowSelected(newSelectedRow);
-    this.conditions.isExpanded = true;
-    this.conditions.isLoading = true;
-    this.conditions.isNonExpandedLoading = true;
-    this.conditions.sectionId = 0;
-    this.sectionService.setCondition(this.conditions);
+    this.condition = this.initCondition();
+    this.sectionService.setCondition(this.condition);
+  }
+
+  initCondition(){
+    this.condition.isExpanded = true;
+    this.condition.isLoading = true;
+    this.condition.isNonExpandedLoading = true;
+    this.condition.sectionId = 0;
+    return this.condition;
   }
 
   ngOnDestroy() {
@@ -399,20 +401,20 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               if(res.sections){
                 for(let resSection of res.sections){
                   if(resSection.fields.length!=0){
-                    this.conditions.sectionId = resSection.id;
-                    this.conditions.isLoading = false;
+                    this.condition.sectionId = resSection.id;
+                    this.condition.isLoading = false;
                     for(let forms of this.formSections){
                         if(forms.autoExpand && forms.sectionName === resSection.label){
-                          this.conditions.isExpanded = true;
-                          this.conditions.isNonExpandedLoading = true;
+                          this.condition.isExpanded = true;
+                          this.condition.isNonExpandedLoading = true;
                         }
                         else if(!forms.autoExpand && forms.sectionName === resSection.label){
-                          this.conditions.isExpanded = false;
-                          this.conditions.isNonExpandedLoading = false;
+                          this.condition.isExpanded = false;
+                          this.condition.isNonExpandedLoading = false;
                           this.enableSaveBtn = true;
                         }
                     }
-                    this.sectionService.setCondition(this.conditions);
+                    this.sectionService.setCondition(this.condition);
                   }
                 }
               }
