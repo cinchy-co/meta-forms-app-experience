@@ -49,11 +49,11 @@ export class FormWrapperComponent implements OnInit {
     try {
       this.spinner.show();
       const metaDataResp = await this.cinchyQueryService.getFormMetaData().toPromise();
-      this.setSubtitle(metaDataResp.queryResult.toObjectArray());
-      this.formFieldMetadataResult = metaDataResp.queryResult.toObjectArray();
+      const objectArrayResponse = metaDataResp.queryResult.toObjectArray();
+      this.setSubtitle(objectArrayResponse);
+      this.formFieldMetadataResult = objectArrayResponse;
       this.appStateService.metaDataOfForm = this.formFieldMetadataResult;
       this.setFormSections();
-      // this.spinner.hide();
     } catch (e) {
       this.showError(e);
     }
@@ -83,6 +83,12 @@ export class FormWrapperComponent implements OnInit {
   async setFormSections() {
     const formSectionResp = await this.cinchyQueryService.getFormSections().toPromise();
     this.formSections = formSectionResp.queryResult.toObjectArray();
+
+    if (this.formSections) {
+      console.info('Sections fetched.');
+      console.log(this.formSections)
+      await this.spinner.hide();
+    }
   }
 
   setDefaultForm() {

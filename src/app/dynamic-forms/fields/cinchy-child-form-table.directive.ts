@@ -266,7 +266,10 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
       });
     }
     if (value && currentField && currentField.cinchyColumn.dataType === "Date and Time") {
-      return this.datePipe.transform(value, 'dd-MMM-yyyy');
+     let dateFormat = currentField.cinchyColumn.displayFormat;
+     dateFormat = dateFormat.replaceAll('Y','y');
+     dateFormat = dateFormat.replaceAll('D','d');
+      return this.datePipe.transform(value, dateFormat);
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
     } else if (value && currentField && (currentField.cinchyColumn.dataFormatType === ImageType.smallURL || currentField.cinchyColumn.dataFormatType === ImageType.mediumURL || currentField.cinchyColumn.dataFormatType === ImageType.largeURL)) {

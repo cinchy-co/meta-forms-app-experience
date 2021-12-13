@@ -4,6 +4,7 @@ import {Observable, of} from 'rxjs';
 import {IGetQuery} from "../models/state.model";
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +20,7 @@ export class CinchyQueryService {
     if (files && uploadUrl) {
       let formData = new FormData();
 
-      // Add the uploaded file to the form data collection  
+      // Add the uploaded file to the form data collection
       if (files.length > 0) {
         for (let i = 0; i < files.length; i++) {
           formData.append("files", files[i]);
@@ -35,7 +36,7 @@ export class CinchyQueryService {
 
   getFilesInCell(columnName: string, domainName: string, tableName: string, cinchyId: number): Observable<{ fileId: number, fileName: string }[]> {
     const query = `SELECT [${columnName}].[Cinchy Id] as 'fileIds', [${columnName}].[File Name] as 'fileNames'  FROM [${domainName}].[${tableName}] WHERE [Cinchy Id]=${cinchyId}`;
-    return this.cincyService.executeCsql(query, null).pipe( map( 
+    return this.cincyService.executeCsql(query, null).pipe( map(
       resp => {
         let result = [];
         const resultRecord = resp['queryResult'].toObjectArray();
@@ -88,6 +89,25 @@ export class CinchyQueryService {
       '@formId': formId ? formId : sessionStorage.getItem('formId')
     };
     return this.cincyService.executeQuery('Cinchy Forms', 'Get Form MetaData', params);
+  }
+
+  getJsonDataBySectionId(formSectionId): Observable<IGetQuery> {
+    // Get JsonData using sectionId.
+    const params = {
+      '@formSectionId': formSectionId
+    };
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get Json Metadata', params);
+  }
+
+  // init the subject
+  public stopRequest: Subject<void> = new Subject<void>();
+    
+  getJsonDataByFormId() {
+    // Get form Meta data using form Id
+    const params = {
+      '@formId': sessionStorage.getItem('formId')
+    };
+    return this.cincyService.executeQuery('Cinchy Forms', 'Get Json Metadata By Form Id', params);
   }
 
   getAllRowsOfTable(subtitleColumn, domain, table, lookupFilter?): Observable<IGetQuery> {

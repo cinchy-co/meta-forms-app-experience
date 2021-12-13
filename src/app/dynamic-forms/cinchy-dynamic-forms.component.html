@@ -1,4 +1,4 @@
-<form *ngIf='form != null' class="cinchy-dynamic-forms-wrapper">
+<form class="cinchy-dynamic-forms-wrapper">
   <div class='navigation-buttons form-header'>
     <!-- <button mat-raised-button>Cancel</button>-->
     <div class="flex-row ml-20">
@@ -17,13 +17,13 @@
       </div>
     </div>
 
-    <div class="action-buttons">
-      <button class="no-bg mr-20" mat-button color="accent" (click)="printCurrentForm()">
+    <div class="action-buttons" matTooltip="Data is loading..." [matTooltipDisabled]="enableSaveBtn">
+      <button class="no-bg mr-20" mat-button color="accent" [disabled]="!enableSaveBtn" (click)="printCurrentForm()">
         <mat-icon class="font-22" title="Export To Pdf">archive</mat-icon>
         Export As Pdf
       </button>
       <!--<button mat-raised-button class="ml-20 navigation-buttons have-brand float-right" (click)="printCurrentForm()">Print</button>-->
-      <button mat-raised-button class='btnSave have-brand' (click)='saveForm(form, RowId)'>Save</button>
+      <button mat-raised-button class='btnSave have-brand' (click)='saveForm(form, RowId)' [disabled]="!enableSaveBtn">Save</button>
     </div>
   </div>
 
@@ -31,6 +31,7 @@
     <mat-accordion *ngIf="MetaData[0] && MetaData[0]['isAccordion']; else withoutAccordion">
       <app-fields-wrapper [form]="form"
                           [rowId]="RowId"
+                          [formFieldMetaDatas]="formFieldMetaDatas"
                           [formSections]="formSections"
                           (eventOccurred)="handleFieldsEvent($event)"
                           (childFormOpened)="openChildForm($event)"

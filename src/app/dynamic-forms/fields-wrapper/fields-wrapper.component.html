@@ -1,14 +1,20 @@
 <ng-container *ngIf="!isChild">
-  <mat-expansion-panel *ngFor='let section of form.sections; index as i'
-                       [ngClass]="'section-flex--'+formSections[i].columnsInRow"
-                       [expanded]="formSections[i].autoExpand" [id]="'section-' + section.label">
+  <mat-expansion-panel *ngFor='let section of formSections; index as i'
+                       [ngClass]="'section-flex--'+section.columnsInRow"
+                       [expanded]="section.autoExpand" [id]="'section-' + section.sectionName">
     <mat-expansion-panel-header class="sectionHeaderRow" expandedHeight="40px" collapsedHeight="40px"
                                 (click)="expansionClicked(section)">
       <mat-panel-title>
-        {{section.label}}
+        {{section.sectionName}}
       </mat-panel-title>
     </mat-expansion-panel-header>
-    <ng-container *ngTemplateOutlet="formFields; context:{section: section}"></ng-container>
+
+    <ng-container *ngIf="form">
+      <ng-container *ngTemplateOutlet="formFields; context:{section: form.sections[i]}" ></ng-container>
+    </ng-container>
+
+    <mat-spinner *ngIf="sectionInfo.isExpanded && sectionInfo.isLoading && !(sectionInfo.sectionId === section.FormSectionId) && section.autoExpand" diameter="50" class="inside"></mat-spinner>
+    <mat-spinner mode="indeterminate" *ngIf="showSpinner && sectionInfo.isExpanded && sectionInfo.isNonExpandedLoading && !(sectionInfo.sectionId === section.FormSectionId) && !section.autoExpand" diameter="50" class="inside"></mat-spinner>
 
   </mat-expansion-panel>
 </ng-container>
@@ -19,7 +25,7 @@
   </ng-container>
 </ng-container>
 
-<ng-template #formFields let-section="section">
+<ng-template #formFields let-section="section" >
   <div *ngFor='let field of section.fields; let idx = index' style="display: flex;">
     <div [class]="form.name === 'Intake'? 'formField deviation-button': 'formField'">
       <cinchy-checkbox *ngIf="(field.cinchyColumn.dataType == 'Yes/No')"

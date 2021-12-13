@@ -2,6 +2,14 @@ import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ResponseType} from '../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
 
+import {DatePipe} from "@angular/common";
+import {MAT_DATE_FORMATS} from '@angular/material/core';
+import { FormControl } from '@angular/forms';
+import * as _moment from 'moment';
+import { Moment } from 'moment';
+import { DisplayFormats } from './cinchy-my-format';
+
+const moment =  _moment;
 //#region Cinchy Dynamic DateTime Field
 /**
  * This section is used to create dynamic DateTime field for the cinchy.
@@ -27,15 +35,22 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
         </mat-icon>
       </div>
       <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
-        <input class='form-control'
-               [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
-               (dateTimeChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
-               [(ngModel)]="preSelectedDate"
-               (ngModelChange)="checkForDate()"
-               [ngModelOptions]="{standalone: true}"
-               [owlDateTimeTrigger]="dt3" [owlDateTime]="dt3">
-        <mat-icon [owlDateTimeTrigger]="dt3" class="date-icon">date_range</mat-icon>
-        <owl-date-time #dt3 [pickerType]="'calendar'"></owl-date-time>
+      <mat-form-field class='form-control'>
+           <input matInput readonly
+           [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly  || isDisabled)"
+           type="text" [(ngModel)]="preSelectedDate"
+           (input)="checkForDate()"
+           (change)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')">
+            <mat-datepicker-toggle   matSuffix [for]="picker3"></mat-datepicker-toggle>
+            <mat-datepicker  #picker3></mat-datepicker>
+          </mat-form-field>
+      <mat-form-field class='form-control hide-date' >
+            <input matInput
+             [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
+             (dateChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
+             (dateInput)="checkForDate()"
+             [matDatepicker]="picker3" [value]="preSelectedDate">
+           </mat-form-field>
         <mat-error
           *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
           *{{field.label}} is Required.
@@ -44,7 +59,8 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
       <label class="pre-formatted" *ngIf="field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled" [innerHTML]="(field.value | date) || '-' "></label>
     </div>
 
-  `
+  `,
+  providers: [{provide: MAT_DATE_FORMATS, useValue: DisplayFormats},],
 })
 export class DateTimeDirective implements OnInit {
   @Input() field: any;
@@ -56,15 +72,18 @@ export class DateTimeDirective implements OnInit {
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
   @Output() eventHandler = new EventEmitter<any>();
-  preSelectedDate;
+  preSelectedDate :any;
   showError;
 
-  constructor() {
+  constructor(private datePipe: DatePipe){
 
   }
 
   ngOnInit() {
-    this.preSelectedDate = this.field.value ? new Date(this.field.value) : '';
+    this.preSelectedDate = this.field.value ? this.field.value : '';
+    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('Y','y');
+    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('D','d');
+    this.preSelectedDate = this.datePipe.transform(this.preSelectedDate, this.field.cinchyColumn.displayFormat);
   }
 
   checkForDate(){
@@ -85,7 +104,13 @@ export class DateTimeDirective implements OnInit {
       'event': event,
       'HasChanged': this.field.cinchyColumn.hasChanged
     };
-    this.field.value = value ? value : this.preSelectedDate;
+    let selctedDate = value ? value : this.preSelectedDate;
+    this.field.value = this.datePipe.transform(selctedDate, 'MM-dd-yyyy');
+    // re-assign format of date
+    this.preSelectedDate = this.field.value ? this.field.value : '';
+    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('Y','y');
+    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('D','d');
+    this.preSelectedDate = this.datePipe.transform(this.preSelectedDate, this.field.cinchyColumn.displayFormat);
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);
