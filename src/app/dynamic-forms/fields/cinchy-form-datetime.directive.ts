@@ -104,13 +104,11 @@ export class DateTimeDirective implements OnInit {
       'event': event,
       'HasChanged': this.field.cinchyColumn.hasChanged
     };
-    let selctedDate = value ? value : this.preSelectedDate;
-    this.field.value = this.datePipe.transform(selctedDate, 'MM-dd-yyyy');
+    let selectedDate = value ? value : this.preSelectedDate;
+    this.field.value = this.datePipe.transform(selectedDate, this.field.cinchyColumn.displayFormat);
+
     // re-assign format of date
     this.preSelectedDate = this.field.value ? this.field.value : '';
-    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('Y','y');
-    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('D','d');
-    this.preSelectedDate = this.datePipe.transform(this.preSelectedDate, this.field.cinchyColumn.displayFormat);
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);
