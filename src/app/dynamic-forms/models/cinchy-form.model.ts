@@ -288,7 +288,8 @@ export class Form implements IForm {
                 if (elementValue) {
                   params[paramName] = elementValue ? elementValue : '';
                 }
-                paramName = element.value instanceof Date ? paramName : `NULLIF(${paramName},'')`;
+                if(!paramName){
+                paramName = element.value instanceof Date ? paramName : `NULLIF(${paramName},'')`;}
                 break;
               case "Number":
                 let elementValueNumber = isNullOrUndefined(element.value) ? '' : element.value;
