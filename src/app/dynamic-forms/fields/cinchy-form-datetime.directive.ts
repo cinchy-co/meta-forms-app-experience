@@ -3,13 +3,8 @@ import {ResponseType} from '../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
 
 import {DatePipe} from "@angular/common";
-import {MAT_DATE_FORMATS} from '@angular/material/core';
-import { FormControl } from '@angular/forms';
-import * as _moment from 'moment';
-import { Moment } from 'moment';
-import { DisplayFormats } from './cinchy-my-format';
 
-const moment =  _moment;
+
 //#region Cinchy Dynamic DateTime Field
 /**
  * This section is used to create dynamic DateTime field for the cinchy.
@@ -60,7 +55,6 @@ const moment =  _moment;
     </div>
 
   `,
-  providers: [{provide: MAT_DATE_FORMATS, useValue: DisplayFormats},],
 })
 export class DateTimeDirective implements OnInit {
   @Input() field: any;
@@ -104,13 +98,11 @@ export class DateTimeDirective implements OnInit {
       'event': event,
       'HasChanged': this.field.cinchyColumn.hasChanged
     };
-    let selctedDate = value ? value : this.preSelectedDate;
-    this.field.value = this.datePipe.transform(selctedDate, 'MM-dd-yyyy');
+    let selectedDate = value ? value : this.preSelectedDate;
+    this.field.value = this.datePipe.transform(selectedDate, 'MM/dd/yyyy');
+
     // re-assign format of date
-    this.preSelectedDate = this.field.value ? this.field.value : '';
-    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('Y','y');
-    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('D','d');
-    this.preSelectedDate = this.datePipe.transform(this.preSelectedDate, this.field.cinchyColumn.displayFormat);
+    this.preSelectedDate = this.datePipe.transform(this.field.value, this.field.cinchyColumn.displayFormat);
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);
