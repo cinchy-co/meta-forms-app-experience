@@ -77,6 +77,10 @@ export class DateTimeDirective implements OnInit {
     this.preSelectedDate = this.field.value ? this.field.value : '';
     this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('Y','y');
     this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('D','d');
+    let charCount  = this.field.cinchyColumn.displayFormat. split("d"). length - 1;
+    if(charCount > 2){
+      this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('d','E');
+    }
     this.preSelectedDate = this.datePipe.transform(this.preSelectedDate, this.field.cinchyColumn.displayFormat);
   }
 

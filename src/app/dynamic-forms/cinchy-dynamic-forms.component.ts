@@ -403,6 +403,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                   if(resSection.fields.length!=0){
                     this.condition.sectionId = resSection.id;
                     this.condition.isLoading = false;
+                    let nonExpandedCount = 0
                     for(let forms of this.formSections){
                         if(forms.autoExpand && forms.sectionName === resSection.label){
                           this.condition.isExpanded = true;
@@ -411,10 +412,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                         else if(!forms.autoExpand && forms.sectionName === resSection.label){
                           this.condition.isExpanded = false;
                           this.condition.isNonExpandedLoading = false;
+                          nonExpandedCount++;
                           this.enableSaveBtn = true;
                         }
                     }
                     this.sectionService.setCondition(this.condition);
+                    this.enableSaveBtn = (nonExpandedCount == 0 || this.enableSaveBtn) ? true :  false
                   }
                 }
               }
