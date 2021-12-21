@@ -379,7 +379,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   /**
    * using this method we load all the meta data of form.
    */
-  async getFormMetaData(expand: boolean, childData?) {
+  async getFormMetaData(expand?: boolean, childData?) {
     try {
       // Get form Meta data Only when Once.
       if (isNullOrUndefined(this.formFieldMetadataResult)) {
@@ -680,6 +680,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       const selectQuery: IQuery = result.generateSelectQuery(this.RowId, this.parentTableId, isChild);
       // this.spinner.show();
       let currentRowItem;
+      let idForParentMatch;
       if (this.dropdownOfAllRows) {
         currentRowItem = this.dropdownOfAllRows.find(item => item.id == this.RowId);
       }
@@ -689,7 +690,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                                                FROM [${this.parentDomain}].[${this.parentTableName}]
                                                WHERE [Cinchy Id] = ${this.RowId}`;
           let cinchyIdForMatchFromParentResp = (await this._cinchyService.executeCsql(queryToGetMatchIdFromParent, null, null, QueryType.DRAFT_QUERY).toPromise()).queryResult.toObjectArray();
-          let idForParentMatch = cinchyIdForMatchFromParentResp[0]['idParent'];
+          idForParentMatch = cinchyIdForMatchFromParentResp[0]['idParent'];
           if (idForParentMatch) {
             if (selectQuery.params == null) {
               selectQuery.params = {};
@@ -704,7 +705,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         if (!isChild) {
           result.loadRecordData(this.RowId, selectQueryResult);
         } else {
-          result.loadMultiRecordData(this.RowId, selectQueryResult, currentRowItem);
+          result.loadMultiRecordData(this.RowId, selectQueryResult, currentRowItem, idForParentMatch);
         }
 
         setTimeout(() => {
@@ -1001,7 +1002,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         this.formsData.loadRecordData(this.RowId, selectQueryResult);
         this.form = this.formsData;
         this.spinner.hide();*/
-    this.getFormMetaData(childData);
+        let expand = true;
+    this.getFormMetaData(expand, childData);
   }
 
   //#endregion

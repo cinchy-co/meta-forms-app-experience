@@ -105,11 +105,12 @@ export class Form implements IForm {
       } else {
         defaultWhere = 'where t.' + parentChildIdMatch.childFormLinkId + ' = @parentCinchyIdMatch and t.[Deleted] is null'
       }
+      if(this.sections[0].childFilter){
         if(this.sections[0].childFilter.charAt(0) =='('){
         let positionCount = this.findClosingBracketMatchIndex(this.sections[0].childFilter, 0);
         this.sections[0].childFilter = this.replaceChar(this.sections[0].childFilter, positionCount);
         this.sections[0].childFilter = this.replaceChar(this.sections[0].childFilter, 0)
-      }
+      }}
       const whereConditionWithOrder = this.sections[0] && this.sections[0].childFilter ? defaultWhere + ' and (t.' + this.sections[0].childFilter  + ')' : defaultWhere;
       const whereWithOrder = this.sections[0] && this.sections[0].childSort ? `${whereConditionWithOrder} ${this.sections[0].childSort}` : `${whereConditionWithOrder} Order by t.[Cinchy Id]`
       let query: IQuery = new Query('select ' + fields.join(',') + ' from [' + this.targetTableDomain + '].[' + this.targetTableName + '] t ' + whereWithOrder,
@@ -182,19 +183,25 @@ export class Form implements IForm {
     this.rowId = rowId;
   }
 
-  loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?): void {
+  loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?, idForParentMatch?): void {
     this.sections.forEach(section => {
       let linkLabel;
+      let linkValue;
       let linkedElement;
+      let tempValue;
       section.fields.forEach(element => {
-        if (element.cinchyColumn.linkedFieldId == element.id) {
+        tempValue = element.cinchyColumn.childFormLinkId? element.cinchyColumn.childFormLinkId: '';
+        tempValue = tempValue.replace('[','');
+        tempValue = tempValue.replace(']','');
+        if (element.cinchyColumn.linkedFieldId == element.id || tempValue === element.label) {
           if (!rowData.length && !element['dropdownDataset']) {
             element['dropdownDataset'] = {options: currentRowItem ? [new DropdownOption(currentRowItem.id, currentRowItem.fullName)] : []};
           }
           this.linkedColumnElement = this.linkedColumnElement ? this.linkedColumnElement : JSON.parse(JSON.stringify(element));
           linkLabel = element.label;
+          linkValue = idForParentMatch;
           linkedElement = element;
-          section['LinkedColumnDetails'] = {linkedElement, linkLabel};
+          section['LinkedColumnDetails'] = {linkedElement, linkLabel, linkValue};
         }
         if (isNullOrUndefined(element['MultiFields'])) {
           section['MultiFields'] = [];
