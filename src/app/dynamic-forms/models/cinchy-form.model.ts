@@ -187,7 +187,7 @@ export class Form implements IForm {
         tempValue = element.cinchyColumn.childFormLinkId? element.cinchyColumn.childFormLinkId: '';
         tempValue = tempValue.replace('[','');
         tempValue = tempValue.replace(']','');
-        if (element.cinchyColumn.linkedFieldId == element.id || tempValue === element.label) {
+        if (element.cinchyColumn.linkedFieldId == element.id || tempValue === element.cinchyColumn.name) {
           if (!rowData.length && !element['dropdownDataset']) {
             element['dropdownDataset'] = {options: currentRowItem ? [new DropdownOption(currentRowItem.id, currentRowItem.fullName)] : []};
           }
