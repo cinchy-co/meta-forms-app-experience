@@ -105,12 +105,6 @@ export class Form implements IForm {
       } else {
         defaultWhere = 'where t.' + parentChildIdMatch.childFormLinkId + ' = @parentCinchyIdMatch and t.[Deleted] is null'
       }
-      if(this.sections[0].childFilter){
-        if(this.sections[0].childFilter.charAt(0) =='('){
-        let positionCount = this.findClosingBracketMatchIndex(this.sections[0].childFilter, 0);
-        this.sections[0].childFilter = this.replaceChar(this.sections[0].childFilter, positionCount);
-        this.sections[0].childFilter = this.replaceChar(this.sections[0].childFilter, 0)
-      }}
       const whereConditionWithOrder = this.sections[0] && this.sections[0].childFilter ? defaultWhere + ' and (t.' + this.sections[0].childFilter  + ')' : defaultWhere;
       const whereWithOrder = this.sections[0] && this.sections[0].childSort ? `${whereConditionWithOrder} ${this.sections[0].childSort}` : `${whereConditionWithOrder} Order by t.[Cinchy Id]`
       let query: IQuery = new Query('select ' + fields.join(',') + ' from [' + this.targetTableDomain + '].[' + this.targetTableName + '] t ' + whereWithOrder,
@@ -754,28 +748,4 @@ export class Form implements IForm {
   isLinkedColumn(element, section) {
     return section.LinkedColumnDetails && element.cinchyColumn.name === section.LinkedColumnDetails.linkLabel;
   }
-
-  findClosingBracketMatchIndex(str, pos) {
-    let depth = 1;
-    for (let i = pos + 1; i < str.length; i++) {
-      switch (str[i]) {
-      case '(':
-        depth++;
-        break;
-      case ')':
-        if (--depth == 0) {
-          return i;
-        }
-        break;
-      }
-    }
-    return -1;    // No matching closing parenthesis
-  }
-  
-  replaceChar(origString: string, position: number) {
-    let newStringArray = origString.split("");
-    newStringArray[position] = '';
-    let newString = newStringArray.join("");
-    return newString;
-}
 }
