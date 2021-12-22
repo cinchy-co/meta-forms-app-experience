@@ -182,12 +182,12 @@ export class Form implements IForm {
       let linkLabel;
       let linkValue;
       let linkedElement;
-      let tempValue;
+      let childFormLinkIdValue;
       section.fields.forEach(element => {
-        tempValue = element.cinchyColumn.childFormLinkId? element.cinchyColumn.childFormLinkId: '';
-        tempValue = tempValue.replace('[','');
-        tempValue = tempValue.replace(']','');
-        if (element.cinchyColumn.linkedFieldId == element.id || tempValue === element.cinchyColumn.name) {
+        childFormLinkIdValue = element.cinchyColumn.childFormLinkId? element.cinchyColumn.childFormLinkId: '';
+        childFormLinkIdValue = childFormLinkIdValue.replaceAll('[','');
+        childFormLinkIdValue = childFormLinkIdValue.replaceAll(']','');
+        if (element.cinchyColumn.linkedFieldId == element.id || childFormLinkIdValue === element.cinchyColumn.name) {
           if (!rowData.length && !element['dropdownDataset']) {
             element['dropdownDataset'] = {options: currentRowItem ? [new DropdownOption(currentRowItem.id, currentRowItem.fullName)] : []};
           }

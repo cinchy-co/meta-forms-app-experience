@@ -1013,7 +1013,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.spinner.show();
     const selectQuery: IQuery = this.childForms.generateSelectQuery(rowID, this.parentTableId, isChild);
     if (isChild && selectQuery.childFormParentIdInfo) {
-      const queryToGetMatchIdFromParent = `Select ${selectQuery.childFormParentIdInfo.childFormParentId} as 'idParent'
+      const queryToGetMatchIdFromParent = `SELECT TOP 1 ${selectQuery.childFormParentIdInfo.childFormParentId} as 'idParent'
                                            FROM [${this.parentDomain}].[${this.parentTableName}]
                                            WHERE [Cinchy Id] = ${this.RowId}`;
       let cinchyIdForMatchFromParentResp = (await this._cinchyService.executeCsql(queryToGetMatchIdFromParent, null, null, QueryType.DRAFT_QUERY).toPromise()).queryResult.toObjectArray();
