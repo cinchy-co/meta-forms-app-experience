@@ -3,6 +3,7 @@ import {ResponseType} from '../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
 
 import {DatePipe} from "@angular/common";
+import * as moment from 'moment';
 
 
 //#region Cinchy Dynamic DateTime Field
@@ -75,9 +76,8 @@ export class DateTimeDirective implements OnInit {
 
   ngOnInit() {
     this.preSelectedDate = this.field.value ? this.field.value : '';
-    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('Y','y');
-    this.field.cinchyColumn.displayFormat = this.field.cinchyColumn.displayFormat.replaceAll('D','d');
-    this.preSelectedDate = this.datePipe.transform(this.preSelectedDate, this.field.cinchyColumn.displayFormat);
+   if(this.preSelectedDate){
+     this.preSelectedDate = moment(this.preSelectedDate).format(this.field.cinchyColumn.displayFormat);}
   }
 
   checkForDate(){
@@ -99,10 +99,10 @@ export class DateTimeDirective implements OnInit {
       'HasChanged': this.field.cinchyColumn.hasChanged
     };
     let selectedDate = value ? value : this.preSelectedDate;
-    this.field.value = this.datePipe.transform(selectedDate, 'MM/dd/yyyy');
+    this.field.value = moment(selectedDate).format('MM/DD/yyyy');
 
     // re-assign format of date
-    this.preSelectedDate = this.datePipe.transform(this.field.value, this.field.cinchyColumn.displayFormat);
+    this.preSelectedDate = moment(selectedDate).format(this.field.cinchyColumn.displayFormat);
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);

@@ -177,19 +177,25 @@ export class Form implements IForm {
     this.rowId = rowId;
   }
 
-  loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?): void {
+  loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?, idForParentMatch?): void {
     this.sections.forEach(section => {
       let linkLabel;
+      let linkValue;
       let linkedElement;
+      let childFormLinkIdValue;
       section.fields.forEach(element => {
-        if (element.cinchyColumn.linkedFieldId == element.id) {
+        childFormLinkIdValue = element.cinchyColumn.childFormLinkId? element.cinchyColumn.childFormLinkId: '';
+        childFormLinkIdValue = childFormLinkIdValue.replaceAll('[','');
+        childFormLinkIdValue = childFormLinkIdValue.replaceAll(']','');
+        if (element.cinchyColumn.linkedFieldId == element.id || childFormLinkIdValue === element.cinchyColumn.name) {
           if (!rowData.length && !element['dropdownDataset']) {
             element['dropdownDataset'] = {options: currentRowItem ? [new DropdownOption(currentRowItem.id, currentRowItem.fullName)] : []};
           }
           this.linkedColumnElement = this.linkedColumnElement ? this.linkedColumnElement : JSON.parse(JSON.stringify(element));
           linkLabel = element.label;
+          linkValue = idForParentMatch;
           linkedElement = element;
-          section['LinkedColumnDetails'] = {linkedElement, linkLabel};
+          section['LinkedColumnDetails'] = {linkedElement, linkLabel, linkValue};
         }
         if (isNullOrUndefined(element['MultiFields'])) {
           section['MultiFields'] = [];
