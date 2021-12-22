@@ -50,7 +50,8 @@ export class ChildFormDirective {
         element.noPreSelect = false;
         if(!element.cinchyColumn.IsDisplayColumn){
           if (linkedColumn && (linkedColumn.linkLabel == element.label)) {
-            element.value = linkedColumn.linkValue ? element.value ? element.value : linkedColumn.linkValue : element.value;
+            if(linkedColumn.linkValue){
+            element.value =  element.value ? element.value : linkedColumn.linkValue;}
             element.value = element.value ? element.value : Number(this._ChildFormData.rowId);
             linkedColumn.linkedElement.value = linkedColumn.linkedElement.value ? linkedColumn.linkedElement.value : Number(this._ChildFormData.rowId);
           }
