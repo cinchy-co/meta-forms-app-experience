@@ -30,7 +30,7 @@ import { ImageType } from '../enums/imageurl-type';
       <div class="m-b-10">
         <div class="link-labels">
           <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
-            {{field.label}}
+            <a [href]="tableSourceURL">{{field.label}}</a>
             {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
           </label>
           <mat-icon *ngIf="charactersAfterWhichToShowList" class="info-icon"
@@ -152,6 +152,7 @@ export class LinkDirective implements OnInit {
   showImage: boolean;
   showLinkUrl: boolean;
   showActualField: boolean;
+  tableSourceURL: any;
 
   renderImageFiles = true;
 
@@ -167,6 +168,8 @@ export class LinkDirective implements OnInit {
     this.showImage = this.field.cinchyColumn.dataFormatType === ImageType.smallURL || this.field.cinchyColumn.dataFormatType === ImageType.mediumURL || this.field.cinchyColumn.dataFormatType === ImageType.largeURL;
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
+    let url = this._configService.envConfig.cinchyRootUrl;
+    this.tableSourceURL = url + '/Tables/' + this.field.cinchyColumn.LinkTargetTableId;
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
       this.myControl.disable();
       this.setSelectedValue();
