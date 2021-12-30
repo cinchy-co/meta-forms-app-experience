@@ -105,10 +105,28 @@ export class Form implements IForm {
       } else {
         defaultWhere = 'where t.' + parentChildIdMatch.childFormLinkId + ' = @parentCinchyIdMatch and t.[Deleted] is null'
       }
+
+      if(this.sections[0].childFilter){
+        if(this.sections[0].childFilter.charAt(0) =='('){
+          if (this.sections[0].childFilter.includes('OR')) {
+          let updatedORFilter = this.childFilterChange(' OR ', this.sections[0].childFilter);
+          this.sections[0].childFilter = updatedORFilter;
+          }
+          if (this.sections[0].childFilter.includes('AND')) {
+          let updatedANDFilter = this.childFilterChange(' AND ', this.sections[0].childFilter);
+          this.sections[0].childFilter = updatedANDFilter;
+          }
+        }
+      }
       const whereConditionWithOrder = this.sections[0] && this.sections[0].childFilter ? defaultWhere + ' and (t.' + this.sections[0].childFilter  + ')' : defaultWhere;
       const whereWithOrder = this.sections[0] && this.sections[0].childSort ? `${whereConditionWithOrder} ${this.sections[0].childSort}` : `${whereConditionWithOrder} Order by t.[Cinchy Id]`
       let query: IQuery = new Query('select ' + fields.join(',') + ' from [' + this.targetTableDomain + '].[' + this.targetTableName + '] t ' + whereWithOrder,
         null, null, parentChildIdMatch);
+        if (this.sections[0].childFilter) {
+          if (this.sections[0].childFilter.charAt(0) =='(') {
+            query.query = query.query.replace('t.(','(')   
+          }
+        }
       return query;
     } else {
       let query: IQuery = new Query('select ' + fields.join(',') + ' from [' + this.targetTableDomain + '].[' + this.targetTableName + '] t where t.[Cinchy Id] = ' + rowId + ' and t.[Deleted] is null Order by t.[Cinchy Id]', null);
@@ -747,5 +765,26 @@ export class Form implements IForm {
 
   isLinkedColumn(element, section) {
     return section.LinkedColumnDetails && element.cinchyColumn.name === section.LinkedColumnDetails.linkLabel;
+  }
+
+  childFilterChange(operator, childFilterCondition) {
+    let str = childFilterCondition;
+    let splitted = str.split(operator);
+    let updatedCondition: any = '';
+    splitted.forEach((element, index, array) => {
+      if (index !== (array.length -1)) {
+        let strFirstThree = element.substring(0,3);
+        if (strFirstThree !=='(t.') {
+        updatedCondition = updatedCondition + 't.' + element + operator;
+        } else {
+        updatedCondition = updatedCondition + element + operator;
+        }
+      }
+      else {
+        updatedCondition = updatedCondition + 't.' + element;
+      }
+    });
+    updatedCondition = updatedCondition.replaceAll('t.(','(t.');
+    return updatedCondition;
   }
 }
