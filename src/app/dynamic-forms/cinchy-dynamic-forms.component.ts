@@ -407,8 +407,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                     for(let forms of this.formSections){
                         if(forms.autoExpand && forms.sectionName === resSection.label){
                           this.condition.isExpanded = true;
-                          //this.condition.isNonExpandedLoading = true;
-                          this.condition.isNonExpandedLoading = (nonExpandedCount == 0) ? false :  true;
+                          this.condition.isNonExpandedLoading = true;
+                          if (this.addNewFromSideNav) {
+                            this.condition.isNonExpandedLoading = false;
+                          }
                         }
                         else if(!forms.autoExpand && forms.sectionName === resSection.label){
                           this.condition.isExpanded = false;
