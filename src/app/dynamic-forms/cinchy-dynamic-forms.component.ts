@@ -47,6 +47,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   enableSaveBtn: boolean = false;
   pendingcall: any;
   condition: SpinnerCondition = {};
+  isCloneForm: boolean = false;
 
   @Input('allRows') set allRows(value: any) {
     this.setAllRowsData(value);
@@ -825,7 +826,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     if (formvalidation.status) {
       // Generate dynamic query using dynamic form meta data
       this.spinner.show();
-      const insertQuery: IQuery = formdata.generateSaveQuery(_RowId);
+      if(this.isCloneForm){
+        _RowId = null;
+        this.RowId = null;
+      }
+      const insertQuery: IQuery = formdata.generateSaveQuery(_RowId, this.isCloneForm);
       // execute dynamic query.
       //   console.log(JSON.stringify(insertQuery));
 
@@ -837,6 +842,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               //  console.log(response);
               if (isNullOrUndefined(this.RowId) || this.RowId == 'null') {
                 this.RowId = response.queryResult._jsonResult.data[0][0];
+                this.isCloneForm = false;
               }
               const data = {
                 id     : this.RowId,
@@ -1112,6 +1118,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   printCurrentForm() {
     this.printService.generatePdf(this.form, this.currentRow);
+  }
+
+  cloneFormData() {
+    this.isCloneForm = true;
   }
 
 //#endregion
