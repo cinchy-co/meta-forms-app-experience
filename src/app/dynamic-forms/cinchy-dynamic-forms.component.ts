@@ -409,6 +409,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                         if(forms.autoExpand && forms.sectionName === resSection.label){
                           this.condition.isExpanded = true;
                           this.condition.isNonExpandedLoading = true;
+                          if (this.addNewFromSideNav) {
+                            this.condition.isNonExpandedLoading = false;
+                          }
                         }
                         else if(!forms.autoExpand && forms.sectionName === resSection.label){
                           this.condition.isExpanded = false;
@@ -636,7 +639,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         formFieldMetadata.ColumnName, formFieldMetadata.ColumnType,
         isMandatory, formFieldMetadata.ColumnMaxLength,
         formFieldMetadata.LinkTargetColumnId, formFieldMetadata.LinkTargetColumnNName, allowMultiple,
-        validationExpression, minValue, canEdit, canView, formFieldMetadata.LinkTargetTableId,
+        validationExpression, minValue, canEdit, canView, formFieldMetadata.createlinkOptionFormId, formFieldMetadata.createlinkOptionName, formFieldMetadata.LinkTargetTableId,
         col, formFieldMetadata.choiceOptions, formFieldMetadata.FormFieldsJsonData, formFieldMetadata.dataFormatType, false,
         viewOnly, linkFieldId, formFieldMetadata.IsDisplayColumn, attachedFileName, formFieldMetadata.FileNameColumn,
         formFieldMetadata.dropdownFilter, formFieldMetadata.totalTextAreaRows, formFieldMetadata.numberFormatter,

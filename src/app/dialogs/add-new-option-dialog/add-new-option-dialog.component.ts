@@ -22,6 +22,9 @@ export class AddNewOptionDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.formId = this.data.createNewOptionFormId;
+    if(this.data.createLinkOptionFormId){
+      this.formId = this.data.createLinkOptionFormId;
+    }
     this.setFormMetaData()
   }
 
@@ -54,6 +57,9 @@ export class AddNewOptionDialogComponent implements OnInit {
   }
 
   async setFormSections() {
+    if(this.data.createLinkOptionFormId){
+      sessionStorage.setItem('formId',this.formId);
+    }
     const formSectionResp = await this.cinchyQueryService.getFormSections().toPromise();
     this.formSections = formSectionResp.queryResult.toObjectArray();
   }

@@ -15,6 +15,12 @@ import { CinchyQueryService } from 'src/app/services/cinchy-query.service';
 import { ConfigService } from 'src/app/config.service';
 import { ToastrService } from 'ngx-toastr';
 import { ImageType } from '../enums/imageurl-type';
+import {faEdit, faPlus, faTrash} from '@fortawesome/free-solid-svg-icons';
+import { IQuery } from '../models/cinchy-query.model';
+import { MatDialog } from '@angular/material';
+import { AddNewOptionDialogComponent } from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
+import { DialogService } from 'src/app/services/dialog.service';
+
 
 //#region Cinchy Dynamic Link field
 /**
@@ -33,6 +39,10 @@ import { ImageType } from '../enums/imageurl-type';
             {{field.label}}
             {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
           </label>
+          <span *ngIf="createlinkOptionName">
+          <a (click)="manageSourceRecords(field)">
+          <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
+          </a></span>
           <mat-icon *ngIf="charactersAfterWhichToShowList" class="info-icon"
                     [matTooltip]="toolTipMessage"
                     matTooltipClass="tool-tip-body"
@@ -136,7 +146,11 @@ export class LinkDirective implements OnInit {
   @Input() targetTableName: string;
   @Input() isInChildForm: boolean;
   @Input() isDisabled: boolean;
+  @Input() formFieldMetadataResult: any;
   @Output() eventHandler = new EventEmitter<any>();
+  @Output() childform = new EventEmitter<any>();
+  faPlus = faPlus;
+  createlinkOptionName: boolean;
   myControl = new FormControl();
   dropdownSetOptions;
   filteredOptions;
@@ -157,6 +171,7 @@ export class LinkDirective implements OnInit {
 
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
               private _cinchyService: CinchyService,
+              private dialogService: DialogService,
               private _appStateService: AppStateService,
               private _cinchyQueryService: CinchyQueryService,
               private _configService: ConfigService,
@@ -179,6 +194,8 @@ export class LinkDirective implements OnInit {
     if (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly && !this.isDisabled) {
       this.onInputChange();
     }
+
+    this.createlinkOptionName = this.field.cinchyColumn.createlinkOptionFormId ? true: false;
     // Below code is SPECIFIC to this Project ONLY
     this._appStateService.getNewContactAdded().subscribe(value => {
       if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]['Table'] === value.tableName) {
@@ -405,6 +422,33 @@ export class LinkDirective implements OnInit {
     this.field.value = '';
     this.field.cinchyColumn.hasChanged = true;
     this.downloadableLinks = [];
+  }
+
+  manageSourceRecords(childFormData: any){
+    //implement new method for add new row in source table
+    let data = {
+      childFormData: childFormData,
+      values: null,
+      title: 'Add Source-Table-Name',
+      type: 'Add',
+      multiFieldValues: childFormData
+    };
+    this.field.cinchyColumn.hasChanged = true;
+    this.openChildDialog();
+  }
+
+  openChildDialog() {
+    debugger;
+    const createLinkOptionFormId = this.field.cinchyColumn.createlinkOptionFormId;
+    const createLinkOptionName = this.field.cinchyColumn.createlinkOptionName;
+    const newOptionDialogRef = this.dialogService.openDialog(AddNewOptionDialogComponent, {
+      createLinkOptionFormId,
+      createLinkOptionName
+    });
+    this.spinner.hide();
+    newOptionDialogRef.afterClosed().subscribe(newContactAdded => {
+      newContactAdded && this._appStateService.newContactAdded(newContactAdded)
+    });
   }
 
   fileNameIsImage(fileName: string) {
