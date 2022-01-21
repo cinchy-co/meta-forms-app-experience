@@ -267,7 +267,7 @@ export class Form implements IForm {
     this.rowId = rowId;
   }
 
-  generateSaveQuery(rowID): IQuery {
+  generateSaveQuery(rowID, isCloneData?): IQuery {
     let i: number = 0;
     let params = {};
     let query: IQuery = null;
@@ -285,7 +285,7 @@ export class Form implements IForm {
           //todo: check for link type
         } else {
           if (element.cinchyColumn.name != null && element.cinchyColumn.dataType != 'Calculated' && element.cinchyColumn.canEdit
-            && element.cinchyColumn.hasChanged && !element.cinchyColumn.isViewOnly && !element.childForm) {
+          && (element.cinchyColumn.hasChanged || isCloneData) && !element.cinchyColumn.isViewOnly && !element.childForm) {
             paramName = '@p' + i.toString();
             switch (element.cinchyColumn.dataType) {
               case "Date and Time":
