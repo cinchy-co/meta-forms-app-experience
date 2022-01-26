@@ -89,6 +89,8 @@ export class FormHelperService {
         columnMetadata?.minValue == null ? 0 : columnMetadata?.minValue,
         (columnEntitlements == null || cellEntitlements && cellEntitlements[columnEntitlementKey] === 0) ? false : columnEntitlements.canEdit,
         (columnEntitlements?.canView != null) ? columnEntitlements.canView : false,
+        formFields[i].createlinkOptionFormId, 
+        formFields[i].createlinkOptionName,
         formFields[i].linkTargetTableId,
         '#dddddd',
         formFields[i].choiceOptions,

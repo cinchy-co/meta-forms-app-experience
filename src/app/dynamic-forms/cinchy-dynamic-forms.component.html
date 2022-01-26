@@ -18,7 +18,7 @@
     </div>
 
     <div class="action-buttons" matTooltip="Data is loading..." [matTooltipDisabled]="enableSaveBtn">
-      <button class="no-bg mr-20" mat-button color="accent" (click)="cloneFormData()" *ngIf="(RowId && RowId != 'null')" [disabled]="!enableSaveBtn" >
+      <button class="no-bg mr-20" mat-button color="accent" (click)="cloneFormData()" *ngIf="(rowId && rowId != 'null')" [disabled]="!enableSaveBtn" >
         <mat-icon class="font-22" title="Clone Data">queue</mat-icon>
         Duplicate Record
       </button>

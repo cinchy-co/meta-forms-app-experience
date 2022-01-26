@@ -33,4 +33,6 @@ export interface IFormFieldMetadata {
 	attachmentUrl			: string;
 	uploadUrl				: string;
 	flattenChildForm		: boolean;
+	createlinkOptionFormId	: string;
+	createlinkOptionName	: string;
 }
