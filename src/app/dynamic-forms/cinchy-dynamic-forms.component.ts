@@ -52,6 +52,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   fieldsWithErrors: Array<any>;
   currentRow: ILookupRecord;
   destroy$: Subject<boolean> = new Subject<boolean>();
+  isCloneForm: boolean = false;
 
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
@@ -371,7 +372,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       
       // Generate dynamic query using dynamic form meta data
       this.spinner.show();
-      const insertQuery: IQuery = formdata.generateSaveQuery(_RowId);
+      if (this.isCloneForm) {
+        _RowId = null;
+        this.rowId = null;
+      }
+      const insertQuery: IQuery = formdata.generateSaveQuery(_RowId, this.isCloneForm);
 
       // execute dynamic query
       if (insertQuery) {
@@ -381,6 +386,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               this.spinner.hide();
               if (isNullOrUndefined(this.rowId) || this.rowId == 'null') {
                 this.rowId = response.queryResult._jsonResult.data[0][0];
+                this.isCloneForm = false;
               }
               const data = {
                 id: this.rowId,
@@ -631,6 +637,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.printService.generatePdf(this.form, this.currentRow);
   }
 
-  //#endregion
+  cloneFormData() {
+    this.isCloneForm = true;
+  }
 }
 

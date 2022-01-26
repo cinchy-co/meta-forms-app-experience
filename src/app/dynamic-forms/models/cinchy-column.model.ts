@@ -41,7 +41,7 @@ export class CinchyColumn implements ICinchyColumn {
               public textColumnMaxLength: number, public linkTargetColumnId: number,
               public linkTargetColumnName: string, public isMultiple: boolean,
               public validationExpression, public minValue, public canEdit: boolean,
-              public canView: boolean, public LinkTargetTableId: number, public DeviationSeverityColor: string,
+              public canView: boolean, public createlinkOptionFormId: string, public createlinkOptionName: string, public LinkTargetTableId: number, public DeviationSeverityColor: string,
               public choiceOptions: string, public FormFieldsJsonData, public dataFormatType,
               public hasChanged: boolean, public isViewOnly: boolean,
               public linkedFieldId: any, public IsDisplayColumn: boolean, public FileName: any, public FileNameColumn: any,
