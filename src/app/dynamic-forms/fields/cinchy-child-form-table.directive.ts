@@ -122,12 +122,6 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Opening the child form after clicking of + icon with new data (as when child form was
-    // getting open just after save on + icon, it was referencing old Form sections and fields)
-    // console.log('FIELD CHULD', this.field);
-    if (this.field.childForm.name === 'Customer 360 Child: Projects') {
-      //  console.log('FIELD CHULD', this.field);
-    }
     this.appStateService.getOpenOfChildFormAfterParentSave().pipe(takeUntil(this.destroy$)).subscribe(val => {
       if (this.field.childForm.name == val.title) {
         this.manageChildRecords(this.field.childForm, null, val.title, 'Add', this.field.childForm);
@@ -272,7 +266,7 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
       return this.datePipe.transform(value, dateFormat);
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
-    } else if (value && currentField && (currentField.cinchyColumn.dataFormatType === ImageType.smallURL || currentField.cinchyColumn.dataFormatType === ImageType.mediumURL || currentField.cinchyColumn.dataFormatType === ImageType.largeURL)) {
+    } else if (value && currentField && currentField.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
       return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
     } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
       const numeralValue = new NumeralPipe(value);

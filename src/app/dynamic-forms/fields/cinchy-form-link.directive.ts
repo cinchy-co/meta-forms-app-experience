@@ -164,7 +164,7 @@ export class LinkDirective implements OnInit {
   }
 
   ngOnInit(): void {
-    this.showImage = this.field.cinchyColumn.dataFormatType === ImageType.smallURL || this.field.cinchyColumn.dataFormatType === ImageType.mediumURL || this.field.cinchyColumn.dataFormatType === ImageType.largeURL;
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
@@ -181,6 +181,7 @@ export class LinkDirective implements OnInit {
     }
     // Below code is SPECIFIC to this Project ONLY
     this._appStateService.getNewContactAdded().subscribe(value => {
+      console.log('getNewContactAdded', value);
       if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]['Table'] === value.tableName) {
         this.updateList = true;
         this.filteredOptions = null;
@@ -340,7 +341,8 @@ export class LinkDirective implements OnInit {
       'Value': value,
       'Text': text,
       'Event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);

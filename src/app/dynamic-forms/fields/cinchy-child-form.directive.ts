@@ -1,9 +1,7 @@
-import {MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
-import {Component, Input, Inject, EventEmitter, ViewEncapsulation} from '@angular/core';
-import {isNullOrUndefined} from 'util';
-import {DropdownDatasetService} from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
-import {environment} from 'src/environments/environment';
-import {CinchyService, CinchyConfig} from '@cinchy-co/angular-sdk';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { Component, Inject, EventEmitter } from '@angular/core';
+import { isNullOrUndefined } from 'util';
+import { DropdownDatasetService } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
 
 //#region Cinchy Dynamic Child Form
 /**
@@ -17,8 +15,9 @@ import {CinchyService, CinchyConfig} from '@cinchy-co/angular-sdk';
       <div class="mat-card-header-child">{{data.title}}</div>
     </h1>
     <div mat-dialog-content *ngIf="data">
-      <app-fields-wrapper [form]="this._ChildFormData.childFormData" [isChild]=true [rowId]="_ChildFormData.rowId"></app-fields-wrapper>
+      <app-fields-wrapper [form]="this._ChildFormData.childFormData" [isChild]=true [rowId]="_ChildFormData.rowId" [formHasDataLoaded]="true"></app-fields-wrapper>
     </div>
+    
     <div mat-dialog-actions>
       <button mat-button color="primary" (click)="onOkClick()" cdkFocusInitial>OK</button>
       <button mat-button color="warn" (click)="onNoClick()">Cancel</button>
@@ -33,7 +32,7 @@ export class ChildFormDirective {
   public cinchyID = null;
   public fieldName = '';
   public fieldValue = '';
-  EventHandler = new EventEmitter();
+  eventHandler = new EventEmitter();
 
   constructor(
     public dialogRef: MatDialogRef<ChildFormDirective>,
@@ -42,16 +41,16 @@ export class ChildFormDirective {
   }
 
   ngOnInit() {
-      // bind and load child form.
+    // bind and load child form.
     let obj = this._ChildFormData.values;
     this._ChildFormData.childFormData.sections.forEach(section => {
       const linkedColumn = section['LinkedColumnDetails'];
       section.fields.forEach(element => {
         element.noPreSelect = false;
-        if(!element.cinchyColumn.IsDisplayColumn){
+        if (!element.cinchyColumn.IsDisplayColumn) {
           if (linkedColumn && (linkedColumn.linkLabel == element.label)) {
             if (linkedColumn.linkValue) {
-            element.value =  element.value ? element.value : linkedColumn.linkValue;
+              element.value = element.value ? element.value : linkedColumn.linkValue;
             }
             element.value = element.value ? element.value : Number(this._ChildFormData.rowId);
             linkedColumn.linkedElement.value = linkedColumn.linkedElement.value ? linkedColumn.linkedElement.value : Number(this._ChildFormData.rowId);
@@ -87,12 +86,12 @@ export class ChildFormDirective {
 
                   let multiDropdownResult = element['dropdownDataset'].options.filter(e => trimedValues.indexOf(e.label) > -1);
                   element.value = multiDropdownResult && multiDropdownResult.length ? multiDropdownResult.map(item => item.id).join(',') : element.value;
-                }else if(obj[element.cinchyColumn.name] && !element.cinchyColumn.isMultiple){
+                } else if (obj[element.cinchyColumn.name] && !element.cinchyColumn.isMultiple) {
                   let singleDropdownResult = element['dropdownDataset'].options.find(e => e.label == obj[element.cinchyColumn.name]);
-                  if(!singleDropdownResult && element.value){ // sometimes label contains display label so it won't match, then try id
+                  if (!singleDropdownResult && element.value) { // sometimes label contains display label so it won't match, then try id
                     singleDropdownResult = element['dropdownDataset'].options.find(e => e.id == element.value);
                   }
-                  element.value = singleDropdownResult  ?singleDropdownResult.id : null;
+                  element.value = singleDropdownResult ? singleDropdownResult.id : null;
                 }
               }
             } else if (element.cinchyColumn.dataType === 'Binary') {
@@ -110,28 +109,28 @@ export class ChildFormDirective {
           else if (linkedColumn && (linkedColumn.linkLabel != element.label)) {
             element.noPreSelect = true;
             element.value = null;
-          }else if(!linkedColumn){
+          } else if (!linkedColumn) {
             element.value = null;
             element.noPreSelect = true;
           }
-        }else if(element.cinchyColumn.IsDisplayColumn){
+        } else if (element.cinchyColumn.IsDisplayColumn) {
           const labelInObj = `${element.cinchyColumn.linkTargetColumnName} label`;
           let selectedValue;
           let hasDropdown = false;
-          if(element.dropdownDataset && element.dropdownDataset.options){
-            selectedValue = element.dropdownDataset.options.find(item => item.label ==  obj[labelInObj]);
+          if (element.dropdownDataset && element.dropdownDataset.options) {
+            selectedValue = element.dropdownDataset.options.find(item => item.label == obj[labelInObj]);
             if (selectedValue != null) {
               hasDropdown = true;
               element.value = selectedValue?.id;
             }
           }
-          
-          if (!hasDropdown){
+
+          if (!hasDropdown) {
             // Creating dummy dropdown and value using multi-field value since it's read only value
-            if(obj){
-            const dummyDropdown = {id: obj[labelInObj], label: obj[labelInObj]};
-            element.dropdownDataset = {options: [dummyDropdown], isDummy: true};
-            element.value = dummyDropdown.id;
+            if (obj) {
+              const dummyDropdown = { id: obj[labelInObj], label: obj[labelInObj] };
+              element.dropdownDataset = { options: [dummyDropdown], isDummy: true };
+              element.value = dummyDropdown.id;
             }
           }
         }
@@ -193,7 +192,7 @@ export class ChildFormDirective {
   //#region This method is used to handle the field event
   handleFieldsEvent($event) {
     // Emit the event to the Project.
-    this.EventHandler.emit($event);
+    this.eventHandler.emit($event);
   }
 
   //#endregion

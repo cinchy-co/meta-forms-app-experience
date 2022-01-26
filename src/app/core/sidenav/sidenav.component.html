@@ -10,12 +10,12 @@
     <div class="sidenav-option">
       <div class="mt-10">
         <ul>
-          <li *ngFor="let section of formSections" (click)="sectionClicked(section)">
+          <li *ngFor="let section of formSectionsMetadata" (click)="sectionClicked(section)">
             <div class="bullet-point"
-                 [ngClass]="{'bullet-point--selected': selectedSection===section.sectionName}"></div>
+                 [ngClass]="{'bullet-point--selected': selectedSection===section.name}"></div>
             <span class="section-item"
-                  [ngClass]="{'section-item--selected': selectedSection===section.sectionName}">
-              {{section.sectionName}}
+                  [ngClass]="{'section-item--selected': selectedSection===section.name}">
+              {{section.name}}
             </span>
           </li>
         </ul>
@@ -23,21 +23,12 @@
     </div>
   </div>
 
-  <!--  <div class="navigation-buttons">
-      <button mat-raised-button class='cancel'>Cancel</button>
-      <button mat-raised-button (click)='saveForm()'>Save</button>
-    </div>-->
-
   <div class="useful-links-wrapper">
     <hr>
-    <p class="link-with-icon" *ngIf="(canAddNewForm && rowId && rowId != 'null')" (click)="createNewForm()">
+    <p class="link-with-icon" *ngIf="(canInsert && rowId && rowId != 'null')" (click)="createNewForm()">
       <mat-icon>queue</mat-icon>
       <span>Create New Record</span>
     </p>
-<!--    <p class="link-with-icon" *ngIf="canAddNewContact && showNewContactLink" (click)="openAddNewContactDialog()">
-      <mat-icon>queue</mat-icon>
-      <span>Add New Contact</span>
-    </p>-->
 
     <p class="link-with-icon" *ngIf="createNewOptionName" (click)="openAddNewOptionDialog()">
       <mat-icon>queue</mat-icon>

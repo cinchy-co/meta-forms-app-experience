@@ -2,15 +2,15 @@
   <div class='navigation-buttons form-header'>
     <!-- <button mat-raised-button>Cancel</button>-->
     <div class="flex-row ml-20">
-      <a class="table-url" [href]="MetaData[0]['tableUrl']" target="_blank"><span
-        class="mr-15"><b>{{MetaData[0]['formName']}}</b></span></a>
-      <app-search-dropdown *ngIf="dropdownOfAllRows && dropdownOfAllRows.length"
-                           [fullList]="dropdownOfAllRows"
+      <a class="table-url" [href]="formMetadata.tableUrl" target="_blank"><span
+        class="mr-15"><b>{{formMetadata.formDisplayName}}</b></span></a>
+      <app-search-dropdown *ngIf="lookupRecordsList?.length"
+                           [fullList]="lookupRecordsList"
                            [selectedOption]="currentRow"
                            (dropdownClicked)="rowSelected($event)">
       </app-search-dropdown>
 
-      <div *ngIf="dropdownOfAllRows && dropdownOfAllRows.length" class="navigation-icons">
+      <div *ngIf="lookupRecordsList?.length" class="navigation-icons">
         <mat-icon (click)="previousRow()">navigate_before</mat-icon>
 
         <mat-icon (click)="nextRow()">navigate_next</mat-icon>
@@ -23,33 +23,30 @@
         Export As Pdf
       </button>
       <!--<button mat-raised-button class="ml-20 navigation-buttons have-brand float-right" (click)="printCurrentForm()">Print</button>-->
-      <button mat-raised-button class='btnSave have-brand' (click)='saveForm(form, RowId)' [disabled]="!enableSaveBtn">Save</button>
+      <button mat-raised-button class='btnSave have-brand' (click)='saveForm(form, rowId)' [disabled]="!enableSaveBtn">Save</button>
     </div>
   </div>
 
   <div class="all-expansions-wrapper">
-    <mat-accordion *ngIf="MetaData[0] && MetaData[0]['isAccordion']; else withoutAccordion">
+    <mat-accordion *ngIf="formMetadata && formMetadata.isAccordion; else withoutAccordion">
       <app-fields-wrapper [form]="form"
-                          [rowId]="RowId"
-                          [formFieldMetaDatas]="formFieldMetaDatas"
-                          [formSections]="formSections"
+                          [rowId]="rowId"
                           (eventOccurred)="handleFieldsEvent($event)"
                           (childFormOpened)="openChildForm($event)"
                           [fieldsWithErrors]="fieldsWithErrors"
-                          [hasChildTableAccess]="hasChildTableAccess"
-                          (deleteDialogOpened)="openDeleteConfirm($event)">
+                          (deleteDialogOpened)="openDeleteConfirm($event)"
+                          [formHasDataLoaded]="formHasDataLoaded">
       </app-fields-wrapper>
     </mat-accordion>
 
     <ng-template #withoutAccordion>
       <app-fields-wrapper [form]="form"
-                          [rowId]="RowId"
-                          [formSections]="formSections"
+                          [rowId]="rowId"
                           (eventOccurred)="handleFieldsEvent($event)"
                           (childFormOpened)="openChildForm($event)"
                           [fieldsWithErrors]="fieldsWithErrors"
-                          [hasChildTableAccess]="hasChildTableAccess"
-                          (deleteDialogOpened)="openDeleteConfirm($event)">
+                          (deleteDialogOpened)="openDeleteConfirm($event)"
+                          [formHasDataLoaded]="formHasDataLoaded">
       </app-fields-wrapper>
     </ng-template>
   </div>

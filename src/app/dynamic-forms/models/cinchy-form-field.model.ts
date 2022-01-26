@@ -17,6 +17,7 @@ export interface IFormField {
   // value
   value: any;
   formControl: FormControl;
+  form: IForm;
   // functions
   setInitialValue(value: any);
 }
@@ -28,7 +29,7 @@ export class FormField implements IFormField {
   filteredValues: Observable<DropdownOption[]>;
 
   constructor(public id: number, public label: string, public caption: string,
-    public childForm: IForm, public cinchyColumn: ICinchyColumn, dropdownDataset: DropdownDataset) {
+    public childForm: IForm, public cinchyColumn: ICinchyColumn, dropdownDataset: DropdownDataset, public form: IForm) {
     this.dropdownDataset = dropdownDataset;
     if (cinchyColumn.dataType == 'Link' && !isNullOrUndefined(this.dropdownDataset)) {
       this.formControl = new FormControl();

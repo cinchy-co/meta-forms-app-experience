@@ -40,6 +40,7 @@ export class CheckBoxDirective {
     this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
   };
 
+  @Input() targetTableName: string;
   @Input() isDisabled: boolean;
   @Output() eventHandler = new EventEmitter<any>();
   showError: boolean;
@@ -51,7 +52,12 @@ export class CheckBoxDirective {
   valueChanged() {
     this.field.cinchyColumn.hasChanged = true;
     const Data = {
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'TableName':  this.targetTableName,
+      'ColumnName': this.field.cinchyColumn.name,
+      'Value': this.field.value,
+      'event': event,
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);

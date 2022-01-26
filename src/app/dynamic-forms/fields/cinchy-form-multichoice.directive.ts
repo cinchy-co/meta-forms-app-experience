@@ -88,7 +88,8 @@ export class MultiChoiceDirective {
       'ColumnName': columnName,
       'Value': value,
       'event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
