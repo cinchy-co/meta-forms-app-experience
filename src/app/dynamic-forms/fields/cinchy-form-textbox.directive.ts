@@ -44,7 +44,11 @@ import { ImageType } from '../enums/imageurl-type';
              [innerHTML]="field.value || '-'"></label>
 
       <ng-container *ngIf="showImage">
-      <img [ngClass]="{'cinchy-images': size === 'ImageUrl (medium)', 'cinchy-imagesLarge' : size === 'ImageUrl (large)', 'cinchy-imagesSmall' : size === 'ImageUrl (small)' }" *ngIf="field.value" [src]="field.value">
+      <img [ngClass]="{
+        'cinchy-images': size === '${ImageType.default}' || size === '${ImageType.medium}', 
+        'cinchy-images-large' : size === '${ImageType.large}', 
+        'cinchy-images-small' : size === '${ImageType.small}' 
+      }" *ngIf="field.value" [src]="field.value">
         <p *ngIf="!field.value">-</p>
       </ng-container>
 
@@ -77,7 +81,7 @@ export class TextBoxDirective implements OnInit {
   }
 
   ngOnInit() {
-    this.showImage = this.field.cinchyColumn.dataFormatType === ImageType.smallURL || this.field.cinchyColumn.dataFormatType === ImageType.mediumURL || this.field.cinchyColumn.dataFormatType === ImageType.largeURL;
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
     if(this.showImage){
       this.size = this.field.cinchyColumn.dataFormatType;
     }
@@ -95,7 +99,8 @@ export class TextBoxDirective implements OnInit {
       'ColumnName': columnName,
       'Value': value,
       'event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);

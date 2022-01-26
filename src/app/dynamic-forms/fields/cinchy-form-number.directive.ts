@@ -102,7 +102,8 @@ export class NumberDirective implements OnInit {
       'ColumnName': columnName,
       'Value': value && Number(value) ? Number(value) : value,
       'event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form
     }
     this.field.value = value && Number(value) ? Number(value) : value;
     // pass calback event

@@ -89,9 +89,8 @@ export class TextAreaDirective implements AfterViewInit, OnInit {
     if (this.field.cinchyColumn.dataFormatType === 'JSON') {
       this.field.value = JSON.stringify(JSON.parse(this.field.value), null, 2)
     }
-    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && this.field.cinchyColumn.dataFormatType !== ImageType.smallURL && this.field.cinchyColumn.dataFormatType !== ImageType.mediumURL && this.field.cinchyColumn.dataFormatType !== ImageType.largeURL
-    && this.field.cinchyColumn.dataFormatType !== 'LinkUrl';
-    this.showImage = this.field.cinchyColumn.dataFormatType === ImageType.smallURL || this.field.cinchyColumn.dataFormatType === ImageType.mediumURL || this.field.cinchyColumn.dataFormatType === ImageType.largeURL;
+    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && !this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default) && this.field.cinchyColumn.dataFormatType !== 'LinkUrl';
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
   }
@@ -146,7 +145,8 @@ export class TextAreaDirective implements AfterViewInit, OnInit {
       'ColumnName': columnName,
       'Value': value,
       'event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);

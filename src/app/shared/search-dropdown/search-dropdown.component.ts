@@ -13,6 +13,7 @@ import {FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {MatSelect} from '@angular/material/select';
 import {ReplaySubject, Subject} from 'rxjs';
 import {take, takeUntil} from 'rxjs/operators';
+import { ILookupRecord } from 'src/app/models/lookup-record.model';
 
 
 @Component({
@@ -21,7 +22,7 @@ import {take, takeUntil} from 'rxjs/operators';
   styleUrls: ['./search-dropdown.component.scss']
 })
 export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() fullList;
+  @Input() fullList: ILookupRecord[];
 
   @Input() set selectedOption(value) {
     // set initial selection
