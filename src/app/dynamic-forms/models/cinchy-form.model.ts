@@ -20,6 +20,8 @@ export interface IForm {
   childFormParentId?: string;
   childFormLinkId?: string;
   flatten: boolean;
+  childFormFilter?: string;
+  childFormSort?: string;
 
   generateSelectQuery(rowId: number | string, parentTableId: number): IQuery;
 
@@ -58,7 +60,9 @@ export class Form implements IForm {
     public isChild: boolean = false,
     public flatten: boolean = false,
     public childFormParentId?: string,
-    public childFormLinkId?: string
+    public childFormLinkId?: string,
+    public childFormFilter?: string,
+    public childFormSort?: string
   ) { }
 
   generateSelectQuery(rowId: number | string, parentTableId: number = 0): IQuery {
@@ -116,8 +120,8 @@ export class Form implements IForm {
       } else {
         defaultWhere = 'where t.' + this.childFormLinkId + ' = @parentCinchyIdMatch and t.[Deleted] is null'
       }
-      const whereConditionWithOrder = this.sections[0] && this.sections[0].childFilter ? defaultWhere + ' and (t.' + this.sections[0].childFilter + ')' : defaultWhere;
-      const whereWithOrder = this.sections[0] && this.sections[0].childSort ? `${whereConditionWithOrder} ${this.sections[0].childSort}` : `${whereConditionWithOrder} Order by t.[Cinchy Id]`
+      const whereConditionWithOrder = this.childFormFilter ? defaultWhere + ' and (t.' + this.childFormFilter + ')' : defaultWhere;
+      const whereWithOrder = this.childFormSort ? `${whereConditionWithOrder} ${this.childFormSort}` : `${whereConditionWithOrder} Order by t.[Cinchy Id]`
       let query: IQuery = new Query('select ' + fields.join(',') + ' from [' + this.targetTableDomain + '].[' + this.targetTableName + '] t ' + whereWithOrder,
         null, null);
       return query;

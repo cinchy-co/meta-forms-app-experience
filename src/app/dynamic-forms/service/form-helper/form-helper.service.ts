@@ -23,7 +23,7 @@ export class FormHelperService {
     private _toastr: ToastrService
   ) { }
 
-  public async generateForm(formMetadata: IFormMetadata, rowId: string | number, isChild: boolean = false, flatten: boolean = false, childFormParentId?: string, childFormLinkId?: string): Promise<IForm> {
+  public async generateForm(formMetadata: IFormMetadata, rowId: string | number, isChild: boolean = false, flatten: boolean = false, childFormParentId?: string, childFormLinkId?: string, childFormFilter?: string, childFormSort?: string): Promise<IForm> {
     if (formMetadata == null)
       return null;
 
@@ -40,7 +40,9 @@ export class FormHelperService {
       isChild,
       flatten,
       childFormParentId,
-      childFormLinkId
+      childFormLinkId,
+      childFormFilter,
+      childFormSort
     );
     result.rowId = rowId;
     return result;
@@ -118,11 +120,13 @@ export class FormHelperService {
       if (childFormId) {
         const displayColumnId = formFields[i].displayColumn.split(',').map(_ => parseInt(_, 10));
         displayColumnId.push(formFields[i].linkFieldId);
+        
         const childFormMetadata = await this._cinchyQueryService.getFormMetadata(childFormId).toPromise();
         const childFormSectionsMetadata = await this._cinchyQueryService.getFormSections(childFormId).toPromise();
-        const childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
+        let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
+        childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => displayColumnId.find(id => id == _.formFieldId) != null);
 
-        childForm = await this.generateForm(childFormMetadata, null, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId);
+        childForm = await this.generateForm(childFormMetadata, null, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable);
         this.fillWithSections(childForm, childFormSectionsMetadata);
         await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord);
         await this.fillWithData(childForm, childFormMetadata, cinchyId, true, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
