@@ -120,8 +120,9 @@ export class Form implements IForm {
       } else {
         defaultWhere = 'where t.' + this.childFormLinkId + ' = @parentCinchyIdMatch and t.[Deleted] is null'
       }
-      const whereConditionWithOrder = this.childFormFilter ? defaultWhere + ' and (t.' + this.childFormFilter + ')' : defaultWhere;
-      const whereWithOrder = this.childFormSort ? `${whereConditionWithOrder} ${this.childFormSort}` : `${whereConditionWithOrder} Order by t.[Cinchy Id]`
+      const whereConditionWithFilter = this.sections[0] && this.sections[0].childFilter ? 
+      `${defaultWhere} AND (${this.sections[0].childFilter})` : defaultWhere;
+      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy Id]`
       let query: IQuery = new Query('select ' + fields.join(',') + ' from [' + this.targetTableDomain + '].[' + this.targetTableName + '] t ' + whereWithOrder,
         null, null);
       return query;
