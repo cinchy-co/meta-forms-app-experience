@@ -146,7 +146,8 @@ export class TextAreaDirective implements AfterViewInit, OnInit {
       'Value': value,
       'event': event,
       'HasChanged': this.field.cinchyColumn.hasChanged,
-      'Form': this.field.form
+      'Form': this.field.form,
+      'Field': this.field
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);

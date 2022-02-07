@@ -7,6 +7,7 @@ import {
   OnInit,
   Output,
   SimpleChanges,
+  ViewChild,
   ViewEncapsulation
 } from '@angular/core';
 import { isNullOrUndefined } from 'util';
@@ -27,6 +28,7 @@ import { IFormMetadata } from '../models/form-metadata-model';
 import { IFormSectionMetadata } from '../models/form-section-metadata.model';
 import { ILookupRecord } from '../models/lookup-record.model';
 import { FormHelperService } from './service/form-helper/form-helper.service';
+import { SearchDropdownComponent } from '../shared/search-dropdown/search-dropdown.component';
 
 @Component({
   selector: 'cinchy-dynamic-forms',
@@ -35,6 +37,8 @@ import { FormHelperService } from './service/form-helper/form-helper.service';
   encapsulation: ViewEncapsulation.None
 })
 export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy {
+  @ViewChild('recordDropdown') dropdownComponent:SearchDropdownComponent;
+  
   @Input() rowId: number | string;
   @Input() formId: number | string;
   @Input() formMetadata: IFormMetadata;
@@ -56,6 +60,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
+  isLoadingForm: boolean = false;
 
   private childDataForm = [];
   private childCinchyId = -1;
@@ -84,16 +89,20 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.rowId = row?.id ?? this.rowId;
     this.rowUpdated.emit(this.rowId);
     this.childDataForm = [];
-    this.form = null;
+    //this.form = null;
     //this.loadForm();
   }
 
   setLookupRecords(lookupRecords: ILookupRecord[]) {
+    console.log('setLookupRecords')
     if (lookupRecords == null)
       return;
 
     this.lookupRecordsList = lookupRecords;
     this.currentRow = this.lookupRecordsList.find(item => item.id == this.rowId);
+    this.rowUpdated.emit(this.rowId);
+    this.dropdownComponent?.setSelectedOption(this.currentRow);
+    this.dropdownComponent?.resetDropdown();
   }
 
   previousRow() {
@@ -126,8 +135,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     }
     this.childDataForm = [];
 
+    console.log('ngOnChanges', changes);
+
     // TODO: Think of a better place to put this, it's risky to add here
-    await this.loadForm();
+    if (changes['formId'] || changes['rowId'])
+      await this.loadForm();
   }
 
   //#endregion
@@ -330,17 +342,26 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
    * Gets called upon load, save, and row changes
    */
   async loadForm(childData?) {
+    console.log('loadForm childData', childData);
     this.formHasDataLoaded = false;
     this.enableSaveBtn = false;
+
+    //if (this.isLoadingForm)
+    //  return;
+    this.isLoadingForm = true;
+
     try {
       this.form = await this._formHelperService.generateForm(this.formMetadata, this.rowId);
       this._formHelperService.fillWithSections(this.form, this.formSectionsMetadata);
       this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
         async (formFieldsMetadata) => {
+          console.log('loadForm getFormFieldsMetadata', formFieldsMetadata);
+
           let selectedLookupRecord = this.lookupRecordsList.find(_ => _.id == this.rowId);
           await this._formHelperService.fillWithFields(this.form, this.rowId as string, this.formMetadata, formFieldsMetadata, selectedLookupRecord);
           await this._formHelperService.fillWithData(this.form, this.formMetadata, this.rowId as string, false, selectedLookupRecord);
 
+          this.isLoadingForm = false;
           this.formHasDataLoaded = true;
           this.enableSaveBtn = true;
           this.spinner.hide();
@@ -365,6 +386,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   //#region  Save Values of MetaData
   public async saveForm(formdata, _RowId, childData?) {
+
     // check validations for the form eg: Required, Regular expression
     const formvalidation = formdata.checkFormValidation();
 
@@ -393,7 +415,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                 type: 'rowId',
                 isSaved: true
               };
-              this.eventHandler.emit(data);
               this.saveMethodLogic(this.rowId, response, childData);
               this.updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
               // rowId = this.saveMethodLogic(rowId, response);
@@ -401,7 +422,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               if (this.addNewFromSideNav) {
                 this.closeAddNewDialog.emit(this.rowId);
               }
-
               this.appStateService.hasFormChanged = false;
 
               // pass response to the project on data save
@@ -457,7 +477,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     });
   }
 
-  private saveMethodLogic(rowId: any, response, childData?) {
+  private async saveMethodLogic(rowId: any, response, childData?) {
+
     if (response && response.queryResult._jsonResult.data.length > 0) {
       rowId = response.queryResult._jsonResult.data[0][0];
     } else {
@@ -467,7 +488,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     console.log('IN SAVE OUT CHILD', this.childCinchyId);
     if (this.childCinchyId !== -1) {
       console.log('IN SAVE CHILD');
-      this.savechildForm(rowId, 0);
+      await this.savechildForm(rowId, 0);
     } else {
       this.spinner.hide();
       if (!isNullOrUndefined(this.rowId)) {
@@ -477,6 +498,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         this._toastr.warning('No Form Data Changed', 'Warning');
       }
     }
+    this.eventHandler.emit(rowId);
     return rowId;
   }
 
@@ -496,13 +518,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       if (element.Query.query) {
         element.Query.query = element.Query.query.replace('{sourceid}', sourceid);
         const params = JSON.stringify(element.Query.params).replace('{sourceid}', sourceid);
-        this._cinchyService.executeCsql(element.Query.query, JSON.parse(params)).subscribe(
-          response => {
+        await this._cinchyService.executeCsql(element.Query.query, JSON.parse(params)).subscribe(
+          async response => {
             this.spinner.hide();
-            this.savechildForm(sourceid, idx + 1);
+            await this.savechildForm(sourceid, idx + 1);
             this.updateFileAndSaveFileNames(element.Query.attachedFilesInfo);
             if (this.childDataForm.length === (idx + 1)) {
-              this.getchildSavedData(sourceid);
+              await this.getchildSavedData(sourceid);
               this.childDataForm = [];
               this.childCinchyId = -1;
               this._toastr.success('Child Form Data Saved Successfully', 'Success');
@@ -521,6 +543,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   //#endregion
   //#region Get Parent Form Data After Save in Database
   public async getSavedData(childData?) {
+    console.log('getSavedData');
     this.loadForm(childData);
   }
 
@@ -565,6 +588,23 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
             $event.Data.Form.sections[0].MultiFields[$event.Data.Form.sections[0].MultiFields.length - 1]['Cinchy ID'] : 
             0
         }, $event.Data.Form);
+      }
+    }
+
+    if ($event?.Data?.ColumnName && $event?.Data?.Form?.childFieldsLinkedToColumnName && $event?.Data?.Form?.childFieldsLinkedToColumnName[$event.Data.ColumnName]) {
+      for (let linkedFormField of $event?.Data?.Form?.childFieldsLinkedToColumnName[$event.Data.ColumnName]) {
+        if (linkedFormField.form.isChild && linkedFormField.form.flatten)
+        {
+          linkedFormField.value = $event.Data.Value;
+          linkedFormField.cinchyColumn.hasChanged = true;
+          this.afterChildFormEdit({
+            'childFormId': linkedFormField.form.id,
+            'data': linkedFormField.form,
+            'id': $event.Data.Form.sections[0].MultiFields?.length && $event.Data.Form.sections[0].MultiFields[$event.Data.Form.sections[0].MultiFields.length - 1]['Cinchy ID'] != null ? 
+              $event.Data.Form.sections[0].MultiFields[$event.Data.Form.sections[0].MultiFields.length - 1]['Cinchy ID'] : 
+              0
+          }, $event.Data.Form);
+        }
       }
     }
   }

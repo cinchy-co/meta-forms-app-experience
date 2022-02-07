@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   forwardRef,
@@ -25,14 +26,14 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
   @Input() fullList: ILookupRecord[];
 
   @Input() set selectedOption(value) {
+    this.setSelectedOption(value);
     // set initial selection
-    this.selectCtrl.setValue(value);
-    this.selectedOptionVal = value;
+    
     // this.moveSelectedItemToTop(value);
   };
 
   /** list of list */
-  list;
+  list: ILookupRecord[];
   /** control for the selected bank */
   public selectCtrl: FormControl = new FormControl();
 
@@ -52,7 +53,7 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
   selectedOptionVal: any;
   maxSize = 3000;
 
-  constructor() {
+  constructor(private _cdr: ChangeDetectorRef) {
   }
 
   ngOnInit() {
@@ -68,9 +69,19 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
       });
   }
 
-  ngAfterViewInit() {
+  setSelectedOption(value) {
+    this.selectCtrl.setValue(value);
+    this.selectedOptionVal = value;
+  }
+
+  resetDropdown() {
+    this.list = this.fullList;
     this.moveSelectedItemToTop(this.selectedOptionVal);
     this.setInitialValue();
+  }
+
+  ngAfterViewInit() {
+    this.resetDropdown();
   }
 
   optionSelected(option) {
@@ -107,13 +118,16 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
     }
     // filter the list
     this.filteredlist.next(
-      this.list.filter(item => item.fullName ? item.fullName.toLowerCase().indexOf(search) > -1 : null)
+      this.list.filter(item => item.label ? item.label.toLowerCase().indexOf(search) > -1 : null)
     );
   }
 
   moveSelectedItemToTop(selectedItem) {
-    if(this.list?.length && this.list?.length > this.maxSize){
-      const itemInList = this.list.find(item => item.id === selectedItem.id);
+    if(selectedItem && this.list?.length && this.list?.length > this.maxSize){
+      let itemInList = this.list.find(item => item.id === selectedItem.id);
+      if (itemInList == null) {
+        itemInList = selectedItem;
+      }
       this.list = this.list.filter(item => item.id !== selectedItem.id);
       this.list.unshift(itemInList);
       setTimeout(() => {

@@ -4,7 +4,7 @@
     <div class="flex-row ml-20">
       <a class="table-url" [href]="formMetadata.tableUrl" target="_blank"><span
         class="mr-15"><b>{{formMetadata.formDisplayName}}</b></span></a>
-      <app-search-dropdown *ngIf="lookupRecordsList?.length"
+      <app-search-dropdown #recordDropdown *ngIf="lookupRecordsList?.length"
                            [fullList]="lookupRecordsList"
                            [selectedOption]="currentRow"
                            (dropdownClicked)="rowSelected($event)">

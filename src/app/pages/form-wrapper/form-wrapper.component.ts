@@ -59,7 +59,7 @@ export class FormWrapperComponent implements OnInit {
       this.formMetadata =
         this.appStateService.formMetadata = formMetadata;
 
-      this.loadLookupRecords(formMetadata);
+      await this.loadLookupRecords(formMetadata);
       this.loadFormSections();
     } catch (e) {
       this.showError('Error getting form metadata', e);
@@ -84,7 +84,7 @@ export class FormWrapperComponent implements OnInit {
     if (formMetadata?.subTitleColumn == null)
       return;
 
-    this.cinchyQueryService.getLookupRecords(formMetadata.subTitleColumn, formMetadata.domainName, formMetadata.tableName, formMetadata.lookupFilter)
+    await this.cinchyQueryService.getLookupRecords(formMetadata.subTitleColumn, formMetadata.domainName, formMetadata.tableName, formMetadata.lookupFilter)
       .subscribe(response => {
         this.lookupRecords = response;
       }, (e => {
@@ -102,11 +102,9 @@ export class FormWrapperComponent implements OnInit {
     this.rowId = null;
   }
 
-  saveClicked(data) {
-    this.appStateService.isFormSaved = data ? data.isSaved : null;
-    if (data.isSaved && this.formId == 11) {
-      this.router.navigate(['/save-success']);
-    }
+  onSaved(data) {
+    this.loadLookupRecords(this.formMetadata);
+    this.rowId = data;
   }
 
   rowUpdatedFromForm(rowId) {

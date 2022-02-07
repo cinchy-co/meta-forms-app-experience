@@ -109,7 +109,8 @@ export class AttachFileDirective implements OnInit {
       'Value': value,
       'event': event,
       'HasChanged': this.field.cinchyColumn.hasChanged,
-      'Form': this.field.form
+      'Form': this.field.form,
+      'Field': this.field
     }
     this.field.cinchyColumn.hasChanged = true;
     // pass calback event

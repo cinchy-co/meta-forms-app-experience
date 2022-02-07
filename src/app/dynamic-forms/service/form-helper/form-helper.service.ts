@@ -23,7 +23,7 @@ export class FormHelperService {
     private _toastr: ToastrService
   ) { }
 
-  public async generateForm(formMetadata: IFormMetadata, rowId: string | number, isChild: boolean = false, flatten: boolean = false, childFormParentId?: string, childFormLinkId?: string, childFormFilter?: string, childFormSort?: string): Promise<IForm> {
+  public async generateForm(formMetadata: IFormMetadata, rowId: string | number, isChild: boolean = false, flatten: boolean = false, childFormParentId?: string, childFormLinkId?: string, childFormFilter?: string, childFormSort?: string, parentForm: IForm = null): Promise<IForm> {
     if (formMetadata == null)
       return null;
 
@@ -44,6 +44,9 @@ export class FormHelperService {
       childFormFilter,
       childFormSort
     );
+
+    result.tableMetadata = JSON.parse(formMetadata.tableJson);
+    result.parentForm = parentForm
     result.rowId = rowId;
     return result;
   }
@@ -66,6 +69,10 @@ export class FormHelperService {
 
     const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
     const cellEntitlements = await this.getCellEntitlements(formMetadata.domainName, formMetadata.tableName, cinchyId, formFields);
+
+    let parentChildLinkedColumns: {[columnName: string]: FormField[]} = {};
+    let parentFieldsByColumn: {[columnName: string]: FormField} = {};
+    let allChildForms: IForm[] = [];
 
     let minSectionIter = 0;
     for (let i = 0; i < formFields.length; i++) {
@@ -126,7 +133,7 @@ export class FormHelperService {
         let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
         childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => displayColumnId.find(id => id == _.formFieldId) != null);
 
-        childForm = await this.generateForm(childFormMetadata, null, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable);
+        childForm = await this.generateForm(childFormMetadata, null, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
         this.fillWithSections(childForm, childFormSectionsMetadata);
         await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord);
         await this.fillWithData(childForm, childFormMetadata, cinchyId, true, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
@@ -158,9 +165,14 @@ export class FormHelperService {
             }
           }
         }
+
+        allChildForms.push(childForm);
       }
 
       const formField: FormField = new FormField(formFields[i].formFieldId, formFields[i].formFieldName, formFields[i].caption, childForm, cinchyColumn, null, form);
+
+      if (childFormId == null)
+        parentFieldsByColumn[cinchyColumn.name] = formField;
 
       for (let j = minSectionIter; j < form.sections.length; j++) {
         if (form.sections[j].id === formFields[i].formSectionId) {
@@ -172,6 +184,39 @@ export class FormHelperService {
         }
       }
     }
+    form.fieldsByColumnName = parentFieldsByColumn;
+
+    for (let i = 0; i < allChildForms.length; i++) {
+      if (allChildForms[i].childFormParentId && allChildForms[i].childFormLinkId) {
+        let parentColName = this.parseColumnNameByChildFormLinkId(allChildForms[i].childFormParentId);
+        let childColName = this.parseColumnNameByChildFormLinkId(allChildForms[i].childFormLinkId);
+        
+        if (parentColName != null && form.fieldsByColumnName[parentColName] != null && childColName != null && allChildForms[i].fieldsByColumnName[childColName] != null) {
+
+          if (parentChildLinkedColumns[parentColName] == null)
+            parentChildLinkedColumns[parentColName] = [];
+          parentChildLinkedColumns[parentColName].push(allChildForms[i].fieldsByColumnName[childColName]);
+
+          // If this is a flat child form, hide the link column otherwise it'll appear twice on the form
+          if (allChildForms[i].flatten)
+            allChildForms[i].fieldsByColumnName[childColName].hide = true;
+        }
+      }
+    }
+
+    form.childFieldsLinkedToColumnName = parentChildLinkedColumns;
+  }
+
+  private parseColumnNameByChildFormLinkId(formLinkId: string): string {
+    if (formLinkId == null)
+      return null;
+
+    let splitColumnNames = formLinkId.split('].[');
+    if (splitColumnNames?.length > 0) {
+      let colName = splitColumnNames[0].replace(/[\[\]]+/g, '');
+      return colName;
+    }
+    return null;
   }
 
   public async fillWithData(form: IForm, formMetadata: IFormMetadata, cinchyId: string, isChild: boolean, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string) {

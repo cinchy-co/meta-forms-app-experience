@@ -9,15 +9,15 @@
     <ng-container *ngIf="filteredlist | async; let list">
       <ng-container *ngIf="list?.length > maxSize">
         <cdk-virtual-scroll-viewport [itemSize]="40" class="example-viewport">
-          <mat-option class="example-item-detail" *cdkVirtualFor="let item of list" [value]="item" [title]="item.label">
-            {{item.label}}
+          <mat-option class="example-item-detail" *cdkVirtualFor="let item of list" [value]="item" [title]="item?.label">
+            {{item?.label}}
           </mat-option>
         </cdk-virtual-scroll-viewport>
       </ng-container>
 
       <ng-container *ngIf="list?.length <= maxSize">
-        <mat-option *ngFor="let item of list" [value]="item" [title]="item.label">
-          {{item.label}}
+        <mat-option *ngFor="let item of list" [value]="item" [title]="item?.label">
+          {{item?.label}}
         </mat-option>
       </ng-container>
     </ng-container>

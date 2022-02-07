@@ -362,7 +362,8 @@ export class LinkDirective implements OnInit {
       'Text': text,
       'Event': event,
       'HasChanged': this.field.cinchyColumn.hasChanged,
-      'Form': this.field.form
+      'Form': this.field.form,
+      'Field': this.field
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
@@ -443,7 +444,6 @@ export class LinkDirective implements OnInit {
   }
 
   openChildDialog() {
-    debugger;
     const createLinkOptionFormId = this.field.cinchyColumn.createlinkOptionFormId;
     const createLinkOptionName = this.field.cinchyColumn.createlinkOptionName;
     const newOptionDialogRef = this.dialogService.openDialog(AddNewOptionDialogComponent, {

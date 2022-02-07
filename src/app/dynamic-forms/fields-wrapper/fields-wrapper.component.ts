@@ -38,6 +38,12 @@ export class FieldsWrapperComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  debug(): void {
+    console.log('Debug form', this.form);
+    console.log('Debug rowId', this.rowId);
+    console.log('Debug isChild', this.isChild);
+  }
+
   expansionClicked(section) {
     this.appStateService.sectionClicked(section.label);
   }

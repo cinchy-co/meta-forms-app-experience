@@ -38,7 +38,7 @@
 <ng-template #formFields let-section="section" >
   <ng-container *ngIf="section.fields?.length && _formHasDataLoaded">
     <div *ngFor='let field of section.fields; let idx = index' style="display: flex;">
-      <div class="formField">
+      <div class="formField" *ngIf="!field.hide">
         <cinchy-checkbox *ngIf="(field.cinchyColumn.dataType == 'Yes/No')"
                         [targetTableName]='field.cinchyColumn.tableName'
                         (eventHandler)='eventOccurred.emit($event)'

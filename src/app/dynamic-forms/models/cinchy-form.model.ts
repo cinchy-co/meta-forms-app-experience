@@ -4,6 +4,8 @@ import { isNullOrUndefined } from 'util';
 import { DropdownDataset } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset';
 import { IDropdownOption, DropdownOption } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-options';
 import * as R from 'ramda';
+import { ICinchyColumn } from './cinchy-column.model';
+import { FormField } from './cinchy-form-field.model';
 
 
 export interface IForm {
@@ -22,6 +24,10 @@ export interface IForm {
   flatten: boolean;
   childFormFilter?: string;
   childFormSort?: string;
+  fieldsByColumnName: { [columnName: string]: FormField };
+  childFieldsLinkedToColumnName: {[columnName: string]: FormField[]};
+  parentForm: IForm;
+  tableMetadata: Object;
 
   generateSelectQuery(rowId: number | string, parentTableId: number): IQuery;
 
@@ -47,6 +53,11 @@ export class Form implements IForm {
   sections: Array<IFormSection> = [];
   linkedColumnElement;
   errorFields = [];
+  fieldsByColumnName: { [columnName: string]: FormField } = {};
+  childFieldsLinkedToColumnName: {[columnName: string]: FormField[]} = {};
+  parentForm: IForm;
+  tableMetadata: Object;
+
   private _dropdownDatasets: { [key: number]: DropdownDataset } = {};
 
   constructor(
@@ -646,10 +657,24 @@ export class Form implements IForm {
               } else {
                 //ToDO: for insert data ... because insert is giving error with parameters
                 if (element.cinchyColumn.dataType == "Link") {
-                  isNullOrUndefined(this.rowId) ?
-                    assignmentValues.push("ResolveLink(" + params[paramName] + ",'" + "Cinchy Id" + "')")
-                    :
-                    assignmentValues.push("ResolveLink(" + paramName + ",'" + "Cinchy Id" + "')");
+
+                  if (isNullOrUndefined(this.rowId) && element.form.isChild && element.form.flatten && element.form.childFormParentId) {
+                    let assignmentVal = "ResolveLink(" + params[paramName] + ",'" + "Cinchy Id" + "')";
+                    let columnMetadata = element.form.tableMetadata['Columns']?.find(_ => _.columnId == element.cinchyColumn.id);
+                    if (columnMetadata && columnMetadata.primaryLinkedColumnId) {
+                      let primaryLinkedColumn = element.form.parentForm.tableMetadata['Columns']?.find(_ => _.columnId == columnMetadata.primaryLinkedColumnId);
+                      if (primaryLinkedColumn) {
+                        assignmentVal = "ResolveLink('" + params[paramName] + "','" + primaryLinkedColumn.name + "')";
+                      }
+                    }
+                    assignmentValues.push(assignmentVal);
+                  } else {
+                    isNullOrUndefined(this.rowId) ?
+                      assignmentValues.push("ResolveLink(" + params[paramName] + ",'" + "Cinchy Id" + "')")
+                      :
+                      assignmentValues.push("ResolveLink(" + paramName + ",'" + "Cinchy Id" + "')");
+                  }
+
                 } else {
                   if (isNullOrUndefined(element.childForm)) {
                     if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||

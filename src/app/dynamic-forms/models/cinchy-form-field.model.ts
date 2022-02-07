@@ -18,6 +18,8 @@ export interface IFormField {
   value: any;
   formControl: FormControl;
   form: IForm;
+
+  hide: boolean;
   // functions
   setInitialValue(value: any);
 }
@@ -27,6 +29,7 @@ export class FormField implements IFormField {
   formControl: FormControl;
   private dropdownDataset: DropdownDataset;
   filteredValues: Observable<DropdownOption[]>;
+  hide: boolean = false;
 
   constructor(public id: number, public label: string, public caption: string,
     public childForm: IForm, public cinchyColumn: ICinchyColumn, dropdownDataset: DropdownDataset, public form: IForm) {

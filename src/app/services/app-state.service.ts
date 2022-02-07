@@ -15,7 +15,6 @@ export class AppStateService {
   currentSection$ = new BehaviorSubject<string>(null);
   saveClicked$ = new BehaviorSubject<boolean>(null);
   childRecordUpdated$ = new Subject<boolean>();
-  isFormSaved: boolean;
   hasFormChanged: boolean;
   savedParentFromChildPlus$ = new Subject<boolean>();
   formMetadata: IFormMetadata;

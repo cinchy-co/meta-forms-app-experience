@@ -41,14 +41,14 @@
   </ng-template>
 
   <ng-template #mainContent>
-    <div class="form-container" *ngIf="formSectionsMetadata">
+    <div class="form-container" *ngIf="formSectionsMetadata && lookupRecords">
       <cinchy-dynamic-forms class="full-height-element"
                             [formId]="formId"
                             [rowId]="rowId"
                             [formMetadata]="formMetadata"
                             [formSectionsMetadata]="formSectionsMetadata"
                             [lookupRecords]="lookupRecords"
-                            (eventHandler)="saveClicked($event)"
+                            (eventHandler)="onSaved($event)"
                             (rowUpdated)="rowUpdatedFromForm($event)">
       </cinchy-dynamic-forms>
     </div>

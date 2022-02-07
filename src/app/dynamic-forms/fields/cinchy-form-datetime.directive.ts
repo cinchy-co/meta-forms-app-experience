@@ -97,7 +97,8 @@ export class DateTimeDirective implements OnInit {
       'Value': value,
       'event': event,
       'HasChanged': this.field.cinchyColumn.hasChanged,
-      'Form': this.field.form
+      'Form': this.field.form,
+      'Field': this.field
     };
     let selectedDate = value ? value : this.preSelectedDate;
     this.field.value = moment(selectedDate).format('MM/DD/yyyy');
