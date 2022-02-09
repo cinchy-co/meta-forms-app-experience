@@ -245,7 +245,6 @@ export class LinkDirective implements OnInit {
         dropdownDataset = this.getSortedList(dropdownDataset);
         dataSet.dropdownDataset = dropdownDataset;
         this.dropdownSetOptions = dropdownDataset ? dropdownDataset.options : [];
-        this.dropdownSetOptions = this.dropdownSetOptions.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
         this.onInputChange();
         if(this.rowId && this.rowId !== "null"){
           const emptyOption = new DropdownOption('DELETE', '', '');
@@ -282,7 +281,7 @@ export class LinkDirective implements OnInit {
         options: filteredOutNullSets.sort((a, b) => {
           var a1 = typeof a.label[0], b1 = typeof b.label[0];
           return a1 < b1 ? -1 : a1 > b1 ? 1 : a.label[0] < b.label[0] ? -1 : a.label[0] > b.label[0] ? 1 : 0;
-        })
+        }).sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
       }
     }
     return dropdownDataset;
