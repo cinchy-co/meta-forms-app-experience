@@ -278,10 +278,7 @@ export class LinkDirective implements OnInit {
     if (dropdownDataset && dropdownDataset.options) {
       filteredOutNullSets = dropdownDataset.options.filter(option => option.label);
       return {
-        options: filteredOutNullSets.sort((a, b) => {
-          var a1 = typeof a.label[0], b1 = typeof b.label[0];
-          return a1 < b1 ? -1 : a1 > b1 ? 1 : a.label[0] < b.label[0] ? -1 : a.label[0] > b.label[0] ? 1 : 0;
-        }).sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
+        options: filteredOutNullSets.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
       }
     }
     return dropdownDataset;
