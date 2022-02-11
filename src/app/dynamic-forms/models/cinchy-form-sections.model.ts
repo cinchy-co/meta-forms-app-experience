@@ -8,6 +8,7 @@ export interface IFormSection {
   childSort;
   autoExpand: boolean;
   columnsInRow: string;
+  MultiFields: Array<any>;
 }
 
 export class FormSection implements IFormSection {
@@ -16,6 +17,7 @@ export class FormSection implements IFormSection {
   childSort: string;
   autoExpand: boolean;
   columnsInRow: string;
+  MultiFields: Array<any>;
 
   constructor(public id: number, public label: string) {
   }

@@ -77,7 +77,6 @@ export class FormHelperService {
     let minSectionIter = 0;
     for (let i = 0; i < formFields.length; i++) {
       const columnMetadata = tableJson.Columns.find(_ => _.columnId === formFields[i].columnId);
-
       const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
       const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
       const attachedFileName = await this.getFileName(cinchyId, formFields[i].fileNameColumn);
@@ -119,7 +118,8 @@ export class FormHelperService {
         formFields[i].childFormParentId,
         formFields[i].childFormLinkId,
         formFields[i].doNotWrap,
-        columnMetadata?.displayFormat
+        columnMetadata?.displayFormat,
+        columnMetadata?.$type == 'Calculated'
       );
 
       let childForm: IForm = null;

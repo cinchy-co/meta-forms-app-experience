@@ -35,7 +35,7 @@ export interface IForm {
 
   loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?, idForParentMatch?): void
 
-  generateSaveQuery(rowID: number | string): IQuery;
+  generateSaveQuery(rowID: number | string, forClonedForm?: boolean): IQuery;
 
   generateDeleteQuery(): IQuery;
 
@@ -43,7 +43,7 @@ export interface IForm {
 
   checkChildFormValidation(): any;
 
-  generateSaveForChildQuery(rowID: number | string, sourceID: number): IQuery
+  generateSaveForChildQuery(rowID: number | string, forClonedForm?: boolean): IQuery
 
   getErrorFields(): Array<any>
 }
@@ -294,7 +294,7 @@ export class Form implements IForm {
     this.rowId = rowId;
   }
 
-  generateSaveQuery(rowID, isCloneData?): IQuery {
+  generateSaveQuery(rowID, forClonedForm?: boolean): IQuery {
     let i: number = 0;
     let params = {};
     let query: IQuery = null;
@@ -311,16 +311,14 @@ export class Form implements IForm {
         )) {
           //todo: check for link type
         } else {
-          if (element.cinchyColumn.name != null && element.cinchyColumn.dataType != 'Calculated' && element.cinchyColumn.canEdit
-          && (element.cinchyColumn.hasChanged || isCloneData) && !element.cinchyColumn.isViewOnly && !element.childForm) {
+          if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalcualted && element.cinchyColumn.canEdit
+          && (element.cinchyColumn.hasChanged) && (!element.cinchyColumn.isViewOnly || forClonedForm) && !element.childForm) {
             paramName = '@p' + i.toString();
             switch (element.cinchyColumn.dataType) {
               case "Date and Time":
                 let elementValue = isNullOrUndefined(element.value) ? null :
                   element.value instanceof Date ? element.value.toLocaleDateString() : element.value;
-                if (elementValue) {
-                  params[paramName] = elementValue ? elementValue : '';
-                }
+                  params[paramName] = elementValue ?? '';
                 if (!paramName) {
                   paramName = element.value instanceof Date ? paramName : `NULLIF(${paramName},'')`;
                 }
@@ -340,7 +338,7 @@ export class Form implements IForm {
                      }
 
                    });*/
-                  choiceElementValue = isNullOrUndefined(arrayElement) ? '' : arrayElement.join(',');
+                  choiceElementValue = isNullOrUndefined(arrayElement) ? '' : (Array.isArray(arrayElement) ? arrayElement.join(',') : arrayElement);
                 } else {
                   choiceElementValue = element.value;
                 }
@@ -487,7 +485,7 @@ export class Form implements IForm {
     }
   }
 
-  generateSaveForChildQuery(rowID, sourceID): IQuery {
+  generateSaveForChildQuery(rowID, forClonedForm?: boolean): IQuery {
     let i: number = 0;
     let params = {};
     let query: IQuery = null;
@@ -504,8 +502,8 @@ export class Form implements IForm {
           console.log('Link type cannot be null');
         } else {
           const isLinkedColumnForInsert = this.isLinkedColumn(element, section) && !rowID;
-          if (element.cinchyColumn.name != null && element.cinchyColumn.dataType != 'Calculated' && element.cinchyColumn.canEdit
-            && !element.cinchyColumn.isViewOnly && (element.cinchyColumn.hasChanged || isLinkedColumnForInsert)) {
+          if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalcualted && element.cinchyColumn.canEdit
+            && (!element.cinchyColumn.isViewOnly || forClonedForm) && (element.cinchyColumn.hasChanged || isLinkedColumnForInsert)) {
             if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
               (element.cinchyColumn.dataType === "Choice" && element.value)
               || (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")) {
@@ -544,7 +542,7 @@ export class Form implements IForm {
                        }
 
                      });*/
-                    choiceElementValue = isNullOrUndefined(arrayElement) ? '' : arrayElement.join(',');
+                    choiceElementValue = isNullOrUndefined(arrayElement) ? '' : (Array.isArray(arrayElement) ? arrayElement.join(',') : arrayElement);
                   } else {
                     choiceElementValue = element.value;
                   }

@@ -33,6 +33,7 @@ export interface ICinchyColumn {
   uploadUrl: string;
   childFormParentId: string;
   childFormLinkId: string;
+  isCalcualted: boolean;
 }
 
 export class CinchyColumn implements ICinchyColumn {
@@ -47,6 +48,6 @@ export class CinchyColumn implements ICinchyColumn {
               public linkedFieldId: any, public IsDisplayColumn: boolean, public FileName: any, public FileNameColumn: any,
               public dropdownFilter: any, public totalTextAreaRows: number, public numberFormatter: string,
               public attachmentUrl: string, public uploadUrl: string, public childFormParentId: string, public childFormLinkId: string, 
-              public doNotWrap: boolean, public displayFormat: string) {
+              public doNotWrap: boolean, public displayFormat: string, public isCalcualted: boolean) {
   }
 }

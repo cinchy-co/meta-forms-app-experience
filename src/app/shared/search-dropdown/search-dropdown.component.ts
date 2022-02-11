@@ -123,7 +123,7 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   moveSelectedItemToTop(selectedItem) {
-    if(selectedItem && this.list?.length && this.list?.length > this.maxSize){
+    if(selectedItem && this.list?.length && this.list?.length) {// > this.maxSize){
       let itemInList = this.list.find(item => item.id === selectedItem.id);
       if (itemInList == null) {
         itemInList = selectedItem;
