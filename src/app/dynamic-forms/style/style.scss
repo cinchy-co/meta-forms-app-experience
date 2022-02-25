@@ -402,7 +402,17 @@ button.btnSave.mat-raised-button {
 
   label {
     margin-right: 5px;
+
+    a:hover {
+      color: #1A1C1D;
+      text-decoration: none;
+    }
+    a {
+      color: rgba(0,0,0,.54);
+      text-decoration: underline;
+    }
   }
+  
 
   mat-icon {
     line-height: 1.2 !important;
