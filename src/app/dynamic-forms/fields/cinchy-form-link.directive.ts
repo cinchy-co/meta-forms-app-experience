@@ -36,7 +36,7 @@ import { DialogService } from 'src/app/services/dialog.service';
       <div class="m-b-10">
         <div class="link-labels">
           <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
-            <a [href]="tableSourceURL">{{field.label}}</a>
+            <a [href]="tableSourceURL" target="_blank">{{field.label}}</a>
             {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
           </label>
           <span *ngIf="createlinkOptionName">
