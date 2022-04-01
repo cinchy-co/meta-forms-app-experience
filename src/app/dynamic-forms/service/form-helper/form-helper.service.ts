@@ -80,6 +80,12 @@ export class FormHelperService {
       const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
       const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
       const attachedFileName = await this.getFileName(cinchyId, formFields[i].fileNameColumn);
+      
+      if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
+        const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
+        columnMetadata.displayFormat = parentMetadata?.displayFormat;
+       }
+
 
       const cinchyColumn: ICinchyColumn = new CinchyColumn(
         formFields[i].columnId,
