@@ -97,7 +97,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     if (lookupRecords == null)
       return;
 
-    this.lookupRecordsList = lookupRecords;
+    this.lookupRecordsList = this.checkNoRecord(lookupRecords);
     this.currentRow = this.lookupRecordsList.find(item => item.id == this.rowId);
     this.rowUpdated.emit(this.rowId);
     this.dropdownComponent?.setSelectedOption(this.currentRow);
@@ -108,6 +108,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     const currentRowIndex = this.lookupRecordsList.findIndex(item => item.id == this.rowId);
     const newIndex = currentRowIndex ? currentRowIndex - 1 : this.lookupRecordsList.length - 1;
     this.setNewRow(newIndex);
+  }
+
+  checkNoRecord(lookupRecord:ILookupRecord[]): ILookupRecord[]{
+    if (lookupRecord && lookupRecord.length > 0){
+      return lookupRecord;
+    }
+    else{
+      return [{id: -1, label: 'No records available'}];
+    }
   }
 
   nextRow() {

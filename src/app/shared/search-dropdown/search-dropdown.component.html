@@ -1,5 +1,5 @@
 <mat-form-field>
-  <mat-select placeholder="Select existing record" [formControl]="selectCtrl" #singleSelect (selectionChange)="optionSelected($event)">
+  <mat-select placeholder={{placeHolderText}} [formControl]="selectCtrl" #singleSelect (selectionChange)="optionSelected($event)">
     <mat-option>
       <ngx-mat-select-search [formControl]="filterCtrl"
                              placeholderLabel="Search..."
