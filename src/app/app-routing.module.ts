@@ -1,6 +1,7 @@
 import {NgModule} from '@angular/core';
 import {Routes, RouterModule} from '@angular/router';
 import {FormWrapperComponent} from './pages/form-wrapper/form-wrapper.component';
+import { HealthcheckComponent } from './pages/healthcheck/healthcheck/healthcheck.component';
 import {SaveSuccessComponent} from "./pages/save-success/save-success.component";
 
 
@@ -12,6 +13,10 @@ const routes: Routes = [
   {
     path: 'save-success',
     component: SaveSuccessComponent
+  },
+  {
+    path: 'healthcheck',
+    component: HealthcheckComponent,
   },/*{
     path: '', redirectTo: '/deals-overview', pathMatch: 'full'
   }, {

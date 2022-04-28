@@ -14,11 +14,13 @@ import {SaveSuccessComponent} from './save-success/save-success.component';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { NativeDateTimeModule } from 'ng-pick-datetime/date-time/adapter/native-date-time.module';
 import { MatInputModule } from '@angular/material';
+import { HealthcheckComponent } from './healthcheck/healthcheck/healthcheck.component';
 
 @NgModule({
   declarations: [
     FormWrapperComponent,
-    SaveSuccessComponent
+    SaveSuccessComponent,
+    HealthcheckComponent
   ],
   imports: [
     BrowserModule,
