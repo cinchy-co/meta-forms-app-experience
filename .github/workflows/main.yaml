@@ -16,6 +16,13 @@ jobs:
 
     - name: Check out code
       uses: actions/checkout@v2
+
+    - name: Find and Replace
+        uses: jacobtomlinson/gha-find-replace@v2
+        with:
+          find: '"buildIdentifier": ""'
+          replace: '"buildIdentifier": "${GITHUB_REF##*/}/${GITHUB_SHA}"'
+          include: "src/assets/config/config.json"
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
