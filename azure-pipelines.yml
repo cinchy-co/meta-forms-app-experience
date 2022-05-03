@@ -14,7 +14,7 @@ variables:
   imageName: 'meta-forms-app-experience'
   tag: '$(Build.BuildId)'
   branchAsTag: '$(Build.SourceBranchName)'
-  commitid: '$'
+
 stages:
 - stage: Build
   displayName: Build image
@@ -24,13 +24,6 @@ stages:
     pool:
       vmImage: ubuntu-latest
     steps:
-    - name: Find and Replace
-        uses: jacobtomlinson/gha-find-replace@v2
-        with:
-          find: '"buildIdentifier": ""'
-          replace: '"buildIdentifier": "${{ github.head_ref }}/${{ github.sha }}"'
-          include: "src/assets/config/config.json"
-
     - task: Docker@2
       displayName: Build an image
       inputs:
