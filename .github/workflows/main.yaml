@@ -19,10 +19,10 @@ jobs:
 
     - name: Find and Replace Build Identifier
       uses: jacobtomlinson/gha-find-replace@2.0.0
-        with:
-          find: '"buildIdentifier": ""'
-          replace: '"buildIdentifier": "${GITHUB_REF##*/}/${GITHUB_SHA}"'
-          include: "src/assets/config/config.json"
+      with:
+        find: '"buildIdentifier": ""'
+        replace: '"buildIdentifier": "${GITHUB_REF##*/}/${GITHUB_SHA}"'
+        include: "src/assets/config/config.json"
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
