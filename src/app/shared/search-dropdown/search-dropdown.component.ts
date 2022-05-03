@@ -52,12 +52,18 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
 
   selectedOptionVal: any;
   maxSize = 3000;
+  public placeHolderText: string = 'Select existing record';
 
   constructor(private _cdr: ChangeDetectorRef) {
   }
 
   ngOnInit() {
     this.list = this.fullList;
+
+    if (this.list && this.list.length == 1 && this.list[0].id == -1){
+      this.placeHolderText = this.list[0].label;
+      this.fullList = this.list = [];
+    }
     // load the initial bank list
     this.filteredlist.next(this.list.slice());
 
