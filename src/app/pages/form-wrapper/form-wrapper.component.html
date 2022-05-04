@@ -1,5 +1,5 @@
-<div *ngIf="formFieldMetadataResult" class="full-height-element form-wrapper-theme"
-     [ngClass]="'form-wrapper-theme--'+formFieldMetadataResult[0].brand"
+<div *ngIf="formMetadata" class="full-height-element form-wrapper-theme"
+     [ngClass]="'form-wrapper-theme--'+formMetadata.brand"
      [class.is-mobile]="mobileQuery.matches">
   <!--[style.height.px]="fullScreenHeight"-->
   <mat-toolbar color="primary" class="toolbar">
@@ -29,27 +29,26 @@
   </mat-sidenav-container>
 
   <ng-template #sideMainContent>
-    <app-sidenav *ngIf="formSections"
-                 [formSections]="formSections"
+    <app-sidenav *ngIf="formSectionsMetadata"
                  [formId]="formId"
                  [rowId]="rowId"
-                 [tableId]="formFieldMetadataResult[0].TableId"
-                 [tableUrl]="formFieldMetadataResult[0]['tableUrl']"
-                 [formFieldMetadataResult]="formFieldMetadataResult"
+                 [tableId]="formMetadata.tableId"
+                 [tableUrl]="formMetadata.tableUrl"
+                 [formMetadata]="formMetadata"
                  (closeSideBar)=sidenav.toggle()
                  (createNewFormClicked)="setDefaultForm()">
     </app-sidenav>
   </ng-template>
 
   <ng-template #mainContent>
-    <div class="form-container" *ngIf="formSections">
+    <div class="form-container" *ngIf="formSectionsMetadata && lookupRecords">
       <cinchy-dynamic-forms class="full-height-element"
-                            [FormId]="formId"
-                            [RowId]="rowId"
-                            [MetaData]="formFieldMetadataResult"
-                            [formSections]="formSections"
-                            [allRows]="allRows"
-                            (EventHandler)="saveClicked($event)"
+                            [formId]="formId"
+                            [rowId]="rowId"
+                            [formMetadata]="formMetadata"
+                            [formSectionsMetadata]="formSectionsMetadata"
+                            [lookupRecords]="lookupRecords"
+                            (eventHandler)="onSaved($event)"
                             (rowUpdated)="rowUpdatedFromForm($event)">
       </cinchy-dynamic-forms>
     </div>

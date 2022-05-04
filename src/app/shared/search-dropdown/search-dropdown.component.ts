@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   forwardRef,
@@ -13,6 +14,7 @@ import {FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {MatSelect} from '@angular/material/select';
 import {ReplaySubject, Subject} from 'rxjs';
 import {take, takeUntil} from 'rxjs/operators';
+import { ILookupRecord } from 'src/app/models/lookup-record.model';
 
 
 @Component({
@@ -21,17 +23,17 @@ import {take, takeUntil} from 'rxjs/operators';
   styleUrls: ['./search-dropdown.component.scss']
 })
 export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() fullList;
+  @Input() fullList: ILookupRecord[];
 
   @Input() set selectedOption(value) {
+    this.setSelectedOption(value);
     // set initial selection
-    this.selectCtrl.setValue(value);
-    this.selectedOptionVal = value;
+    
     // this.moveSelectedItemToTop(value);
   };
 
   /** list of list */
-  list;
+  list: ILookupRecord[];
   /** control for the selected bank */
   public selectCtrl: FormControl = new FormControl();
 
@@ -50,12 +52,18 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
 
   selectedOptionVal: any;
   maxSize = 3000;
+  public placeHolderText: string = 'Select existing record';
 
-  constructor() {
+  constructor(private _cdr: ChangeDetectorRef) {
   }
 
   ngOnInit() {
     this.list = this.fullList;
+
+    if (this.list && this.list.length == 1 && this.list[0].id == -1){
+      this.placeHolderText = this.list[0].label;
+      this.fullList = this.list = [];
+    }
     // load the initial bank list
     this.filteredlist.next(this.list.slice());
 
@@ -67,9 +75,19 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
       });
   }
 
-  ngAfterViewInit() {
+  setSelectedOption(value) {
+    this.selectCtrl.setValue(value);
+    this.selectedOptionVal = value;
+  }
+
+  resetDropdown() {
+    this.list = this.fullList;
     this.moveSelectedItemToTop(this.selectedOptionVal);
     this.setInitialValue();
+  }
+
+  ngAfterViewInit() {
+    this.resetDropdown();
   }
 
   optionSelected(option) {
@@ -106,13 +124,16 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
     }
     // filter the list
     this.filteredlist.next(
-      this.list.filter(item => item.fullName ? item.fullName.toLowerCase().indexOf(search) > -1 : null)
+      this.list.filter(item => item.label ? item.label.toLowerCase().indexOf(search) > -1 : null)
     );
   }
 
   moveSelectedItemToTop(selectedItem) {
-    if(this.list?.length && this.list?.length > this.maxSize){
-      const itemInList = this.list.find(item => item.id === selectedItem.id);
+    if(selectedItem && this.list?.length && this.list?.length) {// > this.maxSize){
+      let itemInList = this.list.find(item => item.id === selectedItem.id);
+      if (itemInList == null) {
+        itemInList = selectedItem;
+      }
       this.list = this.list.filter(item => item.id !== selectedItem.id);
       this.list.unshift(itemInList);
       setTimeout(() => {

@@ -1,107 +1,126 @@
+<mat-spinner *ngIf="!_formHasDataLoaded && !_sectionsToRender?.length" diameter="50" class="inside"></mat-spinner>
 <ng-container *ngIf="!isChild">
-  <mat-expansion-panel *ngFor='let section of form.sections; index as i'
-                       [ngClass]="'section-flex--'+formSections[i].columnsInRow"
-                       [expanded]="formSections[i].autoExpand" [id]="'section-' + section.label">
+  <!-- <mat-expansion-panel *ngFor='let section of _formSectionsToRenderMetadata; index as i'
+                       [ngClass]="'section-flex--'+section.columnsInRow"
+                       [expanded]="section.autoExpand" [id]="'section-' + section.name">
     <mat-expansion-panel-header class="sectionHeaderRow" expandedHeight="40px" collapsedHeight="40px"
                                 (click)="expansionClicked(section)">
+      <mat-panel-title>
+        {{section.name}}
+      </mat-panel-title>
+    </mat-expansion-panel-header> -->
+
+    <mat-expansion-panel *ngFor='let section of _sectionsToRender; index as i'
+                        [ngClass]="'section-flex--'+section.columnsInRow"
+                        [expanded]="section.autoExpand" [id]="'section-' + section.label">
+      <mat-expansion-panel-header class="sectionHeaderRow" expandedHeight="40px" collapsedHeight="40px"
+                  (click)="expansionClicked(section)">
       <mat-panel-title>
         {{section.label}}
       </mat-panel-title>
     </mat-expansion-panel-header>
-    <ng-container *ngTemplateOutlet="formFields; context:{section: section}"></ng-container>
+
+    <ng-container *ngIf="_formHasDataLoaded && _sectionsToRender?.length">
+      <ng-container *ngTemplateOutlet="formFields; context:{section: _sectionsToRender[i]}" ></ng-container>
+    </ng-container>
+
+    <mat-spinner *ngIf="!_formHasDataLoaded" diameter="50" class="inside"></mat-spinner>
 
   </mat-expansion-panel>
 </ng-container>
 
-<ng-container *ngIf="isChild">
+<ng-container *ngIf="isChild && form?.sections?.length">
   <ng-container *ngFor="let section of form.sections">
     <ng-container *ngTemplateOutlet="formFields; context:{section: section}"></ng-container>
   </ng-container>
 </ng-container>
 
-<ng-template #formFields let-section="section">
-  <div *ngFor='let field of section.fields; let idx = index' style="display: flex;">
-    <div [class]="form.name === 'Intake'? 'formField deviation-button': 'formField'">
-      <cinchy-checkbox *ngIf="(field.cinchyColumn.dataType == 'Yes/No')"
-                       (eventHandler)='eventOccurred.emit($event)'
-                       [field]='field'>
-      </cinchy-checkbox>
+<ng-template #formFields let-section="section" >
+  <ng-container *ngIf="section.fields?.length && _formHasDataLoaded">
+    <div *ngFor='let field of section.fields; let idx = index' style="display: flex;">
+      <div class="formField" *ngIf="!field.hide">
+        <cinchy-checkbox *ngIf="(field.cinchyColumn.dataType == 'Yes/No')"
+                        [targetTableName]='field.cinchyColumn.tableName'
+                        (eventHandler)='eventOccurred.emit($event)'
+                        [field]='field'>
+        </cinchy-checkbox>
 
-      <cinchy-link
-        *ngIf="(field.cinchyColumn.dataType == 'Link' && field.cinchyColumn.canView && !field.cinchyColumn.isMultiple)"
-        [targetTableName]='form.targetTableName' [field]='field'
-        [rowId]="rowId"
-        [fieldsWithErrors]="fieldsWithErrors"
-        [isDisabled]="section['LinkedColumnDetails'] && (section['LinkedColumnDetails'].linkLabel === field.label)"
-        [isInChildForm]="isChild"
-        (eventHandler)='eventOccurred.emit($event)'>
-      </cinchy-link>
+        <cinchy-link
+          *ngIf="(field.cinchyColumn.dataType == 'Link' && field.cinchyColumn.canView && !field.cinchyColumn.isMultiple)"
+          [targetTableName]='field.cinchyColumn.tableName' [field]='field'
+          [rowId]="field.form.rowId"
+          [fieldsWithErrors]="fieldsWithErrors"
+          [isDisabled]="section['LinkedColumnDetails'] && (section['LinkedColumnDetails'].linkLabel === field.label)"
+          [isInChildForm]="isChild"
+          (eventHandler)='eventOccurred.emit($event)'>
+        </cinchy-link>
 
-      <cinchy-link-multichoice
-        *ngIf="(field.cinchyColumn.dataType == 'Link' && field.cinchyColumn.canView && field.cinchyColumn.isMultiple)"
-        [rowId]="rowId"
-        [targetTableName]='form.targetTableName' [field]='field'
-        [fieldsWithErrors]="fieldsWithErrors"
-        (eventHandler)='eventOccurred.emit($event)'>
-      </cinchy-link-multichoice>
+        <cinchy-link-multichoice
+          *ngIf="(field.cinchyColumn.dataType == 'Link' && field.cinchyColumn.canView && field.cinchyColumn.isMultiple)"
+          [rowId]="field.form.rowId"
+          [targetTableName]='field.cinchyColumn.tableName' [field]='field'
+          [fieldsWithErrors]="fieldsWithErrors"
+          (eventHandler)='eventOccurred.emit($event)'>
+        </cinchy-link-multichoice>
 
-      <cinchy-textarea
-        *ngIf="(field.cinchyColumn.dataType == 'Text'&& field.cinchyColumn.textColumnMaxLength > 500)"
-        (eventHandler)='eventOccurred.emit($event)'
-        [targetTableName]='form.targetTableName' [field]='field'
-        [fieldsWithErrors]="fieldsWithErrors">
-      </cinchy-textarea>
+        <cinchy-textarea
+          *ngIf="(field.cinchyColumn.dataType == 'Text'&& field.cinchyColumn.textColumnMaxLength > 500)"
+          (eventHandler)='eventOccurred.emit($event)'
+          [targetTableName]='field.cinchyColumn.tableName' [field]='field'
+          [fieldsWithErrors]="fieldsWithErrors">
+        </cinchy-textarea>
 
-      <cinchy-textbox
-        *ngIf="(field.cinchyColumn.dataType == 'Text' && field.cinchyColumn.textColumnMaxLength <= 500)"
-        [targetTableName]='form.targetTableName' [field]='field'
-        [fieldsWithErrors]="fieldsWithErrors"
-        (eventHandler)='eventOccurred.emit($event)'>
-      </cinchy-textbox>
+        <cinchy-textbox
+          *ngIf="(field.cinchyColumn.dataType == 'Text' && field.cinchyColumn.textColumnMaxLength <= 500)"
+          [targetTableName]='field.cinchyColumn.tableName' [field]='field'
+          [fieldsWithErrors]="fieldsWithErrors"
+          (eventHandler)='eventOccurred.emit($event)'>
+        </cinchy-textbox>
 
-      <cinchy-datetime *ngIf="(field.cinchyColumn.dataType == 'Date and Time')"
-                       [targetTableName]='form.targetTableName' [field]='field'
-                       [fieldsWithErrors]="fieldsWithErrors"
-                       (eventHandler)='eventOccurred.emit($event)'>
-      </cinchy-datetime>
+        <cinchy-datetime *ngIf="(field.cinchyColumn.dataType == 'Date and Time')"
+                        [targetTableName]='field.cinchyColumn.tableName' [field]='field'
+                        [fieldsWithErrors]="fieldsWithErrors"
+                        (eventHandler)='eventOccurred.emit($event)'>
+        </cinchy-datetime>
 
-      <cinchy-attachfile *ngIf="(field.cinchyColumn.dataType == 'Binary')"
-                         [targetTableName]='form.targetTableName' [field]='field'
-                         [fieldsWithErrors]="fieldsWithErrors"
-                         (eventHandler)='eventOccurred.emit($event)' [Form]="section.fields">
-      </cinchy-attachfile>
+        <cinchy-attachfile *ngIf="(field.cinchyColumn.dataType == 'Binary')"
+                          [targetTableName]='field.cinchyColumn.tableName' [field]='field'
+                          [fieldsWithErrors]="fieldsWithErrors"
+                          (eventHandler)='eventOccurred.emit($event)' [Form]="section.fields">
+        </cinchy-attachfile>
 
-      <cinchy-calculated *ngIf="(field.cinchyColumn.dataType == 'Calculated')"
-                         [field]='field'>
-      </cinchy-calculated>
+        <cinchy-calculated *ngIf="(field.cinchyColumn.dataType == 'Calculated')"
+                          [field]='field'>
+        </cinchy-calculated>
 
-      <cinchy-choice *ngIf="field.cinchyColumn.dataType == 'Choice' && !field.cinchyColumn.isMultiple"
-                     [targetTableName]='form.targetTableName'
-                     [field]='field'
-                     [fieldsWithErrors]="fieldsWithErrors"
-                     (eventHandler)='eventOccurred.emit($event)'>
-      </cinchy-choice>
+        <cinchy-choice *ngIf="field.cinchyColumn.dataType == 'Choice' && !field.cinchyColumn.isMultiple"
+                      [targetTableName]='field.cinchyColumn.tableName'
+                      [field]='field'
+                      [fieldsWithErrors]="fieldsWithErrors"
+                      (eventHandler)='eventOccurred.emit($event)'>
+        </cinchy-choice>
 
-      <cinchy-muliti-choice *ngIf="field.cinchyColumn.dataType == 'Choice' && field.cinchyColumn.isMultiple"
-                            [targetTableName]='form.targetTableName'
-                            [field]='field'
-                            [fieldsWithErrors]="fieldsWithErrors"
-                            (eventHandler)='eventOccurred.emit($event)'>
-      </cinchy-muliti-choice>
+        <cinchy-muliti-choice *ngIf="field.cinchyColumn.dataType == 'Choice' && field.cinchyColumn.isMultiple"
+                              [targetTableName]='field.cinchyColumn.tableName'
+                              [field]='field'
+                              [fieldsWithErrors]="fieldsWithErrors"
+                              (eventHandler)='eventOccurred.emit($event)'>
+        </cinchy-muliti-choice>
 
-      <cinchy-number *ngIf="(field.cinchyColumn.dataType == 'Number')"
-                     [targetTableName]='form.targetTableName'
-                     [field]='field'
-                     [fieldsWithErrors]="fieldsWithErrors"
-                     (eventHandler)='eventOccurred.emit($event)'>
-      </cinchy-number>
+        <cinchy-number *ngIf="(field.cinchyColumn.dataType == 'Number')"
+                      [targetTableName]='field.cinchyColumn.tableName'
+                      [field]='field'
+                      [fieldsWithErrors]="fieldsWithErrors"
+                      (eventHandler)='eventOccurred.emit($event)'>
+        </cinchy-number>
 
-      <cinchy-childform-table *ngIf="field.childForm" [field]='field'
-                              [rowId] = rowId
-                              [hasChildTableAccess]="hasChildTableAccess"
-                              (childform)='childFormOpened.emit($event)'
-                              (deleteClicked)="deleteDialogOpened.emit($event)">
-      </cinchy-childform-table>
+        <cinchy-childform-table *ngIf="field.childForm && !field.childForm.flatten" [field]='field'
+                                [rowId] = 'field.form.rowId'
+                                [hasChildTableAccess]="field.childForm.hasAccess"
+                                (childform)='childFormOpened.emit($event)'
+                                (deleteClicked)="deleteDialogOpened.emit($event)">
+        </cinchy-childform-table>
+      </div>
     </div>
-  </div>
+  </ng-container>
 </ng-template>

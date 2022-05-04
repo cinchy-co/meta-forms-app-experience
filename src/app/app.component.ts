@@ -51,25 +51,33 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (localStorage.getItem('fullScreenHeight')) {
-      this.fullScreenHeight = parseInt(localStorage.getItem('fullScreenHeight'), 10);
-      this.setHeight();
-    }else{
-      window.addEventListener('message', this.receiveMessage, false);
+    if (window.location.href.includes("healthcheck"))
+    {
+      this.router.navigate(['/healthcheck'], {queryParamsHandling: "merge"});
+      this.loginDone = true;
     }
-    this.cinchyService.checkIfSessionValid().toPromise().then(response => {
-      if (response.accessTokenIsValid) {
-        this.loadRoute();
-      } else {
-        this.cinchyService.login().then(success => {
-          if (success) {
-            this.loadRoute();
-          }
-        }, error => {
-          console.error('Could not login: ', error)
-        });
+    else {
+      if (localStorage.getItem('fullScreenHeight')) {
+        this.fullScreenHeight = parseInt(localStorage.getItem('fullScreenHeight'), 10);
+        this.setHeight();
+      }else{
+        window.addEventListener('message', this.receiveMessage, false);
       }
-    });
+      this.cinchyService.checkIfSessionValid().toPromise().then(response => {
+        if (response.accessTokenIsValid) {
+          this.loadRoute();
+        } else {
+          this.cinchyService.login().then(success => {
+            if (success) {
+              this.loadRoute();
+            }
+          }, error => {
+            console.error('Could not login: ', error)
+          });
+        }
+      });
+    }
+ 
   }
 
   loadRoute() {

@@ -11,11 +11,16 @@ import {FontAwesomeModule} from "@fortawesome/angular-fontawesome";
 import {NgxSpinnerModule} from "ngx-spinner";
 import {CoreModule} from "../core/core.module";
 import {SaveSuccessComponent} from './save-success/save-success.component';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { NativeDateTimeModule } from 'ng-pick-datetime/date-time/adapter/native-date-time.module';
+import { MatInputModule } from '@angular/material';
+import { HealthcheckComponent } from './healthcheck/healthcheck/healthcheck.component';
 
 @NgModule({
   declarations: [
     FormWrapperComponent,
-    SaveSuccessComponent
+    SaveSuccessComponent,
+    HealthcheckComponent
   ],
   imports: [
     BrowserModule,
@@ -29,6 +34,9 @@ import {SaveSuccessComponent} from './save-success/save-success.component';
     CinchyDynamicFormsModule,
     FontAwesomeModule,
     NgxSpinnerModule,
+    MatDatepickerModule,
+    NativeDateTimeModule,
+    MatInputModule,
     CoreModule
   ],
   exports: [],
