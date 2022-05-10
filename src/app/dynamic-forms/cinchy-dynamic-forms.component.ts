@@ -29,6 +29,7 @@ import { IFormSectionMetadata } from '../models/form-section-metadata.model';
 import { ILookupRecord } from '../models/lookup-record.model';
 import { FormHelperService } from './service/form-helper/form-helper.service';
 import { SearchDropdownComponent } from '../shared/search-dropdown/search-dropdown.component';
+import { ConfigService } from '../config.service';
 
 @Component({
   selector: 'cinchy-dynamic-forms',
@@ -39,7 +40,6 @@ import { SearchDropdownComponent } from '../shared/search-dropdown/search-dropdo
 export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('recordDropdown') dropdownComponent:SearchDropdownComponent;
   
-  @Input() rowId: number | string;
   @Input() formId: number | string;
   @Input() formMetadata: IFormMetadata;
   @Input() formSectionsMetadata: IFormSectionMetadata[];
@@ -53,6 +53,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   @Output() closeAddNewDialog = new EventEmitter<any>();
 
   form: IForm = null;
+  rowId: number | string;
   fieldsWithErrors: Array<any>;
   currentRow: ILookupRecord;
   destroy$: Subject<boolean> = new Subject<boolean>();
@@ -75,22 +76,30 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     private appStateService: AppStateService,
     private cinchyQueryService: CinchyQueryService,
     private printService: PrintService,
-    private _formHelperService: FormHelperService
+    private _formHelperService: FormHelperService,
+    private _configService: ConfigService
   ) { }
 
   ngOnInit() {
     this.appStateService.getSaveClickedObs().pipe(takeUntil(this.destroy$)).subscribe((saveClicked) => {
       saveClicked && this.saveForm(this.form, this.rowId);
     });
+
+    this.appStateService.onRecordSelected().subscribe(async resp => {
+      if (resp?.cinchyId == null) {
+        this.rowId = null;
+        this.currentRow = null;
+      } else {
+        this.rowId = resp.cinchyId;
+      }
+      if (resp == null || !(resp.doNotReloadForm))
+        await this.loadForm();
+    });
   }
 
   async rowSelected(row) {
     this.currentRow = row ?? this.currentRow;
-    this.rowId = row?.id ?? this.rowId;
-    this.rowUpdated.emit(this.rowId);
-    //this.childDataForm = [];
-    //this.form = null;
-    //this.loadForm();
+    this.appStateService.setRecordSelected(row?.id ?? this.rowId);
   }
 
   setLookupRecords(lookupRecords: ILookupRecord[]) {
@@ -140,11 +149,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   async ngOnChanges(changes: SimpleChanges) {
     if (changes.rowId && changes.rowId.currentValue === null) {
       this.currentRow = null;
-    }
-
-    // TODO: Think of a better place to put this, it's risky to add here
-    if (changes['formId'] || changes['rowId']) {
-      await this.loadForm();
     }
   }
 
@@ -404,7 +408,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       
       // Generate dynamic query using dynamic form meta data
       this.spinner.show();
-      const insertQuery: IQuery = formdata.generateSaveQuery(_RowId, this.isCloneForm);
+      const insertQuery: IQuery = formdata.generateSaveQuery(_RowId, this._configService.cinchyVersion, this.isCloneForm);
 
       // execute dynamic query
       if (insertQuery) {
@@ -412,15 +416,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
           this._cinchyService.executeCsql(insertQuery.query, insertQuery.params).subscribe(
             response => {
               this.spinner.hide();
+
               if (isNullOrUndefined(this.rowId) || this.rowId == 'null') {
-                this.rowId = response.queryResult._jsonResult.data[0][0];
+                this.appStateService.setRecordSelected(response.queryResult._jsonResult.data[0][0], true);
                 this.isCloneForm = false;
               }
-              const data = {
-                id: this.rowId,
-                type: 'rowId',
-                isSaved: true
-              };
+
               this.saveMethodLogic(this.rowId, response, childData);
               this.updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
               // rowId = this.saveMethodLogic(rowId, response);

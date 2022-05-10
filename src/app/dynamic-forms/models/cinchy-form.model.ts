@@ -4,7 +4,6 @@ import { isNullOrUndefined } from 'util';
 import { DropdownDataset } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset';
 import { IDropdownOption, DropdownOption } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-options';
 import * as R from 'ramda';
-import { ICinchyColumn } from './cinchy-column.model';
 import { FormField } from './cinchy-form-field.model';
 
 
@@ -35,7 +34,7 @@ export interface IForm {
 
   loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?, idForParentMatch?): void
 
-  generateSaveQuery(rowID: number | string, forClonedForm?: boolean): IQuery;
+  generateSaveQuery(rowID: number | string, cinchyVersion?: string, forClonedForm?: boolean): IQuery;
 
   generateDeleteQuery(): IQuery;
 
@@ -294,7 +293,7 @@ export class Form implements IForm {
     this.rowId = rowId;
   }
 
-  generateSaveQuery(rowID, forClonedForm?: boolean): IQuery {
+  generateSaveQuery(rowID, cinchyVersion?: string, forClonedForm?: boolean): IQuery {
     let i: number = 0;
     let params = {};
     let query: IQuery = null;
@@ -468,8 +467,15 @@ export class Form implements IForm {
     const ifUpdateAttachedFilePresent = attachedFilesInfo.find(fileInfo => fileInfo.query);
     if (assignmentValues && assignmentValues.length) {
       if (!rowID || rowID == "null") {
-        //Todo: Change in insert query.
-        query = new Query('insert into [' + this.targetTableDomain + '].[' + this.targetTableName + '] (' + assignmentColumns.join(',') + ') values (' + assignmentValues.join(',') + ') SELECT @cinchy_row_id', params, attachedFilesInfo);
+        const queryString = 
+          cinchyVersion == null || cinchyVersion.startsWith('4.') ?
+          `INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(',')}) VALUES (${assignmentValues.join(',')}) SELECT @cinchy_row_id` :
+          `CREATE TABLE #tmp([id] int) 
+              INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(',')})
+              OUTPUT INSERTED.[Cinchy Id] INTO #tmp ([id])
+              VALUES (${assignmentValues.join(',')})
+              SELECT x.[id] as 'id' FROM #tmp x`;
+        query = new Query(queryString, params, attachedFilesInfo)
       } else {
         let assignmentSetClauses: string[] = [];
         for (let j = 0; j < assignmentColumns.length; j++) {

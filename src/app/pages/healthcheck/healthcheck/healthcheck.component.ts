@@ -18,12 +18,12 @@ export class HealthcheckComponent implements OnInit {
   }
 
   getHealthCheckInfo(): void{
-  this._configService.getEnvUrl();
-  this.healthCheck = this._configService.envConfig;
-  delete this.healthCheck.authority;
-  delete this.healthCheck.cinchyRootUrl;
-  delete this.healthCheck.clientId;
-  delete this.healthCheck.redirectUri;   
+    this._configService.loadConfig();
+    this.healthCheck = this._configService.envConfig;
+    delete this.healthCheck.authority;
+    delete this.healthCheck.cinchyRootUrl;
+    delete this.healthCheck.clientId;
+    delete this.healthCheck.redirectUri;   
   }
 
 }

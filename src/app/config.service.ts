@@ -1,14 +1,15 @@
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {HttpClient} from '@angular/common/http';
 import {Inject, Injectable} from '@angular/core';
-import {forkJoin} from 'rxjs';
-import {map, tap} from 'rxjs/operators';
+import {forkJoin, of} from 'rxjs';
+import {catchError, concatMap, tap} from 'rxjs/operators';
 import { CinchyConfig } from '@cinchy-co/angular-sdk';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ConfigService {
-  private enviornmentConfig;
+  private _enviornmentConfig: CinchyConfig;
+  private _cinchyVersion: string;
   fullScreenHeight;
 
   constructor(private http: HttpClient, @Inject('BASE_URL') private baseUrl: string) {
@@ -36,26 +37,31 @@ export class ConfigService {
   }
 
   get envConfig(): CinchyConfig {
-    return this.enviornmentConfig;
+    return this._enviornmentConfig;
+  }
+
+  get cinchyVersion(): string {
+    return this._cinchyVersion;
   }
 
   loadConfig() {
-    return forkJoin(this.getEnvUrl());
+    return forkJoin([this.getEnvironmentConfig()]);
   }
 
-  getEnvUrl() {
+  getEnvironmentConfig() {
     const url = `${this.baseUrl}assets/config/config.json`;
-
-/*    const headers = new HttpHeaders({
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Expires': 'Sat, 01 Jan 2000 00:00:00 GMT'
-    })*/
     return this.http
       .get<any>(url).pipe(
-        tap(config => {
-          this.enviornmentConfig = config
-        }));
+        tap(configResp => {
+          this._enviornmentConfig = configResp;
+        }),
+        concatMap(configResp => { 
+          return this.http.get(configResp.cinchyRootUrl.replace(/\/$/, "") + '/healthcheck').pipe(
+            catchError(err => { console.warn('Could not execute healthcheck endpoint', err); return of(null); }),
+            tap(healthcheckResp => this._cinchyVersion = healthcheckResp ? healthcheckResp['version'] : null )
+          );
+        })
+        );
   }
 
   receiveMessage(event) {

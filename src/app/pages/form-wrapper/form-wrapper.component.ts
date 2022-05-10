@@ -1,9 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { CinchyQueryService } from '../../services/cinchy-query.service';
 import { AppStateService } from '../../services/app-state.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { DialogService } from '../../services/dialog.service';
-import { CinchyService } from '@cinchy-co/angular-sdk';
+import { ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { MediaMatcher } from '@angular/cdk/layout';
@@ -31,7 +29,6 @@ export class FormWrapperComponent implements OnInit {
   constructor(
     private cinchyQueryService: CinchyQueryService,
     private appStateService: AppStateService,
-    private router: Router,
     private activatedRoute: ActivatedRoute,
     private toastr: ToastrService,
     private spinner: NgxSpinnerService,
@@ -49,7 +46,8 @@ export class FormWrapperComponent implements OnInit {
     let { formId, rowId } = this.activatedRoute.snapshot.queryParams;
     console.log('From session', sessionStorage.getItem('formId'), sessionStorage.getItem('rowId'));
     this.formId = formId || this.appStateService.formId || sessionStorage.getItem('formId');
-    this.rowId = rowId || this.appStateService.rowId || sessionStorage.getItem('rowId');
+
+    this.appStateService.setRecordSelected(this.rowId);
   }
 
   async loadFormMetadata() {
@@ -98,16 +96,7 @@ export class FormWrapperComponent implements OnInit {
     this.toastr.error('Could not fetch the form\'s metadata. You may not have the necessary entitlements to view this form.', 'Error');
   }
 
-  setDefaultForm() {
-    this.rowId = null;
-  }
-
   onSaved(data) {
     this.loadLookupRecords(this.formMetadata);
-    this.rowId = data;
-  }
-
-  rowUpdatedFromForm(rowId) {
-    this.rowId = rowId;
   }
 }
