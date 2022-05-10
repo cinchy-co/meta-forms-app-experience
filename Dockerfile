@@ -8,6 +8,6 @@ COPY . .
 RUN npm run build 
 
 ### STAGE 2: Run ###
-FROM nginxinc/nginx-unprivileged:1.21.6
+FROM nginxinc/nginx-unprivileged:1.21.6-alpine
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /usr/src/app/dist/Meta-Forms-App-Experience /usr/share/nginx/html
