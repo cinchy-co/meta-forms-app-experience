@@ -90,10 +90,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         this.rowId = null;
         this.currentRow = null;
       } else {
+        const setLookupRecords = this.rowId == null;
         this.rowId = resp.cinchyId;
+        if (setLookupRecords)
+          this.setLookupRecords(this.lookupRecordsList);
       }
-      if (resp == null || !(resp.doNotReloadForm))
+      if (resp == null || !(resp.doNotReloadForm)) {
         await this.loadForm();
+      }
     });
   }
 

@@ -46,7 +46,7 @@ export class FormWrapperComponent implements OnInit {
     let { formId, rowId } = this.activatedRoute.snapshot.queryParams;
     console.log('From session', sessionStorage.getItem('formId'), sessionStorage.getItem('rowId'));
     this.formId = formId || this.appStateService.formId || sessionStorage.getItem('formId');
-
+    this.rowId = rowId || this.appStateService.rowId || sessionStorage.getItem('rowId');
     this.appStateService.setRecordSelected(this.rowId);
   }
 
