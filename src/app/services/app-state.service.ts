@@ -14,12 +14,21 @@ export class AppStateService {
   latestRenderedSections$ = new BehaviorSubject<IFormSectionMetadata[]>(null);
   currentSection$ = new BehaviorSubject<string>(null);
   saveClicked$ = new BehaviorSubject<boolean>(null);
+  lastRecordSelect$ = new BehaviorSubject<{ cinchyId: number | string | null, doNotReloadForm: boolean }>(null);
   childRecordUpdated$ = new Subject<boolean>();
   hasFormChanged: boolean;
   savedParentFromChildPlus$ = new Subject<boolean>();
   formMetadata: IFormMetadata;
 
   constructor() { }
+
+  setRecordSelected(cinchyId: number | string | null, doNotReloadForm: boolean = false): void {
+    this.lastRecordSelect$.next({cinchyId, doNotReloadForm});
+  } 
+
+  onRecordSelected(): Observable<{ cinchyId: number | string | null, doNotReloadForm: boolean }> {
+    return this.lastRecordSelect$.asObservable();
+  }
 
   setLatestRenderedSections(sections: IFormSectionMetadata[]){
     this.latestRenderedSections$.next(sections);

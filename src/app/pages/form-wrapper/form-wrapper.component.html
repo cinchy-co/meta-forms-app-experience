@@ -31,12 +31,10 @@
   <ng-template #sideMainContent>
     <app-sidenav *ngIf="formSectionsMetadata"
                  [formId]="formId"
-                 [rowId]="rowId"
                  [tableId]="formMetadata.tableId"
                  [tableUrl]="formMetadata.tableUrl"
                  [formMetadata]="formMetadata"
-                 (closeSideBar)=sidenav.toggle()
-                 (createNewFormClicked)="setDefaultForm()">
+                 (closeSideBar)=sidenav.toggle()>
     </app-sidenav>
   </ng-template>
 
@@ -44,12 +42,10 @@
     <div class="form-container" *ngIf="formSectionsMetadata && lookupRecords">
       <cinchy-dynamic-forms class="full-height-element"
                             [formId]="formId"
-                            [rowId]="rowId"
                             [formMetadata]="formMetadata"
                             [formSectionsMetadata]="formSectionsMetadata"
                             [lookupRecords]="lookupRecords"
-                            (eventHandler)="onSaved($event)"
-                            (rowUpdated)="rowUpdatedFromForm($event)">
+                            (eventHandler)="onSaved($event)">
       </cinchy-dynamic-forms>
     </div>
   </ng-template>

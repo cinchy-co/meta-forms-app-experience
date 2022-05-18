@@ -20,10 +20,7 @@ export class SidenavComponent implements OnInit, OnDestroy {
   @Input() tableId: string | number;
   @Input() formMetadata: IFormMetadata;
 
-  @Input() set rowId(value: string | number) {
-    this._rowId = value
-    this.filteredTableUrl = this.tableUrl ? `${this.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${value}` : this.filteredTableUrl;
-  };
+  rowId: string | number;
 
   @Input() set tableUrl(value: string) {
     this._tableUrl = value
@@ -31,20 +28,15 @@ export class SidenavComponent implements OnInit, OnDestroy {
   };
 
   @Output() closeSideBar = new EventEmitter<any>();
-  @Output() createNewFormClicked = new EventEmitter<any>();
+
   toggleMenu: boolean;
   canInsert: boolean;
   selectedSection: string;
   filteredTableUrl: string;
   destroy$: Subject<boolean> = new Subject<boolean>();
-  _rowId;
   _tableUrl;
   showNewContactLink: boolean;
   createNewOptionName: string;
-
-  get rowId() {
-    return this._rowId;
-  }
 
   get tableUrl() {
     return this._tableUrl;
@@ -61,6 +53,11 @@ export class SidenavComponent implements OnInit, OnDestroy {
     this.subscribeToSectionClickedFromForm();
     this.subscribeToRenderedSectionUpdates();
     this.createNewOptionName = this.formMetadata.createNewOptionName;
+
+    this.appStateService.onRecordSelected().subscribe(resp => {
+      this.rowId = resp.cinchyId;
+      this.filteredTableUrl = this.tableUrl ? `${this.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${resp}` : this.filteredTableUrl;
+    });
   }
 
   subscribeToRenderedSectionUpdates() {
@@ -90,9 +87,9 @@ export class SidenavComponent implements OnInit, OnDestroy {
     sectionEle?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  createNewForm() {
+  createNewRecord() {
     this.sectionClicked(this.formSectionsMetadata[0]);
-    this.createNewFormClicked.emit();
+    this.appStateService.setRecordSelected(null);
   }
 
   openAddNewOptionDialog() {
