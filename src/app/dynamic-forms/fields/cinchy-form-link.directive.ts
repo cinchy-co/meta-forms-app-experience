@@ -14,6 +14,13 @@ import {DropdownOption} from "../service/cinchy-dropdown-dataset/cinchy-dropdown
 import { CinchyQueryService } from 'src/app/services/cinchy-query.service';
 import { ConfigService } from 'src/app/config.service';
 import { ToastrService } from 'ngx-toastr';
+import { ImageType } from '../enums/imageurl-type';
+import {faEdit, faPlus, faTrash} from '@fortawesome/free-solid-svg-icons';
+import { IQuery } from '../models/cinchy-query.model';
+import { MatDialog } from '@angular/material';
+import { AddNewOptionDialogComponent } from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
+import { DialogService } from 'src/app/services/dialog.service';
+
 
 //#region Cinchy Dynamic Link field
 /**
@@ -29,9 +36,13 @@ import { ToastrService } from 'ngx-toastr';
       <div class="m-b-10">
         <div class="link-labels">
           <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
-            {{field.label}}
+            <a [href]="tableSourceURL">{{field.label}}</a>
             {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
           </label>
+          <span *ngIf="createlinkOptionName">
+          <a (click)="manageSourceRecords(field)">
+          <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
+          </a></span>
           <mat-icon *ngIf="charactersAfterWhichToShowList" class="info-icon"
                     [matTooltip]="toolTipMessage"
                     matTooltipClass="tool-tip-body"
@@ -135,7 +146,11 @@ export class LinkDirective implements OnInit {
   @Input() targetTableName: string;
   @Input() isInChildForm: boolean;
   @Input() isDisabled: boolean;
+  @Input() formFieldMetadataResult: any;
   @Output() eventHandler = new EventEmitter<any>();
+  @Output() childform = new EventEmitter<any>();
+  faPlus = faPlus;
+  createlinkOptionName: boolean;
   myControl = new FormControl();
   dropdownSetOptions;
   filteredOptions;
@@ -151,11 +166,13 @@ export class LinkDirective implements OnInit {
   showImage: boolean;
   showLinkUrl: boolean;
   showActualField: boolean;
+  tableSourceURL: any;
 
   renderImageFiles = true;
 
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
               private _cinchyService: CinchyService,
+              private dialogService: DialogService,
               private _appStateService: AppStateService,
               private _cinchyQueryService: CinchyQueryService,
               private _configService: ConfigService,
@@ -163,9 +180,11 @@ export class LinkDirective implements OnInit {
   }
 
   ngOnInit(): void {
-    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl';
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
+    let url = this._configService.envConfig.cinchyRootUrl;
+    this.tableSourceURL = url + '/Tables/' + this.field.cinchyColumn.LinkTargetTableId;
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
       this.myControl.disable();
       this.setSelectedValue();
@@ -178,8 +197,11 @@ export class LinkDirective implements OnInit {
     if (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly && !this.isDisabled) {
       this.onInputChange();
     }
+
+    this.createlinkOptionName = this.field.cinchyColumn.createlinkOptionFormId ? true: false;
     // Below code is SPECIFIC to this Project ONLY
     this._appStateService.getNewContactAdded().subscribe(value => {
+      console.log('getNewContactAdded', value);
       if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]['Table'] === value.tableName) {
         this.updateList = true;
         this.filteredOptions = null;
@@ -223,6 +245,7 @@ export class LinkDirective implements OnInit {
         dropdownDataset = this.getSortedList(dropdownDataset);
         dataSet.dropdownDataset = dropdownDataset;
         this.dropdownSetOptions = dropdownDataset ? dropdownDataset.options : [];
+        this.onInputChange();
         if(this.rowId && this.rowId !== "null"){
           const emptyOption = new DropdownOption('DELETE', '', '');
           this.dropdownSetOptions.unshift(emptyOption);
@@ -255,16 +278,19 @@ export class LinkDirective implements OnInit {
     if (dropdownDataset && dropdownDataset.options) {
       filteredOutNullSets = dropdownDataset.options.filter(option => option.label);
       return {
-        options: filteredOutNullSets.sort((a, b) => {
-          var a1 = typeof a.label[0], b1 = typeof b.label[0];
-          return a1 < b1 ? -1 : a1 > b1 ? 1 : a.label[0] < b.label[0] ? -1 : a.label[0] > b.label[0] ? 1 : 0;
-        })
+        options: filteredOutNullSets.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
       }
     }
     return dropdownDataset;
   }
 
   onInputChange() {
+    if (this.isLoading) {
+      this.myControl.setValue('');
+      this.selectedValue = null;
+      return;
+    }
+    
     this.myControl.valueChanges.pipe(
       startWith('')).subscribe(value => {
       if (value && typeof value !== 'object') {
@@ -339,7 +365,9 @@ export class LinkDirective implements OnInit {
       'Value': value,
       'Text': text,
       'Event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form,
+      'Field': this.field
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
@@ -404,6 +432,32 @@ export class LinkDirective implements OnInit {
     this.field.value = '';
     this.field.cinchyColumn.hasChanged = true;
     this.downloadableLinks = [];
+  }
+
+  manageSourceRecords(childFormData: any){
+    //implement new method for add new row in source table
+    let data = {
+      childFormData: childFormData,
+      values: null,
+      title: 'Add Source-Table-Name',
+      type: 'Add',
+      multiFieldValues: childFormData
+    };
+    this.field.cinchyColumn.hasChanged = true;
+    this.openChildDialog();
+  }
+
+  openChildDialog() {
+    const createLinkOptionFormId = this.field.cinchyColumn.createlinkOptionFormId;
+    const createLinkOptionName = this.field.cinchyColumn.createlinkOptionName;
+    const newOptionDialogRef = this.dialogService.openDialog(AddNewOptionDialogComponent, {
+      createLinkOptionFormId,
+      createLinkOptionName
+    });
+    this.spinner.hide();
+    newOptionDialogRef.afterClosed().subscribe(newContactAdded => {
+      newContactAdded && this._appStateService.newContactAdded(newContactAdded)
+    });
   }
 
   fileNameIsImage(fileName: string) {

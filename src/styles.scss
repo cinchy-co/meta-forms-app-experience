@@ -296,6 +296,22 @@ app-search-dropdown {
   }
 }
 
+.cinchy-images-large {
+  height: 140px;
+
+  &--min {
+    height: 20px;
+  }
+}
+
+.cinchy-images-small {
+  height: 40px;
+
+  &--min {
+    height: 20px;
+  }
+}
+
 .font-14 {
   font-size: 14px;
 }
@@ -312,4 +328,15 @@ app-search-dropdown {
     align-items: center;
     justify-content: flex-start;
   }
+}
+
+.hide-date{
+  height: 0rem;
+  width: 0rem;
+  visibility: hidden;
+  display: block !important;
+}
+
+.mat-spinner.inside {
+  animation: none !important;
 }

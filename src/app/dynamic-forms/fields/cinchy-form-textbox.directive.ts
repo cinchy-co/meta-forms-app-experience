@@ -1,6 +1,7 @@
 import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ResponseType} from './../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
+import { ImageType } from '../enums/imageurl-type';
 
 //#region Cinchy Dynamic Textbox Field
 /**
@@ -43,7 +44,11 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
              [innerHTML]="field.value || '-'"></label>
 
       <ng-container *ngIf="showImage">
-        <img class="cinchy-images" *ngIf="field.value" [src]="field.value">
+      <img [ngClass]="{
+        'cinchy-images': size === '${ImageType.default}' || size === '${ImageType.medium}', 
+        'cinchy-images-large' : size === '${ImageType.large}', 
+        'cinchy-images-small' : size === '${ImageType.small}' 
+      }" *ngIf="field.value" [src]="field.value">
         <p *ngIf="!field.value">-</p>
       </ng-container>
 
@@ -69,13 +74,17 @@ export class TextBoxDirective implements OnInit {
   showImage: boolean;
   showLinkUrl: boolean;
   showActualField: boolean;
+  size: any;
 
   constructor() {
 
   }
 
   ngOnInit() {
-    this.showImage = this.field.cinchyColumn.dataFormatType === 'ImageUrl';
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
+    if(this.showImage){
+      this.size = this.field.cinchyColumn.dataFormatType;
+    }
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
   }
@@ -90,7 +99,9 @@ export class TextBoxDirective implements OnInit {
       'ColumnName': columnName,
       'Value': value,
       'event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form,
+      'Field': this.field
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);

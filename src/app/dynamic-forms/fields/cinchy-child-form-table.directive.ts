@@ -16,6 +16,7 @@ import {AppStateService} from "../../services/app-state.service";
 import {takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs";
 import {NumeralPipe} from "ngx-numeral";
+import { ImageType } from '../enums/imageurl-type';
 
 //#region Cinchy Dynamic Child form Table
 /**
@@ -121,12 +122,6 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Opening the child form after clicking of + icon with new data (as when child form was
-    // getting open just after save on + icon, it was referencing old Form sections and fields)
-    // console.log('FIELD CHULD', this.field);
-    if (this.field.childForm.name === 'Customer 360 Child: Projects') {
-      //  console.log('FIELD CHULD', this.field);
-    }
     this.appStateService.getOpenOfChildFormAfterParentSave().pipe(takeUntil(this.destroy$)).subscribe(val => {
       if (this.field.childForm.name == val.title) {
         this.manageChildRecords(this.field.childForm, null, val.title, 'Add', this.field.childForm);
@@ -265,10 +260,13 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
       });
     }
     if (value && currentField && currentField.cinchyColumn.dataType === "Date and Time") {
-      return this.datePipe.transform(value, 'dd-MMM-yyyy');
+     let dateFormat = currentField.cinchyColumn.displayFormat;
+     dateFormat = dateFormat.replaceAll('Y','y');
+     dateFormat = dateFormat.replaceAll('D','d');
+      return this.datePipe.transform(value, dateFormat);
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
-    } else if (value && currentField && currentField.cinchyColumn.dataFormatType === 'ImageUrl') {
+    } else if (value && currentField && currentField.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
       return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
     } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
       const numeralValue = new NumeralPipe(value);

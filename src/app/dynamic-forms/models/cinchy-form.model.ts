@@ -1,25 +1,40 @@
-import {IFormSection} from './cinchy-form-sections.model';
-import {IQuery, Query} from './cinchy-query.model';
-import {isNullOrUndefined} from 'util';
-import {DropdownDataset} from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset';
-import {IDropdownOption, DropdownOption} from '../service/cinchy-dropdown-dataset/cinchy-dropdown-options';
+import { IFormSection } from './cinchy-form-sections.model';
+import { IQuery, Query } from './cinchy-query.model';
+import { isNullOrUndefined } from 'util';
+import { DropdownDataset } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset';
+import { IDropdownOption, DropdownOption } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-options';
 import * as R from 'ramda';
+import { FormField } from './cinchy-form-field.model';
 
 
 export interface IForm {
-  id: number;
+  id: number | string;
   name: string;
   targetTableId: number;
   targetTableDomain: string;
   targetTableName: string;
   sections: Array<IFormSection>;
   rowId: number;
+  hasAccess: boolean;
+  isAccordion: boolean;
+  isChild: boolean;
+  childFormParentId?: string;
+  childFormLinkId?: string;
+  flatten: boolean;
+  childFormFilter?: string;
+  childFormSort?: string;
+  fieldsByColumnName: { [columnName: string]: FormField };
+  childFieldsLinkedToColumnName: {[columnName: string]: FormField[]};
+  parentForm: IForm;
+  tableMetadata: Object;
 
-  generateSelectQuery(rowId: number | string): IQuery;
+  generateSelectQuery(rowId: number | string, parentTableId: number): IQuery;
 
   loadRecordData(rowId: number | string, rowData: Array<any>): void;
 
-  generateSaveQuery(rowID: number | string): IQuery;
+  loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?, idForParentMatch?): void
+
+  generateSaveQuery(rowID: number | string, cinchyVersion?: string, forClonedForm?: boolean): IQuery;
 
   generateDeleteQuery(): IQuery;
 
@@ -27,7 +42,7 @@ export interface IForm {
 
   checkChildFormValidation(): any;
 
-  generateSaveForChildQuery(rowID: number | string, sourceID: number): IQuery
+  generateSaveForChildQuery(rowID: number | string, forClonedForm?: boolean): IQuery
 
   getErrorFields(): Array<any>
 }
@@ -37,15 +52,31 @@ export class Form implements IForm {
   sections: Array<IFormSection> = [];
   linkedColumnElement;
   errorFields = [];
+  fieldsByColumnName: { [columnName: string]: FormField } = {};
+  childFieldsLinkedToColumnName: {[columnName: string]: FormField[]} = {};
+  parentForm: IForm;
+  tableMetadata: Object;
+
   private _dropdownDatasets: { [key: number]: DropdownDataset } = {};
 
-  constructor(public id: number, public name: string, public targetTableId: number, public targetTableDomain: string,
-              public targetTableName: string) {
-  }
+  constructor(
+    public id: number | string,
+    public name: string,
+    public targetTableId: number,
+    public targetTableDomain: string,
+    public targetTableName: string,
+    public isAccordion: boolean,
+    public hasAccess: boolean,
+    public isChild: boolean = false,
+    public flatten: boolean = false,
+    public childFormParentId?: string,
+    public childFormLinkId?: string,
+    public childFormFilter?: string,
+    public childFormSort?: string
+  ) { }
 
-  generateSelectQuery(rowId: number | string, parentTableId: number = 0, isChild: boolean = false): IQuery {
+  generateSelectQuery(rowId: number | string, parentTableId: number = 0): IQuery {
     let columnName = null;
-    let parentChildIdMatch = null;
     let fields: Array<string> = [];
     this.sections.forEach(section => {
       section.fields.forEach(element => {
@@ -54,12 +85,6 @@ export class Form implements IForm {
           columnName = element.cinchyColumn.name;
         }
 
-        if (element.cinchyColumn.childFormParentId) {
-          parentChildIdMatch = {
-            childFormParentId: element.cinchyColumn.childFormParentId,
-            childFormLinkId: element.cinchyColumn.childFormLinkId
-          };
-        }
         if (isNullOrUndefined(element.cinchyColumn.name) || element.cinchyColumn.name == '') {
           return;
         }
@@ -69,23 +94,23 @@ export class Form implements IForm {
           const targetColumnForQuery = (splitLinkTargetColumnNames.map(name => `[${name}]`)).join('.');
           const labelForColumn = element.cinchyColumn.IsDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
           // Having sep conditions just for clarity
-          if (!element.cinchyColumn.IsDisplayColumn && isChild) {
+          if (!element.cinchyColumn.IsDisplayColumn && this.isChild) {
             // CASE WHEN CHANGE([column])=1 THEN DRAFT([column]) ELSE [column] END as 'column'
             //  fields.push('[' + element.cinchyColumn.name + '].[Cinchy Id] as \'' + element.cinchyColumn.name + '\'');
             const col = `[${element.cinchyColumn.name}].[Cinchy Id]`
             element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${element.cinchyColumn.name}'`);
-          } else if (!isChild) {
+          } else if (!this.isChild) {
             const col = `[${element.cinchyColumn.name}].[Cinchy Id]`
-           // fields.push('[' + element.cinchyColumn.name + '].[Cinchy Id] as \'' + element.cinchyColumn.name + '\'');
+            // fields.push('[' + element.cinchyColumn.name + '].[Cinchy Id] as \'' + element.cinchyColumn.name + '\'');
             element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${element.cinchyColumn.name}'`);
           }
           const col = `[${element.cinchyColumn.name}].${targetColumnForQuery}`
-         // fields.push('[' + element.cinchyColumn.name + '].' + targetColumnForQuery + ' as \'' + labelForColumn + ' label\'');
+          // fields.push('[' + element.cinchyColumn.name + '].' + targetColumnForQuery + ' as \'' + labelForColumn + ' label\'');
           element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${labelForColumn} label'`);
         }
-          // else  if (element.cinchyColumn.dataType === 'Binary') {
-          //   //Todo: CHanges for Short Name
-          //   fields.push('Convert(varchar(max),[' + element.cinchyColumn.name + '])');
+        // else  if (element.cinchyColumn.dataType === 'Binary') {
+        //   //Todo: CHanges for Short Name
+        //   fields.push('Convert(varchar(max),[' + element.cinchyColumn.name + '])');
         // }
         else {
           //Todo: Changes for Short Name
@@ -98,17 +123,18 @@ export class Form implements IForm {
     });
     fields.push('[Cinchy ID]');
 
-    if (isChild && (!isNullOrUndefined(columnName) || parentChildIdMatch)) {
+    if (this.isChild && (!isNullOrUndefined(columnName) || (this.childFormParentId && this.childFormLinkId))) {
       let defaultWhere;
       if (!isNullOrUndefined(columnName)) {
         defaultWhere = 'where t.[' + columnName + '].[Cinchy Id] = ' + rowId + ' and t.[Deleted] is null'
       } else {
-        defaultWhere = 'where t.' + parentChildIdMatch.childFormLinkId + ' = @parentCinchyIdMatch and t.[Deleted] is null'
+        defaultWhere = 'where t.' + this.childFormLinkId + ' = @parentCinchyIdMatch and t.[Deleted] is null'
       }
-      const whereConditionWithOrder = this.sections[0] && this.sections[0].childFilter ? defaultWhere + ' and t.' + this.sections[0].childFilter : defaultWhere;
-      const whereWithOrder = this.sections[0] && this.sections[0].childSort ? `${whereConditionWithOrder} ${this.sections[0].childSort}` : `${whereConditionWithOrder} Order by t.[Cinchy Id]`
+      const whereConditionWithFilter = this.childFormFilter ? 
+      `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
+      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy Id]`
       let query: IQuery = new Query('select ' + fields.join(',') + ' from [' + this.targetTableDomain + '].[' + this.targetTableName + '] t ' + whereWithOrder,
-        null, null, parentChildIdMatch);
+        null, null);
       return query;
     } else {
       let query: IQuery = new Query('select ' + fields.join(',') + ' from [' + this.targetTableDomain + '].[' + this.targetTableName + '] t where t.[Cinchy Id] = ' + rowId + ' and t.[Deleted] is null Order by t.[Cinchy Id]', null);
@@ -149,6 +175,7 @@ export class Form implements IForm {
           }
 
           if (element.cinchyColumn.dataType === 'Link') {
+            //console.log('(element.cinchyColumn.dataType === \'Link\'', result);
             let optionArray: IDropdownOption[] = [];
             if (!isNullOrUndefined(Rowelement[element.cinchyColumn.name]) && Rowelement[element.cinchyColumn.name] !== '') {
               const labelForColumn = element.cinchyColumn.IsDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
@@ -168,7 +195,6 @@ export class Form implements IForm {
                 element['dropdownDataset'] = result;
               }
             }
-
           }
         });
 
@@ -177,19 +203,25 @@ export class Form implements IForm {
     this.rowId = rowId;
   }
 
-  loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?): void {
+  loadMultiRecordData(rowId: number | string, rowData: any, currentRowItem?, idForParentMatch?): void {
     this.sections.forEach(section => {
       let linkLabel;
+      let linkValue;
       let linkedElement;
+      let childFormLinkIdValue;
       section.fields.forEach(element => {
-        if (element.cinchyColumn.linkedFieldId == element.id) {
+        childFormLinkIdValue = element.cinchyColumn.childFormLinkId ? element.cinchyColumn.childFormLinkId : '';
+        childFormLinkIdValue = childFormLinkIdValue.replaceAll('[', '');
+        childFormLinkIdValue = childFormLinkIdValue.replaceAll(']', '');
+        if (element.cinchyColumn.linkedFieldId == element.id || childFormLinkIdValue === element.cinchyColumn.name) {
           if (!rowData.length && !element['dropdownDataset']) {
-            element['dropdownDataset'] = {options: currentRowItem ? [new DropdownOption(currentRowItem.id, currentRowItem.fullName)] : []};
+            element['dropdownDataset'] = { options: currentRowItem ? [new DropdownOption(currentRowItem.id, currentRowItem.fullName)] : [] };
           }
           this.linkedColumnElement = this.linkedColumnElement ? this.linkedColumnElement : JSON.parse(JSON.stringify(element));
           linkLabel = element.label;
+          linkValue = idForParentMatch;
           linkedElement = element;
-          section['LinkedColumnDetails'] = {linkedElement, linkLabel};
+          section['LinkedColumnDetails'] = { linkedElement, linkLabel, linkValue };
         }
         if (isNullOrUndefined(element['MultiFields'])) {
           section['MultiFields'] = [];
@@ -261,7 +293,7 @@ export class Form implements IForm {
     this.rowId = rowId;
   }
 
-  generateSaveQuery(rowID): IQuery {
+  generateSaveQuery(rowID, cinchyVersion?: string, forClonedForm?: boolean): IQuery {
     let i: number = 0;
     let params = {};
     let query: IQuery = null;
@@ -278,17 +310,17 @@ export class Form implements IForm {
         )) {
           //todo: check for link type
         } else {
-          if (element.cinchyColumn.name != null && element.cinchyColumn.dataType != 'Calculated' && element.cinchyColumn.canEdit
-            && element.cinchyColumn.hasChanged && !element.cinchyColumn.isViewOnly && !element.childForm) {
+          if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalcualted && element.cinchyColumn.canEdit
+          && (element.cinchyColumn.hasChanged) && (!element.cinchyColumn.isViewOnly || forClonedForm) && !element.childForm) {
             paramName = '@p' + i.toString();
             switch (element.cinchyColumn.dataType) {
               case "Date and Time":
                 let elementValue = isNullOrUndefined(element.value) ? null :
                   element.value instanceof Date ? element.value.toLocaleDateString() : element.value;
-                if (elementValue) {
-                  params[paramName] = elementValue ? elementValue : '';
+                  params[paramName] = elementValue ?? '';
+                if (!paramName) {
+                  paramName = element.value instanceof Date ? paramName : `NULLIF(${paramName},'')`;
                 }
-                paramName = element.value instanceof Date ? paramName : `NULLIF(${paramName},'')`;
                 break;
               case "Number":
                 let elementValueNumber = isNullOrUndefined(element.value) ? '' : element.value;
@@ -305,7 +337,7 @@ export class Form implements IForm {
                      }
 
                    });*/
-                  choiceElementValue = isNullOrUndefined(arrayElement) ? '' : arrayElement.join(',');
+                  choiceElementValue = isNullOrUndefined(arrayElement) ? '' : (Array.isArray(arrayElement) ? arrayElement.join(',') : arrayElement);
                 } else {
                   choiceElementValue = element.value;
                 }
@@ -435,8 +467,15 @@ export class Form implements IForm {
     const ifUpdateAttachedFilePresent = attachedFilesInfo.find(fileInfo => fileInfo.query);
     if (assignmentValues && assignmentValues.length) {
       if (!rowID || rowID == "null") {
-        //Todo: Change in insert query.
-        query = new Query('insert into [' + this.targetTableDomain + '].[' + this.targetTableName + '] (' + assignmentColumns.join(',') + ') values (' + assignmentValues.join(',') + ') SELECT @cinchy_row_id', params, attachedFilesInfo);
+        const queryString = 
+          cinchyVersion == null || cinchyVersion.startsWith('4.') ?
+          `INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(',')}) VALUES (${assignmentValues.join(',')}) SELECT @cinchy_row_id` :
+          `CREATE TABLE #tmp([id] int) 
+              INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(',')})
+              OUTPUT INSERTED.[Cinchy Id] INTO #tmp ([id])
+              VALUES (${assignmentValues.join(',')})
+              SELECT x.[id] as 'id' FROM #tmp x`;
+        query = new Query(queryString, params, attachedFilesInfo)
       } else {
         let assignmentSetClauses: string[] = [];
         for (let j = 0; j < assignmentColumns.length; j++) {
@@ -452,7 +491,7 @@ export class Form implements IForm {
     }
   }
 
-  generateSaveForChildQuery(rowID, sourceID): IQuery {
+  generateSaveForChildQuery(rowID, forClonedForm?: boolean): IQuery {
     let i: number = 0;
     let params = {};
     let query: IQuery = null;
@@ -469,23 +508,29 @@ export class Form implements IForm {
           console.log('Link type cannot be null');
         } else {
           const isLinkedColumnForInsert = this.isLinkedColumn(element, section) && !rowID;
-          if (element.cinchyColumn.name != null && element.cinchyColumn.dataType != 'Calculated' && element.cinchyColumn.canEdit
-            && !element.cinchyColumn.isViewOnly && (element.cinchyColumn.hasChanged || isLinkedColumnForInsert)) {
-            if ((element.cinchyColumn.dataType === "Date and Time" && element.value instanceof Date) ||
+          if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalcualted && element.cinchyColumn.canEdit
+            && (!element.cinchyColumn.isViewOnly || forClonedForm) && (element.cinchyColumn.hasChanged || isLinkedColumnForInsert)) {
+            if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
               (element.cinchyColumn.dataType === "Choice" && element.value)
               || (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")) {
               paramName = '@p' + i.toString();
             }
             switch (element.cinchyColumn.dataType) {
               case "Date and Time":
-                if (element.value instanceof Date) {
-                  let elementValue = isNullOrUndefined(element.value) ? null :
-                    element.value instanceof Date ? element.value.toLocaleDateString() : null;
-                  if (elementValue) {
-                    params[paramName] = elementValue ? elementValue : '';
-                  }
-                  paramName = element.value instanceof Date ? paramName : `NULLIF(${paramName},'')`;
+                let date: Date;
+                if (typeof element.value === 'string') {
+                  try {
+                    date = new Date(element.value);
+                  } catch { }
+                } else if (element.value instanceof Date) {
+                  date = element.value;
                 }
+
+                let elementValue = isNullOrUndefined(date) ? null : date instanceof Date ? date.toLocaleDateString() : null;
+                if (elementValue) {
+                  params[paramName] = elementValue ? elementValue : '';
+                }
+                paramName = date instanceof Date ? paramName : `NULLIF(${paramName},'')`;
                 break;
               case "Number":
                 let elementValueNumber = isNullOrUndefined(element.value) ? '' : element.value;
@@ -503,7 +548,7 @@ export class Form implements IForm {
                        }
 
                      });*/
-                    choiceElementValue = isNullOrUndefined(arrayElement) ? '' : arrayElement.join(',');
+                    choiceElementValue = isNullOrUndefined(arrayElement) ? '' : (Array.isArray(arrayElement) ? arrayElement.join(',') : arrayElement);
                   } else {
                     choiceElementValue = element.value;
                   }
@@ -561,7 +606,7 @@ export class Form implements IForm {
             }
             //TOdo: Return Insert Data when binary
             if (element.cinchyColumn.dataType !== 'Binary') {
-              if ((element.cinchyColumn.dataType === "Date and Time" && element.value instanceof Date) ||
+              if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
                 (element.cinchyColumn.dataType === "Choice" && element.value)
                 || (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")) {
                 assignmentColumns.push(tableAliasInQuery + '[' + element.cinchyColumn.name + ']');
@@ -570,7 +615,7 @@ export class Form implements IForm {
             if (isNullOrUndefined(element.cinchyColumn.linkTargetColumnName) &&
               element.cinchyColumn.dataType !== 'Binary') {
               //ToDO: for insert data ... because insert is giving error with parameters
-              if ((element.cinchyColumn.dataType === "Date and Time" && element.value instanceof Date) ||
+              if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
                 (element.cinchyColumn.dataType === "Choice" && element.value)
                 || (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")) {
                 if (element.cinchyColumn.dataType === 'Text' && !element.value) {
@@ -617,13 +662,27 @@ export class Form implements IForm {
               } else {
                 //ToDO: for insert data ... because insert is giving error with parameters
                 if (element.cinchyColumn.dataType == "Link") {
-                  isNullOrUndefined(this.rowId) ?
-                    assignmentValues.push("ResolveLink(" + params[paramName] + ",'" + "Cinchy Id" + "')")
-                    :
-                    assignmentValues.push("ResolveLink(" + paramName + ",'" + "Cinchy Id" + "')");
+
+                  if (isNullOrUndefined(this.rowId) && element.form.isChild && element.form.flatten && element.form.childFormParentId) {
+                    let assignmentVal = "ResolveLink(" + params[paramName] + ",'" + "Cinchy Id" + "')";
+                    let columnMetadata = element.form.tableMetadata['Columns']?.find(_ => _.columnId == element.cinchyColumn.id);
+                    if (columnMetadata && columnMetadata.primaryLinkedColumnId) {
+                      let primaryLinkedColumn = element.form.parentForm.tableMetadata['Columns']?.find(_ => _.columnId == columnMetadata.primaryLinkedColumnId);
+                      if (primaryLinkedColumn) {
+                        assignmentVal = "ResolveLink('" + params[paramName] + "','" + primaryLinkedColumn.name + "')";
+                      }
+                    }
+                    assignmentValues.push(assignmentVal);
+                  } else {
+                    isNullOrUndefined(this.rowId) ?
+                      assignmentValues.push("ResolveLink(" + params[paramName] + ",'" + "Cinchy Id" + "')")
+                      :
+                      assignmentValues.push("ResolveLink(" + paramName + ",'" + "Cinchy Id" + "')");
+                  }
+
                 } else {
                   if (isNullOrUndefined(element.childForm)) {
-                    if ((element.cinchyColumn.dataType === "Date and Time" && element.value instanceof Date) ||
+                    if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
                       (element.cinchyColumn.dataType === "Choice" && element.value)
                       || (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")) {
                       assignmentValues.push(paramName);
@@ -735,7 +794,7 @@ export class Form implements IForm {
   getFileNameAndItsTable(field, childCinchyId?) {
     const [domain, table, column] = field.cinchyColumn.FileNameColumn ? field.cinchyColumn.FileNameColumn.split('.') : [];
     const query = this.rowId && this.rowId != "null" ? `Insert into [${domain}].[${table}] ([Cinchy Id], [${field.cinchyColumn.name}]) values(@rowId, @fieldValue)` : null;
-    return {domain, table, column, fileName: field.cinchyColumn.FileName, query, value: field.value, childCinchyId};
+    return { domain, table, column, fileName: field.cinchyColumn.FileName, query, value: field.value, childCinchyId };
   }
 
   isLinkedColumn(element, section) {
