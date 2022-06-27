@@ -11,4 +11,3 @@ RUN npm run build:prod
 FROM nginxinc/nginx-unprivileged:1.21.6-alpine
 COPY nginx.conf /etc/nginx/forms.conf
 COPY --from=build /usr/src/app/dist/Meta-Forms-App-Experience /usr/share/nginx/html
-RUN chmod 666 /usr/share/nginx/html/index.html
