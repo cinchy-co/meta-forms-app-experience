@@ -28,7 +28,7 @@ jobs:
       with:
         find: '"buildIdentifier": ""'
         replace: '"buildIdentifier": "${GITHUB_REF##*/}/${GITHUB_SHA}"'
-        include: "src/assets/config/config.json"
+        include: "/src/healthcheck"
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
