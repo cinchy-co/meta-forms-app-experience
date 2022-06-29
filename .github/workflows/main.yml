@@ -27,7 +27,7 @@ jobs:
       uses: jacobtomlinson/gha-find-replace@2.0.0
       with:
         find: '"buildIdentifier": ""'
-        replace: '"buildIdentifier": "${GITHUB_REF##*/}/${GITHUB_SHA}"'
+        replace: '"buildIdentifier": ${GITHUB_REF##*/}/${GITHUB_SHA}'
         include: "src/healthcheck"
     
     - name: Configure AWS credentials
