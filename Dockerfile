@@ -10,5 +10,5 @@ RUN chmod 666 /usr/src/app/dist/Meta-Forms-App-Experience/index.html
 
 ### STAGE 2: Run ###
 FROM nginxinc/nginx-unprivileged:1.21.6-alpine
-COPY nginx.conf /etc/nginx/forms.conf
+COPY nginx.conf /etc/nginx/conf.d/forms.conf
 COPY --from=build /usr/src/app/dist/Meta-Forms-App-Experience /usr/share/nginx/html
