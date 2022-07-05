@@ -30,6 +30,13 @@ jobs:
         replace: '"buildIdentifier": "${{ github.ref }}/${{ github.sha }}"'
         include: "src/healthcheck"
     
+    - name: Find and Replace GitHub URL
+      uses: jacobtomlinson/gha-find-replace@2.0.0
+      with:
+        find: '"githubURL": "https://github.com/cinchy-co/meta-forms-app-experience"'
+        replace: '"githubURL": "https://github.com/cinchy-co/meta-forms-app-experience/commit/${{ github.sha }}"'
+        include: "src/healthcheck"
+    
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
