@@ -405,7 +405,8 @@ export class Form implements IForm {
               if ((element.cinchyColumn.dataType === 'Text') && !element.value) {
                 // Because empty values for text input is throwing error
                 isNullOrUndefined(this.rowId) ? assignmentValues.push('\'' + params[paramName] + '\'') :
-                  assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
+                params[paramName] != '' ? assignmentValues.push(`cast(${paramName} as nvarchar(100))`) :
+                assignmentValues.push(paramName);
               } else {
                 isNullOrUndefined(this.rowId) ? assignmentValues.push('\'' + params[paramName] + '\'') :
                   assignmentValues.push(paramName);

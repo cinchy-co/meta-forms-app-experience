@@ -1,3 +1,4 @@
+import { getAttrsForDirectiveMatching } from "@angular/compiler/src/render3/view/util";
 import { Injectable } from "@angular/core";
 import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 import { ToastrService } from "ngx-toastr";
@@ -80,6 +81,12 @@ export class FormHelperService {
       const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
       const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
       const attachedFileName = await this.getFileName(cinchyId, formFields[i].fileNameColumn);
+      
+      if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
+        const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
+        columnMetadata.displayFormat = parentMetadata?.displayFormat;
+       }
+
 
       const cinchyColumn: ICinchyColumn = new CinchyColumn(
         formFields[i].columnId,
@@ -136,7 +143,7 @@ export class FormHelperService {
         childForm = await this.generateForm(childFormMetadata, null, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
         this.fillWithSections(childForm, childFormSectionsMetadata);
         await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord);
-        await this.fillWithData(childForm, childFormMetadata, cinchyId, true, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
+        await this.fillWithData(childForm, cinchyId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
 
         // Override these, they will be checked later when opening up the child form
         cinchyColumn.canEdit = true;
@@ -219,7 +226,8 @@ export class FormHelperService {
     return null;
   }
 
-  public async fillWithData(form: IForm, formMetadata: IFormMetadata, cinchyId: string, isChild: boolean, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string) {
+  // TODO: Refactor to smaller function, remove the need to use afterChildFormEdit as a function, it's only a workaround for the bad existing code in cinchy-dynamic-forms.component.ts that handles child forms queries
+  public async fillWithData(form: IForm, cinchyId: string, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string, afterChildFormEdit?: Function) {
     if (cinchyId == null || cinchyId == 'null')
       return;
 
@@ -248,6 +256,36 @@ export class FormHelperService {
         form.loadRecordData(cinchyId, selectQueryResult);
       }
 
+      // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
+      if (form.childFieldsLinkedToColumnName != null) {
+        debugger;
+        for (let parentColName in form.childFieldsLinkedToColumnName) {
+
+          let linkedParentField = form.fieldsByColumnName[parentColName];
+          let linkedChildFields = form.childFieldsLinkedToColumnName[parentColName];
+
+          if (linkedParentField == null || linkedChildFields.length === 0)
+            continue;
+
+          for (let linkedChildField of linkedChildFields) {
+            // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
+            if (!linkedChildField.form.flatten || linkedChildField.value != null || linkedParentField.value == linkedChildField.value)
+              continue;
+
+            // Update the child form field's value
+            linkedChildField.value = linkedParentField.value;
+            linkedChildField.cinchyColumn.hasChanged = true;
+
+            if (afterChildFormEdit) {
+              afterChildFormEdit({
+                'childFormId': linkedChildField.form.id,
+                'data': linkedChildField.form,
+                'id': 0
+              }, linkedChildField.form);
+            }
+          }
+        }
+      }
     } catch (e) {
       console.error(e?.cinchyException?.message, e);
       if (e?.cinchyException?.message)

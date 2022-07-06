@@ -1,5 +1,6 @@
 {
     "component":"Meta-Forms",
     "version": "5.1.0",
-    "buildIdentifier": ""
+    "buildIdentifier": "",
+    "githubURL": "https://github.com/cinchy-co/meta-forms-app-experience"
 }
