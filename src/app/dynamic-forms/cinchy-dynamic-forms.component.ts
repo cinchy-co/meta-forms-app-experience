@@ -382,7 +382,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
             await this._formHelperService.fillWithFields(this.form, this.rowId as string, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
             await this._formHelperService.fillWithData(this.form, this.rowId as string, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
             this.enableSaveBtn = true;
-          }, 1000);
+          }, 0);
 
           this.isLoadingForm = false;
           this.formHasDataLoaded = true;
