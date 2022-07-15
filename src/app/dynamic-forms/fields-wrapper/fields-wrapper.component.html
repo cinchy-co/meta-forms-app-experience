@@ -24,7 +24,7 @@
       <ng-container *ngTemplateOutlet="formFields; context:{section: _sectionsToRender[i]}" ></ng-container>
     </ng-container>
 
-    <mat-spinner *ngIf="!_formHasDataLoaded" diameter="50" class="inside"></mat-spinner>
+    <mat-spinner *ngIf="!isApiCallComplete && _sectionsToRender[i].fields.length == 0" diameter="50" class="inside"></mat-spinner>
 
   </mat-expansion-panel>
 </ng-container>
