@@ -1,6 +1,6 @@
 {
-  "name": "edit-form",
-  "version": "2.4.1",
+  "name": "meta-forms",
+  "version": "5.2.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 3000  --ssl",
