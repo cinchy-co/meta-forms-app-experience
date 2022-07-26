@@ -1,9 +1,7 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable, Subject, throwError} from 'rxjs';
-import {HttpClient, HttpErrorResponse} from '@angular/common/http';
-import {catchError} from 'rxjs/operators';
-import {CinchyService} from '@cinchy-co/angular-sdk';
-import {Router} from '@angular/router';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
+import { IFormMetadata } from '../models/form-metadata-model';
+import { IFormSectionMetadata } from '../models/form-section-metadata.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,25 +11,31 @@ export class AppStateService {
   formId;
   rowId;
   newContactAdded$ = new Subject<any>();
+  latestRenderedSections$ = new BehaviorSubject<IFormSectionMetadata[]>(null);
   currentSection$ = new BehaviorSubject<string>(null);
   saveClicked$ = new BehaviorSubject<boolean>(null);
+  lastRecordSelect$ = new BehaviorSubject<{ cinchyId: number | string | null, doNotReloadForm: boolean }>(null);
   childRecordUpdated$ = new Subject<boolean>();
-  isFormSaved: boolean;
   hasFormChanged: boolean;
   savedParentFromChildPlus$ = new Subject<boolean>();
-  metaDataOfForm: any;
+  formMetadata: IFormMetadata;
 
-  constructor(private http: HttpClient, private cinchyService: CinchyService, private router: Router) {
+  constructor() { }
+
+  setRecordSelected(cinchyId: number | string | null, doNotReloadForm: boolean = false): void {
+    this.lastRecordSelect$.next({cinchyId, doNotReloadForm});
+  } 
+
+  onRecordSelected(): Observable<{ cinchyId: number | string | null, doNotReloadForm: boolean }> {
+    return this.lastRecordSelect$.asObservable();
   }
 
-
-  setSelectedOpportunityId(opportunityId) {
-    this.rowId = opportunityId;
-    this.selectedOpportunityId = opportunityId;
+  setLatestRenderedSections(sections: IFormSectionMetadata[]){
+    this.latestRenderedSections$.next(sections);
   }
 
-  getSelectedValueById(list, selectedId, findKey){
-    return list.find(item => item[findKey] === selectedId);
+  getLatestRenderedSections(): Observable<IFormSectionMetadata[]> {
+    return this.latestRenderedSections$.asObservable();
   }
 
   newContactAdded(contact){

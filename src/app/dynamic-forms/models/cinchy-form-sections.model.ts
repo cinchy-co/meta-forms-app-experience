@@ -6,12 +6,18 @@ export interface IFormSection {
   fields: Array<IFormField>;
   childFilter;
   childSort;
+  autoExpand: boolean;
+  columnsInRow: string;
+  MultiFields: Array<any>;
 }
 
 export class FormSection implements IFormSection {
   fields: Array<IFormField> = [];
   childFilter: string;
   childSort: string;
+  autoExpand: boolean;
+  columnsInRow: string;
+  MultiFields: Array<any>;
 
   constructor(public id: number, public label: string) {
   }

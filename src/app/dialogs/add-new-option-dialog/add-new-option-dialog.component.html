@@ -1,10 +1,9 @@
-<div class="form-container" *ngIf="formSections">
+<div class="form-container" *ngIf="formSectionsMetadata">
   <cinchy-dynamic-forms class="full-height-element"
-                        [FormId]="formId"
-                        [RowId]="null"
-                        [MetaData]="formFieldMetadataResult"
-                        [formSections]="formSections"
-                        [allRows]="allRows"
+                        [formId]="formId"
+                        [formMetadata]="formMetadata"
+                        [formSectionsMetadata]="formSectionsMetadata"
+                        [lookupRecords]="lookupRecords"
                         [addNewFromSideNav]="true"
                         (closeAddNewDialog)="closeDialog($event)">
   </cinchy-dynamic-forms>

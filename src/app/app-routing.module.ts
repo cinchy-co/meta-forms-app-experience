@@ -6,17 +6,13 @@ import {SaveSuccessComponent} from "./pages/save-success/save-success.component"
 
 const routes: Routes = [
   {
-    path: 'edit-form', // Had to change the route to keep deployment configuration same
+    path: 'edit-form',
     component: FormWrapperComponent
   },
   {
     path: 'save-success',
     component: SaveSuccessComponent
-  },/*{
-    path: '', redirectTo: '/deals-overview', pathMatch: 'full'
-  }, {
-    path: '**', component: FormWrapperComponent
-  },*/
+  }
 ];
 
 @NgModule({

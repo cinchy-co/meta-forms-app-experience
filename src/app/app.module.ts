@@ -15,6 +15,11 @@ import {NgxSpinnerModule} from "ngx-spinner";
 import {AceEditorModule} from 'ng2-ace-editor';
 import {NumeralModule} from "ngx-numeral";
 import {ConfigService} from "./config.service";
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { DateAdapter, MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { NativeDateTimeModule } from 'ng-pick-datetime/date-time/adapter/native-date-time.module';
+import { MatInputModule } from '@angular/material';
+import { SectionService } from './services/section-service';
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -42,6 +47,9 @@ export function getBaseUrl() {
     CinchyModule.forRoot(),
     NgxSpinnerModule,
     AceEditorModule,
+    NativeDateTimeModule,
+    MatDatepickerModule,
+    MatInputModule,
     NumeralModule.forRoot()
   ],
   providers: [
@@ -53,6 +61,7 @@ export function getBaseUrl() {
     },
     CinchyModule,
     CinchyService,
+    SectionService,
     {
       provide: CinchyConfig,
       useFactory: (config: ConfigService) => {
@@ -60,7 +69,7 @@ export function getBaseUrl() {
       },
       deps: [ConfigService]
     },
-    { provide: 'BASE_URL', useFactory: getBaseUrl }
+    { provide: 'BASE_URL', useFactory: getBaseUrl },
   ],
   bootstrap: [AppComponent]
 })

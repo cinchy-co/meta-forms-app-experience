@@ -8,7 +8,7 @@ on:
         # ECR Image Tag
         description: 'Image Tag Name'
         # Default value if no value is explicitly provided
-        default: '${GITHUB_REF##*/}'
+        default: '$GITHUB_REF'
         # Input has to be provided for the workflow to run
         required: true
 
@@ -27,8 +27,15 @@ jobs:
       uses: jacobtomlinson/gha-find-replace@2.0.0
       with:
         find: '"buildIdentifier": ""'
-        replace: '"buildIdentifier": "${GITHUB_REF##*/}/${GITHUB_SHA}"'
-        include: "src/assets/config/config.json"
+        replace: '"buildIdentifier": "${{ github.ref }}/${{ github.sha }}"'
+        include: "src/healthcheck"
+    
+    - name: Find and Replace GitHub URL
+      uses: jacobtomlinson/gha-find-replace@2.0.0
+      with:
+        find: '"githubURL": "https://github.com/cinchy-co/meta-forms-app-experience"'
+        replace: '"githubURL": "https://github.com/cinchy-co/meta-forms-app-experience/commit/${{ github.sha }}"'
+        include: "src/healthcheck"
     
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1

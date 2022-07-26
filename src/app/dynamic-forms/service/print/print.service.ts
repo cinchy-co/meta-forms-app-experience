@@ -6,6 +6,7 @@ import {AppStateService} from "../../../services/app-state.service";
 import {NgxSpinnerService} from "ngx-spinner";
 import {DatePipe} from "@angular/common";
 import {NumeralPipe} from "ngx-numeral";
+import { ImageType } from '../../enums/imageurl-type';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -111,11 +112,11 @@ export class PrintService {
   async generatePdf(form, currentRow) {
     this.spinner.show();
     this.content = [
-      {text: this.appStateService.metaDataOfForm[0]['Form'], style: 'formHeader'}
+      {text: this.appStateService.formMetadata.formName, style: 'formHeader'}
     ];
     currentRow?.fullName && this.content.push({text: currentRow?.fullName, style: 'formSubHeader'});
     const documentDefinition = await this.getDocDefFromForm(form);
-    const fileName = currentRow?.fullName ? `${this.appStateService.metaDataOfForm[0]['Form']}-${currentRow?.fullName}.pdf` : `${this.appStateService.metaDataOfForm[0]['Form']}.pdf`;
+    const fileName = currentRow?.fullName ? `${this.appStateService.formMetadata.formName}-${currentRow?.fullName}.pdf` : `${this.appStateService.formMetadata.formName}.pdf`;
     setTimeout(() => {
       pdfMake.createPdf(documentDefinition).download(fileName);
       this.spinner.hide();
@@ -123,12 +124,15 @@ export class PrintService {
   }
 
   async getDocDefFromForm(form) {
+    if(form==null){
+      return;
+    }
     if (form.sections?.length) {
       form.sections.forEach(section => {
         this.content.push({...this.sectionHeaderDefault, text: section.label});
         this.setFieldsForSection(section.fields);
       })
-    }
+      }
     const properContent = await this.getProperContent();
     return new Promise((res, rej) => {
       const pdfContent = {
@@ -208,7 +212,7 @@ export class PrintService {
     if (field.cinchyColumn.dataFormatType === "LinkUrl") {
       // console.log('IMAGE', this.toDataURL(field.value, this.getFileData));
       this.content.push({columns: this.getLinkColumns(actualField)});
-    } else if (field.cinchyColumn.dataFormatType === "ImageUrl") {
+    } else if (field.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
       const base64Img = this.getBase64ImageFromUrl(field.value);
       this.content.push({columns: this.getImageColumns(field, base64Img)});
     } else if (field.cinchyColumn.dataType === "Date and Time") {
@@ -380,7 +384,7 @@ export class PrintService {
       return this.datePipe.transform(value, 'dd-MMM-yyyy');
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
-    } else if (value && currentField && currentField.cinchyColumn.dataFormatType === 'ImageUrl') {
+    } else if (value && currentField && currentField.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
       return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
     } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
       const numeralValue = new NumeralPipe(value);

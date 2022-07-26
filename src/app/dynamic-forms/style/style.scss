@@ -402,7 +402,17 @@ button.btnSave.mat-raised-button {
 
   label {
     margin-right: 5px;
+
+    a:hover {
+      color: #1A1C1D;
+      text-decoration: none;
+    }
+    a {
+      color: rgba(0,0,0,.54);
+      text-decoration: underline;
+    }
   }
+  
 
   mat-icon {
     line-height: 1.2 !important;
@@ -497,4 +507,20 @@ button.btnSave.mat-raised-button {
 
 .file-delete-icon:hover {
   color: #d63737;
+}
+
+.inside {
+  flex-basis: 8% !important;
+  margin-top: 5px;
+}
+
+.mat-form-field-appearance-legacy .mat-form-field-prefix .mat-datepicker-toggle-default-icon,
+.mat-form-field-appearance-legacy .mat-form-field-suffix .mat-datepicker-toggle-default-icon {
+width: 2rem !important;
+}
+
+.mat-form-field-prefix .mat-icon-button,
+.mat-form-field-suffix .mat-icon-button {
+  height: 2em;
+  width: 2.5em !important;
 }

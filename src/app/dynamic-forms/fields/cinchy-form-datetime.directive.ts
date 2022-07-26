@@ -2,6 +2,10 @@ import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ResponseType} from '../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
 
+import {DatePipe} from "@angular/common";
+import * as moment from 'moment';
+
+
 //#region Cinchy Dynamic DateTime Field
 /**
  * This section is used to create dynamic DateTime field for the cinchy.
@@ -27,15 +31,22 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
         </mat-icon>
       </div>
       <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
-        <input class='form-control'
-               [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
-               (dateTimeChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
-               [(ngModel)]="preSelectedDate"
-               (ngModelChange)="checkForDate()"
-               [ngModelOptions]="{standalone: true}"
-               [owlDateTimeTrigger]="dt3" [owlDateTime]="dt3">
-        <mat-icon [owlDateTimeTrigger]="dt3" class="date-icon">date_range</mat-icon>
-        <owl-date-time #dt3 [pickerType]="'calendar'"></owl-date-time>
+      <mat-form-field class='form-control'>
+           <input matInput readonly
+           [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly  || isDisabled)"
+           type="text" [(ngModel)]="preSelectedDate"
+           (input)="checkForDate()"
+           (change)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')">
+            <mat-datepicker-toggle   matSuffix [for]="picker3"></mat-datepicker-toggle>
+            <mat-datepicker  #picker3></mat-datepicker>
+          </mat-form-field>
+      <mat-form-field class='form-control hide-date' >
+            <input matInput
+             [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
+             (dateChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
+             (dateInput)="checkForDate()"
+             [matDatepicker]="picker3" [value]="preSelectedDate">
+           </mat-form-field>
         <mat-error
           *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
           *{{field.label}} is Required.
@@ -44,7 +55,7 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
       <label class="pre-formatted" *ngIf="field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled" [innerHTML]="(field.value | date) || '-' "></label>
     </div>
 
-  `
+  `,
 })
 export class DateTimeDirective implements OnInit {
   @Input() field: any;
@@ -56,15 +67,17 @@ export class DateTimeDirective implements OnInit {
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
   @Output() eventHandler = new EventEmitter<any>();
-  preSelectedDate;
+  preSelectedDate :any;
   showError;
 
-  constructor() {
+  constructor(private datePipe: DatePipe){
 
   }
 
   ngOnInit() {
-    this.preSelectedDate = this.field.value ? new Date(this.field.value) : '';
+    this.preSelectedDate = this.field.value ? this.field.value : '';
+   if(this.preSelectedDate){
+     this.preSelectedDate = moment(this.preSelectedDate).format(this.field.cinchyColumn.displayFormat);}
   }
 
   checkForDate(){
@@ -83,9 +96,15 @@ export class DateTimeDirective implements OnInit {
       'ColumnName': columnName,
       'Value': value,
       'event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form,
+      'Field': this.field
     };
-    this.field.value = value ? value : this.preSelectedDate;
+    let selectedDate = value ? value : this.preSelectedDate;
+    this.field.value = moment(selectedDate).format('MM/DD/yyyy');
+
+    // re-assign format of date
+    this.preSelectedDate = moment(selectedDate).format(this.field.cinchyColumn.displayFormat);
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);

@@ -17,6 +17,9 @@ export interface IFormField {
   // value
   value: any;
   formControl: FormControl;
+  form: IForm;
+
+  hide: boolean;
   // functions
   setInitialValue(value: any);
 }
@@ -26,9 +29,10 @@ export class FormField implements IFormField {
   formControl: FormControl;
   private dropdownDataset: DropdownDataset;
   filteredValues: Observable<DropdownOption[]>;
+  hide: boolean = false;
 
   constructor(public id: number, public label: string, public caption: string,
-    public childForm: IForm, public cinchyColumn: ICinchyColumn, dropdownDataset: DropdownDataset) {
+    public childForm: IForm, public cinchyColumn: ICinchyColumn, dropdownDataset: DropdownDataset, public form: IForm) {
     this.dropdownDataset = dropdownDataset;
     if (cinchyColumn.dataType == 'Link' && !isNullOrUndefined(this.dropdownDataset)) {
       this.formControl = new FormControl();
@@ -48,15 +52,20 @@ export class FormField implements IFormField {
     });
   }
 
-  setInitialValue(value: any) {
-    if (this.cinchyColumn.dataType == 'Date and Time' && !isNullOrUndefined(value))
-      this.value = new Date(value);
-    else
-      this.value = value;
-
-    if (!isNullOrUndefined(this.formControl)) {
-      this.formControl.setValue(this.value);
-    }
+ setInitialValue(value: any) {
+    if (this.cinchyColumn.dataType == 'Date and Time' && !isNullOrUndefined(value)){
+      this.value = new Date(value);}
+    else if (this.cinchyColumn.dataType == 'Choice' && !isNullOrUndefined(value) && this.cinchyColumn.isMultiple){
+      let multiChoiceData = new Array();
+      for(let selected of value){
+        multiChoiceData.push(selected.itemName);
+      }
+      this.value = multiChoiceData;} 
+    else {
+      this.value = value;}
+      
+      if (!isNullOrUndefined(this.formControl)) {
+      this.formControl.setValue(this.value);}
   }
 
   autoCompleteValueMapper = (id) => {
