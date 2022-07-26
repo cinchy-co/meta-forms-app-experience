@@ -8,18 +8,15 @@ import {AppRoutingModule} from './app-routing.module';
 import {DialogsModule} from './dialogs/dialogs.module';
 import {CustomMaterialModule} from './custom-material.module';
 import {CinchyConfig, CinchyModule, CinchyService} from '@cinchy-co/angular-sdk';
-import {environment} from '../environments/environment';
 import {AppComponent} from './app.component';
 import {CinchyDynamicFormsModule} from "./dynamic-forms/cinchy-dynamic-forms.module";
 import {NgxSpinnerModule} from "ngx-spinner";
 import {AceEditorModule} from 'ng2-ace-editor';
 import {NumeralModule} from "ngx-numeral";
 import {ConfigService} from "./config.service";
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { DateAdapter, MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
-import { NativeDateTimeModule } from 'ng-pick-datetime/date-time/adapter/native-date-time.module';
-import { MatInputModule } from '@angular/material';
-import { SectionService } from './services/section-service';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatInputModule} from '@angular/material/input';
+import {SectionService} from './services/section-service';
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -47,7 +44,6 @@ export function getBaseUrl() {
     CinchyModule.forRoot(),
     NgxSpinnerModule,
     AceEditorModule,
-    NativeDateTimeModule,
     MatDatepickerModule,
     MatInputModule,
     NumeralModule.forRoot()
