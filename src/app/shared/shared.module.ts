@@ -1,7 +1,6 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
 import {RouterModule} from '@angular/router';
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from 'ng-pick-datetime';
 import {TypeaheadComponent} from './typeahead/typeahead.component';
 import {CustomMaterialModule} from '../custom-material.module';
 import {ReactiveFormsModule} from '@angular/forms';
@@ -18,8 +17,6 @@ import {ScrollingModule} from '@angular/cdk/scrolling';
   imports: [
     BrowserModule, // Used for async pipes
     RouterModule,
-    OwlDateTimeModule,
-    OwlNativeDateTimeModule,
     CustomMaterialModule,
     ReactiveFormsModule,
     NgxMatSelectSearchModule,

@@ -3,7 +3,6 @@ import {BrowserModule} from '@angular/platform-browser';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {CustomMaterialModule} from '../custom-material.module';
 import {SharedModule} from '../shared/shared.module';
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from 'ng-pick-datetime';
 
 import {AddNewContactDialogComponent} from './add-new-contact-dialog/add-new-contact-dialog.component';
 import {AddNewOptionDialogComponent} from './add-new-option-dialog/add-new-option-dialog.component';
@@ -17,8 +16,6 @@ import {CinchyDynamicFormsModule} from "../dynamic-forms/cinchy-dynamic-forms.mo
     SharedModule,
     FormsModule,
     ReactiveFormsModule,
-    OwlDateTimeModule,
-    OwlNativeDateTimeModule,
     CinchyDynamicFormsModule
   ],
   declarations: [

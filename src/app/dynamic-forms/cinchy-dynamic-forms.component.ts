@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { isNullOrUndefined } from 'util';
 import { ChildFormDirective } from './fields/cinchy-child-form.directive';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { CinchyService, QueryType } from '@cinchy-co/angular-sdk';
 import { IForm } from './models/cinchy-form.model';
 import { IQuery } from './models/cinchy-query.model';

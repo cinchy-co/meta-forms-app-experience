@@ -11,15 +11,13 @@ import {AppStateService} from "../../services/app-state.service";
 import {CinchyService} from "@cinchy-co/angular-sdk";
 import {NumeralPipe} from "ngx-numeral";
 import {DropdownOption} from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
-import { CinchyQueryService } from 'src/app/services/cinchy-query.service';
-import { ConfigService } from 'src/app/config.service';
-import { ToastrService } from 'ngx-toastr';
-import { ImageType } from '../enums/imageurl-type';
-import {faEdit, faPlus, faTrash} from '@fortawesome/free-solid-svg-icons';
-import { IQuery } from '../models/cinchy-query.model';
-import { MatDialog } from '@angular/material';
-import { AddNewOptionDialogComponent } from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
-import { DialogService } from 'src/app/services/dialog.service';
+import {CinchyQueryService } from 'src/app/services/cinchy-query.service';
+import {ConfigService } from 'src/app/config.service';
+import {ToastrService } from 'ngx-toastr';
+import {ImageType } from '../enums/imageurl-type';
+import {faPlus} from '@fortawesome/free-solid-svg-icons';
+import {AddNewOptionDialogComponent} from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
+import {DialogService} from 'src/app/services/dialog.service';
 
 
 //#region Cinchy Dynamic Link field

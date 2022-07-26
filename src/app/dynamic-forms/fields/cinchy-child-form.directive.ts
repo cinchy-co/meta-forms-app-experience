@@ -1,4 +1,4 @@
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component, Inject, EventEmitter } from '@angular/core';
 import { isNullOrUndefined } from 'util';
 import { DropdownDatasetService } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
@@ -74,7 +74,7 @@ export class ChildFormDirective {
                     }
                     else {
                       element.value = null;
-                      element.noPreSelect = !(dropdownResult && dropdownResult.length);
+                      element.noPreSelect = !(dropdownResult && dropdownResult['length']);
                     }
                   }
                 } else if (!obj[element.cinchyColumn.name]) { // When obj doesnt have value and element.value also have no value
