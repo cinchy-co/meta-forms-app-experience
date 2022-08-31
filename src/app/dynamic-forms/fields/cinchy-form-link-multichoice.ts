@@ -29,11 +29,12 @@ import { ToastrService } from 'ngx-toastr';
             </label>
 
             <mat-icon *ngIf="field.caption" class="info-icon"
-                      [matTooltip]="field.caption"
+                      ngbTooltip = "{{field.caption}}"
+                      placement="top"
                       matTooltipClass="tool-tip-body"
-                      matTooltipPosition="after"
+                      matTooltipPosition="above"
                       aria-label="Button that displays a tooltip when focused or hovered over">
-              contact_support
+              info
             </mat-icon>
 
           </div>

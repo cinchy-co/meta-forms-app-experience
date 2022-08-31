@@ -34,7 +34,7 @@ import {DialogService} from 'src/app/services/dialog.service';
       <div class="m-b-10">
         <div class="link-labels">
           <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
-            <a [href]="tableSourceURL" target="_blank">{{field.label}}</a>
+            {{field.label}}
             {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
           </label>
           <span *ngIf="createlinkOptionName">
@@ -44,20 +44,35 @@ import {DialogService} from 'src/app/services/dialog.service';
           <mat-icon *ngIf="charactersAfterWhichToShowList" class="info-icon"
                     [matTooltip]="toolTipMessage"
                     matTooltipClass="tool-tip-body"
-                    matTooltipPosition="after"
+                    matTooltipPosition="above"
+                    aria-label="Button that displays a tooltip when focused or hovered over">
+            error
+          </mat-icon>
+          <mat-icon *ngIf="field.caption" class="info-icon"
+                    [ngbTooltip] = "withcaptiont"
+                    placement="top"
+                    [closeDelay] = "600"
+                    matTooltipClass="tool-tip-body"
+                    matTooltipPosition="above"
                     aria-label="Button that displays a tooltip when focused or hovered over">
             info
           </mat-icon>
-
-          <mat-icon *ngIf="field.caption" class="info-icon"
-                    [matTooltip]="field.caption"
+          <mat-icon *ngIf="!field.caption" class="info-icon"
+                    [ngbTooltip] = "withoutcaptiont"
+                    placement="top"
+                    [closeDelay] = "600"
                     matTooltipClass="tool-tip-body"
-                    matTooltipPosition="after"
+                    matTooltipPosition="above"
                     aria-label="Button that displays a tooltip when focused or hovered over">
-            contact_support
+            info
           </mat-icon>
         </div>
-
+        <ng-template #withcaptiont> 
+         {{this.field.caption}}  <br/> From the  {{this.field.label}}  field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.tableName}}  </a> table.
+        </ng-template>
+        <ng-template #withoutcaptiont> 
+          From the  {{this.field.label}}  field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.tableName}}  </a> table.
+        </ng-template>
         <ng-container
           *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled && !downloadLink && showActualField">
           <div class="search-input-link">

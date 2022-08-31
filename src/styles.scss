@@ -340,3 +340,11 @@ app-search-dropdown {
 .mat-spinner.inside {
   animation: none !important;
 }
+
+.tooltip{
+  font-size: smaller;
+ }
+ .tooltip-inner{
+  max-width: 100%;
+  text-align: left;
+ }

@@ -19,11 +19,12 @@ import {ResponseType} from "../enums/response-type.enum";
               {{field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null) ? '*' :''}}
             </label>
             <mat-icon *ngIf="field.caption" class="info-icon"
-                      [matTooltip]="field.caption"
+                      ngbTooltip = "{{field.caption}}"
+                      placement="top"
                       matTooltipClass="tool-tip-body"
-                      matTooltipPosition="after"
+                      matTooltipPosition="above"
                       aria-label="Button that displays a tooltip when focused or hovered over">
-              contact_support
+              info
             </mat-icon>
           </div>
           <mat-select multiple [(ngModel)]="field.value" class="form-control"
