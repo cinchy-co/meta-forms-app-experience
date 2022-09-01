@@ -14,11 +14,11 @@ import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core'
                [title]="field.caption ? field.caption : ''">
         </label>
         <mat-icon *ngIf="field.caption" class="info-icon"
-                  [matTooltip]="field.caption"
+                  ngbTooltip = "{{field.caption}}"
+                  placement="top"
                   matTooltipClass="tool-tip-body"
-                  matTooltipPosition="after"
-                  aria-label="Button that displays a tooltip when focused or hovered over">
-          contact_support
+                  matTooltipPosition="above">
+          info
         </mat-icon>
       </div>
       <ng-container *ngIf="!isFormatted">
