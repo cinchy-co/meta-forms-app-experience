@@ -21,8 +21,7 @@ import {ResponseType} from "../enums/response-type.enum";
         <mat-icon *ngIf="field.caption" class="info-icon-checkbox"
                   [matTooltip]="field.caption"
                   matTooltipClass="tool-tip-body"
-                  matTooltipPosition="above"
-                  aria-label="Button that displays a tooltip when focused or hovered over">
+                  matTooltipPosition="above">
           info
         </mat-icon>
       </div>

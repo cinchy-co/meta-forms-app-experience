@@ -26,8 +26,7 @@ import * as moment from 'moment';
                   ngbTooltip = "{{field.caption}}"
                   placement="top"
                   matTooltipClass="tool-tip-body"
-                  matTooltipPosition="above"
-                  aria-label="Button that displays a tooltip when focused or hovered over">
+                  matTooltipPosition="above">
           info
         </mat-icon>
       </div>

@@ -44,8 +44,7 @@ import {DialogService} from 'src/app/services/dialog.service';
           <mat-icon *ngIf="charactersAfterWhichToShowList" class="info-icon"
                     [matTooltip]="toolTipMessage"
                     matTooltipClass="tool-tip-body"
-                    matTooltipPosition="above"
-                    aria-label="Button that displays a tooltip when focused or hovered over">
+                    matTooltipPosition="above">
             error
           </mat-icon>
           <mat-icon *ngIf="field.caption" class="info-icon"
@@ -53,8 +52,7 @@ import {DialogService} from 'src/app/services/dialog.service';
                     placement="top"
                     [closeDelay] = "600"
                     matTooltipClass="tool-tip-body"
-                    matTooltipPosition="above"
-                    aria-label="Button that displays a tooltip when focused or hovered over">
+                    matTooltipPosition="above">
             info
           </mat-icon>
           <mat-icon *ngIf="!field.caption" class="info-icon"
@@ -62,8 +60,7 @@ import {DialogService} from 'src/app/services/dialog.service';
                     placement="top"
                     [closeDelay] = "600"
                     matTooltipClass="tool-tip-body"
-                    matTooltipPosition="above"
-                    aria-label="Button that displays a tooltip when focused or hovered over">
+                    matTooltipPosition="above">
             info
           </mat-icon>
         </div>
