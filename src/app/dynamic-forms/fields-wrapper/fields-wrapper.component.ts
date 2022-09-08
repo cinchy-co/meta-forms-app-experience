@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { IFormSectionMetadata } from 'src/app/models/form-section-metadata.model';
 import { AppStateService } from '../../services/app-state.service';
 import { IFormSection } from '../models/cinchy-form-sections.model';
@@ -29,12 +30,16 @@ export class FieldsWrapperComponent implements OnInit {
   @Output() deleteDialogOpened = new EventEmitter<any>();
   subscription: Subscription;
   sectionInfo: SpinnerCondition;
-
+  destroy$: Subject<boolean> = new Subject<boolean>();
+  isApiCallComplete: boolean = false;
   constructor(
     private appStateService: AppStateService,
     private cdr: ChangeDetectorRef) {
+      this.appStateService.getDataFetchingComplete().pipe(takeUntil(this.destroy$)).subscribe((isDataFetch) => {
+        this.isApiCallComplete = isDataFetch;
+      });
   }
-
+  
   ngOnInit(): void {
   }
 
