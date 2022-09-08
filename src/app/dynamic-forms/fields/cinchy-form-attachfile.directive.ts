@@ -2,6 +2,7 @@ import {CinchyColumn} from './../models/cinchy-column.model';
 import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ResponseType} from '../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
+import { faFile } from '@fortawesome/free-solid-svg-icons';
 //#region Cinchy Dynamic DateTime Field
 /**
  * This section is used to create dynamic DateTime field for the cinchy.
@@ -14,6 +15,10 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
          class="full-width-element divMarginBottom">
       <div>
         <div>
+        <div>
+          <fa-icon [icon]="faFile"></fa-icon>
+        </div>
+        &nbsp;
           <label class="cinchy-label">
             {{field.label}}
           </label>
@@ -58,7 +63,7 @@ export class AttachFileDirective implements OnInit {
   // Variable to store File
   fileToUpload: File = null;
   fileName;
-
+  faFile = faFile;
   constructor() {
   }
 
