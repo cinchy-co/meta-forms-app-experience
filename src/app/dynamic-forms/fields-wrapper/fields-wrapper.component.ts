@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
-import { Subscription } from 'rxjs';
+import {  Subscription } from 'rxjs';
 import { IFormSectionMetadata } from 'src/app/models/form-section-metadata.model';
 import { AppStateService } from '../../services/app-state.service';
 import { IFormSection } from '../models/cinchy-form-sections.model';
@@ -34,7 +34,7 @@ export class FieldsWrapperComponent implements OnInit {
     private appStateService: AppStateService,
     private cdr: ChangeDetectorRef) {
   }
-
+  
   ngOnInit(): void {
   }
 
