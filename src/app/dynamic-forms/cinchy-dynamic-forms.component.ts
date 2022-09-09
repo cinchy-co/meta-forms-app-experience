@@ -378,12 +378,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
           let selectedLookupRecord = this.lookupRecordsList.find(_ => _.id == this.rowId);
          
-          setTimeout(async () => {
-            await this._formHelperService.fillWithFields(this.form, this.rowId as string, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
-            await this._formHelperService.fillWithData(this.form, this.rowId as string, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
-            this.appStateService.setDataFetchingComplete(true);
-            this.enableSaveBtn = true;
-          }, 0);
+          await this._formHelperService.fillWithFields(this.form, this.rowId as string, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
+          await this._formHelperService.fillWithData(this.form, this.rowId as string, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+          this.enableSaveBtn = true;
 
           this.isLoadingForm = false;
           this.formHasDataLoaded = true;

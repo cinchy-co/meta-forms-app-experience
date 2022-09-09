@@ -19,7 +19,7 @@ export class AppStateService {
   hasFormChanged: boolean;
   savedParentFromChildPlus$ = new Subject<boolean>();
   formMetadata: IFormMetadata;
-  datafetch$ = new Subject<boolean>();
+
   constructor() { }
 
   setRecordSelected(cinchyId: number | string | null, doNotReloadForm: boolean = false): void {
@@ -82,11 +82,4 @@ export class AppStateService {
     return window.location !== window.parent.location;
   }
 
-  setDataFetchingComplete(isDataFetch){
-    return this.datafetch$.next(isDataFetch);
-  }
-
-  getDataFetchingComplete(): Observable<boolean>{
-    return this.datafetch$.asObservable();
-  }
 }
