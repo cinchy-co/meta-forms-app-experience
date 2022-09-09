@@ -81,4 +81,5 @@ export class AppStateService {
   iniFrame() {
     return window.location !== window.parent.location;
   }
+
 }
