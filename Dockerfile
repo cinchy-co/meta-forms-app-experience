@@ -10,6 +10,7 @@ RUN chmod 666 /usr/src/app/dist/Meta-Forms-App-Experience/index.html
 
 ### STAGE 2: Run ###
 FROM nginxinc/nginx-unprivileged:1.21.6-alpine
+USER root
 RUN apk update && \
     apk add -u curl && \
     rm -rf /var/cache/apk/*
