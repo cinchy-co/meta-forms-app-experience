@@ -1,5 +1,8 @@
 ### STAGE 1: Build ###
 FROM node:14.20-alpine AS build
+RUN apk update && \
+    apk add -u curl && \
+    rm -rf /var/cache/apk/*
 WORKDIR /usr/src/app
 #COPY package.json package-lock.json ./
 COPY package.json ./
