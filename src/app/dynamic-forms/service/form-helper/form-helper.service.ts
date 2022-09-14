@@ -1,4 +1,3 @@
-import { getAttrsForDirectiveMatching } from "@angular/compiler/src/render3/view/util";
 import { Injectable } from "@angular/core";
 import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 import { ToastrService } from "ngx-toastr";
@@ -24,11 +23,11 @@ export class FormHelperService {
     private _toastr: ToastrService
   ) { }
 
-  public async generateForm(formMetadata: IFormMetadata, rowId: string | number, isChild: boolean = false, flatten: boolean = false, childFormParentId?: string, childFormLinkId?: string, childFormFilter?: string, childFormSort?: string, parentForm: IForm = null): Promise<IForm> {
+  public async generateForm(formMetadata: IFormMetadata, rowId: string | number,tableEntitlements: any, isChild: boolean = false, flatten: boolean = false, childFormParentId?: string, childFormLinkId?: string, childFormFilter?: string, childFormSort?: string, parentForm: IForm = null): Promise<IForm> {
     if (formMetadata == null)
       return null;
 
-    var tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
+   // var tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
 
     const result = new Form(
       formMetadata.formId,
@@ -61,14 +60,14 @@ export class FormHelperService {
     });
   }
 
-  public async fillWithFields(form: IForm, cinchyId: string, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord) {
+  public async fillWithFields(form: IForm, cinchyId: string, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord,tableEntitlements: any) {
     if (!formFieldsMetadata?.length)
       return;
 
     let tableJson = JSON.parse(formMetadata.tableJson);
     let formFields: IFormFieldMetadata[] = formFieldsMetadata.filter(_ => _.formId == form.id);
 
-    const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
+   // const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
     const cellEntitlements = await this.getCellEntitlements(formMetadata.domainName, formMetadata.tableName, cinchyId, formFields);
 
     let parentChildLinkedColumns: {[columnName: string]: FormField[]} = {};
@@ -139,10 +138,10 @@ export class FormHelperService {
         const childFormSectionsMetadata = await this._cinchyQueryService.getFormSections(childFormId).toPromise();
         let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
         childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => displayColumnId.find(id => id == _.formFieldId) != null);
-
-        childForm = await this.generateForm(childFormMetadata, null, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
+        const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
+        childForm = await this.generateForm(childFormMetadata, null,childTableEntitlements, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
         this.fillWithSections(childForm, childFormSectionsMetadata);
-        await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord);
+        await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord,childTableEntitlements);
         await this.fillWithData(childForm, cinchyId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
 
         // Override these, they will be checked later when opening up the child form
@@ -154,7 +153,7 @@ export class FormHelperService {
           let childFormData = childForm.sections[0]['MultiFields'];
           let lastRecordId = childFormData[childFormData.length - 1]['Cinchy ID'];
           if (lastRecordId != null) {
-            const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
+          //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
             const childCellEntitlements = await this.getCellEntitlements(childFormMetadata.domainName, childFormMetadata.tableName, lastRecordId, childFormFieldsMetadata);
             childForm.rowId = lastRecordId;
             if (childForm.sections) {
