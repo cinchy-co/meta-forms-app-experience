@@ -27,8 +27,6 @@
     "@cinchy-co/angular-sdk": "^5.0.0",
     "@fortawesome/angular-fontawesome": "^0.9.0",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
-    "@fortawesome/free-brands-svg-icons": "^6.2.0",
-    "@fortawesome/free-regular-svg-icons": "^6.2.0",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@uiowa/digit-only": "^1.4.0",
     "angular2-multiselect-dropdown": "^4.6.5",
