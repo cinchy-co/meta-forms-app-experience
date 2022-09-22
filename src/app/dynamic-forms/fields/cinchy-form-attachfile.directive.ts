@@ -2,7 +2,7 @@ import {CinchyColumn} from './../models/cinchy-column.model';
 import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ResponseType} from '../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
-import { faFile } from '@fortawesome/free-solid-svg-icons';
+import { faFile } from '@fortawesome/free-regular-svg-icons';
 //#region Cinchy Dynamic DateTime Field
 /**
  * This section is used to create dynamic DateTime field for the cinchy.

@@ -4,7 +4,7 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
 
 import {DatePipe} from "@angular/common";
 import * as moment from 'moment';
-import { faCalendar } from '@fortawesome/free-solid-svg-icons';
+import { faCalendar } from '@fortawesome/free-regular-svg-icons';
 
 //#region Cinchy Dynamic DateTime Field
 /**
