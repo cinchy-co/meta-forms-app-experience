@@ -56,7 +56,7 @@ export class SidenavComponent implements OnInit, OnDestroy {
 
     this.appStateService.onRecordSelected().subscribe(resp => {
       this.rowId = resp.cinchyId;
-      this.filteredTableUrl = this.tableUrl ? `${this.tableUrl}` : this.filteredTableUrl;
+      this.filteredTableUrl = !this.rowId.toString().includes('null') ? `${this.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this.rowId}` : this.tableUrl;
     });
   }
 
