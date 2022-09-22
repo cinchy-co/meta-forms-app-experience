@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {EventCallback, IEventCallback} from "../models/cinchy-event-callback.model";
 import {ResponseType} from "../enums/response-type.enum";
-import { faCheckSquare } from '@fortawesome/free-solid-svg-icons';
+import { faCheckSquare } from '@fortawesome/free-regular-svg-icons';
 //#region Cinchy Dynamic YES/NO fields (Checkbox)
 /**
  * This section is used to create Yes/No fields for the cinchy.
