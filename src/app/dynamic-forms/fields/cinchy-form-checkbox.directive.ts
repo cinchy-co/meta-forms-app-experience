@@ -2,6 +2,7 @@ import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {EventCallback, IEventCallback} from "../models/cinchy-event-callback.model";
 import {ResponseType} from "../enums/response-type.enum";
 import { faCheckSquare } from '@fortawesome/free-regular-svg-icons';
+
 //#region Cinchy Dynamic YES/NO fields (Checkbox)
 /**
  * This section is used to create Yes/No fields for the cinchy.
@@ -11,13 +12,13 @@ import { faCheckSquare } from '@fortawesome/free-regular-svg-icons';
   selector: 'cinchy-checkbox',
   template: `
     <div *ngIf="(field.cinchyColumn.dataType == 'Yes/No' && field.cinchyColumn.canView)">
+      <fa-icon [icon]="faCheckSquare"></fa-icon>
+      &nbsp;
       <input class="m-tb-10 mr-5" type='checkbox' [(ngModel)]="field.value" [ngModelOptions]="{standalone: true}"
              [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
              (change)="valueChanged()" [id]="field.label"/>
       <div class="checkbox-field">
-      <div>
-          <fa-icon [icon]="faCheckSquare"></fa-icon>
-       </div>
+
        &nbsp;
         <label class="pre-formatted" [for]="field.label" [title]="field.caption ? field.caption : ''">{{field.label}}
           {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
