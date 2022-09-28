@@ -15,7 +15,9 @@ import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core'
         </label>
         <mat-icon *ngIf="field.caption" class="info-icon"
                   ngbTooltip = "{{field.caption}}"
-                  placement="top"
+                  [closeDelay] = "5000"
+                  placement="auto"
+                  container="body"
                   matTooltipClass="tool-tip-body"
                   matTooltipPosition="above">
           info

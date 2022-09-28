@@ -49,16 +49,18 @@ import {DialogService} from 'src/app/services/dialog.service';
           </mat-icon>
           <mat-icon *ngIf="field.caption" class="info-icon"
                     [ngbTooltip] = "withcaptiont"
-                    placement="top"
-                    [closeDelay] = "600"
+                    [closeDelay]="5000"
+                    placement="auto"
+                    container="body"
                     matTooltipClass="tool-tip-body"
                     matTooltipPosition="above">
             info
           </mat-icon>
           <mat-icon *ngIf="!field.caption" class="info-icon"
                     [ngbTooltip] = "withoutcaptiont"
-                    placement="top"
-                    [closeDelay] = "600"
+                    [closeDelay] = "5000"
+                    placement="auto"
+                    container="body"
                     matTooltipClass="tool-tip-body"
                     matTooltipPosition="above">
             info
