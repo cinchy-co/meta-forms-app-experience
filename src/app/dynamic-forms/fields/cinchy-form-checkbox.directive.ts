@@ -19,7 +19,10 @@ import {ResponseType} from "../enums/response-type.enum";
           {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
         </label>
         <mat-icon *ngIf="field.caption" class="info-icon-checkbox"
-                  [matTooltip]="field.caption"
+                  ngbTooltip = "{{field.caption}}"
+                  [closeDelay] = "5000"
+                  placement="auto"
+                  container="body"
                   matTooltipClass="tool-tip-body"
                   matTooltipPosition="above">
           info
