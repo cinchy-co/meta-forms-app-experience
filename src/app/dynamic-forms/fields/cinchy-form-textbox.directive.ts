@@ -21,7 +21,6 @@ import { ImageType } from '../enums/imageurl-type';
         </label>
         <mat-icon *ngIf="field.caption" class="info-icon"
                   ngbTooltip = "{{field.caption}}"
-                  [closeDelay] = "5000"
                   placement="auto"
                   container="body"
                   matTooltipClass="tool-tip-body"

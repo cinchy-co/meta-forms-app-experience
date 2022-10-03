@@ -18,6 +18,7 @@ import {ImageType } from '../enums/imageurl-type';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {AddNewOptionDialogComponent} from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
 import {DialogService} from 'src/app/services/dialog.service';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 
 
 //#region Cinchy Dynamic Link field
@@ -49,18 +50,22 @@ import {DialogService} from 'src/app/services/dialog.service';
           </mat-icon>
           <mat-icon *ngIf="field.caption" class="info-icon"
                     [ngbTooltip] = "withcaptiont"
-                    [closeDelay]="5000"
                     placement="auto"
                     container="body"
+                    triggers="click"
+                    #t="ngbTooltip"
+                    (mouseenter) ="openTooltip(t)"
                     matTooltipClass="tool-tip-body"
                     matTooltipPosition="above">
             info
           </mat-icon>
           <mat-icon *ngIf="!field.caption" class="info-icon"
                     [ngbTooltip] = "withoutcaptiont"
-                    [closeDelay] = "5000"
+                    triggers="click"
                     placement="auto"
                     container="body"
+                    #t="ngbTooltip"
+                    (mouseenter) ="openTooltip(t)"
                     matTooltipClass="tool-tip-body"
                     matTooltipPosition="above">
             info
@@ -147,7 +152,7 @@ import {DialogService} from 'src/app/services/dialog.service';
 export class LinkDirective implements OnInit {
   @ViewChild('searchInput') searchInput;
   @ViewChild('fileInput') fileInput: ElementRef;
-  
+  @ViewChild('t') public tooltip: NgbTooltip;
   @Input() field: any;
   @Input() rowId: any;
 
@@ -179,7 +184,6 @@ export class LinkDirective implements OnInit {
   showLinkUrl: boolean;
   showActualField: boolean;
   tableSourceURL: any;
-
   renderImageFiles = true;
 
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
@@ -480,5 +484,21 @@ export class LinkDirective implements OnInit {
             lowercase.endsWith('.gif') ||
             lowercase.endsWith('.svg');
   }
-  //#endregion
+
+
+removeTooltipElement(){
+  this.tooltip.close(); 
+}
+
+openTooltip(tooltip){
+  tooltip.open();
+  this.tooltip = tooltip;
+  if(tooltip.isOpen()) {
+    const tooltipElement = document.getElementsByTagName("ngb-tooltip-window");
+    if(tooltipElement[0]){
+      tooltipElement[0].addEventListener('mouseleave',this.removeTooltipElement.bind(this));
+  }
+ }
+}
+
 }
