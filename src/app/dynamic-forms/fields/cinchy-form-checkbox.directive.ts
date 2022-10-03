@@ -20,7 +20,6 @@ import {ResponseType} from "../enums/response-type.enum";
         </label>
         <mat-icon *ngIf="field.caption" class="info-icon-checkbox"
                   ngbTooltip = "{{field.caption}}"
-                  [closeDelay] = "5000"
                   placement="auto"
                   container="body"
                   matTooltipClass="tool-tip-body"
