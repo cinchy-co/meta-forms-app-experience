@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core';
-
+import { faCalculator } from '@fortawesome/free-solid-svg-icons';
 //#region Cinchy Dynamic Calculated field
 /**
  * This section is used to create Calculated field of cinchy table.
@@ -10,6 +10,10 @@ import {AfterViewInit, Component, Input, OnInit, ViewChild} from '@angular/core'
   template: `
     <div class="full-width-element divMarginBottom">
       <div class="link-labels">
+      <div>
+         <fa-icon [icon]="faCalculator"></fa-icon>
+      </div>
+      &nbsp;
         <label class="calculatedStyle cinchy-label" [innerHTML]="field.label"
                [title]="field.caption ? field.caption : ''">
         </label>
@@ -36,7 +40,8 @@ export class CalculatedDirective implements OnInit, AfterViewInit{
   @Input() field: any;
   isFormatted: boolean;
   @ViewChild('editor') editor;
-
+  faCalculator = faCalculator;
+  
   constructor() {
 
   }

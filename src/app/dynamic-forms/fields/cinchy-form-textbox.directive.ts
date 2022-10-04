@@ -2,7 +2,7 @@ import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
 import {ResponseType} from './../enums/response-type.enum';
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
 import { ImageType } from '../enums/imageurl-type';
-
+import { faAlignLeft } from '@fortawesome/free-solid-svg-icons';
 //#region Cinchy Dynamic Textbox Field
 /**
  * This section is used to create dynamic textbox field for the cinchy.
@@ -15,6 +15,10 @@ import { ImageType } from '../enums/imageurl-type';
   && field.cinchyColumn.canView)"
          class="full-width-element divMarginBottom">
       <div class="link-labels">
+      <div>
+       <fa-icon [icon]="faAlignLeft"></fa-icon>
+      </div>
+      &nbsp;
         <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
           {{field.label}}
           {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
@@ -76,7 +80,8 @@ export class TextBoxDirective implements OnInit {
   showLinkUrl: boolean;
   showActualField: boolean;
   size: any;
-
+  faAlignLeft = faAlignLeft;
+  
   constructor() {
   }
 

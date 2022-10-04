@@ -4,6 +4,7 @@ import {ResponseType} from "../enums/response-type.enum";
 import {DropdownDataset} from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 import {isNullOrUndefined} from "util";
 import {DropdownDatasetService} from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
+import { faListUl } from '@fortawesome/free-solid-svg-icons';
 
 //#region Cinchy Dynamic Choice Field
 /**
@@ -17,6 +18,10 @@ import {DropdownDatasetService} from "../service/cinchy-dropdown-dataset/cinchy-
     <div *ngIf=" field.dropdownDataset">
       <div class="full-width-element divMarginBottom">
         <div class="link-labels">
+        <div>
+          <fa-icon [icon]="faListUl"></fa-icon>
+        </div>
+         &nbsp;
           <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
             {{field.label}}
             {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
@@ -69,7 +74,8 @@ export class ChoiceDirective implements OnInit {
   @Output() eventHandler = new EventEmitter<any>();
   choiceFilter: string;
   showError: boolean;
-
+  faListUl = faListUl;
+  
   constructor() {
   }
 

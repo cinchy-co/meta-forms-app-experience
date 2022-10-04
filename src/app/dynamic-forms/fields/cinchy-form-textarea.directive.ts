@@ -2,6 +2,7 @@ import {Component, Input, Output, EventEmitter, ViewChild, AfterViewInit, OnInit
 import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
 import {ResponseType} from '../enums/response-type.enum';
 import { ImageType } from '../enums/imageurl-type';
+import { faAlignLeft } from '@fortawesome/free-solid-svg-icons';
 
 //#region Cinchy Dynamic TextArea
 /**
@@ -15,6 +16,10 @@ import { ImageType } from '../enums/imageurl-type';
      && field.cinchyColumn.textColumnMaxLength > 500 && field.cinchyColumn.canView)"
          class="full-width-element divMarginBottom">
       <div class="link-labels">
+      <div>
+          <fa-icon [icon]="faAlignLeft"></fa-icon>
+       </div>
+       &nbsp;
         <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
           {{field.label}}
           {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
@@ -82,7 +87,8 @@ export class TextAreaDirective implements AfterViewInit, OnInit {
   showImage: boolean;
   showLinkUrl: boolean;
   showActualField: boolean;
-
+  faAlignLeft = faAlignLeft;
+  
   constructor() {
   }
 

@@ -3,6 +3,7 @@ import {CurrencyPipe} from "@angular/common";
 import {EventCallback, IEventCallback} from "../models/cinchy-event-callback.model";
 import {ResponseType} from "../enums/response-type.enum";
 import {NumeralPipe} from "ngx-numeral";
+import { faHashtag } from '@fortawesome/free-solid-svg-icons';
 
 //#region Cinchy Dynamic Number field
 /**
@@ -15,6 +16,10 @@ import {NumeralPipe} from "ngx-numeral";
     <div *ngIf="(field.cinchyColumn.dataType == 'Number' &&
     field.cinchyColumn.canView)" class="full-width-element divMarginBottom">
       <div class="link-labels">
+      <div>
+          <fa-icon [icon]="faHashtag"></fa-icon>
+       </div>
+       &nbsp;
         <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
           {{field.label}}
           {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
@@ -64,7 +69,8 @@ export class NumberDirective implements OnInit {
   showError: boolean;
   @Output() eventHandler = new EventEmitter<any>();
   numeralValue;
-
+  faHashtag = faHashtag;
+  
   constructor(private currencyPipe: CurrencyPipe) {
   }
 

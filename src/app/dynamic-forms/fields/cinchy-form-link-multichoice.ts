@@ -15,6 +15,7 @@ import * as R from 'ramda';
 import { ConfigService } from 'src/app/config.service';
 import { CinchyQueryService } from 'src/app/services/cinchy-query.service';
 import { ToastrService } from 'ngx-toastr';
+import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'cinchy-link-multichoice',
@@ -23,6 +24,10 @@ import { ToastrService } from 'ngx-toastr';
       <div class="full-width-element divMarginBottom linkField">
         <div class="m-b-10">
           <div class="link-labels">
+          <div>
+            <fa-icon [icon]="faShareAlt"></fa-icon>
+          </div>
+          &nbsp;
             <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
               {{field.label}}
               {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
@@ -151,7 +156,8 @@ export class LinkMultichoice implements OnInit, AfterViewInit, OnDestroy {
   downloadableLinks;
 
   renderImageFiles = true;
-
+  faShareAlt = faShareAlt;
+  
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
               private _cinchyService: CinchyService,
               private _configService: ConfigService,

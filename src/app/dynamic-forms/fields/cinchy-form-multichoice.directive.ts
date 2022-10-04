@@ -1,6 +1,7 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {EventCallback, IEventCallback} from "../models/cinchy-event-callback.model";
 import {ResponseType} from "../enums/response-type.enum";
+import { faListUl } from '@fortawesome/free-solid-svg-icons';
 
 //#region Cinchy Dynamic Multi Choice
 /**
@@ -14,6 +15,10 @@ import {ResponseType} from "../enums/response-type.enum";
       <div *ngIf=" field.dropdownDataset">
         <mat-form-field class="full-width-element divMarginBottom">
           <div class="link-labels">
+          <div>
+            <fa-icon [icon]="faListUl"></fa-icon>
+          </div>
+          &nbsp;
             <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
               {{field.label}}
               {{field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null) ? '*' :''}}
@@ -60,7 +65,8 @@ export class MultiChoiceDirective {
   @Output() eventHandler = new EventEmitter<any>();
   choiceFilter: string;
   showError: boolean;
-
+  faListUl = faListUl;
+  
   constructor() {
   }
 

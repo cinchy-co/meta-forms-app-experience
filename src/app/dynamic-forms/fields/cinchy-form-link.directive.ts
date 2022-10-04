@@ -20,7 +20,6 @@ import {AddNewOptionDialogComponent} from 'src/app/dialogs/add-new-option-dialog
 import {DialogService} from 'src/app/services/dialog.service';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 
-
 //#region Cinchy Dynamic Link field
 /**
  * This section is used to create Link field for the cinchy.
@@ -34,6 +33,10 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
     field.cinchyColumn.canView)" class="full-width-element divMarginBottom">
       <div class="m-b-10">
         <div class="link-labels">
+        <div>
+          <fa-icon [icon]="faShareAlt"></fa-icon>
+       </div>
+       &nbsp;
           <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
             {{field.label}}
             {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}

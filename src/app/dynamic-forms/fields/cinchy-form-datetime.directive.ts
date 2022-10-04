@@ -4,7 +4,7 @@ import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.mod
 
 import {DatePipe} from "@angular/common";
 import * as moment from 'moment';
-
+import { faCalendar } from '@fortawesome/free-regular-svg-icons';
 
 //#region Cinchy Dynamic DateTime Field
 /**
@@ -18,6 +18,10 @@ import * as moment from 'moment';
   && field.cinchyColumn.canView)"
          class="full-width-element divMarginBottom relative-pos">
       <div class="link-labels">
+      <div>
+          <fa-icon [icon]="faCalendar"></fa-icon>
+       </div>
+       &nbsp;
         <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
           {{field.label}}
           {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
@@ -70,6 +74,7 @@ export class DateTimeDirective implements OnInit {
   @Output() eventHandler = new EventEmitter<any>();
   preSelectedDate :any;
   showError;
+  faCalendar = faCalendar;
 
   constructor(private datePipe: DatePipe){
 
