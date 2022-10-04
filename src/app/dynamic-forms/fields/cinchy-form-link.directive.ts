@@ -18,8 +18,8 @@ import {ImageType } from '../enums/imageurl-type';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {AddNewOptionDialogComponent} from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
 import {DialogService} from 'src/app/services/dialog.service';
+import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-
 //#region Cinchy Dynamic Link field
 /**
  * This section is used to create Link field for the cinchy.
@@ -190,8 +190,8 @@ export class LinkDirective implements OnInit {
   showActualField: boolean;
   tableSourceURL: any;
   renderImageFiles = true;
-  isCursorIn: boolean = false;
-
+faShareAlt = faShareAlt;
+isCursorIn: boolean = false;
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
               private _cinchyService: CinchyService,
               private dialogService: DialogService,
