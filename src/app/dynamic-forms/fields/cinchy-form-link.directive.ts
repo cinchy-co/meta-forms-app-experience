@@ -18,7 +18,7 @@ import {ImageType } from '../enums/imageurl-type';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {AddNewOptionDialogComponent} from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
 import {DialogService} from 'src/app/services/dialog.service';
-
+import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
 
 //#region Cinchy Dynamic Link field
 /**
@@ -33,6 +33,10 @@ import {DialogService} from 'src/app/services/dialog.service';
     field.cinchyColumn.canView)" class="full-width-element divMarginBottom">
       <div class="m-b-10">
         <div class="link-labels">
+        <div>
+          <fa-icon [icon]="faShareAlt"></fa-icon>
+       </div>
+       &nbsp;
           <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
             <a [href]="tableSourceURL" target="_blank">{{field.label}}</a>
             {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
@@ -167,7 +171,8 @@ export class LinkDirective implements OnInit {
   tableSourceURL: any;
 
   renderImageFiles = true;
-
+  faShareAlt = faShareAlt;
+  
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
               private _cinchyService: CinchyService,
               private dialogService: DialogService,
