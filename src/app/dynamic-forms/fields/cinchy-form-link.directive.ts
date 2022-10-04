@@ -55,6 +55,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                     triggers="click"
                     #t="ngbTooltip"
                     (mouseenter) ="openTooltip(t)"
+                    (mouseleave) = "closeTooltip(t)"
                     matTooltipClass="tool-tip-body"
                     matTooltipPosition="above">
             info
@@ -66,6 +67,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                     container="body"
                     #t="ngbTooltip"
                     (mouseenter) ="openTooltip(t)"
+                    (mouseleave) = "closeTooltip(t)"
                     matTooltipClass="tool-tip-body"
                     matTooltipPosition="above">
             info
@@ -185,6 +187,7 @@ export class LinkDirective implements OnInit {
   showActualField: boolean;
   tableSourceURL: any;
   renderImageFiles = true;
+  isCursorIn: boolean = false;
 
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
               private _cinchyService: CinchyService,
@@ -487,7 +490,12 @@ export class LinkDirective implements OnInit {
 
 
 removeTooltipElement(){
+  this.isCursorIn = false;
   this.tooltip.close(); 
+}
+
+setTooltipCursor(){
+  this.isCursorIn = true;
 }
 
 openTooltip(tooltip){
@@ -497,8 +505,18 @@ openTooltip(tooltip){
     const tooltipElement = document.getElementsByTagName("ngb-tooltip-window");
     if(tooltipElement[0]){
       tooltipElement[0].addEventListener('mouseleave',this.removeTooltipElement.bind(this));
+      tooltipElement[0].addEventListener('mouseenter',this.setTooltipCursor.bind(this));
   }
  }
+}
+
+closeTooltip(tooltip){
+  setTimeout(() => {
+    if(tooltip.isOpen() &&  !this.isCursorIn) {
+      tooltip.close();
+    }
+  }, 100);
+
 }
 
 }
