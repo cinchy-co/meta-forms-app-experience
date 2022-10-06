@@ -346,7 +346,9 @@ export class LinkDirective implements OnInit {
   setToLastValueSelected(event) {
     setTimeout(() => {
       !this.selectedValue && this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, {value: {}}, 'value');
-      this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
+      if(this.myControl.value){
+        this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
+      }
     }, 300)
   }
 
