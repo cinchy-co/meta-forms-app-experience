@@ -290,7 +290,6 @@ export class LinkDirective implements OnInit {
   onInputChange() {
     if (this.isLoading) {
       this.myControl.setValue('');
-      this.selectedValue = null;
       return;
     }
     
@@ -347,34 +346,39 @@ export class LinkDirective implements OnInit {
   setToLastValueSelected(event) {
     setTimeout(() => {
       !this.selectedValue && this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, {value: {}}, 'value');
-      this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
+      if(this.myControl.value){
+        this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
+      }
     }, 300)
   }
 
   //#endregion
   //#region pass callback event to the project On change of link (dropdown)
   callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    // constant values
-    /*const value = event[0].value;
-    const text = event[0].text;*/
-    this.field.cinchyColumn.hasChanged = event.value.id !== this.field.value;
-    this.selectedValue = event.value;
-    this.field.value = event.value.id;
-    const value = event.value.id;
-    const text = event.value.label;
-    const Data = {
-      'TableName': targetTableName,
-      'ColumnName': columnName,
-      'Value': value,
-      'Text': text,
-      'Event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged,
-      'Form': this.field.form,
-      'Field': this.field
+    if(Object.keys(event.value).length > 0){
+          // constant values
+          /*const value = event[0].value;
+          const text = event[0].text;*/
+          this.field.cinchyColumn.hasChanged = event.value.id !== this.field.value;
+          this.selectedValue = event.value;
+          this.field.value = event.value.id;
+          const value = event.value.id;
+          const text = event.value.label;
+          const Data = {
+            'TableName': targetTableName,
+            'ColumnName': columnName,
+            'Value': value,
+            'Text': text,
+            'Event': event,
+            'HasChanged': this.field.cinchyColumn.hasChanged,
+            'Form': this.field.form,
+            'Field': this.field
+          }
+          // pass calback event
+          const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
+          this.eventHandler.emit(callback);
     }
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
-    this.eventHandler.emit(callback);
+    
   }
 
   checkForAttachmentUrl() {
