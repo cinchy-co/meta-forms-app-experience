@@ -67,6 +67,7 @@ import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
           <div class="search-input-link">
             <input type="text" [formControl]="myControl" [matAutocomplete]="auto" class="form-control" #searchInput
                    (focus)="getListItems()"
+                   (keydown) = "deleteDropdownVal($event)"
                    (blur)="setToLastValueSelected($event)"/>
             <mat-icon *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled">search
             </mat-icon>
@@ -346,10 +347,14 @@ export class LinkDirective implements OnInit {
   setToLastValueSelected(event) {
     setTimeout(() => {
       !this.selectedValue && this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, {value: {}}, 'value');
-      if(this.myControl.value){
-        this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
-      }
-    }, 300)
+       this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
+       if(this.selectedValue == null){
+        const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+        if(val){
+          this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, 'value');
+        }
+       }
+      }, 300)
   }
 
   //#endregion
@@ -474,6 +479,18 @@ export class LinkDirective implements OnInit {
             lowercase.endsWith('.jpeg') ||
             lowercase.endsWith('.gif') ||
             lowercase.endsWith('.svg');
+  }
+
+  deleteDropdownVal(event){
+    const key = event.key;
+    if (key === "Delete") {
+       const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+       if(val){
+        this.selectedValue = null;
+        this.myControl.setValue('');
+        this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, 'value');
+       }
+    }
   }
   //#endregion
 }
