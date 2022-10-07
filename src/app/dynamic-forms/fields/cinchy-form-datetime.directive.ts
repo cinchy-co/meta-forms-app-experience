@@ -94,8 +94,9 @@ export class DateTimeDirective implements OnInit {
   //#region pass callback event to the project On blur
   callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
     // constant values
-    const value = event[prop];
-    if(value){
+    const value = event[prop] ? event[prop] : null;
+    if (value == null) this.preSelectedDate = "";
+
       this.field.cinchyColumn.hasChanged = true;
       const Data = {
         'TableName': targetTableName,
@@ -107,14 +108,13 @@ export class DateTimeDirective implements OnInit {
         'Field': this.field
       };
       let selectedDate = value ? value : this.preSelectedDate;
-      this.field.value = moment(selectedDate).format('MM/DD/yyyy');
+      this.field.value = selectedDate ? moment(selectedDate).format('MM/DD/yyyy') : "";
   
       // re-assign format of date
-      this.preSelectedDate = moment(selectedDate).format(this.field.cinchyColumn.displayFormat);
+      this.preSelectedDate =  selectedDate ? moment(selectedDate).format(this.field.cinchyColumn.displayFormat): "";
       // pass calback event
       const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
       this.eventHandler.emit(callback);
-    }
    
   }
 
