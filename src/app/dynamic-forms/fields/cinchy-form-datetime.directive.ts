@@ -36,7 +36,7 @@ import { faCalendar } from '@fortawesome/free-regular-svg-icons';
       </div>
       <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
       <mat-form-field class='form-control'>
-           <input matInput 
+           <input matInput readonly
            [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly  || isDisabled)"
            type="text" [(ngModel)]="preSelectedDate"
            (input)="checkForDate()"
@@ -94,28 +94,25 @@ export class DateTimeDirective implements OnInit {
   //#region pass callback event to the project On blur
   callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
     // constant values
-    const value = event[prop] ? event[prop] : null;
-    if (value == null) this.preSelectedDate = "";
+    const value = event[prop];
+    this.field.cinchyColumn.hasChanged = true;
+    const Data = {
+      'TableName': targetTableName,
+      'ColumnName': columnName,
+      'Value': value,
+      'event': event,
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form,
+      'Field': this.field
+    };
+    let selectedDate = value ? value : this.preSelectedDate;
+    this.field.value = moment(selectedDate).format('MM/DD/yyyy');
 
-      this.field.cinchyColumn.hasChanged = true;
-      const Data = {
-        'TableName': targetTableName,
-        'ColumnName': columnName,
-        'Value': value,
-        'event': event,
-        'HasChanged': this.field.cinchyColumn.hasChanged,
-        'Form': this.field.form,
-        'Field': this.field
-      };
-      let selectedDate = value ? value : this.preSelectedDate;
-      this.field.value = selectedDate ? moment(selectedDate).format('MM/DD/yyyy') : "";
-  
-      // re-assign format of date
-      this.preSelectedDate =  selectedDate ? moment(selectedDate).format(this.field.cinchyColumn.displayFormat): "";
-      // pass calback event
-      const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-      this.eventHandler.emit(callback);
-   
+    // re-assign format of date
+    this.preSelectedDate = moment(selectedDate).format(this.field.cinchyColumn.displayFormat);
+    // pass calback event
+    const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
+    this.eventHandler.emit(callback);
   }
 
   //#endregion
