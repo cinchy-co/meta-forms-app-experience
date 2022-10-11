@@ -483,7 +483,7 @@ export class LinkDirective implements OnInit {
 
   deleteDropdownVal(event){
     const key = event.key;
-    if (key === "Delete") {
+    if (key === "Delete" || key === "Backspace") {
        const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
        if(val){
         this.selectedValue = null;
