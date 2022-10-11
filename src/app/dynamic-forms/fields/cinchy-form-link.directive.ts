@@ -67,6 +67,7 @@ import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
           <div class="search-input-link">
             <input type="text" [formControl]="myControl" [matAutocomplete]="auto" class="form-control" #searchInput
                    (focus)="getListItems()"
+                   (keydown) = "deleteDropdownVal($event)"
                    (blur)="setToLastValueSelected($event)"/>
             <mat-icon *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled">search
             </mat-icon>
@@ -290,7 +291,6 @@ export class LinkDirective implements OnInit {
   onInputChange() {
     if (this.isLoading) {
       this.myControl.setValue('');
-      this.selectedValue = null;
       return;
     }
     
@@ -347,34 +347,43 @@ export class LinkDirective implements OnInit {
   setToLastValueSelected(event) {
     setTimeout(() => {
       !this.selectedValue && this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, {value: {}}, 'value');
-      this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
-    }, 300)
+       this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
+       if(this.selectedValue == null){
+        const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+        if(val){
+          this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, 'value');
+        }
+       }
+      }, 300)
   }
 
   //#endregion
   //#region pass callback event to the project On change of link (dropdown)
   callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    // constant values
-    /*const value = event[0].value;
-    const text = event[0].text;*/
-    this.field.cinchyColumn.hasChanged = event.value.id !== this.field.value;
-    this.selectedValue = event.value;
-    this.field.value = event.value.id;
-    const value = event.value.id;
-    const text = event.value.label;
-    const Data = {
-      'TableName': targetTableName,
-      'ColumnName': columnName,
-      'Value': value,
-      'Text': text,
-      'Event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged,
-      'Form': this.field.form,
-      'Field': this.field
+    if(Object.keys(event.value).length > 0){
+          // constant values
+          /*const value = event[0].value;
+          const text = event[0].text;*/
+          this.field.cinchyColumn.hasChanged = event.value.id !== this.field.value;
+          this.selectedValue = event.value;
+          this.field.value = event.value.id;
+          const value = event.value.id;
+          const text = event.value.label;
+          const Data = {
+            'TableName': targetTableName,
+            'ColumnName': columnName,
+            'Value': value,
+            'Text': text,
+            'Event': event,
+            'HasChanged': this.field.cinchyColumn.hasChanged,
+            'Form': this.field.form,
+            'Field': this.field
+          }
+          // pass calback event
+          const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
+          this.eventHandler.emit(callback);
     }
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
-    this.eventHandler.emit(callback);
+    
   }
 
   checkForAttachmentUrl() {
@@ -470,6 +479,18 @@ export class LinkDirective implements OnInit {
             lowercase.endsWith('.jpeg') ||
             lowercase.endsWith('.gif') ||
             lowercase.endsWith('.svg');
+  }
+
+  deleteDropdownVal(event){
+    const key = event.key;
+    if (key === "Delete" || key === "Backspace") {
+       const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+       if(val){
+        this.selectedValue = null;
+        this.myControl.setValue('');
+        this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, 'value');
+       }
+    }
   }
   //#endregion
 }
