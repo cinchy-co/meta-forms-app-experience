@@ -106,6 +106,7 @@ export class FormHelperService {
         formFields[i].createlinkOptionFormId, 
         formFields[i].createlinkOptionName,
         formFields[i].linkTargetTableId,
+        formFields[i].linkTargetTableName,
         '#dddddd',
         formFields[i].choiceOptions,
         formMetadata.tableJson,

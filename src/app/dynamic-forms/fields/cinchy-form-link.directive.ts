@@ -19,6 +19,7 @@ import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {AddNewOptionDialogComponent} from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
 import {DialogService} from 'src/app/services/dialog.service';
 import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSitemap } from '@fortawesome/free-solid-svg-icons';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 //#region Cinchy Dynamic Link field
 /**
@@ -34,7 +35,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
       <div class="m-b-10">
         <div class="link-labels">
         <div>
-          <fa-icon [icon]="faShareAlt"></fa-icon>
+          <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
        </div>
        &nbsp;
           <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
@@ -51,7 +52,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                     matTooltipPosition="above">
             error
           </mat-icon>
-          <mat-icon *ngIf="field.caption" class="info-icon"
+          <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
                     [ngbTooltip] = "withcaptiont"
                     placement="auto"
                     container="body"
@@ -63,7 +64,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                     matTooltipPosition="above">
             info
           </mat-icon>
-          <mat-icon *ngIf="!field.caption" class="info-icon"
+          <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
                     [ngbTooltip] = "withoutcaptiont"
                     triggers="click"
                     placement="auto"
@@ -75,13 +76,29 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                     matTooltipPosition="above">
             info
           </mat-icon>
+          <mat-icon *ngIf="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                    [ngbTooltip] = "hierarchy"
+                    placement="auto"
+                    container="body"
+                    triggers="click"
+                    #t="ngbTooltip"
+                    (mouseenter) ="openTooltip(t)"
+                    (mouseleave) = "closeTooltip(t)"
+                    matTooltipClass="tool-tip-body"
+                    matTooltipPosition="above">
+            info
+          </mat-icon>
         </div>
         <ng-template #withcaptiont> 
-         {{this.field.caption}}  <br/> From the  {{this.field.label}}  field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.tableName}}  </a> table.
+         {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
         </ng-template>
         <ng-template #withoutcaptiont> 
-          From the  {{this.field.label}}  field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.tableName}}  </a> table.
+          From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
         </ng-template>
+        <ng-template #hierarchy> 
+         {{this.field.caption}}
+        </ng-template>
+
         <ng-container
           *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled && !downloadLink && showActualField">
           <div class="search-input-link">
@@ -190,8 +207,10 @@ export class LinkDirective implements OnInit {
   showActualField: boolean;
   tableSourceURL: any;
   renderImageFiles = true;
-faShareAlt = faShareAlt;
-isCursorIn: boolean = false;
+  faShareAlt = faShareAlt;
+  faSitemap = faSitemap;
+  isCursorIn: boolean = false;
+
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
               private _cinchyService: CinchyService,
               private dialogService: DialogService,
@@ -229,7 +248,8 @@ isCursorIn: boolean = false;
         this.filteredOptions = null;
         this.getListItems();
       }
-    })
+    });
+
   }
 
   setWhenNewRowAddedForParent() {

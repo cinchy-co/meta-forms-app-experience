@@ -342,12 +342,10 @@ app-search-dropdown {
 }
 
 .tooltip{
+  left: -2px !important;
   font: 400 12px/16px Roboto,Helvetica Neue,sans-serif;
-  z-index: 1;
  }
  .tooltip-inner{
   max-width: 250;
   text-align: left;
-  background-color: rgb(0,0,0,0.75);
-  
  }
