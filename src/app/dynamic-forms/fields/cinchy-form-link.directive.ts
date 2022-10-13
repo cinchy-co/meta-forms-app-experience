@@ -18,6 +18,8 @@ import {ImageType } from '../enums/imageurl-type';
 import {faPlus} from '@fortawesome/free-solid-svg-icons';
 import {AddNewOptionDialogComponent} from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
 import {DialogService} from 'src/app/services/dialog.service';
+
+
 import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
 import { faSitemap } from '@fortawesome/free-solid-svg-icons';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
@@ -30,150 +32,146 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   selector: 'cinchy-link',
   template: `
-    <div *ngIf="(field.cinchyColumn.dataType == 'Link' &&
-    field.cinchyColumn.canView)" class="full-width-element divMarginBottom">
-      <div class="m-b-10">
-        <div class="link-labels">
-        <div>
-          <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
-       </div>
-       &nbsp;
-          <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
-            {{field.label}}
-            {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
-          </label>
-          <span *ngIf="createlinkOptionName">
-          <a (click)="manageSourceRecords(field)">
-          <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
-          </a></span>
-          <mat-icon *ngIf="charactersAfterWhichToShowList" class="info-icon"
-                    [matTooltip]="toolTipMessage"
-                    matTooltipClass="tool-tip-body"
-                    matTooltipPosition="above">
-            error
-          </mat-icon>
-          <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
-                    [ngbTooltip] = "withcaptiont"
-                    placement="auto"
-                    container="body"
-                    triggers="click"
-                    #t="ngbTooltip"
-                    (mouseenter) ="openTooltip(t)"
-                    (mouseleave) = "closeTooltip(t)"
-                    matTooltipClass="tool-tip-body"
-                    matTooltipPosition="above">
-            info
-          </mat-icon>
-          <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
-                    [ngbTooltip] = "withoutcaptiont"
-                    triggers="click"
-                    placement="auto"
-                    container="body"
-                    #t="ngbTooltip"
-                    (mouseenter) ="openTooltip(t)"
-                    (mouseleave) = "closeTooltip(t)"
-                    matTooltipClass="tool-tip-body"
-                    matTooltipPosition="above">
-            info
-          </mat-icon>
-          <mat-icon *ngIf="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
-                    [ngbTooltip] = "hierarchy"
-                    placement="auto"
-                    container="body"
-                    triggers="click"
-                    #t="ngbTooltip"
-                    (mouseenter) ="openTooltip(t)"
-                    (mouseleave) = "closeTooltip(t)"
-                    matTooltipClass="tool-tip-body"
-                    matTooltipPosition="above">
-            info
+  <div *ngIf="(field.cinchyColumn.dataType == 'Link' &&
+  field.cinchyColumn.canView)" class="full-width-element divMarginBottom">
+    <div class="m-b-10">
+      <div class="link-labels">
+      <div>
+        <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
+     </div>
+     &nbsp;
+        <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
+          {{field.label}}
+          {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+        </label>
+        <span *ngIf="createlinkOptionName">
+        <a (click)="manageSourceRecords(field)">
+        <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
+        </a></span>
+        <mat-icon *ngIf="charactersAfterWhichToShowList" class="info-icon"
+                  [matTooltip]="toolTipMessage"
+                  matTooltipClass="tool-tip-body"
+                  matTooltipPosition="above">
+          error
+        </mat-icon>
+        <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                  [ngbTooltip] = "withcaptiont"
+                  placement="auto"
+                  container="body"
+                  triggers="click"
+                  #t="ngbTooltip"
+                  (mouseenter) ="openTooltip(t)"
+                  (mouseleave) = "closeTooltip(t)"
+                  matTooltipClass="tool-tip-body"
+                  matTooltipPosition="above">
+          info
+        </mat-icon>
+        <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                  [ngbTooltip] = "withoutcaptiont"
+                  triggers="click"
+                  placement="auto"
+                  container="body"
+                  #t="ngbTooltip"
+                  (mouseenter) ="openTooltip(t)"
+                  (mouseleave) = "closeTooltip(t)"
+                  matTooltipClass="tool-tip-body"
+                  matTooltipPosition="above">
+          info
+        </mat-icon>
+        <mat-icon *ngIf="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                  [ngbTooltip] = "hierarchy"
+                  placement="auto"
+                  container="body"
+                  triggers="click"
+                  #t="ngbTooltip"
+                  (mouseenter) ="openTooltip(t)"
+                  (mouseleave) = "closeTooltip(t)"
+                  matTooltipClass="tool-tip-body"
+                  matTooltipPosition="above">
+          info
+        </mat-icon>
+      </div>
+      <ng-template #withcaptiont> 
+       {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+      </ng-template>
+      <ng-template #withoutcaptiont> 
+        From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+      </ng-template>
+      <ng-template #hierarchy> 
+       {{this.field.caption}}
+      </ng-template>
+      <ng-container
+        *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled && !downloadLink && showActualField">
+        <div class="search-input-link">
+          <input type="text" [formControl]="myControl" [matAutocomplete]="auto" class="form-control" #searchInput
+                 (focus)="getListItems()"
+                 (blur)="setToLastValueSelected($event)"/>
+          <mat-icon *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled">search
           </mat-icon>
         </div>
-        <ng-template #withcaptiont> 
-         {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
-        </ng-template>
-        <ng-template #withoutcaptiont> 
-          From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
-        </ng-template>
-        <ng-template #hierarchy> 
-         {{this.field.caption}}
-        </ng-template>
-
-        <ng-container
-          *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled && !downloadLink && showActualField">
-          <div class="search-input-link">
-            <input type="text" [formControl]="myControl" [matAutocomplete]="auto" class="form-control" #searchInput
-                   (focus)="getListItems()"
-                   (blur)="setToLastValueSelected($event)"/>
-            <mat-icon *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled">search
-            </mat-icon>
-          </div>
-          <mat-autocomplete #auto="matAutocomplete"
-                            (optionSelected)="callbackEvent(targetTableName,field.cinchyColumn.name, $event.option, 'value')"
-                            [displayWith]="displayFn">
-            <ng-container>
-              <mat-option *ngIf="isLoading" class="is-loading">
-                <mat-spinner diameter="35"></mat-spinner>
-              </mat-option>
-              <cdk-virtual-scroll-viewport *ngIf="(charactersAfterWhichToShowList && myControl.value)
-             && (myControl.value.length >= charactersAfterWhichToShowList)"
-                                           [itemSize]="48" [style.height.px]=4*48>
-                <ng-container>
-                  <mat-option [title]="option['label']" *ngFor="let option of filteredOptions" [value]="option">
-                    {{option['label']}}
-                  </mat-option>
-                </ng-container>
-              </cdk-virtual-scroll-viewport>
-              <ng-container *ngIf="!charactersAfterWhichToShowList">
+        <mat-autocomplete #auto="matAutocomplete"
+                          (optionSelected)="callbackEvent(targetTableName,field.cinchyColumn.name, $event.option, 'value')"
+                          [displayWith]="displayFn">
+          <ng-container>
+            <mat-option *ngIf="isLoading" class="is-loading">
+              <mat-spinner diameter="35"></mat-spinner>
+            </mat-option>
+            <cdk-virtual-scroll-viewport *ngIf="(charactersAfterWhichToShowList && myControl.value)
+           && (myControl.value.length >= charactersAfterWhichToShowList)"
+                                         [itemSize]="48" [style.height.px]=4*48>
+              <ng-container>
                 <mat-option [title]="option['label']" *ngFor="let option of filteredOptions" [value]="option">
                   {{option['label']}}
                 </mat-option>
               </ng-container>
+            </cdk-virtual-scroll-viewport>
+            <ng-container *ngIf="!charactersAfterWhichToShowList">
+              <mat-option [title]="option['label']" *ngFor="let option of filteredOptions" [value]="option">
+                {{option['label']}}
+              </mat-option>
             </ng-container>
-          </mat-autocomplete>
-        </ng-container>
-        <ng-container *ngIf="!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly || isDisabled">
-          <label class="pre-formatted" *ngIf="showActualField"
-                 [innerHTML]="selectedValue && selectedValue.label ? selectedValue.label : '-'"></label>
-        </ng-container>
-
-        <ng-container *ngIf="showImage && selectedValue">
-          <img class="cinchy-images" *ngIf="selectedValue.label" [src]="selectedValue.label">
-          <p *ngIf="!selectedValue.label">-</p>
-        </ng-container>
-
-        <ng-container *ngIf="showLinkUrl && selectedValue">
-          <a *ngIf="selectedValue.label" [href]="selectedValue.label" target="_blank">Open</a>
-          <label *ngIf="!selectedValue.label">-</label>
-        </ng-container>
-      </div>
-
-      <ng-container *ngIf="downloadLink">
-        <div *ngFor="let item of downloadableLinks" style="margin-top: -12px">
-          <a *ngIf="downloadLink" [href]="item.fileUrl" [title]="'Download ' + item.fileName">
-            <img *ngIf="renderImageFiles && fileNameIsImage(item.fileName)" style="height: 100px" [src]="item.fileUrl"/>
-            <span [style.marginLeft.px]="renderImageFiles && fileNameIsImage(item.fileName) ? 12 : 0">{{item.fileName}}</span>
-          </a>
-          <mat-icon class="file-delete-icon" (click)="onDeleteFile(item)" title="Delete">close</mat-icon>
-        </div>
-        <input #fileInput class='form-control'
-          *ngIf="!(field.cinchyColumn.canEdit=== false) && (downloadableLinks == null || downloadableLinks.length === 0)"
-          type="file"
-          (change)="onFileSelected($event)"
-          style="margin-top: -10px">
+          </ng-container>
+        </mat-autocomplete>
       </ng-container>
-
-      <mat-error class="mat-error-move-up-10"
-                 *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
-        *{{field.label}} is Required.
-      </mat-error>
+      <ng-container *ngIf="!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly || isDisabled">
+        <label class="pre-formatted" *ngIf="showActualField"
+               [innerHTML]="selectedValue && selectedValue.label ? selectedValue.label : '-'"></label>
+      </ng-container>
+      <ng-container *ngIf="showImage && selectedValue">
+        <img class="cinchy-images" *ngIf="selectedValue.label" [src]="selectedValue.label">
+        <p *ngIf="!selectedValue.label">-</p>
+      </ng-container>
+      <ng-container *ngIf="showLinkUrl && selectedValue">
+        <a *ngIf="selectedValue.label" [href]="selectedValue.label" target="_blank">Open</a>
+        <label *ngIf="!selectedValue.label">-</label>
+      </ng-container>
     </div>
+    <ng-container *ngIf="downloadLink">
+      <div *ngFor="let item of downloadableLinks" style="margin-top: -12px">
+        <a *ngIf="downloadLink" [href]="item.fileUrl" [title]="'Download ' + item.fileName">
+          <img *ngIf="renderImageFiles && fileNameIsImage(item.fileName)" style="height: 100px" [src]="item.fileUrl"/>
+          <span [style.marginLeft.px]="renderImageFiles && fileNameIsImage(item.fileName) ? 12 : 0">{{item.fileName}}</span>
+        </a>
+        <mat-icon class="file-delete-icon" (click)="onDeleteFile(item)" title="Delete">close</mat-icon>
+      </div>
+      <input #fileInput class='form-control'
+        *ngIf="!(field.cinchyColumn.canEdit=== false) && (downloadableLinks == null || downloadableLinks.length === 0)"
+        type="file"
+        (change)="onFileSelected($event)"
+        style="margin-top: -10px">
+    </ng-container>
+    <mat-error class="mat-error-move-up-10"
+               *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+      *{{field.label}} is Required.
+    </mat-error>
+  </div>
   `,
   providers: [DropdownDatasetService]
 })
 export class LinkDirective implements OnInit {
   @ViewChild('searchInput') searchInput;
   @ViewChild('fileInput') fileInput: ElementRef;
+  
   @ViewChild('t') public tooltip: NgbTooltip;
   @Input() field: any;
   @Input() rowId: any;
@@ -206,7 +204,9 @@ export class LinkDirective implements OnInit {
   showLinkUrl: boolean;
   showActualField: boolean;
   tableSourceURL: any;
+
   renderImageFiles = true;
+
   faShareAlt = faShareAlt;
   faSitemap = faSitemap;
   isCursorIn: boolean = false;
@@ -248,8 +248,7 @@ export class LinkDirective implements OnInit {
         this.filteredOptions = null;
         this.getListItems();
       }
-    });
-
+    })
   }
 
   setWhenNewRowAddedForParent() {
@@ -510,6 +509,7 @@ export class LinkDirective implements OnInit {
             lowercase.endsWith('.gif') ||
             lowercase.endsWith('.svg');
   }
+  //#endregion
 
 
 removeTooltipElement(){
@@ -543,3 +543,4 @@ closeTooltip(tooltip){
 }
 
 }
+
