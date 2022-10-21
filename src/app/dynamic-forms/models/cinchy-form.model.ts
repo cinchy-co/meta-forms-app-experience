@@ -7,6 +7,7 @@ import * as R from 'ramda';
 import { FormField } from './cinchy-form-field.model';
 
 
+
 export interface IForm {
   id: number | string;
   name: string;
@@ -521,10 +522,13 @@ export class Form implements IForm {
                 let date: Date;
                 if (typeof element.value === 'string') {
                   try {
+                    console.log("Before new Date element value ",element.value );
                     date = new Date(element.value);
+                    console.log("After new Date element value ",element.value );
                   } catch { }
                 } else if (element.value instanceof Date) {
                   date = element.value;
+                  console.log("Type of value is date element value ", element.value );
                 }
 
                 let elementValue = isNullOrUndefined(date) ? null : date instanceof Date ? date.toLocaleDateString() : null;
@@ -532,6 +536,8 @@ export class Form implements IForm {
                   params[paramName] = elementValue ? elementValue : '';
                 }
                 paramName = date instanceof Date ? paramName : `NULLIF(${paramName},'')`;
+
+                console.log("ParamName with Date ",paramName , params[paramName]);
                 break;
               case "Number":
                 let elementValueNumber = isNullOrUndefined(element.value) ? '' : element.value;
