@@ -65,6 +65,7 @@ import 'brace/snippets/json';
 import { AceEditorModule } from 'ng2-ace-editor';
 import 'ace-builds/webpack-resolver';
 import { DatePipe } from '@angular/common';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 window['ace']['require'] = window['ace']['acequire'];
 
@@ -136,7 +137,8 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     MatProgressSpinnerModule,
     SharedModule,
     NgxMatSelectSearchModule,
-    AceEditorModule
+    AceEditorModule,
+    NgbModule
   ],
   exports        : [CinchyDynamicFormsComponent],
   entryComponents: [ChildFormDirective, MessageDialogComponent],

@@ -24,11 +24,12 @@ import { faCheckSquare } from '@fortawesome/free-regular-svg-icons';
           {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
         </label>
         <mat-icon *ngIf="field.caption" class="info-icon-checkbox"
-                  [matTooltip]="field.caption"
+                  ngbTooltip = "{{field.caption}}"
+                  placement="auto"
+                  container="body"
                   matTooltipClass="tool-tip-body"
-                  matTooltipPosition="after"
-                  aria-label="Button that displays a tooltip when focused or hovered over">
-          contact_support
+                  matTooltipPosition="above">
+          info
         </mat-icon>
       </div>
       <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
