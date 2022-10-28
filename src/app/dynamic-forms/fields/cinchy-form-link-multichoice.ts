@@ -27,7 +27,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
         <div class="m-b-10">
           <div class="link-labels">
           <div>
-            <fa-icon [icon]="faShareAlt"></fa-icon>
+          <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
           </div>
           &nbsp;
             <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
@@ -59,7 +59,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                       matTooltipPosition="above">
               info
             </mat-icon>
-            <mat-icon *ngIf="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+            <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
                       [ngbTooltip] = "hierarchy"
                       placement="auto"
                       container="body"
