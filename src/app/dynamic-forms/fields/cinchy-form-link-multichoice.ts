@@ -16,6 +16,8 @@ import { ConfigService } from 'src/app/config.service';
 import { CinchyQueryService } from 'src/app/services/cinchy-query.service';
 import { ToastrService } from 'ngx-toastr';
 import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSitemap } from '@fortawesome/free-solid-svg-icons';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'cinchy-link-multichoice',
@@ -33,13 +35,51 @@ import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
               {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
             </label>
 
-            <mat-icon *ngIf="field.caption" class="info-icon"
-                      [matTooltip]="field.caption"
+            <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                      [ngbTooltip] = "withcaptiont"
+                      placement="auto"
+                      container="body"
+                      triggers="click"
+                      #t="ngbTooltip"
+                      (mouseenter) ="openTooltip(t)"
+                      (mouseleave) = "closeTooltip(t)"
                       matTooltipClass="tool-tip-body"
-                      matTooltipPosition="after"
-                      aria-label="Button that displays a tooltip when focused or hovered over">
-              contact_support
+                      matTooltipPosition="above">
+              info
             </mat-icon>
+            <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                      [ngbTooltip] = "withoutcaptiont"
+                      triggers="click"
+                      placement="auto"
+                      container="body"
+                      #t="ngbTooltip"
+                      (mouseenter) ="openTooltip(t)"
+                      (mouseleave) = "closeTooltip(t)"
+                      matTooltipClass="tool-tip-body"
+                      matTooltipPosition="above">
+              info
+            </mat-icon>
+            <mat-icon *ngIf="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                      [ngbTooltip] = "hierarchy"
+                      placement="auto"
+                      container="body"
+                      triggers="click"
+                      #t="ngbTooltip"
+                      (mouseenter) ="openTooltip(t)"
+                      (mouseleave) = "closeTooltip(t)"
+                      matTooltipClass="tool-tip-body"
+                      matTooltipPosition="above">
+              info
+            </mat-icon>
+          <ng-template #withcaptiont> 
+             {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+          </ng-template>
+          <ng-template #withoutcaptiont> 
+            From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+          </ng-template>
+          <ng-template #hierarchy> 
+             {{this.field.caption}}
+          </ng-template>
 
           </div>
           <mat-select class="form-control" multiple #multiSelect [formControl]="myControl" *ngIf="!isLoading && !downloadLink"
@@ -122,7 +162,8 @@ import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
 export class LinkMultichoice implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('fileInput') fileInput: ElementRef;
   @ViewChild('multiSelect', {static: true}) multiSelect: MatSelect;
-  
+  @ViewChild('t') public tooltip: NgbTooltip;
+
   @Input() field: any;
   @Input() rowId: any;
   @Input('fieldsWithErrors') set fieldsWithErrors(errorFields: any) {
@@ -153,10 +194,13 @@ export class LinkMultichoice implements OnInit, AfterViewInit, OnDestroy {
   maxLimitForMaterialSelect = 4000;
   downloadLink;
   downloadableLinks;
+  tableSourceURL: any;
 
   renderImageFiles = true;
   faShareAlt = faShareAlt;
-  
+  faSitemap = faSitemap;
+  isCursorIn: boolean = false;
+
   constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
               private _cinchyService: CinchyService,
               private _configService: ConfigService,
@@ -183,6 +227,8 @@ export class LinkMultichoice implements OnInit, AfterViewInit, OnDestroy {
       this.myControl.disable();
     }
     this.getListItems();
+    let url = this._configService.envConfig.cinchyRootUrl;
+    this.tableSourceURL = url + '/Tables/' + this.field.cinchyColumn.LinkTargetTableId;
   }
 
   setSelectedValue() {
@@ -480,5 +526,35 @@ export class LinkMultichoice implements OnInit, AfterViewInit, OnDestroy {
       this.field.cinchyColumn.hasChanged = true;
       this.downloadableLinks = this.downloadableLinks.filter(x => x.fileId !== item.fileId);
     }
+  }
+
+  removeTooltipElement(){
+    this.isCursorIn = false;
+    this.tooltip.close(); 
+  }
+  
+  setTooltipCursor(){
+    this.isCursorIn = true;
+  }
+  
+  openTooltip(tooltip){
+    tooltip.open();
+    this.tooltip = tooltip;
+    if(tooltip.isOpen()) {
+      const tooltipElement = document.getElementsByTagName("ngb-tooltip-window");
+      if(tooltipElement[0]){
+        tooltipElement[0].addEventListener('mouseleave',this.removeTooltipElement.bind(this));
+        tooltipElement[0].addEventListener('mouseenter',this.setTooltipCursor.bind(this));
+    }
+   }
+  }
+  
+  closeTooltip(tooltip){
+    setTimeout(() => {
+      if(tooltip.isOpen() &&  !this.isCursorIn) {
+        tooltip.close();
+      }
+    }, 100);
+  
   }
 }
