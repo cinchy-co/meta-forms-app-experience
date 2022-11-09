@@ -60,25 +60,40 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
               info
             </mat-icon>
             <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
-                      [ngbTooltip] = "hierarchy"
-                      placement="auto"
-                      container="body"
-                      triggers="click"
-                      #t="ngbTooltip"
-                      (mouseenter) ="openTooltip(t)"
-                      (mouseleave) = "closeTooltip(t)"
-                      matTooltipClass="tool-tip-body"
-                      matTooltipPosition="above">
+                  [ngbTooltip] = "hierarchyWithCaption"
+                  placement="auto"
+                  container="body"
+                  triggers="click"
+                  #t="ngbTooltip"
+                  (mouseenter) ="openTooltip(t)"
+                  (mouseleave) = "closeTooltip(t)"
+                  matTooltipClass="tool-tip-body"
+                  matTooltipPosition="above">
               info
-            </mat-icon>
+          </mat-icon>
+          <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                    [ngbTooltip] = "hierarchyWithoutCaption"
+                    placement="auto"
+                    container="body"
+                    triggers="click"
+                    #t="ngbTooltip"
+                    (mouseenter) ="openTooltip(t)"
+                    (mouseleave) = "closeTooltip(t)"
+                    matTooltipClass="tool-tip-body"
+                    matTooltipPosition="above">
+              info
+          </mat-icon>
           <ng-template #withcaptiont> 
              {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
           </ng-template>
           <ng-template #withoutcaptiont> 
-            From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+             From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
           </ng-template>
-          <ng-template #hierarchy> 
-             {{this.field.caption}}
+          <ng-template #hierarchyWithCaption> 
+              {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTargetTableName}} table.
+          </ng-template>
+          <ng-template #hierarchyWithoutCaption> 
+              From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTargetTableName}} table.
           </ng-template>
 
           </div>
