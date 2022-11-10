@@ -568,13 +568,21 @@ closeTooltip(tooltip){
 deleteDropdownVal(event){
   const key = event.key;
   if (key === "Delete" || key === "Backspace") {
-     const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
-     if(val){
+    const text= this.getSelectedText();
+    const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+    if (text!=''){
       this.selectedValue = null;
       this.myControl.setValue('');
       this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, 'value');
-     }
+    }
   }
+}
+
+getSelectedText() {
+  if (window.getSelection) {
+      return window.getSelection().toString();
+  }
+  return '';
 }
 
 }
