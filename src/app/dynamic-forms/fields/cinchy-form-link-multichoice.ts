@@ -27,7 +27,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
         <div class="m-b-10">
           <div class="link-labels">
           <div>
-            <fa-icon [icon]="faShareAlt"></fa-icon>
+          <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
           </div>
           &nbsp;
             <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
@@ -59,26 +59,41 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                       matTooltipPosition="above">
               info
             </mat-icon>
-            <mat-icon *ngIf="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
-                      [ngbTooltip] = "hierarchy"
-                      placement="auto"
-                      container="body"
-                      triggers="click"
-                      #t="ngbTooltip"
-                      (mouseenter) ="openTooltip(t)"
-                      (mouseleave) = "closeTooltip(t)"
-                      matTooltipClass="tool-tip-body"
-                      matTooltipPosition="above">
+            <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                  [ngbTooltip] = "hierarchyWithCaption"
+                  placement="auto"
+                  container="body"
+                  triggers="click"
+                  #t="ngbTooltip"
+                  (mouseenter) ="openTooltip(t)"
+                  (mouseleave) = "closeTooltip(t)"
+                  matTooltipClass="tool-tip-body"
+                  matTooltipPosition="above">
               info
-            </mat-icon>
+          </mat-icon>
+          <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                    [ngbTooltip] = "hierarchyWithoutCaption"
+                    placement="auto"
+                    container="body"
+                    triggers="click"
+                    #t="ngbTooltip"
+                    (mouseenter) ="openTooltip(t)"
+                    (mouseleave) = "closeTooltip(t)"
+                    matTooltipClass="tool-tip-body"
+                    matTooltipPosition="above">
+              info
+          </mat-icon>
           <ng-template #withcaptiont> 
              {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
           </ng-template>
           <ng-template #withoutcaptiont> 
-            From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+             From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
           </ng-template>
-          <ng-template #hierarchy> 
-             {{this.field.caption}}
+          <ng-template #hierarchyWithCaption> 
+              {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTargetTableName}} table.
+          </ng-template>
+          <ng-template #hierarchyWithoutCaption> 
+              From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTargetTableName}} table.
           </ng-template>
 
           </div>
