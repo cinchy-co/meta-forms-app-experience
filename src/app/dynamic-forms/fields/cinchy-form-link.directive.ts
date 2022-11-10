@@ -78,8 +78,20 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                   matTooltipPosition="above">
           info
         </mat-icon>
-        <mat-icon *ngIf="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
-                  [ngbTooltip] = "hierarchy"
+        <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                  [ngbTooltip] = "hierarchyWithCaption"
+                  placement="auto"
+                  container="body"
+                  triggers="click"
+                  #t="ngbTooltip"
+                  (mouseenter) ="openTooltip(t)"
+                  (mouseleave) = "closeTooltip(t)"
+                  matTooltipClass="tool-tip-body"
+                  matTooltipPosition="above">
+          info
+        </mat-icon>
+        <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+                  [ngbTooltip] = "hierarchyWithoutCaption"
                   placement="auto"
                   container="body"
                   triggers="click"
@@ -92,19 +104,23 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
         </mat-icon>
       </div>
       <ng-template #withcaptiont> 
-       {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+        {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
       </ng-template>
       <ng-template #withoutcaptiont> 
         From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
       </ng-template>
-      <ng-template #hierarchy> 
-       {{this.field.caption}}
+      <ng-template #hierarchyWithCaption> 
+        {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTargetTableName}} table.
+      </ng-template>
+      <ng-template #hierarchyWithoutCaption> 
+        From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTargetTableName}} table.
       </ng-template>
       <ng-container
         *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled && !downloadLink && showActualField">
         <div class="search-input-link">
           <input type="text" [formControl]="myControl" [matAutocomplete]="auto" class="form-control" #searchInput
                  (focus)="getListItems()"
+                 (keydown) = "deleteDropdownVal($event)"
                  (blur)="setToLastValueSelected($event)"/>
           <mat-icon *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled">search
           </mat-icon>
@@ -328,7 +344,6 @@ export class LinkDirective implements OnInit {
   onInputChange() {
     if (this.isLoading) {
       this.myControl.setValue('');
-      this.selectedValue = null;
       return;
     }
     
@@ -385,34 +400,42 @@ export class LinkDirective implements OnInit {
   setToLastValueSelected(event) {
     setTimeout(() => {
       !this.selectedValue && this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, {value: {}}, 'value');
-      this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
-    }, 300)
+       this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue('');
+       if(this.selectedValue == null){
+        const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+        if(val){
+          this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, 'value');
+        }
+       }
+      }, 300)
   }
 
   //#endregion
   //#region pass callback event to the project On change of link (dropdown)
   callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    // constant values
-    /*const value = event[0].value;
-    const text = event[0].text;*/
-    this.field.cinchyColumn.hasChanged = event.value.id !== this.field.value;
-    this.selectedValue = event.value;
-    this.field.value = event.value.id;
-    const value = event.value.id;
-    const text = event.value.label;
-    const Data = {
-      'TableName': targetTableName,
-      'ColumnName': columnName,
-      'Value': value,
-      'Text': text,
-      'Event': event,
-      'HasChanged': this.field.cinchyColumn.hasChanged,
-      'Form': this.field.form,
-      'Field': this.field
+    if(Object.keys(event.value).length > 0){
+        // constant values
+        /*const value = event[0].value;
+        const text = event[0].text;*/
+        this.field.cinchyColumn.hasChanged = event.value.id !== this.field.value;
+        this.selectedValue = event.value;
+        this.field.value = event.value.id;
+        const value = event.value.id;
+        const text = event.value.label;
+        const Data = {
+          'TableName': targetTableName,
+          'ColumnName': columnName,
+          'Value': value,
+          'Text': text,
+          'Event': event,
+          'HasChanged': this.field.cinchyColumn.hasChanged,
+          'Form': this.field.form,
+          'Field': this.field
+        }
+        // pass calback event
+        const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
+        this.eventHandler.emit(callback);
     }
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
-    this.eventHandler.emit(callback);
   }
 
   checkForAttachmentUrl() {
@@ -540,6 +563,18 @@ closeTooltip(tooltip){
     }
   }, 100);
 
+}
+
+deleteDropdownVal(event){
+  const key = event.key;
+  if (key === "Delete" || key === "Backspace") {
+     const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+     if(val){
+      this.selectedValue = null;
+      this.myControl.setValue('');
+      this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, 'value');
+     }
+  }
 }
 
 }
