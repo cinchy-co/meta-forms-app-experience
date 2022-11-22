@@ -397,7 +397,7 @@ export class PrintService {
       const urlLink = anchor.href; 
       const urlText = anchor.text
 
-      return { text: urlText, link: urlLink };
+      return { text: urlText, link: urlLink, color: '#007bff' };
     }
     return value;
   }
