@@ -321,20 +321,11 @@ export class PrintService {
     let multiFields = form.sections[0]?.MultiFields;
     const fields = form.sections[0]?.fields;
     let [body, widths] = [[], []];
-    const colsToRemove = {}
+
     if (multiFields?.length) {
 
       let tableColumns = Object.keys(multiFields[0]);
-      multiFields.forEach(field => {
-        // Removing some columns from table
-        tableColumns.forEach(col => {
-          if (field[col] && field[col].includes && field[col].includes('http') || (field[col] && field[col].includes && field[col].includes('<a '))
-          || this.isLinkedColumn(form.sections[0], col)) {
-            colsToRemove[col] = 1;
-          }
-        })
-      });
-      tableColumns = tableColumns.filter(col => col !== 'Cinchy ID' && col !== 'Actions' && !colsToRemove[col]);
+      tableColumns = tableColumns.filter(col => col !== 'Cinchy ID' && col !== 'Actions');
       widths = tableColumns.map(column => 'auto');
       body.push(tableColumns.map(col => ({text: this.getTableHeader(col, form.sections[0]), style: 'tableHeader'})));
       multiFields.forEach(field => {
