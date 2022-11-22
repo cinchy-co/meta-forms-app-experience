@@ -321,11 +321,20 @@ export class PrintService {
     let multiFields = form.sections[0]?.MultiFields;
     const fields = form.sections[0]?.fields;
     let [body, widths] = [[], []];
-
+    const colsToRemove = {}
     if (multiFields?.length) {
 
       let tableColumns = Object.keys(multiFields[0]);
-      tableColumns = tableColumns.filter(col => col !== 'Cinchy ID' && col !== 'Actions');
+      multiFields.forEach(field => {
+        // Removing some columns from table
+        // tableColumns.forEach(col => {
+        //   if (field[col] && field[col].includes && field[col].includes('http') || (field[col] && field[col].includes && field[col].includes('<a '))
+        //   || this.isLinkedColumn(form.sections[0], col)) {
+        //     colsToRemove[col] = 1;
+        //   }
+        // })
+      });
+      tableColumns = tableColumns.filter(col => col !== 'Cinchy ID' && col !== 'Actions' && !colsToRemove[col]);
       widths = tableColumns.map(column => 'auto');
       body.push(tableColumns.map(col => ({text: this.getTableHeader(col, form.sections[0]), style: 'tableHeader'})));
       multiFields.forEach(field => {
@@ -383,6 +392,13 @@ export class PrintService {
     } else if (value && currentField && currentField.cinchyColumn.dataFormatType === 'LinkUrl') {
       return `<a href="${value}" target="_blank">Open</a>`;
     }
+    else if(value && value.includes && value.includes('<a ')){
+      const anchor = this.htmlToElement(value);
+      const urlLink = anchor.href; 
+      const urlText = anchor.text
+
+      return { text: urlText, link: urlLink };
+    }
     return value;
   }
 
@@ -400,5 +416,13 @@ export class PrintService {
       body: []
     }
   }
+
+  htmlToElement(html):any {
+    const template = document.createElement('template');
+    html = html.trim(); // Never return a text node of whitespace as the result
+    template.innerHTML = html;
+    return template.content.firstChild;
+ }
+
 
 }
