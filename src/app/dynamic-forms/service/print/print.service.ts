@@ -392,7 +392,7 @@ export class PrintService {
     } else if (value && currentField && currentField.cinchyColumn.dataFormatType === 'LinkUrl') {
       return `<a href="${value}" target="_blank">Open</a>`;
     }
-    else if(value && value.includes && value.includes('<a ')){
+    else if(this.isAnchor(value)){
       const anchor = this.htmlToElement(value);
       const urlLink = anchor.href; 
       const urlText = anchor.text
@@ -424,5 +424,8 @@ export class PrintService {
     return template.content.firstChild;
  }
 
+ isAnchor(str){
+  return /^\<a.*\>.*\<\/a\>/i.test(str);
+ }
 
 }
