@@ -393,11 +393,19 @@ export class PrintService {
       return `<a href="${value}" target="_blank">Open</a>`;
     }
     else if(this.isAnchor(value)){
-      const anchor = this.htmlToElement(value);
+      const anchor = this.htmlToElement(value.match(/<a.*?<\/a>/g)[0]);
       const urlLink = anchor.href; 
       const urlText = anchor.text
+      const anchorWithText = value.split(value.match(/<a.*?<\/a>/g));
+      const frontStr = anchorWithText[0];
+      const backStr = anchorWithText[1];
+      const returnStr: any[] = [];
 
-      return { text: urlText, link: urlLink, color: '#007bff' };
+      if (frontStr && frontStr != '') returnStr.push(frontStr);
+      returnStr.push({ text: urlText, link: urlLink, color: '#007bff' });
+      if (backStr && backStr != '') returnStr.push(backStr);  
+
+      return returnStr;
     }
     return value;
   }
@@ -425,7 +433,7 @@ export class PrintService {
  }
 
  isAnchor(str){
-  return /^\<a.*\>.*\<\/a\>/i.test(str);
+  return /<a.*?<\/a>/g.test(str);
  }
 
 }
