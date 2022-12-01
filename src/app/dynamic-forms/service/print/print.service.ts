@@ -325,15 +325,7 @@ export class PrintService {
     if (multiFields?.length) {
 
       let tableColumns = Object.keys(multiFields[0]);
-      multiFields.forEach(field => {
-        // Removing some columns from table
-        // tableColumns.forEach(col => {
-        //   if (field[col] && field[col].includes && field[col].includes('http') || (field[col] && field[col].includes && field[col].includes('<a '))
-        //   || this.isLinkedColumn(form.sections[0], col)) {
-        //     colsToRemove[col] = 1;
-        //   }
-        // })
-      });
+
       tableColumns = tableColumns.filter(col => col !== 'Cinchy ID' && col !== 'Actions' && !colsToRemove[col]);
       widths = tableColumns.map(column => 'auto');
       body.push(tableColumns.map(col => ({text: this.getTableHeader(col, form.sections[0]), style: 'tableHeader'})));
