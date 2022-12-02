@@ -1,7 +1,9 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import {  Subscription } from 'rxjs';
 import { IFormSectionMetadata } from 'src/app/models/form-section-metadata.model';
+import { isNullOrUndefined } from 'util';
 import { AppStateService } from '../../services/app-state.service';
+import { IFormField } from '../models/cinchy-form-field.model';
 import { IFormSection } from '../models/cinchy-form-sections.model';
 import { IForm } from '../models/cinchy-form.model';
 import { SpinnerCondition } from '../models/cinchy-spinner.model';
@@ -95,5 +97,23 @@ export class FieldsWrapperComponent implements OnInit {
     this._formSectionsToRenderMetadata = _newSectionsToRenderMetadata;
     this._sectionsToRender = _newSectionsToRender;
     this.appStateService.setLatestRenderedSections(_newSectionsToRenderMetadata);
+  }
+
+
+  usePlaintext(field: IFormField): boolean {
+
+    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
+  }
+
+
+  useRichText(field: IFormField): boolean {
+
+    return (field.cinchyColumn.dataType === "Text" && !isNullOrUndefined(field.cinchyColumn.textFormat));
+  }
+
+
+  useTextarea(field: IFormField): boolean {
+
+    return (field.cinchyColumn.dataType == "Text" && field.cinchyColumn.textColumnMaxLength > 500);
   }
 }
