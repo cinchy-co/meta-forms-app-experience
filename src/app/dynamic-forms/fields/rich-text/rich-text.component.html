@@ -1,0 +1,86 @@
+<div class="full-width-element divMarginBottom">
+  <div class="link-labels">
+    <div>
+      <fa-icon [icon]="icons.faParagraph"></fa-icon>
+    </div>
+    &nbsp;
+    <label class="cinchy-label" [title]="field.caption || ''">
+      {{field.label}}
+      {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+    </label>
+    <mat-icon *ngIf="field.caption" class="info-icon"
+              ngbTooltip="{{field.caption}}"
+              placement="auto"
+              container="body"
+              matTooltipClass="tool-tip-body"
+              matTooltipPosition="above">
+      info
+    </mat-icon>
+  </div>
+
+  <ng-container *ngIf="canEdit">
+    <div class="rich-text-wrapper">
+      <div class="toolbar">
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Bold)">
+          <fa-icon [icon]="icons.faBold"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Italic)">
+          <fa-icon [icon]="icons.faItalic"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Underline)">
+          <fa-icon [icon]="icons.faUnderline"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Strike)">
+          <fa-icon [icon]="icons.faStrikethrough"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Code)">
+          <fa-icon [icon]="icons.faCode"></fa-icon>
+        </button>
+
+        <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.ListUnordered)">
+          <fa-icon [icon]="icons.faListUl"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.ListOrdered)">
+          <fa-icon [icon]="icons.faListOl"></fa-icon>
+        </button>
+
+        <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Heading1)">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>1</sub>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Heading2)">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>2</sub>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Heading3)">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>3</sub>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Heading4)">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>4</sub>
+        </button>
+
+        <button class="toolbar-item" (click)="toggleMark(tiptapMarkType.Heading5)">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>5</sub>
+        </button>
+      </div>
+      <div #richTextElement class="rich-text-element"></div>
+    </div>
+  </ng-container>
+  <ng-container *ngIf="field.cinchyColumn.canEdit === false || field.cinchyColumn.isViewOnly || isDisabled">
+    <label class="pre-formatted">{{field.value | json}}</label>
+  </ng-container>
+</div>

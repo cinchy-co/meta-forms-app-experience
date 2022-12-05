@@ -1,0 +1,55 @@
+<div *ngIf="(field.cinchyColumn.dataType == 'Text' && field.cinchyColumn.textColumnMaxLength > 500 && field.cinchyColumn.canView)"
+     class="full-width-element divMarginBottom">
+  <div class="link-labels">
+    <div>
+      <fa-icon [icon]="faAlignLeft"></fa-icon>
+    </div>
+    &nbsp;
+    <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
+      {{field.label}}
+      {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+    </label>
+    <mat-icon *ngIf="field.caption" class="info-icon"
+              ngbTooltip="{{field.caption}}"
+              placement="auto"
+              container="body"
+              matTooltipClass="tool-tip-body"
+              matTooltipPosition="above">
+      info
+    </mat-icon>
+  </div>
+  <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
+    <textarea *ngIf="!isFormatted && showActualField"
+              [rows]="field.cinchyColumn.totalTextAreaRows ? field.cinchyColumn.totalTextAreaRows : 4"
+              [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
+              class='form-control' type="text" [(ngModel)]="field.value"
+              (blur)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
+              [ngModelOptions]="{standalone: true}">
+         </textarea>
+
+    <ace-editor *ngIf="isFormatted" #editor style="height:450px;" [(text)]="field.value"
+                (textChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')">
+    </ace-editor>
+    <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+      *{{field.label}} is Required.
+    </mat-error>
+  </ng-container>
+
+  <ng-container *ngIf="field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled">
+    <label class="pre-formatted" *ngIf="!isFormatted && showActualField" [innerHTML]="field.value || '-'"></label>
+
+    <ace-editor *ngIf="isFormatted" #editor style="height:450px;" [(text)]="field.value"
+                (textChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')">
+    </ace-editor>
+  </ng-container>
+
+  <ng-container *ngIf="showImage">
+    <img class="cinchy-images" *ngIf="field.value" [src]="field.value">
+    <p *ngIf="!field.value">-</p>
+  </ng-container>
+
+  <ng-container *ngIf="showLinkUrl">
+    <a *ngIf="field.value" [href]="field.value">Open</a>
+    <label *ngIf="!field.value">-</label>
+  </ng-container>
+</div>
