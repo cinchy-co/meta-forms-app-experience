@@ -325,7 +325,15 @@ export class PrintService {
     if (multiFields?.length) {
 
       let tableColumns = Object.keys(multiFields[0]);
-
+      multiFields.forEach(field => {
+        // Removing some columns from table
+        tableColumns.forEach(col => {
+          if (field[col] && field[col].includes && field[col].includes('http') || (field[col] && field[col].includes && field[col].includes('<a '))
+          || this.isLinkedColumn(form.sections[0], col)) {
+            colsToRemove[col] = 1;
+          }
+        })
+      });
       tableColumns = tableColumns.filter(col => col !== 'Cinchy ID' && col !== 'Actions' && !colsToRemove[col]);
       widths = tableColumns.map(column => 'auto');
       body.push(tableColumns.map(col => ({text: this.getTableHeader(col, form.sections[0]), style: 'tableHeader'})));
@@ -384,21 +392,6 @@ export class PrintService {
     } else if (value && currentField && currentField.cinchyColumn.dataFormatType === 'LinkUrl') {
       return `<a href="${value}" target="_blank">Open</a>`;
     }
-    else if(this.isAnchor(value)){
-      const anchor = this.htmlToElement(value.match(/<a.*?<\/a>/g)[0]);
-      const urlLink = anchor.href; 
-      const urlText = anchor.text
-      const anchorWithText = value.split(value.match(/<a.*?<\/a>/g));
-      const frontStr = anchorWithText[0];
-      const backStr = anchorWithText[1];
-      const returnStr: any[] = [];
-
-      if (frontStr && frontStr != '') returnStr.push(frontStr);
-      returnStr.push({ text: urlText, link: urlLink, color: '#007bff' });
-      if (backStr && backStr != '') returnStr.push(backStr);  
-
-      return returnStr;
-    }
     return value;
   }
 
@@ -416,16 +409,5 @@ export class PrintService {
       body: []
     }
   }
-
-  htmlToElement(html):any {
-    const template = document.createElement('template');
-    html = html.trim(); // Never return a text node of whitespace as the result
-    template.innerHTML = html;
-    return template.content.firstChild;
- }
-
- isAnchor(str){
-  return /<a.*?<\/a>/g.test(str);
- }
 
 }

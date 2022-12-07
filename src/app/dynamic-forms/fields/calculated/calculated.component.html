@@ -1,0 +1,26 @@
+<div class="full-width-element divMarginBottom">
+  <div class="link-labels">
+    <div>
+      <fa-icon [icon]="faCalculator"></fa-icon>
+    </div>
+    &nbsp;
+    <label class="calculatedStyle cinchy-label" [innerHTML]="field.label"
+           [title]="field.caption ? field.caption : ''">
+    </label>
+    <mat-icon *ngIf="field.caption" class="info-icon"
+              ngbTooltip="{{field.caption}}"
+              placement="auto"
+              container="body"
+              matTooltipClass="tool-tip-body"
+              matTooltipPosition="above">
+      info
+    </mat-icon>
+  </div>
+  <ng-container *ngIf="!isFormatted">
+    <label class="pre-formatted" *ngIf="!field.cinchyColumn.dataFormatType" [innerHTML]="field.value || '-'"></label>
+    <label *ngIf="field.cinchyColumn.dataFormatType === 'Currency' && field.value" [innerHTML]="(field.value | currency) || '-'"></label>
+  </ng-container>
+
+  <ace-editor *ngIf="isFormatted" #editor style="height:450px;" [(text)]="field.value">
+  </ace-editor>
+</div>

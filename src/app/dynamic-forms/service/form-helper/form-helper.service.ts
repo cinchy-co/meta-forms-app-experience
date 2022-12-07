@@ -84,7 +84,7 @@ export class FormHelperService {
       if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
         const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
         columnMetadata.displayFormat = parentMetadata?.displayFormat;
-       }
+      }
 
 
       const cinchyColumn: ICinchyColumn = new CinchyColumn(
@@ -103,7 +103,7 @@ export class FormHelperService {
         columnMetadata?.minValue == null ? 0 : columnMetadata?.minValue,
         (columnEntitlements == null || cellEntitlements && cellEntitlements[columnEntitlementKey] === 0) ? false : columnEntitlements.canEdit,
         (columnEntitlements?.canView != null) ? columnEntitlements.canView : false,
-        formFields[i].createlinkOptionFormId, 
+        formFields[i].createlinkOptionFormId,
         formFields[i].createlinkOptionName,
         formFields[i].linkTargetTableId,
         formFields[i].linkTargetTableName,
@@ -126,7 +126,8 @@ export class FormHelperService {
         formFields[i].childFormLinkId,
         formFields[i].doNotWrap,
         columnMetadata?.displayFormat,
-        columnMetadata?.$type == 'Calculated'
+        columnMetadata?.$type == 'Calculate',
+        columnMetadata?.textFormat
       );
 
       let childForm: IForm = null;
@@ -258,7 +259,6 @@ export class FormHelperService {
 
       // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
       if (form.childFieldsLinkedToColumnName != null) {
-        debugger;
         for (let parentColName in form.childFieldsLinkedToColumnName) {
 
           let linkedParentField = form.fieldsByColumnName[parentColName];
