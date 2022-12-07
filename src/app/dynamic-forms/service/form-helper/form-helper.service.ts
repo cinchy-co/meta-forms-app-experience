@@ -126,8 +126,7 @@ export class FormHelperService {
         formFields[i].childFormLinkId,
         formFields[i].doNotWrap,
         columnMetadata?.displayFormat,
-        columnMetadata?.$type == 'Calculate',
-        columnMetadata?.textFormat
+        columnMetadata?.$type == 'Calculate'
       );
 
       let childForm: IForm = null;

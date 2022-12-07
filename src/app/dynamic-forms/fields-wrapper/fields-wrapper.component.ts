@@ -19,7 +19,6 @@ import { IFormSection } from "../models/cinchy-form-sections.model";
 import { SpinnerCondition } from "../models/cinchy-spinner.model";
 
 import { AppStateService } from "../../services/app-state.service";
-import { TextFormatType } from "../enums/text-format-type.enum";
 
 
 @Component({
@@ -116,12 +115,12 @@ export class FieldsWrapperComponent {
 
   usePlaintext(field: IFormField): boolean {
 
-    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
+    return (field.cinchyColumn.dataType == "Text" && field.cinchyColumn.textColumnMaxLength <= 500)
   }
 
 
   useTextarea(field: IFormField): boolean {
 
-    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
+    return (field.cinchyColumn.dataType == "Text" && field.cinchyColumn.textColumnMaxLength > 500);
   }
 }
