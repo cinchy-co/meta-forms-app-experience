@@ -11,7 +11,7 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import { isNullOrUndefined } from 'util';
-import { ChildFormComponent } from './fields/child-form/child-form.component';
+import { ChildFormDirective } from './fields/cinchy-child-form.directive';
 import { MatDialog } from '@angular/material/dialog';
 import { CinchyService, QueryType } from '@cinchy-co/angular-sdk';
 import { IForm } from './models/cinchy-form.model';
@@ -343,7 +343,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   openChildDialog(data) {
     const dialogData = { ...data, rowId: this.rowId };
-    const dialogRef = this._dialog.open(ChildFormComponent, {
+    const dialogRef = this._dialog.open(ChildFormDirective, {
       width: '500px',
       data: dialogData
     });

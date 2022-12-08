@@ -1,26 +1,58 @@
-import { Component, Input, Output, EventEmitter, OnInit } from "@angular/core";
-
-import { ResponseType } from "../../enums/response-type.enum";
-import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
-
-import { faFile } from "@fortawesome/free-regular-svg-icons";
-
-
+import {CinchyColumn} from './../models/cinchy-column.model';
+import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
+import {ResponseType} from '../enums/response-type.enum';
+import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
+import { faFile } from '@fortawesome/free-regular-svg-icons';
 //#region Cinchy Dynamic DateTime Field
 /**
  * This section is used to create dynamic DateTime field for the cinchy.
  */
 //#endregion
 @Component({
-  selector: "cinchy-attach-file",
-  templateUrl: "./attach-file.component.html",
-  styleUrls: ["./attach-file.component.scss"]
+  selector: 'cinchy-attachfile',
+  template: `
+    <div style="width:100%;display:inline" *ngIf="(field.cinchyColumn.dataType == 'Binary')"
+         class="full-width-element divMarginBottom">
+      <div>
+        <div>
+        <div>
+          <fa-icon [icon]="faFile"></fa-icon>
+        </div>
+        &nbsp;
+          <label class="cinchy-label">
+            {{field.label}}
+          </label>
+          <input class='form-control'
+                 [disabled]="(field.cinchyColumn.canEdit=== false)"
+                 type="file"
+                 id="file"
+                 (change)="onFileSelected(field,$event)">
+
+          <mat-error
+            *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+            *{{field.label}} is Required.
+          </mat-error>
+        </div>
+      </div>
+
+      <div>
+        <div *ngIf="fileName" style="margin: 5px;">
+
+          <a class="download-link" (click)="downloadDocument($event, field.value)">
+            Existing file: <strong>{{fileName}}</strong>
+            <mat-icon>cloud_download</mat-icon>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  `
 })
-export class AttachFileComponent implements OnInit {
+export class AttachFileDirective implements OnInit {
   @Input() field: any;
   @Input() rowId: any;
 
-  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
+  @Input('fieldsWithErrors') set fieldsWithErrors(errorFields: any) {
     this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
   };
 
@@ -62,7 +94,7 @@ export class AttachFileComponent implements OnInit {
     return new Promise((resolve, reject) => {
       let reader = new FileReader();
       reader.onloadend = () => {
-        resolve(btoa(<string>reader.result));
+        resolve(btoa(<string> reader.result));
       }
       reader.onerror = reject;
       reader.readAsBinaryString(file);
@@ -77,13 +109,13 @@ export class AttachFileComponent implements OnInit {
   callbackEvent(targetTableName: string, columnName: string, value: any) {
     // constant values
     const Data = {
-      "TableName": targetTableName,
-      "ColumnName": columnName,
-      "Value": value,
-      "event": event,
-      "HasChanged": this.field.cinchyColumn.hasChanged,
-      "Form": this.field.form,
-      "Field": this.field
+      'TableName': targetTableName,
+      'ColumnName': columnName,
+      'Value': value,
+      'event': event,
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form,
+      'Field': this.field
     }
     this.field.cinchyColumn.hasChanged = true;
     // pass calback event
@@ -95,7 +127,7 @@ export class AttachFileComponent implements OnInit {
 
   downloadDocument(event, doc) {
     const arrayBuffer = this.base64ToArrayBuffer(doc);
-    var blob = new Blob([arrayBuffer], { type: "application/binary" });
+    var blob = new Blob([arrayBuffer], {type: 'application/binary'});
     // Download file
     this.saveFile(blob, this.fileName);
   }
@@ -112,7 +144,7 @@ export class AttachFileComponent implements OnInit {
     if (window.navigator.msSaveOrOpenBlob) {
       window.navigator.msSaveOrOpenBlob(blob, filename);
     } else {
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       document.body.appendChild(a);
       const url = window.URL.createObjectURL(blob);
       a.href = url;

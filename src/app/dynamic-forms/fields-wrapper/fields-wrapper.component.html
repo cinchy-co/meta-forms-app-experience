@@ -90,12 +90,12 @@
                          (eventHandler)="eventOccurred.emit($event)">
         </cinchy-datetime>
 
-        <cinchy-attach-file *ngIf="(field.cinchyColumn.dataType == 'Binary')"
+        <cinchy-attachfile *ngIf="(field.cinchyColumn.dataType == 'Binary')"
                             [targetTableName]="field.cinchyColumn.tableName"
                             [field]="field"
                             [fieldsWithErrors]="fieldsWithErrors"
                             (eventHandler)="eventOccurred.emit($event)" [Form]="section.fields">
-        </cinchy-attach-file>
+        </cinchy-attachfile>
 
         <cinchy-calculated *ngIf="(field.cinchyColumn.dataType == 'Calculated')"
                            [field]="field">

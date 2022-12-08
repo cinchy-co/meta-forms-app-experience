@@ -28,31 +28,31 @@ import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { DigitOnlyModule } from "@uiowa/digit-only";
 
 //#region Custom
-import { AttachFileComponent } from "./fields/attach-file/attach-file.component";
-import { CalculatedComponent } from "./fields/calculated/calculated.component";
-import { CheckboxComponent } from "./fields/checkbox/checkbox.component";
-import { ChildFormComponent } from "./fields/child-form/child-form.component";
-import { ChildFormTableComponent} from "./fields/child-form-table/child-form-table.component";
-import { ChoiceComponent } from "./fields/choice/choice.component";
-import { DatetimeComponent } from "./fields/datetime/datetime.component";
-import { LinkComponent } from "./fields/link/link.component";
-import { LinkMultichoiceComponent } from "./fields/link-multichoice/link-multichoice.component";
-import { MultichoiceComponent } from "./fields/multichoice/multichoice.component";
-import { NumberComponent } from "./fields/number/number.component";
+import { ChoiceDirective } from './fields/cinchy-form-choice.directive';
+import { LinkDirective } from './fields/cinchy-form-link.directive';
+import { MultiChoiceDirective } from './fields/cinchy-form-multichoice.directive';
+import { TextBoxDirective } from './fields/cinchy-form-textbox.directive';
+import { TextAreaDirective } from './fields/cinchy-form-textarea.directive';
+import { CheckBoxDirective } from './fields/cinchy-form-checkbox.directive';
+import { ChildFormTableDirective } from './fields/cinchy-child-form-table.directive';
+import { CalculatedDirective } from './fields/cinchy-form-calculated.directive';
+import { NumberDirective } from './fields/cinchy-form-number.directive';
+import { ChildFormDirective } from './fields/cinchy-child-form.directive';
+import { CinchyDynamicFormsComponent } from './cinchy-dynamic-forms.component';
 import { RichTextComponent } from "./fields/rich-text/rich-text.component";
-import { TextboxComponent } from "./fields/textbox/textbox.component";
-import { TextareaComponent } from "./fields/textarea/textarea.component";
-import { CinchyDynamicFormsComponent } from "./cinchy-dynamic-forms.component";
 //#endregion
 
 //#region Pipes for the forms
-import { KeysPipe } from "./pipes/cinchy-column-key.pipe";
-import { AngularMultiSelectModule } from "angular2-multiselect-dropdown";
-import { ScrollingModule } from "@angular/cdk/scrolling";
-import { FieldsWrapperComponent } from "./fields-wrapper/fields-wrapper.component";
-import { MessageDialogComponent } from "./message-dialog/message-dialog.component";
-import { SharedModule } from "../shared/shared.module";
-import { NgxMatSelectSearchModule } from "ngx-mat-select-search";
+import { KeysPipe } from './pipes/cinchy-column-key.pipe';
+import { DateTimeDirective } from './fields/cinchy-form-datetime.directive';
+import { AttachFileDirective } from './fields/cinchy-form-attachfile.directive';
+import { AngularMultiSelectModule } from 'angular2-multiselect-dropdown';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { FieldsWrapperComponent } from './fields-wrapper/fields-wrapper.component';
+import { MessageDialogComponent } from './message-dialog/message-dialog.component';
+import { SharedModule } from '../shared/shared.module';
+import { LinkMultichoice } from './fields/cinchy-form-link-multichoice';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import "brace";
 import "brace/index";
 import "brace/ext/language_tools";
@@ -81,25 +81,25 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
 
 
 @NgModule({
-  declarations   : [
-    AttachFileComponent,
-    CalculatedComponent,
-    CheckboxComponent,
-    ChildFormComponent,
-    ChildFormTableComponent,
-    ChoiceComponent,
+  declarations: [
+    LinkDirective,
+    LinkMultichoice,
+    TextBoxDirective,
+    DateTimeDirective,
+    AttachFileDirective,
+    TextAreaDirective,
+    CheckBoxDirective,
+    ChildFormTableDirective,
+    CalculatedDirective,
+    NumberDirective,
+    ChildFormDirective,
+    KeysPipe,
     CinchyDynamicFormsComponent,
-    DatetimeComponent,
+    ChoiceDirective,
+    MultiChoiceDirective,
     FieldsWrapperComponent,
-    LinkComponent,
-    LinkMultichoiceComponent,
     MessageDialogComponent,
-    MultichoiceComponent,
-    RichTextComponent,
-    TextareaComponent,
-    TextboxComponent,
-    NumberComponent,
-    KeysPipe
+    RichTextComponent
   ],
   imports        : [
     BrowserModule,
@@ -142,8 +142,8 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     AceEditorModule,
     NgbModule
   ],
-  exports        : [CinchyDynamicFormsComponent],
-  entryComponents: [ChildFormComponent, MessageDialogComponent],
+  exports:         [CinchyDynamicFormsComponent],
+  entryComponents: [ChildFormDirective, MessageDialogComponent],
   providers      : [CinchyModule, DatePipe],
   bootstrap      : []
 })

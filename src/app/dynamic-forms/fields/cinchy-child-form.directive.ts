@@ -1,10 +1,7 @@
-import { Component, Inject, EventEmitter } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-
-import { DropdownDatasetService } from '../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
-
+import { Component, Inject, EventEmitter } from '@angular/core';
 import { isNullOrUndefined } from 'util';
-
+import { DropdownDatasetService } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
 
 //#region Cinchy Dynamic Child Form
 /**
@@ -12,13 +9,24 @@ import { isNullOrUndefined } from 'util';
  */
 //#endregion
 @Component({
-  selector: "cinchy-child-form",
-  templateUrl: "./child-form.component.html",
-  styleUrls: ["./child-form.component.scss"],
+  selector: 'cinchy-child-form',
+  template: `
+    <h1 mat-dialog-title>
+      <div class="mat-card-header-child">{{data.title}}</div>
+    </h1>
+    <div mat-dialog-content *ngIf="data">
+      <app-fields-wrapper [form]="this._ChildFormData.childFormData" [isChild]=true [rowId]="_ChildFormData.rowId" [formHasDataLoaded]="true"></app-fields-wrapper>
+    </div>
+    
+    <div mat-dialog-actions>
+      <button mat-button color="primary" (click)="onOkClick()" cdkFocusInitial>OK</button>
+      <button mat-button color="warn" (click)="onNoClick()">Cancel</button>
+    </div>
+  `,
   // TODO Need to set this environment Dynamically
   providers: [DropdownDatasetService]
 })
-export class ChildFormComponent {
+export class ChildFormDirective {
   public data: any;
   public datachild = [];
   public cinchyID = null;
@@ -27,7 +35,7 @@ export class ChildFormComponent {
   eventHandler = new EventEmitter();
 
   constructor(
-    public dialogRef: MatDialogRef<ChildFormComponent>,
+    public dialogRef: MatDialogRef<ChildFormDirective>,
     @Inject(MAT_DIALOG_DATA) public _ChildFormData: any
   ) {
   }
