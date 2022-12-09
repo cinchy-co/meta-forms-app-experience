@@ -285,7 +285,8 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           data: {
             content: selectedText
           },
-          maxWidth: "400px"
+          maxHeight: "80vh",
+          width: "600px"
         }
       );
 

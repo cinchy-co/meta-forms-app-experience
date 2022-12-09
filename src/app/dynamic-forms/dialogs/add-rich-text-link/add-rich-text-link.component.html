@@ -15,13 +15,11 @@
             Link Text
           </label>
         </div>
-        <mat-form-field class="form-control">
-          <input matInput
-                 id="linkText"
-                 type="text"
-                 name="link-text"
-                 [(ngModel)]="content" />
-        </mat-form-field>
+        <input id="linkText"
+               type="text"
+               name="link-text"
+               class="form-control"
+               [(ngModel)]="content" />
       </div>
 
       <div class="full-width-element divMarginBottom relative-pos">
@@ -34,13 +32,11 @@
             Target URL
           </label>
         </div>
-        <mat-form-field class="form-control">
-          <input matInput
-                 id="linkHref"
-                 type="text"
-                 name="link-href"
-                 [(ngModel)]="href" />
-        </mat-form-field>
+        <input id="linkHref"
+               type="text"
+               name="link-href"
+               class="form-control"
+               [(ngModel)]="href" />
       </div>
 
       <div class="full-width-element divMarginBottom relative-pos">
@@ -54,10 +50,10 @@
           </label>
         </div>
         <mat-checkbox id="linkTargetBlank"
-                type="text"
-                name="link-target-blank"
-                [(ngModel)]="targetBlank">
-          </mat-checkbox>
+                      type="text"
+                      name="link-target-blank"
+                      [(ngModel)]="targetBlank">
+        </mat-checkbox>
       </div>
     </form>
   </div>

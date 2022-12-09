@@ -328,6 +328,11 @@ article label {
   font-size: 14px;
 }
 
+.mat-dialog-content {
+    /* Removes phantom scrollbars */
+    padding: 1px 24px !important;
+}
+
 .formMainDiv {
   background-color: #f1f1f1;
   display: flow-root;
