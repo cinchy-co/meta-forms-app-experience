@@ -1,50 +1,38 @@
-import { Subscription } from "rxjs";
-
-import {
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  ViewEncapsulation
-} from "@angular/core";
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { IFormSectionMetadata } from 'src/app/models/form-section-metadata.model';
+import { AppStateService } from '../../services/app-state.service';
+import { IFormSection } from '../models/cinchy-form-sections.model';
+import { IForm } from '../models/cinchy-form.model';
+import { SpinnerCondition } from '../models/cinchy-spinner.model';
+import { IFormField } from "../models/cinchy-form-field.model";
 
 import { isNullOrUndefined } from "util";
 
-import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
-
-import { IForm } from "../models/cinchy-form.model";
-import { IFormField } from "../models/cinchy-form-field.model";
-import { IFormSection } from "../models/cinchy-form-sections.model";
-import { SpinnerCondition } from "../models/cinchy-spinner.model";
-
-import { AppStateService } from "../../services/app-state.service";
 import { TextFormatType } from "../enums/text-format-type.enum";
 
 
 @Component({
-  selector: "app-fields-wrapper",
-  templateUrl: "./fields-wrapper.component.html",
-  styleUrls: ["./fields-wrapper.component.scss"],
+  selector: 'app-fields-wrapper',
+  templateUrl: './fields-wrapper.component.html',
+  styleUrls: ['./fields-wrapper.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class FieldsWrapperComponent {
   @Input() form: IForm;
   @Input() rowId;
+  _formSectionsToRenderMetadata: IFormSectionMetadata[] = [];
   @Input() isChild: boolean;
   @Input() fieldsWithErrors;
+
   @Input("formHasDataLoaded") set formHasDataLoaded(value: boolean) { this.setFormHasDataLoaded(value); }
-
-  @Output() eventOccurred = new EventEmitter<any>();
-  @Output() childFormOpened = new EventEmitter<any>();
-  @Output() deleteDialogOpened = new EventEmitter<any>();
-
-  _formSectionsToRenderMetadata: IFormSectionMetadata[] = [];
-
   _formHasDataLoaded: boolean;
 
   _sectionsToRender: IFormSection[];
 
+  @Output() eventOccurred = new EventEmitter<any>();
+  @Output() childFormOpened = new EventEmitter<any>();
+  @Output() deleteDialogOpened = new EventEmitter<any>();
   subscription: Subscription;
   sectionInfo: SpinnerCondition;
 
@@ -76,7 +64,7 @@ export class FieldsWrapperComponent {
             if (this.form.sections[i].fields[j].childForm?.flatten && this.form.sections[i].fields[j].childForm.sections) {
               numOfFlattenedChildForms++;
               for (let k = 0; k < this.form.sections[i].fields[j].childForm.sections.length; k++) {
-                // Don't' auto expand the child column if this is an accordion form
+                // Don't auto expand the child column if this is an accordion form
                 if (this.form.isAccordion)
                   this.form.sections[i].fields[j].childForm.sections[k].autoExpand = false;
 
