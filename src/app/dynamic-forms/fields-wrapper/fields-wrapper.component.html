@@ -45,7 +45,8 @@
                         [field]='field'>
         </cinchy-checkbox>
 
-        <cinchy-link *ngIf="(field.cinchyColumn.dataType == 'Link' && field.cinchyColumn.canView && !field.cinchyColumn.isMultiple)"
+        <cinchy-link
+          *ngIf="(field.cinchyColumn.dataType == 'Link' && field.cinchyColumn.canView && !field.cinchyColumn.isMultiple)"
           [targetTableName]='field.cinchyColumn.tableName' [field]='field'
           [rowId]="field.form.rowId"
           [fieldsWithErrors]="fieldsWithErrors"
@@ -54,7 +55,8 @@
           (eventHandler)='eventOccurred.emit($event)'>
         </cinchy-link>
 
-        <cinchy-link-multichoice *ngIf="(field.cinchyColumn.dataType == 'Link' && field.cinchyColumn.canView && field.cinchyColumn.isMultiple)"
+        <cinchy-link-multichoice
+          *ngIf="(field.cinchyColumn.dataType == 'Link' && field.cinchyColumn.canView && field.cinchyColumn.isMultiple)"
           [rowId]="field.form.rowId"
           [targetTableName]='field.cinchyColumn.tableName' [field]='field'
           [fieldsWithErrors]="fieldsWithErrors"
@@ -107,10 +109,10 @@
         </cinchy-choice>
 
         <cinchy-multi-choice *ngIf="field.cinchyColumn.dataType == 'Choice' && field.cinchyColumn.isMultiple"
-                             [targetTableName]='field.cinchyColumn.tableName'
-                             [field]='field'
-                             [fieldsWithErrors]="fieldsWithErrors"
-                             (eventHandler)='eventOccurred.emit($event)'>
+                              [targetTableName]='field.cinchyColumn.tableName'
+                              [field]='field'
+                              [fieldsWithErrors]="fieldsWithErrors"
+                              (eventHandler)='eventOccurred.emit($event)'>
         </cinchy-multi-choice>
 
         <cinchy-number *ngIf="(field.cinchyColumn.dataType == 'Number')"
