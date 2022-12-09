@@ -1,43 +1,43 @@
 import { TextFormatType } from "../enums/text-format-type.enum";
 
 export interface ICinchyColumn {
-  attachmentUrl: string;
-  canEdit: boolean;
-  canView: boolean;
-  childFormParentId: string;
-  childFormLinkId: string;
-  choiceOptions: string;
-  dataFormatType: string;
-  dataType: string;
-  deviationSeverityColor: string;
-  domainName: string;
-  doNotWrap: boolean;
-  dropdownFilter: any;
-  fileName: any;
-  fileNameColumn: any;
-  formFieldsJsonData: string; // String of json object
-  hasChanged: boolean;
   id: number;
-  isCalculated: boolean;
-  isDisplayColumn: boolean;
-  isMandatory: boolean;
-  isMultiple: boolean;
-  isViewOnly: boolean;
-  linkedFieldId: any;
-  linkTargetColumnId: number;
-  linkTargetColumnName: string;
-  LinkTargetTableId: number;
-  linkTargetTableName: string;
-  minValue: number;
-  name: string;
-  numberFormatter: string;
   tableId: number;
   tableName: string;
+  domainName: string;
+  name: string;
+  dataType: string;
+  isMandatory: boolean;
   textColumnMaxLength: number;
-  textFormat: TextFormatType;
-  totalTextAreaRows: number;
-  uploadUrl: string;
+  linkTargetColumnId: number;
+  LinkTargetTableId: number;
+  linkTargetTableName: string;
+  linkTargetColumnName: string;
+  isMultiple: boolean;
   validationExpression: string;
+  minValue: number;
+  canEdit: boolean;
+  canView: boolean;
+  deviationSeverityColor: string;
+  choiceOptions: string;
+  formFieldsJsonData: string; // String of json object
+  dataFormatType: string;
+  doNotWrap: boolean;
+  hasChanged: boolean;
+  isViewOnly: boolean;
+  linkedFieldId: any;
+  isDisplayColumn: boolean;
+  fileName: any;
+  fileNameColumn: any;
+  dropdownFilter: any;
+  totalTextAreaRows: number;
+  numberFormatter: string;
+  attachmentUrl: string;
+  uploadUrl: string;
+  childFormParentId: string;
+  childFormLinkId: string;
+  isCalculated: boolean;
+  textFormat: TextFormatType;
 }
 
 export class CinchyColumn implements ICinchyColumn {
