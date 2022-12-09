@@ -92,9 +92,9 @@
         </cinchy-datetime>
 
         <cinchy-attachfile *ngIf="(field.cinchyColumn.dataType == 'Binary')"
-                           [targetTableName]='field.cinchyColumn.tableName' [field]='field'
-                           [fieldsWithErrors]="fieldsWithErrors"
-                           (eventHandler)='eventOccurred.emit($event)' [Form]="section.fields">
+                          [targetTableName]='field.cinchyColumn.tableName' [field]='field'
+                          [fieldsWithErrors]="fieldsWithErrors"
+                          (eventHandler)='eventOccurred.emit($event)' [Form]="section.fields">
         </cinchy-attachfile>
 
         <cinchy-calculated *ngIf="(field.cinchyColumn.dataType == 'Calculated')"
@@ -104,7 +104,7 @@
         <cinchy-choice *ngIf="field.cinchyColumn.dataType == 'Choice' && !field.cinchyColumn.isMultiple"
                       [targetTableName]='field.cinchyColumn.tableName'
                       [field]='field'
-                      [fieldsWithErrors]='fieldsWithErrors'
+                      [fieldsWithErrors]="fieldsWithErrors"
                       (eventHandler)='eventOccurred.emit($event)'>
         </cinchy-choice>
 
