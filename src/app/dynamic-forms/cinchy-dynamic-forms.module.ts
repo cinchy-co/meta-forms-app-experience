@@ -1,3 +1,5 @@
+import { MultiChoiceDirective } from './fields/cinchy-form-multichoice.directive';
+import { ChoiceDirective } from './fields/cinchy-form-choice.directive';
 import { BrowserModule } from "@angular/platform-browser";
 import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
@@ -28,9 +30,8 @@ import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { DigitOnlyModule } from "@uiowa/digit-only";
 
 //#region Custom
-import { ChoiceDirective } from './fields/cinchy-form-choice.directive';
+import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
 import { LinkDirective } from './fields/cinchy-form-link.directive';
-import { MultiChoiceDirective } from './fields/cinchy-form-multichoice.directive';
 import { TextBoxDirective } from './fields/cinchy-form-textbox.directive';
 import { TextAreaDirective } from './fields/cinchy-form-textarea.directive';
 import { CheckBoxDirective } from './fields/cinchy-form-checkbox.directive';
@@ -82,6 +83,7 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
 
 @NgModule({
   declarations: [
+    AddRichTextLinkDialogComponent,
     LinkDirective,
     LinkMultichoice,
     TextBoxDirective,
@@ -101,7 +103,7 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     MessageDialogComponent,
     RichTextComponent
   ],
-  imports        : [
+  imports: [
     BrowserModule,
     MatTableModule,
     MatPaginatorModule,
@@ -142,8 +144,8 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     AceEditorModule,
     NgbModule
   ],
-  exports:         [CinchyDynamicFormsComponent],
-  entryComponents: [ChildFormDirective, MessageDialogComponent],
+  exports: [CinchyDynamicFormsComponent],
+  entryComponents: [ChildFormDirective, MessageDialogComponent, AddRichTextLinkDialogComponent],
   providers      : [CinchyModule, DatePipe],
   bootstrap      : []
 })

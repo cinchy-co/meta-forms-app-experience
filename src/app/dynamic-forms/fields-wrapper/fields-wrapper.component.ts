@@ -52,13 +52,7 @@ export class FieldsWrapperComponent {
     private appStateService: AppStateService,
     private cdr: ChangeDetectorRef) {
   }
- 
 
-  debug(): void {
-    console.log("Debug form", this.form);
-    console.log("Debug rowId", this.rowId);
-    console.log("Debug isChild", this.isChild);
-  }
 
   expansionClicked(section) {
     this.appStateService.sectionClicked(section.label);

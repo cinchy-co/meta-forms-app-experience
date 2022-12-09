@@ -8,6 +8,10 @@ import {
   Output,
   ViewChild
 } from "@angular/core";
+import {
+  MatDialog,
+  MatDialogRef
+} from "@angular/material/dialog";
 
 import {
   faAlignLeft,
@@ -34,6 +38,8 @@ import { ResponseType } from "../../enums/response-type.enum";
 import { IFormField } from "../../models/cinchy-form-field.model";
 import { isNullOrUndefined } from "util";
 import { Transaction } from "prosemirror-state";
+import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
+import { IRichTextLink } from "../../interface/rich-text-link";
 
 
 @Component({
@@ -57,6 +63,9 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
   @Output() eventHandler = new EventEmitter<any>();
 
+  /**
+   * The element that contains the actual Tiptap editor
+   */
   @ViewChild("richTextElement") richTextElement: ElementRef<HTMLDivElement> | undefined;
 
   editor: Editor | undefined;
@@ -65,6 +74,9 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
   value: any;
 
+  /**
+   * Tracks the marks active at the most recent cursor position
+   */
   activeMarks = {
     bold: false,
     code: false,
@@ -97,13 +109,18 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   tiptapMarkType = TiptapMarkType;
 
 
+  /**
+   * Determines whether or not the form is in a savable state
+   */
   get canEdit(): boolean {
 
     return (!this.field.cinchyColumn.isViewOnly && !this.isDisabled && this.field.cinchyColumn.canEdit);
   }
 
 
-  constructor() {}
+  constructor(
+    private _dialog: MatDialog,
+  ) {}
 
 
   ngAfterViewInit(): void {
@@ -251,7 +268,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
 
   /**
-   * Turns on or off bold text at the cursor location or for the selection
+   * Inserts an anchor element at the most recent cursor position
    */
   toggleLink(): void {
 
@@ -259,11 +276,36 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
       this.editor?.commands.unsetLink();
     }
     else {
-      let href = prompt("Enter your URL for the link");
+      const selection = this.editor.view.state.selection;
+      const selectedText = selection ? this.editor.state.doc.textBetween(selection.from, selection.to) : undefined;
 
-      if (!isNullOrUndefined(href)) {
-        this.editor?.commands.toggleLink({ href: href, target: "_blank" });
-      }
+      const dialogRef: MatDialogRef<AddRichTextLinkDialogComponent> = this._dialog.open(
+        AddRichTextLinkDialogComponent,
+        {
+          data: {
+            content: selectedText
+          },
+          maxWidth: "400px"
+        }
+      );
+
+      dialogRef.afterClosed().subscribe({
+        next: (result: IRichTextLink) => {
+
+          if (result) {
+            this.editor
+              .chain()
+              .deleteSelection()
+              .setLink({
+                href: result.href,
+                target: (result.targetBlank ? "_blank" : "")
+              })
+              .insertContent(result.content)
+              .focus()
+              .run();
+          }
+        }
+      })
     }
   }
 
