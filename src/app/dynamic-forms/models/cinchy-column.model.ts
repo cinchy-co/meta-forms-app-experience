@@ -1,3 +1,5 @@
+import { TextFormatType } from "../enums/text-format-type.enum";
+
 export interface ICinchyColumn {
   id: number;
   tableId: number;
@@ -16,17 +18,17 @@ export interface ICinchyColumn {
   minValue: number;
   canEdit: boolean;
   canView: boolean;
-  DeviationSeverityColor: string;
+  deviationSeverityColor: string;
   choiceOptions: string;
-  FormFieldsJsonData: string; // String of json object
+  formFieldsJsonData: string; // String of json object
   dataFormatType: string;
   doNotWrap: boolean;
   hasChanged: boolean;
   isViewOnly: boolean;
   linkedFieldId: any;
-  IsDisplayColumn: boolean;
-  FileName: any;
-  FileNameColumn: any;
+  isDisplayColumn: boolean;
+  fileName: any;
+  fileNameColumn: any;
   dropdownFilter: any;
   totalTextAreaRows: number;
   numberFormatter: string;
@@ -34,21 +36,51 @@ export interface ICinchyColumn {
   uploadUrl: string;
   childFormParentId: string;
   childFormLinkId: string;
-  isCalcualted: boolean;
+  isCalculated: boolean;
+  textFormat: TextFormatType;
 }
 
 export class CinchyColumn implements ICinchyColumn {
-  constructor(public id: number, public tableId: number, public tableName: string, public domainName: string,
-              public name: string, public dataType: string, public isMandatory: boolean,
-              public textColumnMaxLength: number, public linkTargetColumnId: number,
-              public linkTargetColumnName: string, public isMultiple: boolean,
-              public validationExpression, public minValue, public canEdit: boolean,
-              public canView: boolean, public createlinkOptionFormId: string, public createlinkOptionName: string, public LinkTargetTableId: number, public linkTargetTableName:string, public DeviationSeverityColor: string,
-              public choiceOptions: string, public FormFieldsJsonData, public dataFormatType,
-              public hasChanged: boolean, public isViewOnly: boolean,
-              public linkedFieldId: any, public IsDisplayColumn: boolean, public FileName: any, public FileNameColumn: any,
-              public dropdownFilter: any, public totalTextAreaRows: number, public numberFormatter: string,
-              public attachmentUrl: string, public uploadUrl: string, public childFormParentId: string, public childFormLinkId: string, 
-              public doNotWrap: boolean, public displayFormat: string, public isCalcualted: boolean) {
-  }
+  constructor(
+    public id: number,
+    public tableId: number,
+    public tableName: string,
+    public domainName: string,
+    public name: string,
+    public dataType: string,
+    public isMandatory: boolean,
+    public textColumnMaxLength: number,
+    public linkTargetColumnId: number,
+    public linkTargetColumnName: string,
+    public isMultiple: boolean,
+    public validationExpression: string,
+    public minValue: number,
+    public canEdit: boolean,
+    public canView: boolean,
+    public createlinkOptionFormId: string,
+    public createlinkOptionName: string,
+    public LinkTargetTableId: number,
+    public linkTargetTableName: string,
+    public deviationSeverityColor: string,
+    public choiceOptions: string,
+    public formFieldsJsonData,
+    public dataFormatType,
+    public hasChanged: boolean,
+    public isViewOnly: boolean,
+    public linkedFieldId: any,
+    public isDisplayColumn: boolean,
+    public fileName: any,
+    public fileNameColumn: any,
+    public dropdownFilter: any,
+    public totalTextAreaRows: number,
+    public numberFormatter: string,
+    public attachmentUrl: string,
+    public uploadUrl: string,
+    public childFormParentId: string,
+    public childFormLinkId: string, 
+    public doNotWrap: boolean,
+    public displayFormat: string,
+    public isCalculated: boolean,
+    public textFormat: TextFormatType
+  ) {}
 }
