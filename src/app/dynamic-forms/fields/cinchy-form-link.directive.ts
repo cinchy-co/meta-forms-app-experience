@@ -37,7 +37,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
     <div class="m-b-10">
       <div class="link-labels">
       <div>
-        <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
+        <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.linkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
      </div>
      &nbsp;
         <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
@@ -54,7 +54,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                   matTooltipPosition="above">
           error
         </mat-icon>
-        <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
+        <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId != field.cinchyColumn.linkTargetTableId" class="info-icon"
                   [ngbTooltip] = "withcaptiont"
                   placement="auto"
                   container="body"
@@ -66,7 +66,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                   matTooltipPosition="above">
           info
         </mat-icon>
-        <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId" class="info-icon"
+        <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId != field.cinchyColumn.linkTargetTableId" class="info-icon"
                   [ngbTooltip] = "withoutcaptiont"
                   triggers="click"
                   placement="auto"
@@ -78,7 +78,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                   matTooltipPosition="above">
           info
         </mat-icon>
-        <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+        <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId == field.cinchyColumn.linkTargetTableId" class="info-icon"
                   [ngbTooltip] = "hierarchyWithCaption"
                   placement="auto"
                   container="body"
@@ -90,7 +90,7 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
                   matTooltipPosition="above">
           info
         </mat-icon>
-        <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId" class="info-icon"
+        <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId == field.cinchyColumn.linkTargetTableId" class="info-icon"
                   [ngbTooltip] = "hierarchyWithoutCaption"
                   placement="auto"
                   container="body"
@@ -241,7 +241,7 @@ export class LinkDirective implements OnInit {
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === 'LinkUrl';
     this.showActualField = !this.showImage && !this.showLinkUrl;
     let url = this._configService.envConfig.cinchyRootUrl;
-    this.tableSourceURL = url + '/Tables/' + this.field.cinchyColumn.LinkTargetTableId;
+    this.tableSourceURL = url + '/Tables/' + this.field.cinchyColumn.linkTargetTableId;
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
       this.myControl.disable();
       this.setSelectedValue();
@@ -293,7 +293,7 @@ export class LinkDirective implements OnInit {
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
       const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.FormFieldsJsonData);
-      if (formFieldsJsonData && formFieldsJsonData.Columns) {
+      if (formFieldsJsonData?.Columns) {
         currentFieldJson = formFieldsJsonData.Columns.find(field => field.name === this.field.cinchyColumn.name);
       }
       if (!isNullOrUndefined(linkTargetId)) {
