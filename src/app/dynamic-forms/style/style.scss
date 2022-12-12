@@ -329,8 +329,12 @@ article label {
 }
 
 .mat-dialog-content {
-    /* Removes phantom scrollbars */
-    padding: 1px 24px !important;
+  /*
+   * Removes phantom scrollbars
+   *
+   * https://github.com/angular/components/issues/20344
+   */
+  padding: 2px 24px !important;
 }
 
 .formMainDiv {

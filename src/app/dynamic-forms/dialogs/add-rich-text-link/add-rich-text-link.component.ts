@@ -24,13 +24,6 @@ export class AddRichTextLinkDialogComponent {
   targetBlank = true;
 
 
-  icons = {
-    faFont: faFont,
-    faLink: faLink,
-    faSquareCheck: faSquareCheck
-  };
-
-
   get canSave(): boolean {
 
     return !isNullOrUndefined(this.href && this.content);
