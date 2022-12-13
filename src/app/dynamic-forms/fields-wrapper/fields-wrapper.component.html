@@ -75,6 +75,14 @@
                         (eventHandler)="eventOccurred.emit($event)">
         </cinchy-textbox>
 
+        <cinchy-rich-text *ngIf="useRichText(field)"
+                          [targetTableName]="field.cinchyColumn.tableName"
+                          [field]="field"
+                          [fieldsWithErrors]="fieldsWithErrors"
+                          [useJson]="richTextUseJson(field)"
+                          (eventHandler)="eventOccurred.emit($event)">
+        </cinchy-rich-text>
+
         <cinchy-datetime *ngIf="(field.cinchyColumn.dataType == 'Date and Time')"
                          [targetTableName]="field.cinchyColumn.tableName"
                          [field]="field"
@@ -114,7 +122,8 @@
                        (eventHandler)="eventOccurred.emit($event)">
         </cinchy-number>
 
-        <cinchy-childform-table *ngIf="field.childForm && !field.childForm.flatten" [field]="field"
+        <cinchy-childform-table *ngIf="field.childForm && !field.childForm.flatten"
+                                [field]="field"
                                 [rowId]='field.form.rowId'
                                 [hasChildTableAccess]="field.childForm.hasAccess"
                                 (childform)='childFormOpened.emit($event)'

@@ -328,6 +328,15 @@ article label {
   font-size: 14px;
 }
 
+.mat-dialog-content {
+  /*
+   * Removes phantom scrollbars
+   *
+   * https://github.com/angular/components/issues/20344
+   */
+  padding: 2px 24px !important;
+}
+
 .formMainDiv {
   background-color: #f1f1f1;
   display: flow-root;
@@ -529,4 +538,10 @@ width: 2rem !important;
 .svg-inline--fa{
   color: dimgray;
   font: normal normal normal 14px/1 FontAwesome;
+}
+
+
+
+.ProseMirror-focused {
+  outline: none !important;
 }

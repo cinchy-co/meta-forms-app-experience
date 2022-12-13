@@ -1,3 +1,5 @@
+import { TextFormatType } from "../enums/text-format-type.enum";
+
 export interface ICinchyColumn {
   attachmentUrl: string;
   canEdit: boolean;
@@ -77,6 +79,7 @@ export class CinchyColumn implements ICinchyColumn {
     public childFormLinkId: string, 
     public doNotWrap: boolean,
     public displayFormat: string,
-    public isCalculated: boolean
+    public isCalculated: boolean,
+    public textFormat: TextFormatType
   ) {}
 }

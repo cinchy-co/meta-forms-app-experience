@@ -28,6 +28,7 @@ import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { DigitOnlyModule } from "@uiowa/digit-only";
 
 //#region Custom
+import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
 import { AttachFileComponent } from "./fields/attach-file/attach-file.component";
 import { CalculatedComponent } from "./fields/calculated/calculated.component";
 import { CheckboxComponent } from "./fields/checkbox/checkbox.component";
@@ -39,6 +40,7 @@ import { LinkComponent } from "./fields/link/link.component";
 import { LinkMultichoiceComponent } from "./fields/link-multichoice/link-multichoice.component";
 import { MultichoiceComponent } from "./fields/multichoice/multichoice.component";
 import { NumberComponent } from "./fields/number/number.component";
+import { RichTextComponent } from "./fields/rich-text/rich-text.component";
 import { TextboxComponent } from "./fields/textbox/textbox.component";
 import { TextareaComponent } from "./fields/textarea/textarea.component";
 import { CinchyDynamicFormsComponent } from "./cinchy-dynamic-forms.component";
@@ -81,6 +83,7 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
 
 @NgModule({
   declarations   : [
+    AddRichTextLinkDialogComponent,
     AttachFileComponent,
     CalculatedComponent,
     CheckboxComponent,
@@ -96,10 +99,11 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     MultichoiceComponent,
     TextareaComponent,
     TextboxComponent,
-    NumberComponent,
+    NumberComponent,,
+    RichTextComponent
     KeysPipe
   ],
-  imports        : [
+  imports: [
     BrowserModule,
     MatTableModule,
     MatPaginatorModule,

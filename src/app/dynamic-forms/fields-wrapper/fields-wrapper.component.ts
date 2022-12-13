@@ -21,6 +21,11 @@ import { SpinnerCondition } from "../models/cinchy-spinner.model";
 import { AppStateService } from "../../services/app-state.service";
 
 
+import { isNullOrUndefined } from "util";
+
+import { TextFormatType } from "../enums/text-format-type.enum";
+
+
 @Component({
   selector: "app-fields-wrapper",
   templateUrl: "./fields-wrapper.component.html",
@@ -51,13 +56,6 @@ export class FieldsWrapperComponent {
     private appStateService: AppStateService,
     private cdr: ChangeDetectorRef) {
   }
- 
-
-  debug(): void {
-    console.log("Debug form", this.form);
-    console.log("Debug rowId", this.rowId);
-    console.log("Debug isChild", this.isChild);
-  }
 
   expansionClicked(section) {
     this.appStateService.sectionClicked(section.label);
@@ -81,7 +79,7 @@ export class FieldsWrapperComponent {
             if (this.form.sections[i].fields[j].childForm?.flatten && this.form.sections[i].fields[j].childForm.sections) {
               numOfFlattenedChildForms++;
               for (let k = 0; k < this.form.sections[i].fields[j].childForm.sections.length; k++) {
-                // Don't' auto expand the child column if this is an accordion form
+                // Don't auto expand the child column if this is an accordion form
                 if (this.form.isAccordion)
                   this.form.sections[i].fields[j].childForm.sections[k].autoExpand = false;
 
@@ -107,20 +105,28 @@ export class FieldsWrapperComponent {
         }
       }
     }
-    this._formSectionsToRenderMetadata = _newSectionsToRenderMetadata;
-    this._sectionsToRender = _newSectionsToRender;
-    this.appStateService.setLatestRenderedSections(_newSectionsToRenderMetadata);
+
+
+  richTextUseJson(field: IFormField): boolean {
+
+    return (field.cinchyColumn.textFormat !== TextFormatType.HTML);
   }
 
 
   usePlaintext(field: IFormField): boolean {
 
-    return (field.cinchyColumn.dataType == "Text" && field.cinchyColumn.textColumnMaxLength <= 500)
+    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
+  }
+
+
+  useRichText(field: IFormField): boolean {
+
+    return (field.cinchyColumn.dataType === "Text" && !isNullOrUndefined(field.cinchyColumn.textFormat));
   }
 
 
   useTextarea(field: IFormField): boolean {
 
-    return (field.cinchyColumn.dataType == "Text" && field.cinchyColumn.textColumnMaxLength > 500);
+    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
   }
 }
