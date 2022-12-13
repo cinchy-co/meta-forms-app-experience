@@ -102,6 +102,10 @@ export class FieldsWrapperComponent {
         }
       }
     }
+
+    this._formSectionsToRenderMetadata = _newSectionsToRenderMetadata;
+    this._sectionsToRender = _newSectionsToRender;
+    this.appStateService.setLatestRenderedSections(_newSectionsToRenderMetadata);
   }
 
 

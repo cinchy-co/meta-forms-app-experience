@@ -10,7 +10,7 @@
       </mat-panel-title>
     </mat-expansion-panel-header> -->
 
-    <mat-expansion-panel *ngFor='let section of _sectionsToRender; index as i'
+    <mat-expansion-panel *ngFor="let section of _sectionsToRender; index as i"
                         [ngClass]="'section-flex--'+section.columnsInRow"
                         [expanded]="section.autoExpand" [id]="'section-' + section.label">
       <mat-expansion-panel-header class="sectionHeaderRow" expandedHeight="40px" collapsedHeight="40px"
