@@ -34,6 +34,7 @@ export interface ICinchyColumn {
   tableId: number;
   tableName: string;
   textColumnMaxLength: number;
+  textFormat: TextFormatType,
   totalTextAreaRows: number;
   uploadUrl: string;
   validationExpression: string;

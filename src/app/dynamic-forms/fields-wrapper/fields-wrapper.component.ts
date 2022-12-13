@@ -13,17 +13,14 @@ import { isNullOrUndefined } from "util";
 
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 
+import { TextFormatType } from "../enums/text-format-type.enum";
+
 import { IForm } from "../models/cinchy-form.model";
 import { IFormField } from "../models/cinchy-form-field.model";
 import { IFormSection } from "../models/cinchy-form-sections.model";
 import { SpinnerCondition } from "../models/cinchy-spinner.model";
 
 import { AppStateService } from "../../services/app-state.service";
-
-
-import { isNullOrUndefined } from "util";
-
-import { TextFormatType } from "../enums/text-format-type.enum";
 
 
 @Component({
@@ -84,7 +81,7 @@ export class FieldsWrapperComponent {
                   this.form.sections[i].fields[j].childForm.sections[k].autoExpand = false;
 
                 _newSectionsToRender.push(this.form.sections[i].fields[j].childForm.sections[k]);
-                _newSectionsToRenderMetadata.push(<IFormSectionMetadata> {
+                _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
                   id: this.form.sections[i].fields[j].childForm.sections[k].id,
                   name: this.form.sections[i].fields[j].childForm.sections[k].label,
                   columnsInRow: this.form.sections[i].fields[j].childForm.sections[k].columnsInRow,
@@ -95,7 +92,7 @@ export class FieldsWrapperComponent {
           }
           if (this.form.sections[i].fields.length > numOfFlattenedChildForms || numOfFlattenedChildForms == 0) {
             _newSectionsToRender.push(this.form.sections[i]);
-            _newSectionsToRenderMetadata.push(<IFormSectionMetadata> {
+            _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
               id: this.form.sections[i].id,
               name: this.form.sections[i].label,
               columnsInRow: this.form.sections[i].columnsInRow,
@@ -105,6 +102,7 @@ export class FieldsWrapperComponent {
         }
       }
     }
+  }
 
 
   richTextUseJson(field: IFormField): boolean {
