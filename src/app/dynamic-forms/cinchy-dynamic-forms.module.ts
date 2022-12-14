@@ -30,6 +30,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DigitOnlyModule } from '@uiowa/digit-only';
 
 //#region Custom
+import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
 import { LinkDirective } from './fields/cinchy-form-link.directive';
 import { TextBoxDirective } from './fields/cinchy-form-textbox.directive';
 import { TextAreaDirective } from './fields/cinchy-form-textarea.directive';
@@ -39,6 +40,7 @@ import { CalculatedDirective } from './fields/cinchy-form-calculated.directive';
 import { NumberDirective } from './fields/cinchy-form-number.directive';
 import { ChildFormDirective } from './fields/cinchy-child-form.directive';
 import { CinchyDynamicFormsComponent } from './cinchy-dynamic-forms.component';
+import { RichTextComponent } from "./fields/rich-text/rich-text.component";
 //#endregion
 
 //#region Pipes for the forms
@@ -68,7 +70,6 @@ import { DatePipe } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 window['ace']['require'] = window['ace']['acequire'];
-
 //#endregion
 
 //#region Select Dropdownlist options
@@ -78,9 +79,11 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
   keepSelectedItems: true
 };
 //#endregion
-//#endregion
+
+
 @NgModule({
-  declarations   : [
+  declarations: [
+    AddRichTextLinkDialogComponent,
     LinkDirective,
     LinkMultichoice,
     TextBoxDirective,
@@ -97,9 +100,10 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     ChoiceDirective,
     MultiChoiceDirective,
     FieldsWrapperComponent,
-    MessageDialogComponent
+    MessageDialogComponent,
+    RichTextComponent
   ],
-  imports        : [
+  imports: [
     BrowserModule,
     MatTableModule,
     MatPaginatorModule,
@@ -140,10 +144,9 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     AceEditorModule,
     NgbModule
   ],
-  exports        : [CinchyDynamicFormsComponent],
-  entryComponents: [ChildFormDirective, MessageDialogComponent],
+  exports: [CinchyDynamicFormsComponent],
+  entryComponents: [ChildFormDirective, MessageDialogComponent, AddRichTextLinkDialogComponent],
   providers      : [CinchyModule, DatePipe],
   bootstrap      : []
 })
-export class CinchyDynamicFormsModule {
-}
+export class CinchyDynamicFormsModule {}

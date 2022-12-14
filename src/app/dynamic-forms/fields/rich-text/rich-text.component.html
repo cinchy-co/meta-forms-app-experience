@@ -1,0 +1,96 @@
+<div class="full-width-element divMarginBottom">
+  <div class="link-labels">
+    <div>
+      <fa-icon [icon]="icons.faAlignLeft"></fa-icon>
+    </div>
+    &nbsp;
+    <label class="cinchy-label" [title]="field.caption || ''">
+      {{field.label}}
+      {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+    </label>
+    <mat-icon *ngIf="field.caption" class="info-icon"
+              ngbTooltip="{{field.caption}}"
+              placement="auto"
+              container="body"
+              matTooltipClass="tool-tip-body"
+              matTooltipPosition="above">
+      info
+    </mat-icon>
+  </div>
+
+  <ng-container *ngIf="canEdit">
+    <div class="rich-text-wrapper form-control">
+      <div class="toolbar">
+        <button class="toolbar-item" [class.active]="activeMarks.bold" (click)="toggleMark(tiptapMarkType.Bold)" matTooltip="Bold">
+          <fa-icon [icon]="icons.faBold"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.italic" (click)="toggleMark(tiptapMarkType.Italic)" matTooltip="Italic">
+          <fa-icon [icon]="icons.faItalic"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.underline" (click)="toggleMark(tiptapMarkType.Underline)" matTooltip="Underline">
+          <fa-icon [icon]="icons.faUnderline"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.strike" (click)="toggleMark(tiptapMarkType.Strike)" matTooltip="Strikethrough">
+          <fa-icon [icon]="icons.faStrikethrough"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.code" (click)="toggleMark(tiptapMarkType.Code)" matTooltip="Code">
+          <fa-icon [icon]="icons.faCode"></fa-icon>
+        </button>
+
+        <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.listUnordered" (click)="toggleMark(tiptapMarkType.ListUnordered)" matTooltip="Unordered List">
+          <fa-icon [icon]="icons.faListUl"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.listOrdered" (click)="toggleMark(tiptapMarkType.ListOrdered)" matTooltip="Ordered List">
+          <fa-icon [icon]="icons.faListOl"></fa-icon>
+        </button>
+
+        <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.heading1" (click)="toggleMark(tiptapMarkType.Heading1)" matTooltip="Heading 1">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>1</sub>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.heading2" (click)="toggleMark(tiptapMarkType.Heading2)" matTooltip="Heading 2">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>2</sub>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.heading3" (click)="toggleMark(tiptapMarkType.Heading3)" matTooltip="Heading 3">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>3</sub>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.heading4" (click)="toggleMark(tiptapMarkType.Heading4)" matTooltip="Heading 4">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>4</sub>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.heading5" (click)="toggleMark(tiptapMarkType.Heading5)" matTooltip="Heading 5">
+          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>5</sub>
+        </button>
+
+        <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.link" (click)="toggleLink()" matTooltip="Insert Link">
+          <fa-icon [icon]="icons.faLink"></fa-icon>
+        </button>
+      </div>
+      <div class="editor-wrapper" (click)="setFocus()">
+        <div #richTextElement class="rich-text-element"></div>
+      </div>
+    </div>
+  </ng-container>
+  <ng-container *ngIf="field.cinchyColumn.canEdit === false || field.cinchyColumn.isViewOnly || isDisabled">
+    <label class="pre-formatted">{{field.value | json}}</label>
+  </ng-container>
+</div>

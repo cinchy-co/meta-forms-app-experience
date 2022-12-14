@@ -261,7 +261,7 @@ article label {
 
 .mat-dialog-actions {
   padding-top: 10px;
-  padding-bottom: 24px;;
+  padding-bottom: 24px;
 }
 
 .mat-checkbox-layout .mat-checkbox-label {
@@ -326,6 +326,15 @@ article label {
 
 .mat-header-child[_ngcontent-c6] {
   font-size: 14px;
+}
+
+.mat-dialog-content {
+  /*
+   * Removes phantom scrollbars
+   *
+   * https://github.com/angular/components/issues/20344
+   */
+  padding: 2px 24px !important;
 }
 
 .formMainDiv {
@@ -529,4 +538,10 @@ width: 2rem !important;
 .svg-inline--fa{
   color: dimgray;
   font: normal normal normal 14px/1 FontAwesome;
+}
+
+
+
+.ProseMirror-focused {
+  outline: none !important;
 }
