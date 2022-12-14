@@ -157,7 +157,7 @@ const CustomSelectOptions: INgxSelectOptions = {
     NgbModule
   ],
   exports        : [CinchyDynamicFormsComponent],
-  entryComponents: [ChildFormComponent, MessageDialogComponent],
+  entryComponents: [AddRichTextLinkDialogComponent, ChildFormComponent, MessageDialogComponent],
   providers      : [CinchyModule, DatePipe],
   bootstrap      : []
 })
