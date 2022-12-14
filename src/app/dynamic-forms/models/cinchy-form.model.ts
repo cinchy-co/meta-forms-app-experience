@@ -793,9 +793,18 @@ export class Form implements IForm {
   }
 
   getFileNameAndItsTable(field, childCinchyId?) {
-    const [domain, table, column] = field.cinchyColumn.FileNameColumn ? field.cinchyColumn.FileNameColumn.split('.') : [];
-    const query = this.rowId && this.rowId != "null" ? `Insert into [${domain}].[${table}] ([Cinchy Id], [${field.cinchyColumn.name}]) values(@rowId, @fieldValue)` : null;
-    return { domain, table, column, fileName: field.cinchyColumn.FileName, query, value: field.value, childCinchyId };
+    const [domain, table, column] = field.cinchyColumn.fileNameColumn?.split('.') ?? [];
+    const query = (this.rowId && this.rowId) != "null" ? `Insert into [${domain}].[${table}] ([Cinchy Id], [${field.cinchyColumn.name}]) values(@rowId, @fieldValue)` : null;
+
+    return {
+      domain,
+      table,
+      column,
+      fileName: field.cinchyColumn.fileName,
+      query,
+      value: field.value,
+      childCinchyId
+    };
   }
 
   isLinkedColumn(element, section) {

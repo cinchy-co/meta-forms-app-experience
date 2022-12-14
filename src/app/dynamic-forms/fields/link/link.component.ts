@@ -155,7 +155,7 @@ export class LinkComponent implements OnInit {
       let tableColumnQuery: string = "select tc.[Table].[Domain].[Name] as \"Domain\", tc.[Table].[Name] as \"Table\", tc.[Name] as \"Column\" from [Cinchy].[Cinchy].[Table Columns] tc where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy Id] = " + linkTargetId;
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
-      const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.FormFieldsJsonData);
+      const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
       if (formFieldsJsonData && formFieldsJsonData.Columns) {
         currentFieldJson = formFieldsJsonData.Columns.find(field => field.name === this.field.cinchyColumn.name);
       }
@@ -291,7 +291,7 @@ export class LinkComponent implements OnInit {
           "Value": value,
           "Text": text,
           "Event": event,
-          "HasChanged": this.field.cinchyColumn.hasChanged,
+          "hasChanged": this.field.cinchyColumn.hasChanged,
           "Form": this.field.form,
           "Field": this.field
         }
@@ -314,7 +314,7 @@ export class LinkComponent implements OnInit {
   }
 
   checkForDisplayColumnFormatter() {
-    if (this.field.cinchyColumn.IsDisplayColumn && this.field.cinchyColumn.numberFormatter
+    if (this.field.cinchyColumn.isDisplayColumn && this.field.cinchyColumn.numberFormatter
       && this.selectedValue && this.selectedValue.label) {
       const numeralValue = new NumeralPipe(this.selectedValue.label);
       this.selectedValue.label = numeralValue.format(this.field.cinchyColumn.numberFormatter);

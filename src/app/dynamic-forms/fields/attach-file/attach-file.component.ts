@@ -36,7 +36,7 @@ export class AttachFileComponent implements OnInit {
   }
 
   async ngOnInit() {
-    this.fileName = this.field.cinchyColumn.FileName;
+    this.fileName = this.field.cinchyColumn.fileName;
   }
 
   // Function called after selecting a file
@@ -52,7 +52,7 @@ export class AttachFileComponent implements OnInit {
         element.value = file.name;
       }
     });
-    field.cinchyColumn.FileName = file.name;
+    field.cinchyColumn.fileName = file.name;
     field.value = await this.readFileAsyncEncode(file);
     this.field.value = field.value;
     this.callbackEvent(this.targetTableName, field.cinchyColumn.name, field.value)
@@ -81,7 +81,7 @@ export class AttachFileComponent implements OnInit {
       "ColumnName": columnName,
       "Value": value,
       "event": event,
-      "HasChanged": this.field.cinchyColumn.hasChanged,
+      "hasChanged": this.field.cinchyColumn.hasChanged,
       "Form": this.field.form,
       "Field": this.field
     }

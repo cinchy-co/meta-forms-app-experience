@@ -98,7 +98,7 @@ export class TextareaComponent implements AfterViewInit, OnInit {
       "ColumnName": columnName,
       "Value": value,
       "event": event,
-      "HasChanged": this.field.cinchyColumn.hasChanged,
+      "hasChanged": this.field.cinchyColumn.hasChanged,
       "Form": this.field.form,
       "Field": this.field
     }

@@ -164,7 +164,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
       let currentFieldJson;
       let tableColumnQuery: string = "select tc.[Table].[Domain].[Name] as 'Domain', tc.[Table].[Name] as 'Table', tc.[Name] as 'Column' from [Cinchy].[Cinchy].[Table Columns] tc where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy Id] = " + linkTargetId;
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
-      const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.FormFieldsJsonData);
+      const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
       if (formFieldsJsonData && formFieldsJsonData.Columns) {
         currentFieldJson = formFieldsJsonData.Columns.find(field => field.name === this.field.cinchyColumn.name);
       }
@@ -250,7 +250,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
     this.field.value = this.selectedValues.map(option => option.id);
     const text = this.field.cinchyColumn.label;
     const Data = {
-      "HasChanged": this.field.cinchyColumn.hasChanged,
+      "hasChanged": this.field.cinchyColumn.hasChanged,
       "TableName": this.targetTableName,
       "ColumnName": this.field.cinchyColumn.name,
       "Value": this.field.value,

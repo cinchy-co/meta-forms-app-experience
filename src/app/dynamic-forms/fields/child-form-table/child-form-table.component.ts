@@ -85,7 +85,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
     if (multiFields && multiFields.length) {
       binaryFields.forEach(field => {
         const key = field.cinchyColumn.name;
-        const fileNameColumn = field.cinchyColumn.FileNameColumn;
+        const fileNameColumn = field.cinchyColumn.fileNameColumn;
         multiFields.forEach(async multiField => {
           const cinchyId = multiField["Cinchy ID"];
           //const columnDetails = {domain: targetTableDomain, table: this.field.childForm.targetTableName}
@@ -189,7 +189,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
          if(this.field.childForm.name === "Customer 360 Child: Opportunities"){
             console.log("currentField", currentField, key);
          }*/
-    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.IsDisplayColumn);
+    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
     // So that the one which is display column doesn"t match and show the name, as for display column one also
     // field.cinchyColumn.name is same
     let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name == key);
@@ -221,7 +221,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
 
   getTableHeader(key, section) {
     // For child form all fields should be in 1 section
-    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.IsDisplayColumn);
+    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
     // So that the one which is display column doesn"t match and show the name, as for display column one also
     // field.cinchyColumn.name is same
     let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name == key);

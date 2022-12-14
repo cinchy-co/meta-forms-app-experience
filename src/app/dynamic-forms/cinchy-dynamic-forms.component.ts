@@ -273,8 +273,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               childResult[element.cinchyColumn.name] = element.value;
               childResultForLocal[element.cinchyColumn.name] = element.value;
               const keyForBinary = element.cinchyColumn.name + '_Name';
-              childResult[keyForBinary] = element.cinchyColumn.FileName;
-              childResultForLocal[keyForBinary] = element.cinchyColumn.FileName;
+              childResult[keyForBinary] = element.cinchyColumn.fileName;
+              childResultForLocal[keyForBinary] = element.cinchyColumn.fileName;
             } else {
               childResult[element.cinchyColumn.name] = element.value;
               childResultForLocal[element.cinchyColumn.name] = element.value;
@@ -598,7 +598,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   handleFieldsEvent($event) {
     this.appStateService.hasFormChanged = this.appStateService.hasFormChanged ? this.appStateService.hasFormChanged
-      : $event.Data ? $event.Data.HasChanged : true;
+      : $event.Data ? $event.Data.hasChanged : true;
 
     // If child flattened child form
     if ($event?.Data?.Form?.isChild && $event?.Data?.Form?.flatten) {
