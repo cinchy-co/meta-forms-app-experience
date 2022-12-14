@@ -293,7 +293,7 @@ export class LinkDirective implements OnInit {
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
       const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.FormFieldsJsonData);
-      if (formFieldsJsonData && formFieldsJsonData.Columns) {
+      if (formFieldsJsonData?.Columns) {
         currentFieldJson = formFieldsJsonData.Columns.find(field => field.name === this.field.cinchyColumn.name);
       }
       if (!isNullOrUndefined(linkTargetId)) {

@@ -1,10 +1,16 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
-import {  Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { IFormSectionMetadata } from 'src/app/models/form-section-metadata.model';
 import { AppStateService } from '../../services/app-state.service';
 import { IFormSection } from '../models/cinchy-form-sections.model';
 import { IForm } from '../models/cinchy-form.model';
 import { SpinnerCondition } from '../models/cinchy-spinner.model';
+import { IFormField } from "../models/cinchy-form-field.model";
+
+import { isNullOrUndefined } from "util";
+
+import { TextFormatType } from "../enums/text-format-type.enum";
+
 
 @Component({
   selector: 'app-fields-wrapper',
@@ -12,14 +18,14 @@ import { SpinnerCondition } from '../models/cinchy-spinner.model';
   styleUrls: ['./fields-wrapper.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class FieldsWrapperComponent implements OnInit {
+export class FieldsWrapperComponent {
   @Input() form: IForm;
   @Input() rowId;
   _formSectionsToRenderMetadata: IFormSectionMetadata[] = [];
   @Input() isChild: boolean;
   @Input() fieldsWithErrors;
 
-  @Input('formHasDataLoaded') set formHasDataLoaded(value: boolean) { this.setFormHasDataLoaded(value); }
+  @Input("formHasDataLoaded") set formHasDataLoaded(value: boolean) { this.setFormHasDataLoaded(value); }
   _formHasDataLoaded: boolean;
 
   _sectionsToRender: IFormSection[];
@@ -34,15 +40,7 @@ export class FieldsWrapperComponent implements OnInit {
     private appStateService: AppStateService,
     private cdr: ChangeDetectorRef) {
   }
-  
-  ngOnInit(): void {
-  }
 
-  debug(): void {
-    console.log('Debug form', this.form);
-    console.log('Debug rowId', this.rowId);
-    console.log('Debug isChild', this.isChild);
-  }
 
   expansionClicked(section) {
     this.appStateService.sectionClicked(section.label);
@@ -95,5 +93,29 @@ export class FieldsWrapperComponent implements OnInit {
     this._formSectionsToRenderMetadata = _newSectionsToRenderMetadata;
     this._sectionsToRender = _newSectionsToRender;
     this.appStateService.setLatestRenderedSections(_newSectionsToRenderMetadata);
+  }
+
+
+  richTextUseJson(field: IFormField): boolean {
+
+    return (field.cinchyColumn.textFormat !== TextFormatType.HTML);
+  }
+
+
+  usePlaintext(field: IFormField): boolean {
+
+    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
+  }
+
+
+  useRichText(field: IFormField): boolean {
+
+    return (field.cinchyColumn.dataType === "Text" && !isNullOrUndefined(field.cinchyColumn.textFormat));
+  }
+
+
+  useTextarea(field: IFormField): boolean {
+
+    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
   }
 }

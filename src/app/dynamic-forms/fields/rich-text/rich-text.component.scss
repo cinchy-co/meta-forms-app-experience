@@ -1,0 +1,53 @@
+.rich-text-wrapper {
+  padding: 0 !important;
+
+  .editor-wrapper {
+    overflow: hidden;
+    padding: 4px 0.5rem 2px;
+
+    &:hover {
+      cursor: text;
+    }
+
+    .rich-text-element {
+
+      .ProseMirror:focus-visible {
+        outline: none !important;
+      }
+    }
+  }
+
+  .toolbar {
+    border-bottom: 1px solid #ced4da;
+    margin: -1px;
+    padding: 0.375rem;
+
+    .toolbar-item {
+      background-color: transparent;
+      border: none;
+      margin-right: 0.375rem;
+
+      &:last-child {
+        margin-right: 0;
+      }
+
+      &.active {
+        background-color: rgba(0, 0, 0, 0.15);
+      }
+
+      &:active,
+      &:focus,
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.25);
+      }
+
+      &:hover {
+        cursor: pointer;
+      }
+
+      fa-icon {
+        color: black;
+      }
+    }
+  }
+}
