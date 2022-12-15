@@ -398,55 +398,54 @@ export class LinkComponent implements OnInit {
   //#endregion
 
 
-removeTooltipElement(){
-  this.isCursorIn = false;
-  this.tooltip.close(); 
-}
-
-setTooltipCursor(){
-  this.isCursorIn = true;
-}
-
-openTooltip(tooltip){
-  tooltip.open();
-  this.tooltip = tooltip;
-  if(tooltip.isOpen()) {
-    const tooltipElement = document.getElementsByTagName("ngb-tooltip-window");
-    if(tooltipElement[0]){
-      tooltipElement[0].addEventListener("mouseleave",this.removeTooltipElement.bind(this));
-      tooltipElement[0].addEventListener("mouseenter",this.setTooltipCursor.bind(this));
+  removeTooltipElement(){
+    this.isCursorIn = false;
+    this.tooltip.close(); 
   }
- }
-}
 
-closeTooltip(tooltip){
-  setTimeout(() => {
-    if(tooltip.isOpen() &&  !this.isCursorIn) {
-      tooltip.close();
+  setTooltipCursor(){
+    this.isCursorIn = true;
+  }
+
+  openTooltip(tooltip){
+    tooltip.open();
+    this.tooltip = tooltip;
+    if(tooltip.isOpen()) {
+      const tooltipElement = document.getElementsByTagName("ngb-tooltip-window");
+      if(tooltipElement[0]){
+        tooltipElement[0].addEventListener("mouseleave",this.removeTooltipElement.bind(this));
+        tooltipElement[0].addEventListener("mouseenter",this.setTooltipCursor.bind(this));
     }
-  }, 100);
+   }
+  }
 
-}
+  closeTooltip(tooltip){
+    setTimeout(() => {
+      if(tooltip.isOpen() &&  !this.isCursorIn) {
+        tooltip.close();
+      }
+    }, 100);
 
-deleteDropdownVal(event){
-  const key = event.key;
-  if (key === "Delete" || key === "Backspace") {
-    const text= this.getSelectedText();
-    const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
-    if (text!=""){
-      this.selectedValue = null;
-      this.myControl.setValue("");
-      this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, "value");
+  }
+
+  deleteDropdownVal(event){
+    const key = event.key;
+    if (key === "Delete" || key === "Backspace") {
+      const text= this.getSelectedText();
+      const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+      if (text!=""){
+        this.selectedValue = null;
+        this.myControl.setValue("");
+        this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, "value");
+      }
     }
   }
-}
 
-getSelectedText() {
-  if (window.getSelection) {
-      return window.getSelection().toString();
+  getSelectedText() {
+    if (window.getSelection) {
+        return window.getSelection().toString();
+    }
+    return "";
   }
-  return "";
-}
-
 }
 
