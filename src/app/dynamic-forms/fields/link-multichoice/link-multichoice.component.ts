@@ -434,6 +434,5 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
         tooltip.close();
       }
     }, 100);
-  
   }
 }

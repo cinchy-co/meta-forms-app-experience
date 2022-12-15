@@ -22,6 +22,11 @@ import { SpinnerCondition } from "../models/cinchy-spinner.model";
 
 import { AppStateService } from "../../services/app-state.service";
 
+import { isNullOrUndefined } from "util";
+
+import { TextFormatType } from "../enums/text-format-type.enum";
+
+
 @Component({
   selector: "app-fields-wrapper",
   templateUrl: "./fields-wrapper.component.html",
