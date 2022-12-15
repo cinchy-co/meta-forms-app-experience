@@ -41,9 +41,7 @@ import { DigitOnlyModule } from "@uiowa/digit-only";
 
 //#region Custom
 import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
-
 import { FieldsWrapperComponent } from "./fields-wrapper/fields-wrapper.component";
-
 import { AttachFileComponent } from "./fields/attach-file/attach-file.component";
 import { CalculatedComponent } from "./fields/calculated/calculated.component";
 import { CheckboxComponent } from "./fields/checkbox/checkbox.component";
