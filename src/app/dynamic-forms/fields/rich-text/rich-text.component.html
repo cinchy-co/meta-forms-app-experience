@@ -84,6 +84,52 @@
         <button class="toolbar-item" [class.active]="activeMarks.link" (click)="toggleLink()" matTooltip="Insert Link">
           <fa-icon [icon]="icons.faLink"></fa-icon>
         </button>
+
+        <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.image" (click)="toggleImage()" matTooltip="Insert Image">
+          <fa-icon [icon]="icons.faImage"></fa-icon>
+        </button>
+
+        <!-- <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.table" (click)="toggleTable()" matTooltip="Insert Table">
+          <fa-icon [icon]="icons.faTable"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.table" (click)="deleteTable()" matTooltip="Delete Table">
+          <fa-icon [icon]="icons.faTrash"></fa-icon>
+        </button>
+
+        <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.table" (click)="toggleTableRow()" matTooltip="Insert Row" [disabled]="isTable">
+          <fa-icon [icon]="icons.faBars"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.table" (click)="deleteRow()" matTooltip="Delete Row" [disabled]="isTable">
+          <fa-icon [icon]="icons.faTrash"></fa-icon>
+        </button>
+
+        <span class="tooltbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.table" (click)="toggleTableColumn()" matTooltip="Insert Column" [disabled]="isTable">
+          <fa-icon [icon]="icons.faGripLinesVertical"></fa-icon>
+        </button>
+
+        <button class="toolbar-item" [class.active]="activeMarks.table" (click)="deleteColumn()" matTooltip="Delete Column" [disabled]="isTable">
+          <fa-icon [icon]="icons.faTrash"></fa-icon>
+        </button> -->
+
+
       </div>
       <div class="editor-wrapper" (click)="setFocus()">
         <div #richTextElement class="rich-text-element"></div>

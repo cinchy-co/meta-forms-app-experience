@@ -23,7 +23,12 @@ import {
   faListOl,
   faListUl,
   faStrikethrough,
-  faUnderline
+  faUnderline,
+  faImage,
+  faTable,
+  faTrash,
+  faBars,
+  faGripLinesVertical
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Editor } from "@tiptap/core"
@@ -31,6 +36,11 @@ import { Editor } from "@tiptap/core"
 import Link from "@tiptap/extension-link";
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline";
+import Image from "@tiptap/extension-image";
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
 
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
 import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
@@ -40,6 +50,7 @@ import { isNullOrUndefined } from "util";
 import { Transaction } from "prosemirror-state";
 import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
 import { IRichTextLink } from "../../interface/rich-text-link";
+import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
 
 
 @Component({
@@ -90,7 +101,9 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     listOrdered: false,
     listUnordered: false,
     strike: false,
-    underline: false
+    underline: false,
+    image: false,
+    table: false
   };
 
   icons = {
@@ -103,11 +116,17 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     faListOl: faListOl,
     faListUl: faListUl,
     faStrikethrough: faStrikethrough,
-    faUnderline: faUnderline
+    faUnderline: faUnderline,
+    faImage: faImage,
+    faTable: faTable,
+    faTrash: faTrash,
+    faBars: faBars,
+    faGripLinesVertical: faGripLinesVertical
   };
 
   tiptapMarkType = TiptapMarkType;
-
+  
+  isTable: boolean = true;
 
   /**
    * Determines whether or not the form is in a savable state
@@ -142,7 +161,15 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           Link.extend({
             inclusive: false
           }),
-          Underline
+          Underline,
+          Image,
+          Table.configure({
+            resizable: true,
+          }),
+          TableRow,
+          TableHeader,
+          TableCell
+
         ],
         content: content,
         editable: true,
@@ -168,6 +195,8 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           this.activeMarks.listUnordered = this.editor?.isActive("bulletList");
           this.activeMarks.strike = this.editor?.isActive("strike");
           this.activeMarks.underline = this.editor?.isActive("underline");
+          this.activeMarks.image = this.editor?.isActive("image");
+          this.activeMarks.table = this.editor?.isActive("table");
         },
         onUpdate: (): void => {
 
@@ -205,7 +234,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
    * Adds or removes the given mark at the current cursor position
    */
   toggleMark(type: TiptapMarkType): void {
-
+    this.isTable = true;
     switch (type) {
       case TiptapMarkType.Bold:
         this.editor?.commands.toggleBold();
@@ -271,7 +300,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
    * Inserts an anchor element at the most recent cursor position
    */
   toggleLink(): void {
-
+    this.isTable = true;
     if (this.activeMarks.link) {
       this.editor?.commands.unsetLink();
     }
@@ -310,6 +339,69 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     }
   }
 
+  /**
+   * Insert Image 
+   */
+  
+  toggleImage(): void{
+    this.isTable = true;
+    // const url = window.prompt('URL')
+    // if (url) {
+    //   this.editor.chain().focus().setImage({ src: url }).run()
+    // }
+
+      const selection = this.editor.view.state.selection;
+      const selectedText = selection ? this.editor.state.doc.textBetween(selection.from, selection.to) : undefined;
+
+      const dialogRef: MatDialogRef<AddRichTextImageComponent> = this._dialog.open(
+        AddRichTextImageComponent,
+        {
+          data: {
+            content: selectedText
+          },
+          maxHeight: "80vh",
+          width: "600px"
+        }
+      );
+
+      dialogRef.afterClosed().subscribe({
+        next: (result: IRichTextLink) => {
+
+          if (result) {
+            this.editor
+              .chain()
+              .setImage({ src:  result.href })
+              .focus()
+              .run();
+          }
+        }
+      })
+  }
+
+  toggleTable(): void{
+    this.isTable = false;
+    this.editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  }
+
+  deleteTable(): void{
+    this.editor.chain().focus().deleteTable().run();  
+  }
+
+  toggleTableRow(): void{
+    this.editor.chain().focus().addRowAfter().run();
+  }
+
+  deleteRow(): void{
+    this.editor.chain().focus().deleteRow().run();
+  }
+
+  toggleTableColumn(): void{
+    this.editor.chain().focus().addColumnAfter().run();
+  }
+
+  deleteColumn(): void{
+    this.editor.chain().focus().deleteColumn().run();
+  }
 
   private _callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
 
@@ -331,7 +423,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);
   }
-
 
   private _resolveValue(): void {
 
