@@ -28,6 +28,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { ToastrModule } from 'ngx-toastr';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DigitOnlyModule } from '@uiowa/digit-only';
+import {MatMenuModule} from '@angular/material/menu';
 
 //#region Custom
 import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
@@ -144,7 +145,8 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     SharedModule,
     NgxMatSelectSearchModule,
     AceEditorModule,
-    NgbModule
+    NgbModule,
+    MatMenuModule
   ],
   exports: [CinchyDynamicFormsComponent],
   entryComponents: [ChildFormDirective, MessageDialogComponent, AddRichTextLinkDialogComponent],

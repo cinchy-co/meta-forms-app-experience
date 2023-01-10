@@ -13,6 +13,8 @@ import {
   MatDialogRef
 } from "@angular/material/dialog";
 
+
+
 import {
   faAlignLeft,
   faBold,
@@ -28,8 +30,9 @@ import {
   faTable,
   faTrash,
   faBars,
-  faGripLinesVertical
+  faColumns
 } from "@fortawesome/free-solid-svg-icons";
+
 
 import { Editor } from "@tiptap/core"
 
@@ -59,7 +62,6 @@ import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add
   styleUrls: ["./rich-text.component.scss"],
 })
 export class RichTextComponent implements OnDestroy, AfterViewInit {
-
   @Input() field: IFormField;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
@@ -103,7 +105,8 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     strike: false,
     underline: false,
     image: false,
-    table: false
+    table: false,
+    tableDelete: false
   };
 
   icons = {
@@ -121,7 +124,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     faTable: faTable,
     faTrash: faTrash,
     faBars: faBars,
-    faGripLinesVertical: faGripLinesVertical
+    faColumns: faColumns
   };
 
   tiptapMarkType = TiptapMarkType;
@@ -197,6 +200,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           this.activeMarks.underline = this.editor?.isActive("underline");
           this.activeMarks.image = this.editor?.isActive("image");
           this.activeMarks.table = this.editor?.isActive("table");
+          this.activeMarks.tableDelete = this.editor?.isActive("tableDelete");
         },
         onUpdate: (): void => {
 
@@ -384,19 +388,28 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   }
 
   deleteTable(): void{
+    this.isTable = true;
     this.editor.chain().focus().deleteTable().run();  
   }
 
-  toggleTableRow(): void{
+  toggleTableRowAfter(): void{
     this.editor.chain().focus().addRowAfter().run();
+  }
+
+  toggleTableRowBefore(): void{
+    this.editor.chain().focus().addRowBefore().run();
   }
 
   deleteRow(): void{
     this.editor.chain().focus().deleteRow().run();
   }
 
-  toggleTableColumn(): void{
+  toggleTableColumnAfter(): void{
     this.editor.chain().focus().addColumnAfter().run();
+  }
+
+  toggleTableColumnBefore(): void{
+    this.editor.chain().focus().addColumnBefore().run();
   }
 
   deleteColumn(): void{
