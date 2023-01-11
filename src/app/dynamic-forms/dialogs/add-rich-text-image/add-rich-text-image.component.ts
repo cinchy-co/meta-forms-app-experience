@@ -10,16 +10,13 @@ import { isNullOrUndefined } from "util";
 })
 export class AddRichTextImageComponent {
 
-  content: string;
-
   href: string;
 
   targetBlank = true;
 
 
   get canSave(): boolean {
-
-    return !isNullOrUndefined(this.href && this.content);
+    return !isNullOrUndefined(this.href);
   }
 
 
@@ -28,7 +25,6 @@ export class AddRichTextImageComponent {
     @Inject(MAT_DIALOG_DATA) public data: IRichTextLink
   ) {
 
-    this.content = data.content;
   }
 
 
@@ -42,7 +38,6 @@ export class AddRichTextImageComponent {
 
     if (this.canSave) {
       this.dialogRef.close({
-        content: this.content,
         href: this.href,
         targetBlank: this.targetBlank
       } as IRichTextLink);

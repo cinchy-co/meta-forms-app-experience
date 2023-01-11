@@ -347,13 +347,8 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
    * Insert Image 
    */
   
-  toggleImage(): void{
-    this.isTable = true;
-    // const url = window.prompt('URL')
-    // if (url) {
-    //   this.editor.chain().focus().setImage({ src: url }).run()
-    // }
-
+  insertImage(): void{
+      this.isTable = true;
       const selection = this.editor.view.state.selection;
       const selectedText = selection ? this.editor.state.doc.textBetween(selection.from, selection.to) : undefined;
 
@@ -382,7 +377,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
       })
   }
 
-  toggleTable(): void{
+  insertTable(): void{
     this.isTable = false;
     this.editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   }
@@ -392,11 +387,11 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     this.editor.chain().focus().deleteTable().run();  
   }
 
-  toggleTableRowAfter(): void{
+  insertTableRowAfter(): void{
     this.editor.chain().focus().addRowAfter().run();
   }
 
-  toggleTableRowBefore(): void{
+  insertTableRowBefore(): void{
     this.editor.chain().focus().addRowBefore().run();
   }
 
@@ -404,11 +399,11 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     this.editor.chain().focus().deleteRow().run();
   }
 
-  toggleTableColumnAfter(): void{
+  insertTableColumnAfter(): void{
     this.editor.chain().focus().addColumnAfter().run();
   }
 
-  toggleTableColumnBefore(): void{
+  insertTableColumnBefore(): void{
     this.editor.chain().focus().addColumnBefore().run();
   }
 
