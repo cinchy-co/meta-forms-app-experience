@@ -104,16 +104,16 @@ import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
         </mat-icon>
       </div>
       <ng-template #withcaptiont> 
-        {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank"> {{this.field.cinchyColumn.domainName}} - {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+        {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank"> {{this.field.cinchyColumn.linkTableDomainName}} - {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
       </ng-template>
       <ng-template #withoutcaptiont> 
-        From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank"> {{this.field.cinchyColumn.domainName}} - {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+        From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank"> {{this.field.cinchyColumn.linkTableDomainName}} - {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
       </ng-template>
       <ng-template #hierarchyWithCaption> 
-        {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.domainName}} - {{this.field.cinchyColumn.linkTargetTableName}} table.
+        {{this.field.caption}}  <br/> <br/> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTableDomainName}} - {{this.field.cinchyColumn.linkTargetTableName}} table.
       </ng-template>
       <ng-template #hierarchyWithoutCaption> 
-        From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.domainName}} - {{this.field.cinchyColumn.linkTargetTableName}} table.
+        From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTableDomainName}} - {{this.field.cinchyColumn.linkTargetTableName}} table.
       </ng-template>
       <ng-container
         *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled && !downloadLink && showActualField">
