@@ -97,7 +97,7 @@
           |
         </span>
 
-        <button mat-icon-button class="toolbar-item" [class.active]="activeMarks.table" [matMenuTriggerFor]="menu" matTooltip="Insert Table">
+        <button class="toolbar-item" [class.active]="activeMarks.table" [matMenuTriggerFor]="menu" matTooltip="Insert Table">
           <fa-icon [icon]="icons.faTable"></fa-icon>
         </button>
 
@@ -109,37 +109,37 @@
             <span>Add Table</span>
           </button>
 
-          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.tableDelete" (click)="deleteTable()" matTooltip="Delete Table" [disabled]="isTable">
+          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.tableDelete" (click)="deleteTable()" matTooltip="Delete Table" [disabled]="!activeMarks.table">
             <fa-icon class="mr-2" [icon]="icons.faTrash"></fa-icon>
             <span>Delete Table</span>
           </button>
 
-          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableRowBefore()" matTooltip="Add Row Before" [disabled]="isTable">
+          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableRowBefore()" matTooltip="Add Row Before" [disabled]="!activeMarks.table">
             <fa-icon class="mr-2" [icon]="icons.faBars"></fa-icon>
             <span>Add Row Before</span>
           </button>
 
-          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableRowAfter()" matTooltip="Add Row After" [disabled]="isTable">
+          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableRowAfter()" matTooltip="Add Row After" [disabled]="!activeMarks.table">
             <fa-icon class="mr-2" [icon]="icons.faBars"></fa-icon>
             <span>Add Row After</span>
           </button>
 
-          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="deleteRow()" matTooltip="Delete Row" [disabled]="isTable">
+          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="deleteRow()" matTooltip="Delete Row" [disabled]="!activeMarks.table">
             <fa-icon class="mr-2" [icon]="icons.faTrash"></fa-icon>
             <span>Delete Row</span>
           </button>
 
-          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableColumnBefore()" matTooltip="Add Column Before" [disabled]="isTable">
+          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableColumnBefore()" matTooltip="Add Column Before" [disabled]="!activeMarks.table">
             <fa-icon class="mr-2" [icon]="icons.faColumns"></fa-icon>
             <span>Add Column Before</span>
           </button>
 
-          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableColumnAfter()" matTooltip="Add Column After" [disabled]="isTable">
+          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableColumnAfter()" matTooltip="Add Column After" [disabled]="!activeMarks.table">
             <fa-icon class="mr-2" [icon]="icons.faColumns"></fa-icon>
             <span>Add Column After</span>
           </button>
 
-          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="deleteColumn()" matTooltip="Delete Column" [disabled]="isTable">
+          <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="deleteColumn()" matTooltip="Delete Column" [disabled]="!activeMarks.table">
             <fa-icon class="mr-2" [icon]="icons.faTrash"></fa-icon>
             <span>Delete Column</span>
           </button>

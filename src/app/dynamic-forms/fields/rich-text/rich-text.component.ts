@@ -129,8 +129,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
   tiptapMarkType = TiptapMarkType;
   
-  isTable: boolean = true;
-
   /**
    * Determines whether or not the form is in a savable state
    */
@@ -238,7 +236,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
    * Adds or removes the given mark at the current cursor position
    */
   toggleMark(type: TiptapMarkType): void {
-    this.isTable = true;
     switch (type) {
       case TiptapMarkType.Bold:
         this.editor?.commands.toggleBold();
@@ -304,7 +301,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
    * Inserts an anchor element at the most recent cursor position
    */
   toggleLink(): void {
-    this.isTable = true;
+
     if (this.activeMarks.link) {
       this.editor?.commands.unsetLink();
     }
@@ -348,7 +345,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
    */
   
   insertImage(): void{
-      this.isTable = true;
+
       const selection = this.editor.view.state.selection;
       const selectedText = selection ? this.editor.state.doc.textBetween(selection.from, selection.to) : undefined;
 
@@ -356,7 +353,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
         AddRichTextImageComponent,
         {
           data: {
-            content: selectedText
+            href: selectedText
           },
           maxHeight: "80vh",
           width: "600px"
@@ -372,18 +369,58 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
               .setImage({ src:  result.href })
               .focus()
               .run();
+
+              setTimeout(() => {
+                const selectedImage = document.getElementsByClassName("ProseMirror-selectednode")[0];
+                if(selectedImage) selectedImage.addEventListener('click',this.editSelectedImage.bind(this,selectedImage));
+            }, 0);   
           }
+     
         }
-      })
+      });
   }
 
+  editSelectedImage(selectedImage){
+    const imgURL = selectedImage.getAttribute("src");
+    if(imgURL){
+        const dialogRef: MatDialogRef<AddRichTextImageComponent> = this._dialog.open(
+        AddRichTextImageComponent,
+        {
+            data: {
+              href: imgURL
+            },
+            maxHeight: "80vh",
+            width: "600px"
+        }
+        );
+
+        dialogRef.afterClosed().subscribe({
+          next: (result: IRichTextLink) => {
+  
+            if (result && result.href) {
+              this.editor
+                .chain()
+                .setImage({ src:  result.href })
+                .focus()
+                .run();
+  
+                setTimeout(() => {
+                  const selectedImage = document.getElementsByClassName("ProseMirror-selectednode")[0];
+                  if(selectedImage) selectedImage.addEventListener('click',this.editSelectedImage.bind(this,selectedImage));
+              }, 0);   
+            }
+         }
+        });
+    }
+  }
+ 
   insertTable(): void{
-    this.isTable = false;
+
     this.editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   }
 
   deleteTable(): void{
-    this.isTable = true;
+
     this.editor.chain().focus().deleteTable().run();  
   }
 

@@ -16,7 +16,7 @@ export class AddRichTextImageComponent {
 
 
   get canSave(): boolean {
-    return !isNullOrUndefined(this.href);
+    return this.href ? true : false;
   }
 
 
@@ -24,7 +24,7 @@ export class AddRichTextImageComponent {
     public dialogRef: MatDialogRef<AddRichTextImageComponent>,
     @Inject(MAT_DIALOG_DATA) public data: IRichTextLink
   ) {
-
+    if(data.href) this.href = data.href;
   }
 
 
