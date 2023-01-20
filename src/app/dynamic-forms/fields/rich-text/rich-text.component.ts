@@ -29,8 +29,9 @@ import {
   faImage,
   faTable,
   faTrash,
-  faBars,
-  faColumns
+  faLevelDownAlt,
+  faLevelUpAlt,
+  faMinusSquare
 } from "@fortawesome/free-solid-svg-icons";
 
 
@@ -54,6 +55,7 @@ import { Transaction } from "prosemirror-state";
 import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
 import { IRichTextLink } from "../../interface/rich-text-link";
 import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
+import { table } from "console";
 
 
 @Component({
@@ -86,6 +88,8 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   showError: boolean;
 
   value: any;
+
+  imageURL: string = "";
 
   /**
    * Tracks the marks active at the most recent cursor position
@@ -123,8 +127,9 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     faImage: faImage,
     faTable: faTable,
     faTrash: faTrash,
-    faBars: faBars,
-    faColumns: faColumns
+    faLevelDownAlt: faLevelDownAlt,
+    faLevelUpAlt: faLevelUpAlt,
+    faMinusSquare: faMinusSquare
   };
 
   tiptapMarkType = TiptapMarkType;
@@ -353,7 +358,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
         AddRichTextImageComponent,
         {
           data: {
-            href: selectedText
+            href: this.imageURL == "" ? selectedText : this.imageURL
           },
           maxHeight: "80vh",
           width: "600px"
@@ -381,36 +386,9 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   }
 
   editSelectedImage(selectedImage){
-    const imgURL = selectedImage.getAttribute("src");
-    if(imgURL){
-        const dialogRef: MatDialogRef<AddRichTextImageComponent> = this._dialog.open(
-        AddRichTextImageComponent,
-        {
-            data: {
-              href: imgURL
-            },
-            maxHeight: "80vh",
-            width: "600px"
-        }
-        );
-
-        dialogRef.afterClosed().subscribe({
-          next: (result: IRichTextLink) => {
-  
-            if (result && result.href) {
-              this.editor
-                .chain()
-                .setImage({ src:  result.href })
-                .focus()
-                .run();
-  
-                setTimeout(() => {
-                  const selectedImage = document.getElementsByClassName("ProseMirror-selectednode")[0];
-                  if(selectedImage) selectedImage.addEventListener('click',this.editSelectedImage.bind(this,selectedImage));
-              }, 0);   
-            }
-         }
-        });
+    const imageSrc = selectedImage.getAttribute("src");
+    if(imageSrc){
+      this.imageURL = imageSrc;
     }
   }
  

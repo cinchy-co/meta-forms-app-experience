@@ -115,32 +115,32 @@
           </button>
 
           <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableRowBefore()" matTooltip="Add Row Before" [disabled]="!activeMarks.table">
-            <fa-icon class="mr-2" [icon]="icons.faBars"></fa-icon>
+            <div class="fa-rotate-90 mr-2" style="display: inline-block;"><fa-icon  [icon]="icons.faLevelDownAlt"></fa-icon></div>
             <span>Add Row Before</span>
           </button>
 
           <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableRowAfter()" matTooltip="Add Row After" [disabled]="!activeMarks.table">
-            <fa-icon class="mr-2" [icon]="icons.faBars"></fa-icon>
+            <div class="fa-rotate-90 mr-2" style="display: inline-block;"><fa-icon  [icon]="icons.faLevelUpAlt"></fa-icon></div>
             <span>Add Row After</span>
           </button>
 
           <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="deleteRow()" matTooltip="Delete Row" [disabled]="!activeMarks.table">
-            <fa-icon class="mr-2" [icon]="icons.faTrash"></fa-icon>
+            <fa-icon class="mr-2" [icon]="icons.faMinusSquare"></fa-icon>
             <span>Delete Row</span>
           </button>
 
           <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableColumnBefore()" matTooltip="Add Column Before" [disabled]="!activeMarks.table">
-            <fa-icon class="mr-2" [icon]="icons.faColumns"></fa-icon>
+            <div class="fa-flip-horizontal mr-2" style="display: inline-block;"><fa-icon [icon]="icons.faLevelDownAlt"></fa-icon></div>
             <span>Add Column Before</span>
           </button>
 
           <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="insertTableColumnAfter()" matTooltip="Add Column After" [disabled]="!activeMarks.table">
-            <fa-icon class="mr-2" [icon]="icons.faColumns"></fa-icon>
+            <fa-icon class="mr-2" [icon]="icons.faLevelDownAlt"></fa-icon>
             <span>Add Column After</span>
           </button>
 
           <button class="toolbar-item" mat-menu-item [class.active]="activeMarks.table" (click)="deleteColumn()" matTooltip="Delete Column" [disabled]="!activeMarks.table">
-            <fa-icon class="mr-2" [icon]="icons.faTrash"></fa-icon>
+            <div class="fa-rotate-90 mr-2" style="display: inline-block;"><fa-icon  [icon]="icons.faMinusSquare"></fa-icon></div>
             <span>Delete Column</span>
           </button>
       </mat-menu>
