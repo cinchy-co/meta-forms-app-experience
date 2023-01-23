@@ -13,8 +13,6 @@ import {
   MatDialogRef
 } from "@angular/material/dialog";
 
-
-
 import {
   faAlignLeft,
   faBold,
@@ -34,7 +32,6 @@ import {
   faMinusSquare
 } from "@fortawesome/free-solid-svg-icons";
 
-
 import { Editor } from "@tiptap/core"
 
 import Link from "@tiptap/extension-link";
@@ -45,7 +42,6 @@ import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
-
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
 import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
 import { ResponseType } from "../../enums/response-type.enum";
@@ -55,7 +51,7 @@ import { Transaction } from "prosemirror-state";
 import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
 import { IRichTextLink } from "../../interface/rich-text-link";
 import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
-import { table } from "console";
+
 
 
 @Component({
@@ -64,6 +60,7 @@ import { table } from "console";
   styleUrls: ["./rich-text.component.scss"],
 })
 export class RichTextComponent implements OnDestroy, AfterViewInit {
+
   @Input() field: IFormField;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
@@ -111,6 +108,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     image: false,
     table: false,
     tableDelete: false
+
   };
 
   icons = {
@@ -175,7 +173,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           TableRow,
           TableHeader,
           TableCell
-
         ],
         content: content,
         editable: true,

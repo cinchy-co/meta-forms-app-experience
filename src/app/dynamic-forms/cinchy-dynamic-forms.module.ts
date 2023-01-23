@@ -42,6 +42,7 @@ import { NumberDirective } from './fields/cinchy-form-number.directive';
 import { ChildFormDirective } from './fields/cinchy-child-form.directive';
 import { CinchyDynamicFormsComponent } from './cinchy-dynamic-forms.component';
 import { RichTextComponent } from "./fields/rich-text/rich-text.component";
+import { AddRichTextImageComponent } from './dialogs/add-rich-text-image/add-rich-text-image.component';
 //#endregion
 
 //#region Pipes for the forms
@@ -69,7 +70,7 @@ import { AceEditorModule } from 'ng2-ace-editor';
 import 'ace-builds/webpack-resolver';
 import { DatePipe } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { AddRichTextImageComponent } from './dialogs/add-rich-text-image/add-rich-text-image.component';
+
 
 window['ace']['require'] = window['ace']['acequire'];
 //#endregion
@@ -154,3 +155,4 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
   bootstrap      : []
 })
 export class CinchyDynamicFormsModule {}
+

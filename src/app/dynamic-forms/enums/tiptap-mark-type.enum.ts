@@ -57,6 +57,10 @@ export enum TiptapMarkType {
    * Hotkey: ###### || mod + alt + 6
    */
   Heading6 = "HEADING_6",
+   /**
+   * Represents an Image tag.
+   */
+  Image = "IMAGE",
   /**
    * Represents an <i> tag.
    *
@@ -93,6 +97,10 @@ export enum TiptapMarkType {
    * Hotkey: ~~{text}~~
    */
   Strike = "STRIKE",
+  /**
+   * Represents an Table tag with all table operation like Add Before/After row , Add Before/After column, Delete table, column, row.
+   */
+  Table = "TABLE",
   /**
    * Default extension, required for TipTap. Enables plaintext in the field.
    */
