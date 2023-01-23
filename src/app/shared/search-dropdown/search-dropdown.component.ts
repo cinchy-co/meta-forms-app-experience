@@ -18,6 +18,9 @@ import { ILookupRecord } from "src/app/models/lookup-record.model";
 import { CinchyQueryService } from "../../services/cinchy-query.service";
 
 
+const DEFAULT_PLACEHOLDER_TEXT = "Select existing record";
+
+
 @Component({
   selector: "app-search-dropdown",
   templateUrl: "./search-dropdown.component.html",
@@ -47,8 +50,6 @@ export class SearchDropdownComponent implements OnChanges, OnInit {
   /** control for the MatSelect filter keyword */
   filterCtrl: FormControl = new FormControl();
 
-  placeholderText: string = "Select existing record";
-
 
   /**
    * Determines whether or not there are more records in the set than are being displayed by the control
@@ -56,6 +57,24 @@ export class SearchDropdownComponent implements OnChanges, OnInit {
   get hasAdditionalRecords(): boolean {
 
     return (this.items?.length > CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT);
+  }
+
+
+  /**
+   * Determines whether or not the whole list contains only a single item
+   */
+  get hasSingleRecord(): boolean {
+
+    return (this.items.length === 1 && !this.filterCtrl.value);
+  }
+
+
+  /**
+   * If there is only one record to display, we want to show that record's label instead of generic text
+   */
+  get placeholderText(): string {
+
+    return (this.hasSingleRecord ? this.items[0].label : DEFAULT_PLACEHOLDER_TEXT);
   }
 
 
@@ -75,6 +94,13 @@ export class SearchDropdownComponent implements OnChanges, OnInit {
 
     if (changes.items) {
       this.setDisplayItems();
+
+      if (this.hasSingleRecord) {
+        this.selectCtrl.disable();
+      }
+      else {
+        this.selectCtrl.enable();
+      }
     }
   }
 
