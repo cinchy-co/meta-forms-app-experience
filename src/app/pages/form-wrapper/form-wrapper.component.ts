@@ -55,9 +55,14 @@ export class FormWrapperComponent implements OnInit {
 
   handleOnLookupRecordFilter(filter: string): void {
 
-    const resolvedFilter = (filter ? `CAST([${this.formMetadata.subTitleColumn}] as nvarchar) LIKE '%${filter}%'` : null);
+    let resolvedFilter = (filter ? `CAST([${this.formMetadata.subTitleColumn}] as nvarchar) LIKE '%${filter}%'` : null);
 
-    this.loadLookupRecords(this.formMetadata, resolvedFilter);
+    // Ensure that if there is a default filter on the field, it is not lost
+    if (resolvedFilter && this.formMetadata.lookupFilter) {
+      resolvedFilter += ` AND ${this.formMetadata.lookupFilter}`;
+    }
+
+    this.loadLookupRecords(this.formMetadata, resolvedFilter ?? this.formMetadata.lookupFilter);
   }
 
 
