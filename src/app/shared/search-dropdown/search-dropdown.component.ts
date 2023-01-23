@@ -1,145 +1,131 @@
+import { debounceTime, take, takeUntil } from "rxjs/operators";
+
 import {
-  AfterViewInit,
-  ChangeDetectorRef,
   Component,
   EventEmitter,
-  forwardRef,
   Input,
-  OnDestroy,
+  OnChanges,
   OnInit,
   Output,
+  SimpleChanges,
   ViewChild
-} from '@angular/core';
-import {FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
-import {MatSelect} from '@angular/material/select';
-import {ReplaySubject, Subject} from 'rxjs';
-import {take, takeUntil} from 'rxjs/operators';
-import { ILookupRecord } from 'src/app/models/lookup-record.model';
+} from "@angular/core";
+import { FormControl } from "@angular/forms";
+import { MatSelect } from "@angular/material/select";
+
+import { ILookupRecord } from "src/app/models/lookup-record.model";
+
+import { CinchyQueryService } from "../../services/cinchy-query.service";
 
 
 @Component({
-  selector: 'app-search-dropdown',
-  templateUrl: './search-dropdown.component.html',
-  styleUrls: ['./search-dropdown.component.scss']
+  selector: "app-search-dropdown",
+  templateUrl: "./search-dropdown.component.html",
+  styleUrls: ["./search-dropdown.component.scss"]
 })
-export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() fullList: ILookupRecord[];
+export class SearchDropdownComponent implements OnChanges, OnInit {
+
+  @Input() items: Array<ILookupRecord>;
 
   @Input() set selectedOption(value) {
-    this.setSelectedOption(value);
-    // set initial selection
-    
-    // this.moveSelectedItemToTop(value);
+
+    this.selectCtrl.setValue(value);
   };
-
-  /** list of list */
-  list: ILookupRecord[];
-  /** control for the selected bank */
-  public selectCtrl: FormControl = new FormControl();
-
-  /** control for the MatSelect filter keyword */
-  public filterCtrl: FormControl = new FormControl();
-
-  /** list of list filtered by search keyword */
-  public filteredlist: ReplaySubject<any[]> = new ReplaySubject<any[]>(1);
-
-  @ViewChild('singleSelect', {static: true}) singleSelect: MatSelect;
 
   @Output() dropdownClicked: EventEmitter<any> = new EventEmitter();
 
-  /** Subject that emits when the component has been destroyed. */
-  protected _onDestroy = new Subject<void>();
+  /** Fires whenever a filter value resolves */
+  @Output() onFilter: EventEmitter<string> = new EventEmitter<string>();
 
-  selectedOptionVal: any;
-  maxSize = 3000;
-  public placeHolderText: string = 'Select existing record';
+  @ViewChild("singleSelect", { static: true }) singleSelect: MatSelect;
 
-  constructor(private _cdr: ChangeDetectorRef) {
-  }
+  displayItems: Array<ILookupRecord>;
 
-  ngOnInit() {
-    this.list = this.fullList;
+  /** control for the selected bank */
+  selectCtrl: FormControl = new FormControl();
 
-    if (this.list && this.list.length == 1 && this.list[0].id == -1){
-      this.placeHolderText = this.list[0].label;
-      this.fullList = this.list = [];
-    }
-    // load the initial bank list
-    this.filteredlist.next(this.list.slice());
+  /** control for the MatSelect filter keyword */
+  filterCtrl: FormControl = new FormControl();
 
-    // listen for search field value changes
-    this.filterCtrl.valueChanges
-      .pipe(takeUntil(this._onDestroy))
-      .subscribe(() => {
-        this.filterlist();
-      });
-  }
+  placeholderText: string = "Select existing record";
 
-  setSelectedOption(value) {
-    this.selectCtrl.setValue(value);
-    this.selectedOptionVal = value;
-  }
-
-  resetDropdown() {
-    this.list = this.fullList;
-    this.moveSelectedItemToTop(this.selectedOptionVal);
-    this.setInitialValue();
-  }
-
-  ngAfterViewInit() {
-    this.resetDropdown();
-  }
-
-  optionSelected(option) {
-    this.dropdownClicked.emit(option.value);
-  }
-
-  ngOnDestroy() {
-    this._onDestroy.next();
-    this._onDestroy.complete();
-  }
 
   /**
-   * Sets the initial value after the filteredlist are loaded initially
+   * Determines whether or not there are more records in the set than are being displayed by the control
    */
-  protected setInitialValue() {
-    this.filteredlist
-      .pipe(take(1), takeUntil(this._onDestroy))
+  get hasAdditionalRecords(): boolean {
+
+    return (this.items?.length > CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT);
+  }
+
+
+  /**
+   * Returns true is the item list only contains the placeholder item for an empty result
+   */
+  get noRecordsAfterFilter(): boolean {
+
+    return (this.items?.length === 1 && this.items[0].id === -1);
+  }
+
+
+  constructor() {}
+
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes.items) {
+      this.setDisplayItems();
+    }
+  }
+
+
+  ngOnInit() {
+
+    // listen for search field value changes
+    this.filterCtrl.valueChanges.pipe(
+        debounceTime(500)
+      )
       .subscribe(() => {
-        this.singleSelect.compareWith = (a: any, b: any) => a && b && a.id === b.id;
+
+        this.onFilter.emit(this.filterCtrl.value);
       });
   }
 
-  protected filterlist() {
-    if (!this.list) {
-      return;
+
+  /**
+   * Sets up the set of options to be displayed
+   */
+  setDisplayItems() {
+
+    let displayItems = this.selectCtrl.value ? [this.selectCtrl.value] : [];
+
+    if (this.items) {
+      const resolvedItems = this.hasAdditionalRecords ? this.items.slice(0, CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT) : this.items;
+
+      displayItems = displayItems.concat(resolvedItems.filter((item: ILookupRecord) => {
+
+        return (item.id !== this.selectCtrl.value?.id);
+      }));
     }
-    // get the search keyword
-    let search = this.filterCtrl.value;
-    if (!search) {
-      this.filteredlist.next(this.list.slice());
-      return;
-    } else {
-      search = search.toLowerCase();
-    }
-    // filter the list
-    this.filteredlist.next(
-      this.list.filter(item => item.label ? item.label.toLowerCase().indexOf(search) > -1 : null)
-    );
+
+    this.displayItems = displayItems.slice();
   }
 
-  moveSelectedItemToTop(selectedItem) {
-    if(selectedItem && this.list?.length && this.list?.length) {// > this.maxSize){
-      let itemInList = this.list.find(item => item.id === selectedItem.id);
-      if (itemInList == null) {
-        itemInList = selectedItem;
-      }
-      this.list = this.list.filter(item => item.id !== selectedItem.id);
-      this.list.unshift(itemInList);
-      setTimeout(() => {
-        this.filteredlist.next(this.list.slice());
-      }, 0);
-    }
+
+  /**
+   * Resets the dropdown to its default state
+   */
+  resetDropdown() {
+
+    this.filterCtrl.setValue(undefined);
+    this.optionSelected(undefined);
   }
 
+
+  optionSelected(option) {
+
+    this.setDisplayItems();
+
+    this.dropdownClicked.emit(option?.value);
+  }
 }

@@ -1,12 +1,16 @@
-import { Injectable, Inject } from '@angular/core';
-import { CinchyService } from '@cinchy-co/angular-sdk';
 import { Observable, of, throwError } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
-import { IFormMetadata } from '../models/form-metadata-model';
+
+import { Injectable, Inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+import { CinchyService } from '@cinchy-co/angular-sdk';
+
 import { IFormFieldMetadata } from '../models/form-field-metadata.model';
+import { IFormMetadata } from '../models/form-metadata-model';
 import { IFormSectionMetadata } from '../models/form-section-metadata.model';
 import { ILookupRecord } from '../models/lookup-record.model';
+
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +23,14 @@ export class CinchyQueryService {
   private _formSectionsMetadataCache: { [formId: string] : IFormSectionMetadata[] } = {};
   private _formFieldsMetadataCache: { [formId: string] : IFormFieldMetadata[] } = {};
 
+  /**
+   * Search is limited to the first N records per CIN-02737.
+   */
+  public static readonly LOOKUP_RECORD_LABEL_COUNT = 100;
+
+
   constructor(private cincyService: CinchyService, private httpClient: HttpClient) { }
+
 
   getFormMetadata(formId?: string | number): Observable<IFormMetadata> {
     const id = formId ? formId : sessionStorage.getItem('formId');
@@ -47,6 +58,7 @@ export class CinchyQueryService {
     );
   }
 
+
   getFormSections(formId?: string | number): Observable<IFormSectionMetadata[]> {
     const id = formId ? formId : sessionStorage.getItem('formId');
     if (this._formSectionsMetadataCache[id])
@@ -71,6 +83,7 @@ export class CinchyQueryService {
       })
     );
   }
+
 
   getFormFieldsMetadata(formId?: string | number): Observable<IFormFieldMetadata[]> {
     const id = formId ? formId : sessionStorage.getItem('formId');
@@ -97,23 +110,32 @@ export class CinchyQueryService {
     );
   }
 
-  getLookupRecords(subtitleColumn, domain, table, lookupFilter?): Observable<ILookupRecord[]> {
+
+  getLookupRecords(subtitleColumn: string, domain: string, table: string, lookupFilter?: string, limitResults?: boolean): Observable<ILookupRecord[]> {
+
+    const selectStatement = limitResults ? `SELECT TOP ${CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT + 1}` : `SELECT`;
+    // If more than LOOKUP_RECORD_LABEL_COUNT records are retrieved, we know to indicate that additional records are available for the given filter.
     const query = `
-      SELECT 
+      ${selectStatement}
         [Cinchy Id]         as 'id',
         [${subtitleColumn}] as 'label'
       FROM [${domain}].[${table}]
       WHERE [Deleted] IS NULL ${lookupFilter ? `AND ${lookupFilter}` : ''};`;
+
     return this.cincyService.executeCsql(query, null).pipe(
       map(response => {
-        return <ILookupRecord[]> response?.queryResult?.toObjectArray();
+
+        return <ILookupRecord[]>response?.queryResult?.toObjectArray();
       }),
       catchError(error => {
+
         console.error("Error fetching lookup records:", error);
+
         return throwError(error);
       })
     );
   }
+
 
   uploadFiles(files: File[], uploadUrl: string): Observable<any> {
     if (files && uploadUrl) {
@@ -129,6 +151,7 @@ export class CinchyQueryService {
     }
     return null;
   }
+
 
   getFilesInCell(columnName: string, domainName: string, tableName: string, cinchyId: number): Observable<{ fileId: number, fileName: string }[]> {
     const query = `SELECT [${columnName}].[Cinchy Id] as 'fileIds', [${columnName}].[File Name] as 'fileNames'  FROM [${domainName}].[${tableName}] WHERE [Cinchy Id]=${cinchyId}`;
@@ -147,6 +170,7 @@ export class CinchyQueryService {
       }
     ));
   }
+
 
   updateFilesInCell(fileIds: number[], columnName: string, domainName: string, tableName: string, cinchyId: number): Observable<any> {
     const ids = fileIds.length > 0 ? fileIds?.join(',1,') + ',1' : '';

@@ -41,14 +41,25 @@ export class FormWrapperComponent implements OnInit {
     this.mobileQuery.addListener(this.mobileQueryListener);
   }
 
+
   async ngOnInit() {
     await this.loadFormMetadata();
+
     let { formId, rowId } = this.activatedRoute.snapshot.queryParams;
-    console.log('From session', sessionStorage.getItem('formId'), sessionStorage.getItem('rowId'));
+
     this.formId = formId || this.appStateService.formId || sessionStorage.getItem('formId');
     this.rowId = rowId || this.appStateService.rowId || sessionStorage.getItem('rowId');
     this.appStateService.setRecordSelected(this.rowId);
   }
+
+
+  handleOnLookupRecordFilter(filter: string): void {
+
+    const resolvedFilter = (filter ? `CAST([${this.formMetadata.subTitleColumn}] as nvarchar) LIKE '%${filter}%'` : null);
+
+    this.loadLookupRecords(this.formMetadata, resolvedFilter);
+  }
+
 
   async loadFormMetadata() {
     try {
@@ -64,6 +75,7 @@ export class FormWrapperComponent implements OnInit {
     }
   }
 
+
   async loadFormSections() {
     try {
       const formSections = await this.cinchyQueryService.getFormSections().toPromise();
@@ -78,25 +90,44 @@ export class FormWrapperComponent implements OnInit {
     await this.spinner.hide();
   }
 
-  async loadLookupRecords(formMetadata: IFormMetadata): Promise<void> {
-    if (formMetadata?.subTitleColumn == null)
-      return;
 
-    await this.cinchyQueryService.getLookupRecords(formMetadata.subTitleColumn, formMetadata.domainName, formMetadata.tableName, formMetadata.lookupFilter)
-      .subscribe(response => {
+  async loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): Promise<void> {
+
+    if (formMetadata?.subTitleColumn == null) {
+      return;
+    }
+
+    await this.cinchyQueryService.getLookupRecords(
+      formMetadata.subTitleColumn,
+      formMetadata.domainName,
+      formMetadata.tableName,
+      filter ?? formMetadata.lookupFilter,
+      limitResults
+    ).subscribe(
+      response => {
+
         this.lookupRecords = response;
-      }, (e => {
+      },
+      e => {
+
         this.showError('Error getting lookup records', e);
-      }));
+      }
+    );
   }
 
+
   private showError(message: string, error: any) {
+
     this.spinner.hide();
+
     console.error(message, error);
+
     this.toastr.error('Could not fetch the form\'s metadata. You may not have the necessary entitlements to view this form.', 'Error');
   }
 
+
   onSaved(data) {
+
     this.loadLookupRecords(this.formMetadata);
   }
 }

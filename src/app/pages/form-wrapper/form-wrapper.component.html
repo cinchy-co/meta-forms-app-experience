@@ -13,7 +13,6 @@
     </mat-drawer>
 
     <ng-container *ngTemplateOutlet="mainContent"></ng-container>
-
   </mat-drawer-container>
 
   <mat-sidenav-container *ngIf="mobileQuery.matches" class="sidenav-container"
@@ -45,7 +44,8 @@
                             [formMetadata]="formMetadata"
                             [formSectionsMetadata]="formSectionsMetadata"
                             [lookupRecords]="lookupRecords"
-                            (eventHandler)="onSaved($event)">
+                            (eventHandler)="onSaved($event)"
+                            (onLookupRecordFilter)="handleOnLookupRecordFilter($event)">
       </cinchy-dynamic-forms>
     </div>
   </ng-template>
