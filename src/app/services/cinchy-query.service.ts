@@ -121,7 +121,8 @@ export class CinchyQueryService {
         [Cinchy Id]         as 'id',
         [${subtitleColumn}] as 'label'
       FROM [${domain}].[${table}]
-      WHERE [Deleted] IS NULL ${lookupFilter ? `AND ${lookupFilter}` : ''};`;
+      WHERE [Deleted] IS NULL ${lookupFilter ? `AND ${lookupFilter}` : ''}
+      ORDER BY [${subtitleColumn}];`;
 
     return this.cincyService.executeCsql(query, null).pipe(
       map(response => {
