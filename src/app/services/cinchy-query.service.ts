@@ -26,7 +26,7 @@ export class CinchyQueryService {
   /**
    * Search is limited to the first N records per CIN-02737.
    */
-  public static readonly LOOKUP_RECORD_LABEL_COUNT = 100;
+  public static readonly LOOKUP_RECORD_LABEL_COUNT = 10;
 
 
   constructor(private cincyService: CinchyService, private httpClient: HttpClient) { }

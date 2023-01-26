@@ -55,7 +55,7 @@ export class FormWrapperComponent implements OnInit {
 
   handleOnLookupRecordFilter(filter: string): void {
 
-    let resolvedFilter = (filter ? `CAST([${this.formMetadata.subTitleColumn}] as nvarchar) LIKE '%${filter}%'` : null);
+    let resolvedFilter = (filter ? `LOWER(CAST([${this.formMetadata.subTitleColumn}] as nvarchar)) LIKE LOWER('%${filter}%')` : null);
 
     // Ensure that if there is a default filter on the field, it is not lost
     if (resolvedFilter && this.formMetadata.lookupFilter) {
@@ -70,10 +70,9 @@ export class FormWrapperComponent implements OnInit {
     try {
       this.spinner.show();
       const formMetadata = await this.cinchyQueryService.getFormMetadata().toPromise();
-      this.formMetadata =
-        this.appStateService.formMetadata = formMetadata;
+      this.formMetadata = this.appStateService.formMetadata = formMetadata;
 
-      await this.loadLookupRecords(formMetadata);
+      this.lookupRecords = [];
       this.loadFormSections();
     } catch (e) {
       this.showError('Error getting form metadata', e);

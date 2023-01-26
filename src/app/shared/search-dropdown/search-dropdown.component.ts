@@ -1,11 +1,14 @@
-import { debounceTime, take, takeUntil } from "rxjs/operators";
+import {
+  debounceTime,
+  distinctUntilChanged
+} from "rxjs/operators";
 
 import {
+  AfterViewInit,
   Component,
   EventEmitter,
   Input,
   OnChanges,
-  OnInit,
   Output,
   SimpleChanges,
   ViewChild
@@ -26,7 +29,7 @@ const DEFAULT_PLACEHOLDER_TEXT = "Select existing record";
   templateUrl: "./search-dropdown.component.html",
   styleUrls: ["./search-dropdown.component.scss"]
 })
-export class SearchDropdownComponent implements OnChanges, OnInit {
+export class SearchDropdownComponent implements AfterViewInit, OnChanges {
 
   @Input() items: Array<ILookupRecord>;
 
@@ -90,6 +93,23 @@ export class SearchDropdownComponent implements OnChanges, OnInit {
   constructor() {}
 
 
+  ngAfterViewInit() {
+
+    // listen for search field value changes
+    this.filterCtrl.valueChanges.pipe(
+      debounceTime(500),
+      distinctUntilChanged()
+    )
+    .subscribe(() => {
+
+      this.onFilter.emit(this.filterCtrl.value);
+    });
+
+    // Only fetch the first batch of records after the component has initialized
+    this.onFilter.emit(this.filterCtrl.value);
+  }
+
+
   ngOnChanges(changes: SimpleChanges): void {
 
     if (changes.items) {
@@ -102,19 +122,6 @@ export class SearchDropdownComponent implements OnChanges, OnInit {
         this.selectCtrl.enable();
       }
     }
-  }
-
-
-  ngOnInit() {
-
-    // listen for search field value changes
-    this.filterCtrl.valueChanges.pipe(
-        debounceTime(500)
-      )
-      .subscribe(() => {
-
-        this.onFilter.emit(this.filterCtrl.value);
-      });
   }
 
 
