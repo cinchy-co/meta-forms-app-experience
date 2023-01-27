@@ -98,7 +98,7 @@ export enum TiptapMarkType {
    */
   Strike = "STRIKE",
   /**
-   * Represents an Table tag with all table operation like Add Before/After row , Add Before/After column, Delete table, column, row.
+   * Represents a Table tag with all table operations like Add Before/After row , Add Before/After column, Delete table, column, row.
    */
   Table = "TABLE",
   /**

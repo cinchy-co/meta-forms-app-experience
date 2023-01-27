@@ -108,7 +108,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     image: false,
     table: false,
     tableDelete: false
-
   };
 
   icons = {
