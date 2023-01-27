@@ -141,7 +141,6 @@ export class ChildFormDirective {
       this.cinchyID = 0;
     } else {
       this.cinchyID = obj['Cinchy ID'];
-      if(this.cinchyID) this._ChildFormData.childFormData.rowId = this.cinchyID;
     }
     this.data = this._ChildFormData;
   }
