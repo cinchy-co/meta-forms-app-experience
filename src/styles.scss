@@ -349,3 +349,9 @@ app-search-dropdown {
   max-width: 250;
   text-align: left;
  }
+
+ .ProseMirror {
+  li p {
+    margin-bottom: 0;
+  }
+ }
