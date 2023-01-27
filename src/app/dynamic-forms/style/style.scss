@@ -480,12 +480,8 @@ button.btnSave.mat-raised-button {
   }
 }
 
-.multi-search{
-  .mat-select-search-input{
-    margin-left: 5px;
-    border: none;
-    outline: none;
-  }
+.mat-select-panel {
+    max-width: 100% !important;
 }
 
 .date-icon{
@@ -538,6 +534,12 @@ width: 2rem !important;
 .svg-inline--fa{
   color: dimgray;
   font: normal normal normal 14px/1 FontAwesome;
+}
+
+.fix-width-470 {
+    max-width: min(502px, 100%) !important;
+    min-width: min(502px, 100%) !important;
+    width: min(502px, 100%) !important;
 }
 
 

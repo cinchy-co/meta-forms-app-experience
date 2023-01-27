@@ -255,33 +255,11 @@ app-fields-wrapper {
 .is-loading {
   margin-top: -10px;
   text-align: left;
-
-  .mat-progress-spinner {
-    //   display: inline;
-  }
-}
-
-.mat-drawer-content {
-  // height: 100vh !important;
 }
 
 .checkbox-field {
   display: inline-flex;
   align-items: center;
-}
-
-.dropdown-list {
-  // position: relative !important;
-}
-
-app-search-dropdown {
-  .mat-select-search-inner {
-    width: 487px !important;
-  }
-
-  .mat-form-field-wrapper {
-    width: 470px !important;
-  }
 }
 
 .float-right {

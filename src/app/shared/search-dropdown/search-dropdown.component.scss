@@ -1,24 +1,7 @@
-:host ::ng-deep .mat-form-field-infix {
-  display: block;
-  position: relative;
-  flex: auto;
-  min-width: 0;
-  width: 250px;
+:host ::ng-deep .mat-select-arrow-wrapper {
+    display: none;
 }
 
-.example-viewport {
-  height: 200px;
-
-  .example-item-detail {
-    height: 40px !important;
-  }
-}
-
-.example-alternate {
-  background: rgba(127, 127, 127, 0.3);
-}
-
-.manual-selected {
-  margin-top: 20px;
-  position: absolute;
+mat-form-field {
+    width: 470px;
 }

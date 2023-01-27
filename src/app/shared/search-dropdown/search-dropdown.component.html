@@ -1,6 +1,6 @@
-<mat-form-field>
+<mat-form-field class="form-control search-dropdown">
   <mat-label>Search Records</mat-label>
-  <mat-select [formControl]="selectCtrl" #singleSelect (selectionChange)="optionSelected($event)">
+  <mat-select [formControl]="selectCtrl" #singleSelect (selectionChange)="optionSelected($event)" panelClass="fix-width-470">
     <mat-option>
       <ngx-mat-select-search [formControl]="filterCtrl"
         placeholderLabel="Search..."
