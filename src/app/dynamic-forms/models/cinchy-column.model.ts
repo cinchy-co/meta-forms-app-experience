@@ -12,6 +12,7 @@ export interface ICinchyColumn {
   linkTargetColumnId: number;
   LinkTargetTableId: number;
   linkTargetTableName: string;
+  linkTableDomainName: string
   linkTargetColumnName: string;
   isMultiple: boolean;
   validationExpression: string;
@@ -61,6 +62,7 @@ export class CinchyColumn implements ICinchyColumn {
     public createlinkOptionName: string,
     public LinkTargetTableId: number,
     public linkTargetTableName: string,
+    public linkTableDomainName: string,
     public DeviationSeverityColor: string,
     public choiceOptions: string,
     public FormFieldsJsonData,
