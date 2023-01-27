@@ -16,12 +16,11 @@ import {
 import { FormControl } from "@angular/forms";
 import { MatSelect } from "@angular/material/select";
 
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
+
 import { ILookupRecord } from "src/app/models/lookup-record.model";
 
 import { CinchyQueryService } from "../../services/cinchy-query.service";
-
-
-const DEFAULT_PLACEHOLDER_TEXT = "Select existing record";
 
 
 @Component({
@@ -54,6 +53,9 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
   filterCtrl: FormControl = new FormControl();
 
 
+  faSearch = faSearch;
+
+
   /**
    * Determines whether or not there are more records in the set than are being displayed by the control
    */
@@ -69,15 +71,6 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
   get hasSingleRecord(): boolean {
 
     return (this.items.length === 1 && !this.filterCtrl.value);
-  }
-
-
-  /**
-   * If there is only one record to display, we want to show that record's label instead of generic text
-   */
-  get placeholderText(): string {
-
-    return (this.hasSingleRecord ? this.items[0].label : DEFAULT_PLACEHOLDER_TEXT);
   }
 
 
@@ -114,13 +107,6 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
 
     if (changes.items) {
       this.setDisplayItems();
-
-      if (this.hasSingleRecord) {
-        this.selectCtrl.disable();
-      }
-      else {
-        this.selectCtrl.enable();
-      }
     }
   }
 
@@ -151,6 +137,7 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
   resetDropdown() {
 
     this.filterCtrl.setValue(undefined);
+    this.selectCtrl.setValue(undefined);
     this.optionSelected(undefined);
   }
 

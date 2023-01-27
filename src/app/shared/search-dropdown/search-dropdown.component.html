@@ -1,5 +1,6 @@
 <mat-form-field>
-  <mat-select placeholder={{placeholderText}} [formControl]="selectCtrl" #singleSelect (selectionChange)="optionSelected($event)">
+  <mat-label>Search Records</mat-label>
+  <mat-select [formControl]="selectCtrl" #singleSelect (selectionChange)="optionSelected($event)">
     <mat-option>
       <ngx-mat-select-search [formControl]="filterCtrl"
         placeholderLabel="Search..."
@@ -13,4 +14,7 @@
       Refine your search to see other options
     </mat-option>
   </mat-select>
+  <div matSuffix>
+    <fa-icon [icon]="faSearch"></fa-icon>
+  </div>
 </mat-form-field>

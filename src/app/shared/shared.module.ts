@@ -1,25 +1,31 @@
-import {BrowserModule} from '@angular/platform-browser';
-import {NgModule} from '@angular/core';
-import {RouterModule} from '@angular/router';
-import {TypeaheadComponent} from './typeahead/typeahead.component';
-import {CustomMaterialModule} from '../custom-material.module';
-import {ReactiveFormsModule} from '@angular/forms';
-import {NgxMatSelectSearchModule} from 'ngx-mat-select-search';
-import {SearchDropdownComponent} from './search-dropdown/search-dropdown.component';
-import {ScrollingModule} from '@angular/cdk/scrolling';
+import { NgModule } from "@angular/core";
+import { ScrollingModule } from "@angular/cdk/scrolling";
+import { ReactiveFormsModule } from "@angular/forms";
+import { BrowserModule } from "@angular/platform-browser";
+import { RouterModule } from "@angular/router";
+
+import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
+
+import { NgxMatSelectSearchModule } from "ngx-mat-select-search";
+
+import { CustomMaterialModule } from "../custom-material.module";
+
+import { SearchDropdownComponent } from "./search-dropdown/search-dropdown.component";
+import { TypeaheadComponent } from "./typeahead/typeahead.component";
 
 
 @NgModule({
   declarations: [
-    TypeaheadComponent,
-    SearchDropdownComponent
+    SearchDropdownComponent,
+    TypeaheadComponent
   ],
   imports: [
     BrowserModule, // Used for async pipes
-    RouterModule,
     CustomMaterialModule,
-    ReactiveFormsModule,
     NgxMatSelectSearchModule,
+    FontAwesomeModule,
+    ReactiveFormsModule,
+    RouterModule,
     ScrollingModule
   ],
   exports: [
