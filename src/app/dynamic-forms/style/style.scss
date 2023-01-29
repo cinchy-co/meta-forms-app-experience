@@ -522,7 +522,7 @@ button.btnSave.mat-raised-button {
 
 .mat-form-field-appearance-legacy .mat-form-field-prefix .mat-datepicker-toggle-default-icon,
 .mat-form-field-appearance-legacy .mat-form-field-suffix .mat-datepicker-toggle-default-icon {
-width: 2rem !important;
+  width: 2rem !important;
 }
 
 .mat-form-field-prefix .mat-icon-button,
@@ -536,13 +536,13 @@ width: 2rem !important;
   font: normal normal normal 14px/1 FontAwesome;
 }
 
-.fix-width-470 {
-    max-width: min(502px, 100%) !important;
-    min-width: min(502px, 100%) !important;
-    width: min(502px, 100%) !important;
+@media (min-width: 502px) {
+  .fix-width-470 {
+    max-width: calc(470px + 32px) !important;
+    min-width: calc(470px + 32px) !important;
+    width: calc(470px + 32px) !important;
+  }
 }
-
-
 
 .ProseMirror-focused {
   outline: none !important;
