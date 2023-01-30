@@ -21,6 +21,19 @@
   <ng-container *ngIf="canEdit">
     <div class="rich-text-wrapper form-control">
       <div class="toolbar">
+        <select class="toolbar-item" (change)="toggleMark($event.target.value)">
+          <option [value]="tiptapMarkType.Paragraph">Paragraph</option>
+          <option [selected]="activeMarks.heading1" [value]="tiptapMarkType.Heading1" >Heading 1</option>
+          <option [selected]="activeMarks.heading2" [value]="tiptapMarkType.Heading2">Heading 2</option>
+          <option [selected]="activeMarks.heading3" [value]="tiptapMarkType.Heading3">Heading 3</option>
+          <option [selected]="activeMarks.heading4" [value]="tiptapMarkType.Heading4">Heading 4</option>
+          <option [selected]="activeMarks.heading5" [value]="tiptapMarkType.Heading5">Heading 5</option>
+        </select>
+
+        <span class="toolbar-divider">
+          |
+        </span>
+
         <button class="toolbar-item" [class.active]="activeMarks.bold" (click)="toggleMark(tiptapMarkType.Bold)" matTooltip="Bold">
           <fa-icon [icon]="icons.faBold"></fa-icon>
         </button>
@@ -51,30 +64,6 @@
 
         <button class="toolbar-item" [class.active]="activeMarks.listOrdered" (click)="toggleMark(tiptapMarkType.ListOrdered)" matTooltip="Ordered List">
           <fa-icon [icon]="icons.faListOl"></fa-icon>
-        </button>
-
-        <span class="toolbar-divider">
-          |
-        </span>
-
-        <button class="toolbar-item" [class.active]="activeMarks.heading1" (click)="toggleMark(tiptapMarkType.Heading1)" matTooltip="Heading 1">
-          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>1</sub>
-        </button>
-
-        <button class="toolbar-item" [class.active]="activeMarks.heading2" (click)="toggleMark(tiptapMarkType.Heading2)" matTooltip="Heading 2">
-          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>2</sub>
-        </button>
-
-        <button class="toolbar-item" [class.active]="activeMarks.heading3" (click)="toggleMark(tiptapMarkType.Heading3)" matTooltip="Heading 3">
-          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>3</sub>
-        </button>
-
-        <button class="toolbar-item" [class.active]="activeMarks.heading4" (click)="toggleMark(tiptapMarkType.Heading4)" matTooltip="Heading 4">
-          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>4</sub>
-        </button>
-
-        <button class="toolbar-item" [class.active]="activeMarks.heading5" (click)="toggleMark(tiptapMarkType.Heading5)" matTooltip="Heading 5">
-          <fa-icon [icon]="icons.faHeading"></fa-icon><sub>5</sub>
         </button>
 
         <span class="toolbar-divider">

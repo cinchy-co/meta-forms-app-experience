@@ -29,7 +29,7 @@ import {
 import { Editor } from "@tiptap/core"
 
 import Link from "@tiptap/extension-link";
-import StarterKit from "@tiptap/starter-kit"
+import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
@@ -80,6 +80,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   activeMarks = {
     bold: false,
     code: false,
+    paragraph: false,
     heading1: false,
     heading2: false,
     heading3: false,
@@ -214,6 +215,9 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
       case TiptapMarkType.Code:
         this.editor?.commands.toggleCode();
 
+        break;
+      case TiptapMarkType.Paragraph:
+        this.editor?.commands.setParagraph();
         break;
       case TiptapMarkType.Heading1:
         this.editor?.commands.toggleHeading({ level: 1});
