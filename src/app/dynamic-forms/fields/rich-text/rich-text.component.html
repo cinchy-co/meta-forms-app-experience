@@ -62,6 +62,10 @@
           <fa-icon [icon]="icons.faListOl"></fa-icon>
         </button>
 
+        <button class="toolbar-item" [class.active]="activeMarks.listTask" (click)="toggleMark(tiptapMarkType.ListTask)" matTooltip="Task List {{ '\n' + ctrlLabel }} + Shift + 9" matTooltipClass="tooltip-newline">
+          <fa-icon [icon]="icons.faTasks"></fa-icon>
+        </button>
+
         <span class="toolbar-divider">
           |
         </span>

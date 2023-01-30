@@ -92,7 +92,13 @@ export enum TiptapMarkType {
    */
   ListUnordered = "BULLET_LIST",
   /**
-   * Automatically inserts a <p> tag when doing a soft line breat
+   * Represents a <ul data-type="taskList">
+   * 
+   * Hotkey: Type [ ] or [x] at the beginning of a new line
+   */
+  ListTask = "TASK_LIST",
+  /**
+   * Automatically inserts a <p> tag when doing a soft line break
    */
   Paragraph = "PARAGRAPH",
   /**

@@ -23,14 +23,18 @@ import {
   faListOl,
   faListUl,
   faStrikethrough,
+  faTasks,
   faUnderline
 } from "@fortawesome/free-solid-svg-icons";
 
-import { Editor } from "@tiptap/core"
+import { Editor } from "@tiptap/core";
 
 import Link from "@tiptap/extension-link";
-import StarterKit from "@tiptap/starter-kit";
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
 import Underline from "@tiptap/extension-underline";
+import StarterKit from "@tiptap/starter-kit";
+
 
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
 import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
@@ -89,6 +93,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     link: false,
     listOrdered: false,
     listUnordered: false,
+    listTask: false,
     strike: false,
     underline: false
   };
@@ -113,6 +118,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     faListOl: faListOl,
     faListUl: faListUl,
     faStrikethrough: faStrikethrough,
+    faTasks: faTasks,
     faUnderline: faUnderline
   };
 
@@ -149,13 +155,15 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
       this.editor = new Editor({
         element: this.richTextElement?.nativeElement,
         extensions: [
-          StarterKit.configure({
-            heading: { levels: [1, 2, 3, 4, 5]},
-          }),
           Link.extend({
             inclusive: false
           }),
-          Underline
+          StarterKit.configure({
+            heading: { levels: [1, 2, 3, 4, 5]},
+          }),
+          TaskList,
+          TaskItem,
+          Underline,
         ],
         content: content,
         editable: true,
@@ -179,6 +187,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           this.activeMarks.link = this.editor?.isActive("link");
           this.activeMarks.listOrdered = this.editor?.isActive("orderedList");
           this.activeMarks.listUnordered = this.editor?.isActive("bulletList");
+          this.activeMarks.listTask = this.editor?.isActive("taskList");
           this.activeMarks.strike = this.editor?.isActive("strike");
           this.activeMarks.underline = this.editor?.isActive("underline");
         },
@@ -265,6 +274,10 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
         break;
       case TiptapMarkType.ListUnordered:
         this.editor?.commands.toggleBulletList();
+
+        break;
+      case TiptapMarkType.ListTask:
+        this.editor?.commands.toggleTaskList();
 
         break;
       case TiptapMarkType.Strike:
