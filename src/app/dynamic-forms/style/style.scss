@@ -538,6 +538,7 @@ button.btnSave.mat-raised-button {
 
 @media (min-width: 502px) {
   .fix-width-470 {
+      max-height: 100% !important;
     max-width: calc(470px + 32px) !important;
     min-width: calc(470px + 32px) !important;
     width: calc(470px + 32px) !important;
