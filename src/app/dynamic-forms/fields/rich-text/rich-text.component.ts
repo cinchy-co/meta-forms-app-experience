@@ -80,12 +80,11 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   activeMarks = {
     bold: false,
     code: false,
-    paragraph: false,
-    heading1: false,
-    heading2: false,
-    heading3: false,
-    heading4: false,
-    heading5: false,
+    Heading1: false,
+    Heading2: false,
+    Heading3: false,
+    Heading4: false,
+    Heading5: false,
     italic: false,
     link: false,
     listOrdered: false,
@@ -108,6 +107,14 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   };
 
   tiptapMarkType = TiptapMarkType;
+
+  headings = [
+    { name: "Heading 1", value: "Heading1"},
+    { name: "Heading 2", value: "Heading2"},
+    { name: "Heading 3", value: "Heading3"},
+    { name: "Heading 4", value: "Heading4"},
+    { name: "Heading 5", value: "Heading5"},
+  ]
 
 
   /**
@@ -158,11 +165,11 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
           this.activeMarks.bold = this.editor?.isActive("bold");
           this.activeMarks.code = this.editor?.isActive("code");
-          this.activeMarks.heading1 = this.editor?.isActive("heading", { level: 1 });
-          this.activeMarks.heading2 = this.editor?.isActive("heading", { level: 2 });
-          this.activeMarks.heading3 = this.editor?.isActive("heading", { level: 3 });
-          this.activeMarks.heading4 = this.editor?.isActive("heading", { level: 4 });
-          this.activeMarks.heading5 = this.editor?.isActive("heading", { level: 5 });
+          this.activeMarks.Heading1 = this.editor?.isActive("heading", { level: 1 });
+          this.activeMarks.Heading2 = this.editor?.isActive("heading", { level: 2 });
+          this.activeMarks.Heading3 = this.editor?.isActive("heading", { level: 3 });
+          this.activeMarks.Heading4 = this.editor?.isActive("heading", { level: 4 });
+          this.activeMarks.Heading5 = this.editor?.isActive("heading", { level: 5 });
           this.activeMarks.italic = this.editor?.isActive("italic");
           this.activeMarks.link = this.editor?.isActive("link");
           this.activeMarks.listOrdered = this.editor?.isActive("orderedList");
