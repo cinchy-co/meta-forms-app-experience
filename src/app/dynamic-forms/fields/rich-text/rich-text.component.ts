@@ -149,7 +149,9 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
       this.editor = new Editor({
         element: this.richTextElement?.nativeElement,
         extensions: [
-          StarterKit,
+          StarterKit.configure({
+            heading: { levels: [1, 2, 3, 4, 5]},
+          }),
           Link.extend({
             inclusive: false
           }),
