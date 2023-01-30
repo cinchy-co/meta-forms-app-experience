@@ -92,6 +92,16 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     strike: false,
     underline: false
   };
+  // Keyboard shortcut label for ctrl key
+  ctrlLabel = window.navigator.appVersion.indexOf("Mac") !== -1 ? "⌘" : "^";
+
+  headings = [
+    { name: "Heading 1", title: `${this.ctrlLabel} + Alt + 1`, value: "Heading1"},
+    { name: "Heading 2", title: `${this.ctrlLabel} + Alt + 2`, value: "Heading2"},
+    { name: "Heading 3", title: `${this.ctrlLabel} + Alt + 3`, value: "Heading3"},
+    { name: "Heading 4", title: `${this.ctrlLabel} + Alt + 4`, value: "Heading4"},
+    { name: "Heading 5", title: `${this.ctrlLabel} + Alt + 5`, value: "Heading5"},
+  ]
 
   icons = {
     faAlignLeft: faAlignLeft,
@@ -108,13 +118,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
   tiptapMarkType = TiptapMarkType;
 
-  headings = [
-    { name: "Heading 1", value: "Heading1"},
-    { name: "Heading 2", value: "Heading2"},
-    { name: "Heading 3", value: "Heading3"},
-    { name: "Heading 4", value: "Heading4"},
-    { name: "Heading 5", value: "Heading5"},
-  ]
 
 
   /**

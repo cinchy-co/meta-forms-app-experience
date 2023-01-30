@@ -22,31 +22,31 @@
     <div class="rich-text-wrapper form-control">
       <div class="toolbar">
         <select class="toolbar-item" (change)="toggleMark($event.target.value)">
-          <option [value]="tiptapMarkType.Paragraph">Paragraph</option>
-          <option *ngFor="let heading of headings" [selected]="activeMarks[heading.value]" [value]="tiptapMarkType[heading.value]">{{ heading.name }}</option>
+          <option [value]="tiptapMarkType.Paragraph" title="{{ ctrlLabel }} + Alt + 0">Paragraph</option>
+          <option *ngFor="let heading of headings" [selected]="activeMarks[heading.value]" [title]="heading.title" [value]="tiptapMarkType[heading.value]">{{ heading.name }}</option>
         </select>
 
         <span class="toolbar-divider">
           |
         </span>
 
-        <button class="toolbar-item" [class.active]="activeMarks.bold" (click)="toggleMark(tiptapMarkType.Bold)" matTooltip="Bold">
+        <button class="toolbar-item" [class.active]="activeMarks.bold" (click)="toggleMark(tiptapMarkType.Bold)" matTooltip="Bold {{ '\n' + ctrlLabel }} + B" matTooltipClass="tooltip-newline">
           <fa-icon [icon]="icons.faBold"></fa-icon>
         </button>
 
-        <button class="toolbar-item" [class.active]="activeMarks.italic" (click)="toggleMark(tiptapMarkType.Italic)" matTooltip="Italic">
+        <button class="toolbar-item" [class.active]="activeMarks.italic" (click)="toggleMark(tiptapMarkType.Italic)" matTooltip="Italic {{ '\n' + ctrlLabel }} + I"  matTooltipClass="tooltip-newline">
           <fa-icon [icon]="icons.faItalic"></fa-icon>
         </button>
 
-        <button class="toolbar-item" [class.active]="activeMarks.underline" (click)="toggleMark(tiptapMarkType.Underline)" matTooltip="Underline">
+        <button class="toolbar-item" [class.active]="activeMarks.underline" (click)="toggleMark(tiptapMarkType.Underline)" matTooltip="Underline {{ '\n' + ctrlLabel }} + U"  matTooltipClass="tooltip-newline">
           <fa-icon [icon]="icons.faUnderline"></fa-icon>
         </button>
 
-        <button class="toolbar-item" [class.active]="activeMarks.strike" (click)="toggleMark(tiptapMarkType.Strike)" matTooltip="Strikethrough">
+        <button class="toolbar-item" [class.active]="activeMarks.strike" (click)="toggleMark(tiptapMarkType.Strike)" matTooltip="Strikethrough {{ '\n' + ctrlLabel }} + Shift + X" matTooltipClass="tooltip-newline">
           <fa-icon [icon]="icons.faStrikethrough"></fa-icon>
         </button>
 
-        <button class="toolbar-item" [class.active]="activeMarks.code" (click)="toggleMark(tiptapMarkType.Code)" matTooltip="Code">
+        <button class="toolbar-item" [class.active]="activeMarks.code" (click)="toggleMark(tiptapMarkType.Code)" matTooltip="Code {{ '\n' + ctrlLabel }} + E" matTooltipClass="tooltip-newline">
           <fa-icon [icon]="icons.faCode"></fa-icon>
         </button>
 
@@ -54,11 +54,11 @@
           |
         </span>
 
-        <button class="toolbar-item" [class.active]="activeMarks.listUnordered" (click)="toggleMark(tiptapMarkType.ListUnordered)" matTooltip="Unordered List">
+        <button class="toolbar-item" [class.active]="activeMarks.listUnordered" (click)="toggleMark(tiptapMarkType.ListUnordered)" matTooltip="Unordered List {{ '\n' + ctrlLabel }} + Shift + 8" matTooltipClass="tooltip-newline">
           <fa-icon [icon]="icons.faListUl"></fa-icon>
         </button>
 
-        <button class="toolbar-item" [class.active]="activeMarks.listOrdered" (click)="toggleMark(tiptapMarkType.ListOrdered)" matTooltip="Ordered List">
+        <button class="toolbar-item" [class.active]="activeMarks.listOrdered" (click)="toggleMark(tiptapMarkType.ListOrdered)" matTooltip="Ordered List {{ '\n' + ctrlLabel }} + Shift + 7" matTooltipClass="tooltip-newline">
           <fa-icon [icon]="icons.faListOl"></fa-icon>
         </button>
 
