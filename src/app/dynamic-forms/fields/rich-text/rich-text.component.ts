@@ -23,13 +23,7 @@ import {
   faListOl,
   faListUl,
   faStrikethrough,
-  faUnderline,
-  faImage,
-  faTable,
-  faTrash,
-  faLevelDownAlt,
-  faLevelUpAlt,
-  faMinusSquare
+  faUnderline
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Editor } from "@tiptap/core"
@@ -37,11 +31,7 @@ import { Editor } from "@tiptap/core"
 import Link from "@tiptap/extension-link";
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline";
-import Image from "@tiptap/extension-image";
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
+
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
 import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
 import { ResponseType } from "../../enums/response-type.enum";
@@ -50,8 +40,6 @@ import { isNullOrUndefined } from "util";
 import { Transaction } from "prosemirror-state";
 import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
 import { IRichTextLink } from "../../interface/rich-text-link";
-import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
-
 
 
 @Component({
@@ -86,8 +74,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
   value: any;
 
-  imageURL: string = "";
-
   /**
    * Tracks the marks active at the most recent cursor position
    */
@@ -104,10 +90,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     listOrdered: false,
     listUnordered: false,
     strike: false,
-    underline: false,
-    image: false,
-    table: false,
-    tableDelete: false
+    underline: false
   };
 
   icons = {
@@ -120,17 +103,12 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     faListOl: faListOl,
     faListUl: faListUl,
     faStrikethrough: faStrikethrough,
-    faUnderline: faUnderline,
-    faImage: faImage,
-    faTable: faTable,
-    faTrash: faTrash,
-    faLevelDownAlt: faLevelDownAlt,
-    faLevelUpAlt: faLevelUpAlt,
-    faMinusSquare: faMinusSquare
+    faUnderline: faUnderline
   };
 
   tiptapMarkType = TiptapMarkType;
-  
+
+
   /**
    * Determines whether or not the form is in a savable state
    */
@@ -164,14 +142,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           Link.extend({
             inclusive: false
           }),
-          Underline,
-          Image,
-          Table.configure({
-            resizable: true,
-          }),
-          TableRow,
-          TableHeader,
-          TableCell
+          Underline
         ],
         content: content,
         editable: true,
@@ -197,9 +168,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           this.activeMarks.listUnordered = this.editor?.isActive("bulletList");
           this.activeMarks.strike = this.editor?.isActive("strike");
           this.activeMarks.underline = this.editor?.isActive("underline");
-          this.activeMarks.image = this.editor?.isActive("image");
-          this.activeMarks.table = this.editor?.isActive("table");
-          this.activeMarks.tableDelete = this.editor?.isActive("tableDelete");
         },
         onUpdate: (): void => {
 
@@ -237,6 +205,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
    * Adds or removes the given mark at the current cursor position
    */
   toggleMark(type: TiptapMarkType): void {
+
     switch (type) {
       case TiptapMarkType.Bold:
         this.editor?.commands.toggleBold();
@@ -341,86 +310,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     }
   }
 
-  /**
-   * Insert Image 
-   */
-  
-  insertImage(): void{
-
-      const selection = this.editor.view.state.selection;
-      const selectedText = selection ? this.editor.state.doc.textBetween(selection.from, selection.to) : undefined;
-
-      const dialogRef: MatDialogRef<AddRichTextImageComponent> = this._dialog.open(
-        AddRichTextImageComponent,
-        {
-          data: {
-            href: this.imageURL == "" ? selectedText : this.imageURL
-          },
-          maxHeight: "80vh",
-          width: "600px"
-        }
-      );
-
-      dialogRef.afterClosed().subscribe({
-        next: (result: IRichTextLink) => {
-
-          if (result) {
-            this.editor
-              .chain()
-              .setImage({ src:  result.href })
-              .focus()
-              .run();
-
-              setTimeout(() => {
-                const selectedImage = document.getElementsByClassName("ProseMirror-selectednode")[0];
-                if(selectedImage) selectedImage.addEventListener('click',this.editSelectedImage.bind(this,selectedImage));
-            }, 0);   
-          }
-     
-        }
-      });
-  }
-
-  editSelectedImage(selectedImage){
-    const imageSrc = selectedImage.getAttribute("src");
-    if(imageSrc){
-      this.imageURL = imageSrc;
-    }
-  }
- 
-  insertTable(): void{
-
-    this.editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
-  }
-
-  deleteTable(): void{
-
-    this.editor.chain().focus().deleteTable().run();  
-  }
-
-  insertTableRowAfter(): void{
-    this.editor.chain().focus().addRowAfter().run();
-  }
-
-  insertTableRowBefore(): void{
-    this.editor.chain().focus().addRowBefore().run();
-  }
-
-  deleteRow(): void{
-    this.editor.chain().focus().deleteRow().run();
-  }
-
-  insertTableColumnAfter(): void{
-    this.editor.chain().focus().addColumnAfter().run();
-  }
-
-  insertTableColumnBefore(): void{
-    this.editor.chain().focus().addColumnBefore().run();
-  }
-
-  deleteColumn(): void{
-    this.editor.chain().focus().deleteColumn().run();
-  }
 
   private _callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
 
@@ -442,6 +331,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);
   }
+
 
   private _resolveValue(): void {
 

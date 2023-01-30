@@ -28,7 +28,6 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { ToastrModule } from 'ngx-toastr';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DigitOnlyModule } from '@uiowa/digit-only';
-import {MatMenuModule} from '@angular/material/menu';
 
 //#region Custom
 import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
@@ -42,7 +41,6 @@ import { NumberDirective } from './fields/cinchy-form-number.directive';
 import { ChildFormDirective } from './fields/cinchy-child-form.directive';
 import { CinchyDynamicFormsComponent } from './cinchy-dynamic-forms.component';
 import { RichTextComponent } from "./fields/rich-text/rich-text.component";
-import { AddRichTextImageComponent } from './dialogs/add-rich-text-image/add-rich-text-image.component';
 //#endregion
 
 //#region Pipes for the forms
@@ -70,6 +68,7 @@ import { AceEditorModule } from 'ng2-ace-editor';
 import 'ace-builds/webpack-resolver';
 import { DatePipe } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+
 window['ace']['require'] = window['ace']['acequire'];
 //#endregion
 
@@ -102,8 +101,7 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     MultiChoiceDirective,
     FieldsWrapperComponent,
     MessageDialogComponent,
-    RichTextComponent,
-    AddRichTextImageComponent
+    RichTextComponent
   ],
   imports: [
     BrowserModule,
@@ -144,8 +142,7 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
     SharedModule,
     NgxMatSelectSearchModule,
     AceEditorModule,
-    NgbModule,
-    MatMenuModule
+    NgbModule
   ],
   exports: [CinchyDynamicFormsComponent],
   entryComponents: [ChildFormDirective, MessageDialogComponent, AddRichTextLinkDialogComponent],
@@ -153,4 +150,3 @@ const CustomSelectOptions: INgxSelectOptions = { // Check the interface for more
   bootstrap      : []
 })
 export class CinchyDynamicFormsModule {}
-
