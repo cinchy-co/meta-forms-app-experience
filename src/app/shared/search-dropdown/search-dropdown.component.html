@@ -1,16 +1,11 @@
 <mat-form-field class="search-dropdown" appearance="outline">
   <mat-label>Search Records</mat-label>
-  <mat-select [(ngModel)]="selectedValue"
-              (selectionChange)="onSelect($event)"
-              panelClass="fix-width-470"
-  >
-    <mat-select-trigger>
-      {{ selectedRecord?.label }}
-    </mat-select-trigger>
+  <mat-select [(ngModel)]="selectedRecordId"
+              (ngModelChange)="onSelect($event)"
+              panelClass="fix-width-470">
     <mat-option>
       <ngx-mat-select-search [formControl]="filterCtrl" [clearSearchInput]="false"
-        placeholderLabel="Search..."
-      >
+                             placeholderLabel="Search...">
       </ngx-mat-select-search>
     </mat-option>
     <mat-option *ngFor="let item of displayItems" [value]="item.id" [title]="item.label">

@@ -1,4 +1,7 @@
 import {
+  Subscription
+} from "rxjs";
+import {
   debounceTime,
   distinctUntilChanged,
   startWith
@@ -10,12 +13,13 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnDestroy,
   Output,
   SimpleChanges,
   ViewChild
 } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { MatSelect, MatSelectChange } from "@angular/material/select";
+import { MatSelectChange } from "@angular/material/select";
 
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
@@ -29,16 +33,14 @@ import { CinchyQueryService } from "../../services/cinchy-query.service";
   templateUrl: "./search-dropdown.component.html",
   styleUrls: ["./search-dropdown.component.scss"]
 })
-export class SearchDropdownComponent implements AfterViewInit, OnChanges {
+export class SearchDropdownComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   @Input() items: Array<ILookupRecord>;
 
   @Input() set selectedOption(value: ILookupRecord) {
 
-    if (value) {
-      this.selectedValue = value.id;
-      this.selectedRecord = value;
-    }
+    this.selectedRecordId = value?.id;
+    this.selectedRecord = value;
   };
 
   @Output() dropdownClicked: EventEmitter<any> = new EventEmitter();
@@ -51,7 +53,7 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
   /**
    * The ID of the active record
    */
-  selectedValue: number;
+  selectedRecordId: number;
 
   /**
    * The record associated with the selected value
@@ -65,6 +67,9 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
 
 
   faSearch = faSearch;
+
+
+  private _subscription = new Subscription();
 
 
   /**
@@ -100,59 +105,48 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
   ngAfterViewInit() {
 
     // listen for search field value changes
-    this.filterCtrl.valueChanges.pipe(
-      startWith(""),
-      distinctUntilChanged(),
-      debounceTime(500),
-    )
-    .subscribe(() => {
+    this._subscription.add(
+      this.filterCtrl.valueChanges.pipe(
+        startWith(null),
+        distinctUntilChanged(),
+        debounceTime(500),
+      )
+      .subscribe(() => {
 
-      this.onFilter.emit(this.filterCtrl.value);
-    });
-
-    // Only fetch the first batch of records after the component has initialized
-    this.onFilter.emit(this.filterCtrl.value);
-
-    // DEBUG
-    console.log("afterViewInit");
+        this.onFilter.emit(this.filterCtrl.value);
+      })
+    );
   }
 
 
   ngOnChanges(changes: SimpleChanges): void {
 
     if (changes.items) {
+
       this.setDisplayItems();
     }
   }
 
 
-  /**
-   * Determines if the given LookupRecord matches the selected value
-   */
-  compareFn(option: ILookupRecord, value: number): boolean {
+  ngOnDestroy(): void {
 
-    return (value && option.id === value);
+    this._subscription.unsubscribe();
   }
 
 
   /**
    * Runs when the user selects an item from the dropdown
    */
-  onSelect(event: MatSelectChange) {
-
-    this.setDisplayItems();
+  onSelect(event: number) {
 
     this.selectedRecord = this.displayItems.find((value: ILookupRecord) => {
 
-      return value.id = event.value;
+      return value.id === this.selectedRecordId;
     });
 
     this.dropdownClicked.emit(this.selectedRecord);
 
-    // DEBUG
-    console.log("-----");
-    console.log(this.selectedValue);
-    console.log(this.selectedRecord);
+    this.setDisplayItems();
   }
 
 
@@ -161,27 +155,27 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
    */
   setDisplayItems() {
 
-    let displayItems = this.selectedRecord ? [this.selectedRecord] : [];
-
-    if (this.items) {
-      const resolvedItems = this.hasAdditionalRecords ? this.items.slice(0, CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT) : this.items;
-
-      displayItems = displayItems.concat(resolvedItems.filter((item: ILookupRecord) => {
-
-        return (item.id !== this.selectedValue);
-      }));
+    if (this.noRecordsAfterFilter) {
+      this.displayItems = this.items.slice();
     }
+    else {
+      // DEBUG
+      console.log(this.selectedRecord);
 
-    this.displayItems = displayItems.slice();
-  }
+      let displayItems = this.selectedRecord ? [Object.assign({}, this.selectedRecord)] : [];
 
+      if (this.items) {
+        const resolvedItems = this.items.slice(0, CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT);
 
-  /**
-   * Resets the dropdown to its default state
-   */
-  resetDropdown() {
+        resolvedItems.forEach((value: ILookupRecord) => {
 
-    this.filterCtrl.setValue(undefined);
-    this.onSelect(undefined);
+          if (value.id !== this.selectedRecord?.id) {
+            displayItems.push(value);
+          }
+        });
+      }
+
+      this.displayItems = displayItems.slice();
+    }
   }
 }
