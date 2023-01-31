@@ -156,17 +156,26 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     }
     
     if (this.canEdit) {
+      // Disable spellcheck in code blocks
+      const CustomCodeBlockLowlight = CodeBlockLowlight.extend({
+        addAttributes() {
+          return {
+            spellcheck: { default: 'false' },
+          }
+        }
+      });
+
       this.editor = new Editor({
         element: this.richTextElement?.nativeElement,
         extensions: [
-          CodeBlockLowlight.configure({
+          CustomCodeBlockLowlight.configure({
             lowlight,
           }),
           Link.extend({
             inclusive: false
           }),
           StarterKit.configure({
-            heading: { levels: [1, 2, 3, 4, 5]},
+            heading: { levels: [1, 2, 3, 4, 5] },
           }),
           TaskList,
           TaskItem,
