@@ -51,6 +51,7 @@ import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add
 import { ResponseType } from "../../enums/response-type.enum";
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
 
+import { IRichTextImage } from "../../interface/rich-text-image";
 import { IRichTextLink } from "../../interface/rich-text-link";
 
 import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
@@ -305,12 +306,12 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
     );
 
     dialogRef.afterClosed().subscribe({
-      next: (result: IRichTextLink) => {
+      next: (result: IRichTextImage) => {
 
         if (result) {
           this.editor
             .chain()
-            .setImage({ src: result.href })
+            .setImage({ src: result.src })
             .focus()
             .run();
         }
