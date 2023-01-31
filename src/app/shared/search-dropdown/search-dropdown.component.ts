@@ -159,9 +159,6 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges, OnDest
       this.displayItems = this.items.slice();
     }
     else {
-      // DEBUG
-      console.log(this.selectedRecord);
-
       let displayItems = this.selectedRecord ? [Object.assign({}, this.selectedRecord)] : [];
 
       if (this.items) {
