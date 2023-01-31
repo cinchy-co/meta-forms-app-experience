@@ -1,11 +1,6 @@
 export enum TiptapMarkType {
   //Blockquote = "BLOCKQUOTE",
-  /*
-   * Alias for a <code> tagged wrapped in a <pre> tag to allow for multi-line code
-   *
-   * Hotkey: ``` or ~~~
-   */
-  //CodeBlock = "CODE_BLOCK",
+  
   //HorizontalRule = "HORIZONTAL_RULE",
   /**
    * Represents a <b> tag.
@@ -19,6 +14,12 @@ export enum TiptapMarkType {
    * Hotkey: `{text}`
    */
   Code = "CODE",
+  /*
+   * Alias for a <code> tagged wrapped in a <pre> tag to allow for multi-line code
+   *
+   * Hotkey: ``` or ~~~ or ```language
+   */
+  CodeBlock = "CODE_BLOCK",
   /**
    * Default extension, required for Tiptap. The wrapping element.
    */

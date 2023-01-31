@@ -50,6 +50,10 @@
           <fa-icon [icon]="icons.faCode"></fa-icon>
         </button>
 
+        <button class="toolbar-item" [class.active]="activeMarks.codeBlock" (click)="toggleMark(tiptapMarkType.CodeBlock)" matTooltip="Code {{ '\n' + ctrlLabel }} + E" matTooltipClass="tooltip-newline">
+          <fa-icon [icon]="icons.faFileCode"></fa-icon>
+        </button>
+
         <span class="toolbar-divider">
           |
         </span>

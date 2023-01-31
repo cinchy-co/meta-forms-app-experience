@@ -13,6 +13,7 @@ import {
   MatDialogRef
 } from "@angular/material/dialog";
 
+import { faFileCode } from "@fortawesome/free-regular-svg-icons";
 import {
   faAlignLeft,
   faBold,
@@ -28,13 +29,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Editor } from "@tiptap/core";
-
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Link from "@tiptap/extension-link";
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import Underline from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
 
+import { lowlight } from 'lowlight/lib/common';
 
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
 import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
@@ -84,6 +86,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   activeMarks = {
     bold: false,
     code: false,
+    codeBlock: false,
     Heading1: false,
     Heading2: false,
     Heading3: false,
@@ -112,6 +115,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     faAlignLeft: faAlignLeft,
     faBold: faBold,
     faCode: faCode,
+    faFileCode: faFileCode,
     faHeading: faHeading,
     faItalic: faItalic,
     faLink: faLink,
@@ -150,11 +154,14 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     catch (error) {
       content = this.field.value;
     }
-
+    
     if (this.canEdit) {
       this.editor = new Editor({
         element: this.richTextElement?.nativeElement,
         extensions: [
+          CodeBlockLowlight.configure({
+            lowlight,
+          }),
           Link.extend({
             inclusive: false
           }),
@@ -178,6 +185,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
           this.activeMarks.bold = this.editor?.isActive("bold");
           this.activeMarks.code = this.editor?.isActive("code");
+          this.activeMarks.codeBlock = this.editor?.isActive("codeBlock");
           this.activeMarks.Heading1 = this.editor?.isActive("heading", { level: 1 });
           this.activeMarks.Heading2 = this.editor?.isActive("heading", { level: 2 });
           this.activeMarks.Heading3 = this.editor?.isActive("heading", { level: 3 });
@@ -235,6 +243,10 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
         break;
       case TiptapMarkType.Code:
         this.editor?.commands.toggleCode();
+
+        break;
+      case TiptapMarkType.CodeBlock:
+        this.editor?.commands.toggleCodeBlock();
 
         break;
       case TiptapMarkType.Paragraph:
