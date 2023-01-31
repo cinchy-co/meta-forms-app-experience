@@ -1,6 +1,7 @@
 import {
   debounceTime,
-  distinctUntilChanged
+  distinctUntilChanged,
+  startWith
 } from "rxjs/operators";
 
 import {
@@ -14,7 +15,7 @@ import {
   ViewChild
 } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { MatSelect } from "@angular/material/select";
+import { MatSelect, MatSelectChange } from "@angular/material/select";
 
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
@@ -32,9 +33,12 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
 
   @Input() items: Array<ILookupRecord>;
 
-  @Input() set selectedOption(value) {
+  @Input() set selectedOption(value: ILookupRecord) {
 
-    this.selectCtrl.setValue(value);
+    if (value) {
+      this.selectedValue = value.id;
+      this.selectedRecord = value;
+    }
   };
 
   @Output() dropdownClicked: EventEmitter<any> = new EventEmitter();
@@ -42,14 +46,21 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
   /** Fires whenever a filter value resolves */
   @Output() onFilter: EventEmitter<string> = new EventEmitter<string>();
 
-  @ViewChild("singleSelect", { static: true }) singleSelect: MatSelect;
-
   displayItems: Array<ILookupRecord>;
 
-  /** control for the selected bank */
-  selectCtrl: FormControl = new FormControl();
+  /**
+   * The ID of the active record
+   */
+  selectedValue: number;
 
-  /** control for the MatSelect filter keyword */
+  /**
+   * The record associated with the selected value
+   */
+  selectedRecord: ILookupRecord;
+
+  /**
+   * Form control for the filter string
+   */
   filterCtrl: FormControl = new FormControl();
 
 
@@ -90,8 +101,9 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
 
     // listen for search field value changes
     this.filterCtrl.valueChanges.pipe(
+      startWith(""),
+      distinctUntilChanged(),
       debounceTime(500),
-      distinctUntilChanged()
     )
     .subscribe(() => {
 
@@ -100,6 +112,9 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
 
     // Only fetch the first batch of records after the component has initialized
     this.onFilter.emit(this.filterCtrl.value);
+
+    // DEBUG
+    console.log("afterViewInit");
   }
 
 
@@ -112,18 +127,48 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
 
 
   /**
+   * Determines if the given LookupRecord matches the selected value
+   */
+  compareFn(option: ILookupRecord, value: number): boolean {
+
+    return (value && option.id === value);
+  }
+
+
+  /**
+   * Runs when the user selects an item from the dropdown
+   */
+  onSelect(event: MatSelectChange) {
+
+    this.setDisplayItems();
+
+    this.selectedRecord = this.displayItems.find((value: ILookupRecord) => {
+
+      return value.id = event.value;
+    });
+
+    this.dropdownClicked.emit(this.selectedRecord);
+
+    // DEBUG
+    console.log("-----");
+    console.log(this.selectedValue);
+    console.log(this.selectedRecord);
+  }
+
+
+  /**
    * Sets up the set of options to be displayed
    */
   setDisplayItems() {
 
-    let displayItems = this.selectCtrl.value ? [this.selectCtrl.value] : [];
+    let displayItems = this.selectedRecord ? [this.selectedRecord] : [];
 
     if (this.items) {
       const resolvedItems = this.hasAdditionalRecords ? this.items.slice(0, CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT) : this.items;
 
       displayItems = displayItems.concat(resolvedItems.filter((item: ILookupRecord) => {
 
-        return (item.id !== this.selectCtrl.value?.id);
+        return (item.id !== this.selectedValue);
       }));
     }
 
@@ -137,15 +182,6 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges {
   resetDropdown() {
 
     this.filterCtrl.setValue(undefined);
-    this.selectCtrl.setValue(undefined);
-    this.optionSelected(undefined);
-  }
-
-
-  optionSelected(option) {
-
-    this.setDisplayItems();
-
-    this.dropdownClicked.emit(option?.value);
+    this.onSelect(undefined);
   }
 }

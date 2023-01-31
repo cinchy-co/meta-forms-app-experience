@@ -1,20 +1,26 @@
-<mat-form-field class="form-control search-dropdown">
+<mat-form-field class="search-dropdown" appearance="outline">
   <mat-label>Search Records</mat-label>
-  <mat-select [formControl]="selectCtrl" #singleSelect (selectionChange)="optionSelected($event)" panelClass="fix-width-470">
+  <mat-select [(ngModel)]="selectedValue"
+              (selectionChange)="onSelect($event)"
+              panelClass="fix-width-470"
+  >
+    <mat-select-trigger>
+      {{ selectedRecord?.label }}
+    </mat-select-trigger>
     <mat-option>
-      <ngx-mat-select-search [formControl]="filterCtrl"
+      <ngx-mat-select-search [formControl]="filterCtrl" [clearSearchInput]="false"
         placeholderLabel="Search..."
       >
       </ngx-mat-select-search>
     </mat-option>
-    <mat-option *ngFor="let item of displayItems" [value]="item" [title]="item?.label">
-      {{ item?.label }}
+    <mat-option *ngFor="let item of displayItems" [value]="item.id" [title]="item.label">
+      {{ item.label }}
     </mat-option>
     <mat-option *ngIf="hasAdditionalRecords" disabled>
       Refine your search to see other options
     </mat-option>
   </mat-select>
-  <div matSuffix>
+  <div matSuffix class="search-input-icon">
     <fa-icon [icon]="faSearch"></fa-icon>
   </div>
 </mat-form-field>

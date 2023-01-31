@@ -1,6 +1,6 @@
 import { NgModule } from "@angular/core";
 import { ScrollingModule } from "@angular/cdk/scrolling";
-import { ReactiveFormsModule } from "@angular/forms";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { RouterModule } from "@angular/router";
 
@@ -24,6 +24,7 @@ import { TypeaheadComponent } from "./typeahead/typeahead.component";
     CustomMaterialModule,
     NgxMatSelectSearchModule,
     FontAwesomeModule,
+    FormsModule,
     ReactiveFormsModule,
     RouterModule,
     ScrollingModule

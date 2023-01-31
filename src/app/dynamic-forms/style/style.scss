@@ -531,6 +531,15 @@ button.btnSave.mat-raised-button {
   width: 2.5em !important;
 }
 
+.mat-select-value {
+  max-width: 100% !important;
+}
+
+.search-input-icon {
+  position: relative;
+  top: -7px;
+}
+
 .svg-inline--fa{
   color: dimgray;
   font: normal normal normal 14px/1 FontAwesome;
