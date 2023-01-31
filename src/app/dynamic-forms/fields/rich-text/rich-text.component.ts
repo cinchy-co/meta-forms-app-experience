@@ -285,7 +285,6 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
 
     let currentSrc: string;
 
-
     if (this.activeMarks.image) {
       currentSrc = this.editor?.getAttributes("image").src;
     }
@@ -298,7 +297,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
       AddRichTextImageComponent,
       {
         data: {
-          href: currentSrc ?? undefined
+          src: currentSrc ?? undefined
         },
         maxHeight: "80vh",
         width: "600px"
@@ -314,6 +313,9 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
             .setImage({ src: result.src })
             .focus()
             .run();
+        }
+        else {
+          this.editor.chain().focus();
         }
       }
     });
