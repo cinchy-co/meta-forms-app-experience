@@ -21,7 +21,7 @@
   <ng-container *ngIf="canEdit">
     <div class="rich-text-wrapper form-control">
       <div class="toolbar">
-        <select class="toolbar-item" (change)="toggleMark($event.target.value)">
+        <select class="toolbar-dropdown toolbar-item" (change)="toggleMark($event.target.value)">
           <option [value]="tiptapMarkType.Paragraph" title="{{ ctrlLabel }} + Alt + 0">Paragraph</option>
           <option *ngFor="let heading of headings" [selected]="activeMarks[heading.value]" [title]="heading.title" [value]="tiptapMarkType[heading.value]">{{ heading.name }}</option>
         </select>
