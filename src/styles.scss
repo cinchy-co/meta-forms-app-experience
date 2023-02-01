@@ -345,19 +345,19 @@ app-search-dropdown {
   left: -4px !important;
   font: 400 12px/16px Roboto,Helvetica Neue,sans-serif;
  }
- .tooltip-inner{
+.tooltip-inner{
   max-width: 250;
   text-align: left;
  }
 
- .tooltip-newline {
+.tooltip-newline {
   text-align: center;
   white-space: pre-line;
 }
 
- .ProseMirror {
+.ProseMirror {
   li p {
-    margin-bottom: 0;
+    margin: 8px 0 0;
   }
 
   pre {

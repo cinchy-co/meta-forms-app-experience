@@ -129,7 +129,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   tiptapMarkType = TiptapMarkType;
 
 
-
   /**
    * Determines whether or not the form is in a savable state
    */
