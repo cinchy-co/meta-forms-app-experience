@@ -1,12 +1,4 @@
 export enum TiptapMarkType {
-  //Blockquote = "BLOCKQUOTE",
-  /*
-   * Alias for a <code> tagged wrapped in a <pre> tag to allow for multi-line code
-   *
-   * Hotkey: ``` or ~~~
-   */
-  //CodeBlock = "CODE_BLOCK",
-  //HorizontalRule = "HORIZONTAL_RULE",
   /**
    * Represents a <b> tag.
    *
@@ -65,6 +57,10 @@ export enum TiptapMarkType {
    * Hotkey: ###### || mod + alt + 6
    */
   Heading6 = "HEADING_6",
+   /**
+   * Represents an Image tag.
+   */
+  Image = "IMAGE",
   /**
    * Represents an <i> tag.
    *
@@ -101,6 +97,10 @@ export enum TiptapMarkType {
    * Hotkey: ~~{text}~~
    */
   Strike = "STRIKE",
+  /**
+   * Represents a Table tag with all table operations like Add Before/After row , Add Before/After column, Delete table, column, row.
+   */
+  Table = "TABLE",
   /**
    * Default extension, required for TipTap. Enables plaintext in the field.
    */

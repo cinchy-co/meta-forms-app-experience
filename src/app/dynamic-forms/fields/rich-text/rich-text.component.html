@@ -41,7 +41,7 @@
           <fa-icon [icon]="icons.faCode"></fa-icon>
         </button>
 
-        <span class="tooltbar-divider">
+        <span class="toolbar-divider">
           |
         </span>
 
@@ -53,7 +53,7 @@
           <fa-icon [icon]="icons.faListOl"></fa-icon>
         </button>
 
-        <span class="tooltbar-divider">
+        <span class="toolbar-divider">
           |
         </span>
 
@@ -77,14 +77,75 @@
           <fa-icon [icon]="icons.faHeading"></fa-icon><sub>5</sub>
         </button>
 
-        <span class="tooltbar-divider">
+
+        <span class="toolbar-divider">
           |
         </span>
 
         <button class="toolbar-item" [class.active]="activeMarks.link" (click)="toggleLink()" matTooltip="Insert Link">
           <fa-icon [icon]="icons.faLink"></fa-icon>
         </button>
-      </div>
+
+        <span class="toolbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.image" (click)="insertImage()" matTooltip="Insert Image">
+          <fa-icon [icon]="icons.faImage"></fa-icon>
+        </button>
+
+        <span class="toolbar-divider">
+          |
+        </span>
+
+        <button class="toolbar-item" [class.active]="activeMarks.table" [matMenuTriggerFor]="menu" matTooltip="Insert Table">
+          <fa-icon [icon]="icons.faTable"></fa-icon>
+        </button>
+
+  
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item class="toolbar-item" (click)="insertTable()" matTooltip="Add Table" [disabled]="activeMarks.table">
+            <fa-icon class="mr-2" [icon]="icons.faTable"></fa-icon>
+            <span>Add Table</span>
+          </button>
+
+          <button class="toolbar-item" mat-menu-item (click)="deleteTable()" matTooltip="Delete Table" [disabled]="!activeMarks.table">
+            <fa-icon class="mr-2" [icon]="icons.faTrash"></fa-icon>
+            <span>Delete Table</span>
+          </button>
+
+          <button class="toolbar-item" mat-menu-item (click)="insertRowBefore()" matTooltip="Add Row Before" [disabled]="!activeMarks.table">
+            <div class="fa-rotate-90 mr-2" style="display: inline-block;"><fa-icon  [icon]="icons.faLevelDownAlt"></fa-icon></div>
+            <span>Add Row Before</span>
+          </button>
+
+          <button class="toolbar-item" mat-menu-item (click)="insertRowAfter()" matTooltip="Add Row After" [disabled]="!activeMarks.table">
+            <div class="fa-rotate-90 mr-2" style="display: inline-block;"><fa-icon  [icon]="icons.faLevelUpAlt"></fa-icon></div>
+            <span>Add Row After</span>
+          </button>
+
+          <button class="toolbar-item" mat-menu-item (click)="deleteRow()" matTooltip="Delete Row" [disabled]="!activeMarks.table">
+            <fa-icon class="mr-2" [icon]="icons.faMinusSquare"></fa-icon>
+            <span>Delete Row</span>
+          </button>
+
+          <button class="toolbar-item" mat-menu-item (click)="insertColumnBefore()" matTooltip="Add Column Before" [disabled]="!activeMarks.table">
+            <div class="fa-flip-horizontal mr-2" style="display: inline-block;"><fa-icon [icon]="icons.faLevelDownAlt"></fa-icon></div>
+            <span>Add Column Before</span>
+          </button>
+
+          <button class="toolbar-item" mat-menu-item (click)="insertColumnAfter()" matTooltip="Add Column After" [disabled]="!activeMarks.table">
+            <fa-icon class="mr-2" [icon]="icons.faLevelDownAlt"></fa-icon>
+            <span>Add Column After</span>
+          </button>
+
+          <button class="toolbar-item" mat-menu-item (click)="deleteColumn()" matTooltip="Delete Column" [disabled]="!activeMarks.table">
+            <div class="fa-rotate-90 mr-2" style="display: inline-block;"><fa-icon  [icon]="icons.faMinusSquare"></fa-icon></div>
+            <span>Delete Column</span>
+          </button>
+      </mat-menu>
+
+     </div>
       <div class="editor-wrapper" (click)="setFocus()">
         <div #richTextElement class="rich-text-element"></div>
       </div>

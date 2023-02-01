@@ -23,23 +23,39 @@ import {
   faListOl,
   faListUl,
   faStrikethrough,
-  faUnderline
+  faUnderline,
+  faImage,
+  faTable,
+  faTrash,
+  faLevelDownAlt,
+  faLevelUpAlt,
+  faMinusSquare
 } from "@fortawesome/free-solid-svg-icons";
 
 import { Editor } from "@tiptap/core"
 
+import { Transaction } from "prosemirror-state";
+
 import Link from "@tiptap/extension-link";
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline";
+import Image from "@tiptap/extension-image";
+import Table from "@tiptap/extension-table"
+import TableRow from "@tiptap/extension-table-row"
+import TableCell from "@tiptap/extension-table-cell"
+import TableHeader from "@tiptap/extension-table-header"
 
-import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
-import { ResponseType } from "../../enums/response-type.enum";
-import { IFormField } from "../../models/cinchy-form-field.model";
-import { isNullOrUndefined } from "util";
-import { Transaction } from "prosemirror-state";
 import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
+import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
+
+import { ResponseType } from "../../enums/response-type.enum";
+import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
+
+import { IRichTextImage } from "../../interface/rich-text-image";
 import { IRichTextLink } from "../../interface/rich-text-link";
+
+import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
+import { IFormField } from "../../models/cinchy-form-field.model";
 
 
 @Component({
@@ -47,7 +63,7 @@ import { IRichTextLink } from "../../interface/rich-text-link";
   templateUrl: "./rich-text.component.html",
   styleUrls: ["./rich-text.component.scss"],
 })
-export class RichTextComponent implements OnDestroy, AfterViewInit {
+export class RichTextComponent implements AfterViewInit, OnDestroy {
 
   @Input() field: IFormField;
 
@@ -74,6 +90,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
   value: any;
 
+
   /**
    * Tracks the marks active at the most recent cursor position
    */
@@ -85,11 +102,13 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     heading3: false,
     heading4: false,
     heading5: false,
+    image: false,
     italic: false,
     link: false,
     listOrdered: false,
     listUnordered: false,
     strike: false,
+    table: false,
     underline: false
   };
 
@@ -98,16 +117,27 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     faBold: faBold,
     faCode: faCode,
     faHeading: faHeading,
+    faImage: faImage,
     faItalic: faItalic,
+    faLevelDownAlt: faLevelDownAlt,
+    faLevelUpAlt: faLevelUpAlt,
     faLink: faLink,
     faListOl: faListOl,
     faListUl: faListUl,
+    faMinusSquare: faMinusSquare,
     faStrikethrough: faStrikethrough,
+    faTable: faTable,
+    faTrash: faTrash,
     faUnderline: faUnderline
   };
 
   tiptapMarkType = TiptapMarkType;
 
+
+  private _DEFAULT_TABLE_COLUMN_COUNT = 3;
+
+  private _DEFAULT_TABLE_ROW_COUNT = 3;
+  
 
   /**
    * Determines whether or not the form is in a savable state
@@ -142,7 +172,14 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
           Link.extend({
             inclusive: false
           }),
-          Underline
+          Underline,
+          Image,
+          Table.configure({
+            resizable: true,
+          }),
+          TableRow,
+          TableHeader,
+          TableCell
         ],
         content: content,
         editable: true,
@@ -155,19 +192,21 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
          */
         onTransaction: (args: { editor: Editor, transaction: Transaction }): void => {
 
-          this.activeMarks.bold = this.editor?.isActive("bold");
-          this.activeMarks.code = this.editor?.isActive("code");
-          this.activeMarks.heading1 = this.editor?.isActive("heading", { level: 1 });
-          this.activeMarks.heading2 = this.editor?.isActive("heading", { level: 2 });
-          this.activeMarks.heading3 = this.editor?.isActive("heading", { level: 3 });
-          this.activeMarks.heading4 = this.editor?.isActive("heading", { level: 4 });
-          this.activeMarks.heading5 = this.editor?.isActive("heading", { level: 5 });
-          this.activeMarks.italic = this.editor?.isActive("italic");
-          this.activeMarks.link = this.editor?.isActive("link");
-          this.activeMarks.listOrdered = this.editor?.isActive("orderedList");
-          this.activeMarks.listUnordered = this.editor?.isActive("bulletList");
-          this.activeMarks.strike = this.editor?.isActive("strike");
-          this.activeMarks.underline = this.editor?.isActive("underline");
+          this.activeMarks.bold = args.editor.isActive("bold");
+          this.activeMarks.code = args.editor.isActive("code");
+          this.activeMarks.heading1 = args.editor.isActive("heading", { level: 1 });
+          this.activeMarks.heading2 = args.editor.isActive("heading", { level: 2 });
+          this.activeMarks.heading3 = args.editor.isActive("heading", { level: 3 });
+          this.activeMarks.heading4 = args.editor.isActive("heading", { level: 4 });
+          this.activeMarks.heading5 = args.editor.isActive("heading", { level: 5 });
+          this.activeMarks.italic = args.editor.isActive("italic");
+          this.activeMarks.link = args.editor.isActive("link");
+          this.activeMarks.listOrdered = args.editor.isActive("orderedList");
+          this.activeMarks.listUnordered = args.editor.isActive("bulletList");
+          this.activeMarks.strike = args.editor.isActive("strike");
+          this.activeMarks.underline = args.editor.isActive("underline");
+          this.activeMarks.image = args.editor.isActive("image");
+          this.activeMarks.table = args.editor.isActive("table");
         },
         onUpdate: (): void => {
 
@@ -181,6 +220,144 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
 
     this.editor?.destroy();
+  }
+
+
+  /**
+   * Deletes the focused column
+   */
+  deleteColumn(): void {
+
+    if (this.activeMarks.table) {
+      this.editor.chain().focus().deleteColumn().run();
+    }
+  }
+
+
+  /**
+   * Deletes the focused row
+   */
+  deleteRow(): void {
+
+    if (this.activeMarks.table) {
+      this.editor.chain().focus().deleteRow().run();
+    }
+  }
+
+
+  /**
+   * Deletes the focused table
+   */
+  deleteTable(): void {
+
+    if (this.activeMarks.table) {
+      this.editor.chain().focus().deleteTable().run();
+    }
+  }
+
+
+  /**
+   * Inserts a column after the focused column of the focused table
+   */
+  insertColumnAfter(): void {
+
+    if (this.activeMarks.table) {
+      this.editor.chain().focus().addColumnAfter().run();
+    }
+  }
+
+
+  /**
+   * Inserts a column before the focused column of the focused table
+   */
+  insertColumnBefore(): void {
+
+    if (this.activeMarks.table) {
+      this.editor.chain().focus().addColumnBefore().run();
+    }
+  }
+
+
+  /**
+   * Inserts an image tag at the given position with a source provided by the user
+   */
+  insertImage(): void {
+
+    let currentSrc: string;
+
+    if (this.activeMarks.image) {
+      currentSrc = this.editor?.getAttributes("image").src;
+    }
+    else {
+      const selection = this.editor.view.state.selection;
+      currentSrc = selection ? this.editor.state.doc.textBetween(selection.from, selection.to) : undefined;
+    }
+
+    const dialogRef: MatDialogRef<AddRichTextImageComponent> = this._dialog.open(
+      AddRichTextImageComponent,
+      {
+        data: {
+          src: currentSrc ?? undefined
+        },
+        maxHeight: "80vh",
+        width: "600px"
+      }
+    );
+
+    dialogRef.afterClosed().subscribe({
+      next: (result: IRichTextImage) => {
+
+        if (result) {
+          this.editor
+            .chain()
+            .setImage({ src: result.src })
+            .focus()
+            .run();
+        }
+        else {
+          this.editor.chain().focus();
+        }
+      }
+    });
+  }
+
+
+  /**
+   * Inserts a row after the focused row of the focused table
+   */
+  insertRowAfter(): void {
+
+    if (this.activeMarks.table) {
+      this.editor.chain().focus().addRowAfter().run();
+    }
+  }
+
+
+  /**
+   * Inserts a row before the focused row of the focused table
+   */
+  insertRowBefore(): void {
+
+    if (this.activeMarks.table) {
+      this.editor.chain().focus().addRowBefore().run();
+    }
+  }
+
+
+  /**
+   * Inserts a table at the cursor position
+   */
+  insertTable(): void {
+
+    this.editor
+      .chain()
+      .focus()
+      .insertTable({
+        rows: this._DEFAULT_TABLE_COLUMN_COUNT,
+        cols: this._DEFAULT_TABLE_ROW_COUNT,
+        withHeaderRow: true
+      })
+      .run();
   }
 
 
@@ -205,7 +382,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
    * Adds or removes the given mark at the current cursor position
    */
   toggleMark(type: TiptapMarkType): void {
-
     switch (type) {
       case TiptapMarkType.Bold:
         this.editor?.commands.toggleBold();
@@ -295,7 +471,7 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
 
           if (result) {
             this.editor
-              .chain()
+              ?.chain()
               .deleteSelection()
               .setLink({
                 href: result.href,
@@ -309,7 +485,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
       })
     }
   }
-
 
   private _callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
 
@@ -331,7 +506,6 @@ export class RichTextComponent implements OnDestroy, AfterViewInit {
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
     this.eventHandler.emit(callback);
   }
-
 
   private _resolveValue(): void {
 
