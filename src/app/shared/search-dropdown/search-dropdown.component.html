@@ -8,7 +8,7 @@
                              placeholderLabel="Search...">
       </ngx-mat-select-search>
     </mat-option>
-    <mat-option *ngFor="let item of displayItems" [value]="item.id" [title]="item.label">
+    <mat-option *ngFor="let item of displayItems" [value]="item.id" [title]="item.label" [disabled]="item.id === -1">
       {{ item.label }}
     </mat-option>
     <mat-option *ngIf="hasAdditionalRecords" disabled>

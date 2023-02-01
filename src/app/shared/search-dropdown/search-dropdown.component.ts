@@ -82,15 +82,6 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges, OnDest
 
 
   /**
-   * Determines whether or not the whole list contains only a single item
-   */
-  get hasSingleRecord(): boolean {
-
-    return (this.items.length === 1 && !this.filterCtrl.value);
-  }
-
-
-  /**
    * Returns true is the item list only contains the placeholder item for an empty result
    */
   get noRecordsAfterFilter(): boolean {

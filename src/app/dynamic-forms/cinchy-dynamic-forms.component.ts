@@ -96,11 +96,16 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   ngOnInit() {
 
+    // Intialize with a loading state in case the first load takes some time
+    this.lookupRecordsList = [{ id: -1, label: "Loading..." }];
+
     this.appStateService.getSaveClickedObs().pipe(takeUntil(this.destroy$)).subscribe((saveClicked) => {
+
       saveClicked && this.saveForm(this.form, this.rowId);
     });
 
     this.appStateService.onRecordSelected().subscribe(async resp => {
+
       if (resp?.cinchyId == null) {
         this.rowId = null;
         this.currentRow = null;
@@ -112,6 +117,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
           this.setLookupRecords(this.lookupRecordsList);
         }
       }
+
       if (resp == null || !(resp.doNotReloadForm)) {
         await this.loadForm();
       }
@@ -134,10 +140,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   }
 
 
-  checkNoRecord(lookupRecord: ILookupRecord[]): ILookupRecord[]{
+  checkNoRecord(lookupRecords: ILookupRecord[]): ILookupRecord[]{
 
-    if (lookupRecord?.length > 0) {
-      return lookupRecord;
+    if (lookupRecords?.length > 0) {
+      return lookupRecords;
     }
     else{
       return [{id: -1, label: "No records available"}];
