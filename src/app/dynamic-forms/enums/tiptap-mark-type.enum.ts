@@ -1,6 +1,5 @@
 export enum TiptapMarkType {
   //Blockquote = "BLOCKQUOTE",
-  
   //HorizontalRule = "HORIZONTAL_RULE",
   /**
    * Represents a <b> tag.
