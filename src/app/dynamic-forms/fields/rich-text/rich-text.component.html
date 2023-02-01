@@ -74,7 +74,7 @@
           |
         </span>
 
-        <button class="toolbar-item" [class.active]="activeMarks.link" (click)="toggleLink()" matTooltip="Insert Link">
+        <button class="toolbar-item" [class.active]="activeMarks.link" (click)="toggleLink()" matTooltip="Insert Link {{ '\n' + ctrlLabel }} + Shift + k" matTooltipClass="tooltip-newline">
           <fa-icon [icon]="icons.faLink"></fa-icon>
         </button>
 

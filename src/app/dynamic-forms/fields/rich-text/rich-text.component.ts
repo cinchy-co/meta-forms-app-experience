@@ -179,6 +179,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
 
     let content: string | Object;
+    const self = this
 
     try {
       content = ((this.field.value as string).includes(`"type":"doc"`)) ? JSON.parse(this.field.value ?? "{}") : this.field.value;
@@ -204,6 +205,18 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
             lowlight,
           }),
           Link.extend({
+            addKeyboardShortcuts() {
+              return {
+                'Mod-k': () => {
+                  self.toggleLink()
+                  return true                
+                },
+                'Ctrl-k': () => {
+                  self.toggleLink()
+                  return true
+                },
+              }
+            },
             inclusive: false
           }),
           StarterKit.configure({
