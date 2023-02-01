@@ -210,6 +210,7 @@ export class ChildFormTableDirective implements OnInit, OnDestroy {
         const cellEntitlements = cellEntitlementsResp.queryResult.toObjectArray()[0];
         this.updateEntitlements(cellEntitlements, childFormData, multiFieldValues);
       }
+      if (valuesForLabels['Cinchy ID']) childFormData.rowId = valuesForLabels['Cinchy ID'];
     }
     let data = {
       childFormData: childFormData,

@@ -45,7 +45,7 @@ import { faAlignLeft } from '@fortawesome/free-solid-svg-icons';
       </ng-container>
 
       <label class="pre-formatted"
-             *ngIf="!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly  || field.label=== 'File Name' || isDisabled"
+             *ngIf="showActualField && (!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly  || field.label=== 'File Name' || isDisabled)"
              [innerHTML]="field.value || '-'"></label>
 
       <ng-container *ngIf="showImage">

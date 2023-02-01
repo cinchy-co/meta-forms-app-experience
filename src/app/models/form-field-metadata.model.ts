@@ -29,6 +29,7 @@ export interface IFormFieldMetadata {
 	fileNameColumn			: string;
 	linkTargetTableId		: number;
 	linkTargetTableName		: string;
+	linkTableDomainName		: string;
 	viewOnly				: boolean;
 	isDisplayColumn			: boolean;
 	attachmentUrl			: string;
