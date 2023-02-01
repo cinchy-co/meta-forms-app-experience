@@ -355,41 +355,6 @@ app-search-dropdown {
   white-space: pre-line;
 }
 
-.ProseMirror {
-  li p {
-    margin: 8px 0 0;
-  }
-
-  pre {
-    background-color: #f8f8f8;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-  }
-
-  ul[data-type="taskList"] {
-    list-style: none;
-    padding: 0;
-
-    li {
-      align-items: center;
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    label {
-      display: inline-flex;
-      flex: 0 0 auto;
-      margin-bottom: 0;
-    }
-
-    p {
-      margin: 0;
-    }
-  }
-}
-
-
  /* Table-specific styling */
 .ProseMirror {
   table {
@@ -461,6 +426,38 @@ app-search-dropdown {
 
     &.ProseMirror-selectednode {
       outline: 3px solid #68CEF8;
+    }
+  }
+
+  li p {
+    margin: 8px 0 0;
+  }
+
+  pre {
+    background-color: #f8f8f8;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+
+    li {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    label {
+      display: inline-flex;
+      flex: 0 0 auto;
+      margin-bottom: 0;
+    }
+
+    p {
+      margin: 0;
     }
   }
 }

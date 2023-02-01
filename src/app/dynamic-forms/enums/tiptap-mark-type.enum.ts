@@ -94,7 +94,7 @@ export enum TiptapMarkType {
    */
   ListUnordered = "BULLET_LIST",
   /**
-   * Represents a <ul data-type="taskList">
+   * Represents a <ul> tag with the data-type attribute set to "task-list"
    * 
    * Hotkey: Type [ ] or [x] at the beginning of a new line
    */
