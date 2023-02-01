@@ -107,11 +107,11 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
     bold: false,
     code: false,
     codeBlock: false,
-    Heading1: false,
-    Heading2: false,
-    Heading3: false,
-    Heading4: false,
-    Heading5: false,
+    heading1: false,
+    heading2: false,
+    heading3: false,
+    heading4: false,
+    heading5: false,
     image: false,
     italic: false,
     link: false,
@@ -126,11 +126,11 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
   ctrlLabel = window.navigator.appVersion.indexOf("Mac") !== -1 ? "⌘" : "^";
 
   headings = [
-    { name: "Heading 1", title: `${this.ctrlLabel} + Alt + 1`, value: "Heading1"},
-    { name: "Heading 2", title: `${this.ctrlLabel} + Alt + 2`, value: "Heading2"},
-    { name: "Heading 3", title: `${this.ctrlLabel} + Alt + 3`, value: "Heading3"},
-    { name: "Heading 4", title: `${this.ctrlLabel} + Alt + 4`, value: "Heading4"},
-    { name: "Heading 5", title: `${this.ctrlLabel} + Alt + 5`, value: "Heading5"},
+    { name: "Heading 1", selected: "heading1", mark: TiptapMarkType.Heading1, title: `${this.ctrlLabel} + Alt + 1` },
+    { name: "Heading 2", selected: "heading2", mark: TiptapMarkType.Heading2, title: `${this.ctrlLabel} + Alt + 2` },
+    { name: "Heading 3", selected: "heading3", mark: TiptapMarkType.Heading3, title: `${this.ctrlLabel} + Alt + 3` },
+    { name: "Heading 4", selected: "heading4", mark: TiptapMarkType.Heading4, title: `${this.ctrlLabel} + Alt + 4` },
+    { name: "Heading 5", selected: "heading5", mark: TiptapMarkType.Heading5, title: `${this.ctrlLabel} + Alt + 5` },
   ]
 
   icons = {
@@ -193,7 +193,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
       const CustomCodeBlockLowlight = CodeBlockLowlight.extend({
         addAttributes() {
           return {
-            spellcheck: { default: 'false' },
+            spellcheck: { default: "false" },
           }
         }
       });
@@ -210,10 +210,6 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
                 'Mod-k': () => {
                   self.toggleLink()
                   return true                
-                },
-                'Ctrl-k': () => {
-                  self.toggleLink()
-                  return true
                 },
               }
             },
@@ -246,11 +242,11 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
           this.activeMarks.bold = args.editor.isActive("bold");
           this.activeMarks.code = args.editor.isActive("code");
           this.activeMarks.codeBlock = args.editor.isActive("codeBlock");
-          this.activeMarks.Heading1 = args.editor.isActive("heading", { level: 1 });
-          this.activeMarks.Heading2 = args.editor.isActive("heading", { level: 2 });
-          this.activeMarks.Heading3 = args.editor.isActive("heading", { level: 3 });
-          this.activeMarks.Heading4 = args.editor.isActive("heading", { level: 4 });
-          this.activeMarks.Heading5 = args.editor.isActive("heading", { level: 5 });
+          this.activeMarks.heading1 = args.editor.isActive("heading", { level: 1 });
+          this.activeMarks.heading2 = args.editor.isActive("heading", { level: 2 });
+          this.activeMarks.heading3 = args.editor.isActive("heading", { level: 3 });
+          this.activeMarks.heading4 = args.editor.isActive("heading", { level: 4 });
+          this.activeMarks.heading5 = args.editor.isActive("heading", { level: 5 });
           this.activeMarks.italic = args.editor.isActive("italic");
           this.activeMarks.link = args.editor.isActive("link");
           this.activeMarks.listOrdered = args.editor.isActive("orderedList");

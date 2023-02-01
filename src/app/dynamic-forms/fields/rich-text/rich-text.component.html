@@ -23,7 +23,7 @@
       <div class="toolbar">
         <select class="toolbar-dropdown toolbar-item" (change)="toggleMark($event.target.value)">
           <option [value]="tiptapMarkType.Paragraph" title="{{ ctrlLabel }} + Alt + 0">Paragraph</option>
-          <option *ngFor="let heading of headings" [selected]="activeMarks[heading.value]" [title]="heading.title" [value]="tiptapMarkType[heading.value]">{{ heading.name }}</option>
+          <option *ngFor="let heading of headings" [selected]="activeMarks[heading.selected]" [title]="heading.title" [value]="heading.mark">{{ heading.name }}</option>
         </select>
 
         <span class="toolbar-divider">
