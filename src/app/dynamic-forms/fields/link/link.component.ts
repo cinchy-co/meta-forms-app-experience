@@ -104,7 +104,7 @@ export class LinkComponent implements OnInit {
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
     this.showActualField = !this.showImage && !this.showLinkUrl;
     let url = this._configService.envConfig.cinchyRootUrl;
-    this.tableSourceURL = url + "/Tables/" + this.field.cinchyColumn.LinkTargetTableId;
+    this.tableSourceURL = url + "/Tables/" + this.field.cinchyColumn.linkTargetTableId;
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
       this.myControl.disable();
       this.setSelectedValue();

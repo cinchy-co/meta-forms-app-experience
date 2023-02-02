@@ -2,7 +2,7 @@
   <div class="m-b-10">
     <div class="link-labels">
       <div>
-        <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
+        <fa-icon [icon]="field.cinchyColumn.tableId == field.cinchyColumn.linkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
       </div>
       &nbsp;
       <label class="cinchy-label" [title]="field.caption ?? ' '">
@@ -21,7 +21,7 @@
                 matTooltipPosition="above">
         error
       </mat-icon>
-      <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId"
+      <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId != field.cinchyColumn.linkTargetTableId"
                 class="info-icon"
                 [ngbTooltip]="withcaptiont"
                 placement="auto"
@@ -34,7 +34,7 @@
                 matTooltipPosition="above">
         info
       </mat-icon>
-      <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId != field.cinchyColumn.LinkTargetTableId"
+      <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId != field.cinchyColumn.linkTargetTableId"
                 class="info-icon"
                 [ngbTooltip]="withoutcaptiont"
                 triggers="click"
@@ -47,7 +47,7 @@
                 matTooltipPosition="above">
         info
       </mat-icon>
-      <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId"
+      <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId == field.cinchyColumn.linkTargetTableId"
                 class="info-icon"
                 [ngbTooltip]="hierarchyWithCaption"
                 placement="auto"
@@ -60,7 +60,7 @@
                 matTooltipPosition="above">
         info
       </mat-icon>
-      <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId == field.cinchyColumn.LinkTargetTableId"
+      <mat-icon *ngIf="!field.caption && field.cinchyColumn.tableId == field.cinchyColumn.linkTargetTableId"
                 class="info-icon"
                 [ngbTooltip]="hierarchyWithoutCaption"
                 placement="auto"

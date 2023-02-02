@@ -104,7 +104,7 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
     }
     this.getListItems();
     let url = this._configService.envConfig.cinchyRootUrl;
-    this.tableSourceURL = url + "/Tables/" + this.field.cinchyColumn.LinkTargetTableId;
+    this.tableSourceURL = url + "/Tables/" + this.field.cinchyColumn.linkTargetTableId;
   }
 
   setSelectedValue() {

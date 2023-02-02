@@ -12,6 +12,7 @@ import { MatExpansionModule } from "@angular/material/expansion";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
+import { MatMenuModule } from "@angular/material/menu";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatSelectModule } from "@angular/material/select";
@@ -94,7 +95,7 @@ const CustomSelectOptions: INgxSelectOptions = {
 
 @NgModule({
   declarations: [
-    AddRichTextImageComponent,
+    AddRichTextImageDialogComponent,
     AddRichTextLinkDialogComponent,
     AttachFileComponent,
     CalculatedComponent,
@@ -116,50 +117,49 @@ const CustomSelectOptions: INgxSelectOptions = {
     KeysPipe
   ],
   imports: [
-    BrowserModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatCheckboxModule,
-    MatDialogModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatAutocompleteModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatProgressSpinnerModule,
     CinchyModule.forRoot(),
-    MatCardModule,
+    AceEditorModule,
+    AngularMultiSelectModule,
+    BrowserAnimationsModule,
+    BrowserModule,
+    DigitOnlyModule,
     FilterPipeModule,
+    FontAwesomeModule,
+    FormsModule,
+    MatAutocompleteModule,
+    MatButtonModule,
+    MatCardModule,
+    MatCheckboxModule,
+    MatDatepickerModule,
+    MatDialogModule,
+    MatExpansionModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatMenuModule,
+    MatNativeDateModule,
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
+    MatSelectModule,
+    MatTableModule,
+    MatTabsModule,
+    MatTooltipModule,
+    NgbModule,
+    NgxMatSelectSearchModule,
     NgxSelectModule.forRoot(CustomSelectOptions),
     NgxSpinnerModule,
-    FormsModule,
     ReactiveFormsModule,
-    MatTabsModule,
-    MatExpansionModule,
-    BrowserAnimationsModule,
+    ScrollingModule,
+    SharedModule,
     ToastrModule.forRoot({
       timeOut          : 5000,
       closeButton      : true,
       preventDuplicates: true
-    }),
-    FontAwesomeModule,
-    AngularMultiSelectModule,
-    DigitOnlyModule,
-    ScrollingModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    SharedModule,
-    NgxMatSelectSearchModule,
-    AceEditorModule,
-    NgbModule,
-    MatMenuModule
+    })
   ],
   exports        : [CinchyDynamicFormsComponent],
   entryComponents: [
-    AddRichTextImageComponent,
+    AddRichTextImageDialogComponent,
     AddRichTextLinkDialogComponent,
     ChildFormComponent,
     MessageDialogComponent

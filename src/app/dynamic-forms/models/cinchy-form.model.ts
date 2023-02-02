@@ -81,7 +81,7 @@ export class Form implements IForm {
     this.sections.forEach(section => {
       section.fields.forEach(element => {
         //TODO: GET The values Dynamically
-        if (parentTableId === element.cinchyColumn.LinkTargetTableId) {
+        if (parentTableId === element.cinchyColumn.linkTargetTableId) {
           columnName = element.cinchyColumn.name;
         }
 

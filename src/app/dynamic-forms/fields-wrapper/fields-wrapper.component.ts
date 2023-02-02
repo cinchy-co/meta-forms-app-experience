@@ -9,8 +9,6 @@ import {
   ViewEncapsulation
 } from "@angular/core";
 
-import { isNullOrUndefined } from "util";
-
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 
 import { TextFormatType } from "../enums/text-format-type.enum";
@@ -24,8 +22,6 @@ import { AppStateService } from "../../services/app-state.service";
 
 import { isNullOrUndefined } from "util";
 
-import { TextFormatType } from "../enums/text-format-type.enum";
-
 
 @Component({
   selector: "app-fields-wrapper",
@@ -34,6 +30,7 @@ import { TextFormatType } from "../enums/text-format-type.enum";
   encapsulation: ViewEncapsulation.None
 })
 export class FieldsWrapperComponent {
+
   @Input() form: IForm;
   @Input() rowId;
   @Input() isChild: boolean;
@@ -71,21 +68,26 @@ export class FieldsWrapperComponent {
   }
 
   determineSectionsToRender() {
+
     let _newSectionsToRenderMetadata = [];
     let _newSectionsToRender = [];
+
     if (this.form?.sections) {
       for (let i = 0; i < this.form.sections.length; i++) {
         if (this.form.sections[i].fields) {
           let numOfFlattenedChildForms = 0;
+
           for (let j = 0; j < this.form.sections[i].fields.length; j++) {
             if (this.form.sections[i].fields[j].childForm?.flatten && this.form.sections[i].fields[j].childForm.sections) {
               numOfFlattenedChildForms++;
               for (let k = 0; k < this.form.sections[i].fields[j].childForm.sections.length; k++) {
                 // Don't auto expand the child column if this is an accordion form
-                if (this.form.isAccordion)
+                if (this.form.isAccordion) {
                   this.form.sections[i].fields[j].childForm.sections[k].autoExpand = false;
+                }
 
                 _newSectionsToRender.push(this.form.sections[i].fields[j].childForm.sections[k]);
+
                 _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
                   id: this.form.sections[i].fields[j].childForm.sections[k].id,
                   name: this.form.sections[i].fields[j].childForm.sections[k].label,
@@ -95,8 +97,10 @@ export class FieldsWrapperComponent {
               }
             }
           }
+
           if (this.form.sections[i].fields.length > numOfFlattenedChildForms || numOfFlattenedChildForms == 0) {
             _newSectionsToRender.push(this.form.sections[i]);
+
             _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
               id: this.form.sections[i].id,
               name: this.form.sections[i].label,
