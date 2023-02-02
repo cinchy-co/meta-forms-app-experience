@@ -1,5 +1,5 @@
 <form class="cinchy-dynamic-forms-wrapper">
-  <div class='navigation-buttons form-header'>
+  <div class="navigation-buttons form-header">
     <!-- <button mat-raised-button>Cancel</button>-->
     <div class="flex-row ml-20">
       <a class="table-url" [href]="formMetadata.tableUrl" target="_blank"><span
@@ -18,12 +18,15 @@
         <mat-icon class="font-22" title="Clone Data">queue</mat-icon>
         Duplicate Record
       </button>
+
       <button type="button" class="no-bg mr-20" mat-button color="accent" [disabled]="!enableSaveBtn" (click)="printCurrentForm()">
         <mat-icon class="font-22" title="Export To Pdf">archive</mat-icon>
         Export As Pdf
       </button>
+
       <!--<button mat-raised-button class="ml-20 navigation-buttons have-brand float-right" (click)="printCurrentForm()">Print</button>-->
-      <button type="button" mat-raised-button class='btnSave have-brand' (click)='saveForm(form, rowId)' [disabled]="!enableSaveBtn">Save</button>
+
+      <button type="button" mat-raised-button class="btnSave have-brand center-vertical-important" (click)="saveForm(form, rowId)" [disabled]="!enableSaveBtn">Save</button>
     </div>
   </div>
 

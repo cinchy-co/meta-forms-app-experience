@@ -26,6 +26,28 @@
   }
 }
 
+/**
+ * The positional 50% is relative to the container, while the transform 50% is relative to its own height, so this pushes
+ * the element down to the bottom half of the container, then nudges it back up so the element's center aligns with the container's
+ * center
+ */
+.center-vertical {
+    position: relative;
+    top: 50%;
+
+    transform: translateY(-50%);
+}
+
+/**
+ * I have separated these so that the user can determine the extent to which the style needs to apply in context
+ */
+.center-vertical-important {
+  position: relative;
+  top: 50% !important;
+
+  transform: translateY(-50%) !important;
+}
+
 .flex-vertical-center {
   align-items: center;
 }
@@ -126,6 +148,10 @@ mat-spinner {
   display: none !important;
 }
 
+.mat-form-field-flex {
+    align-items: center !important;
+}
+
 .selected-list .c-list .c-token .c-label,
 .pure-checkbox input[type="checkbox"] + label {
   font-size: 12px;
@@ -133,10 +159,6 @@ mat-spinner {
 
 .mat-expansion-panel-content {
   font-size: 16px;
-}
-
-.mat-expansion-panel {
-  // overflow: visible !important;
 }
 
 .table-url {
@@ -245,11 +267,6 @@ app-fields-wrapper {
 
 .auto-height {
   height: auto;
-}
-
-
-.mat-select.single-select {
-  margin-top: -7px !important;
 }
 
 .is-loading {

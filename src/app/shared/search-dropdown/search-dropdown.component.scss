@@ -5,3 +5,8 @@
 mat-form-field {
     width: 470px;
 }
+
+// Fixing a weird display bug that prevents the selected value from being visible on only this element
+::ng-deep .mat-select-value {
+    max-width: 430px !important;
+}
