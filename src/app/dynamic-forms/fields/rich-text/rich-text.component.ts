@@ -13,6 +13,7 @@ import {
   MatDialogRef
 } from "@angular/material/dialog";
 
+import { faFileCode } from "@fortawesome/free-regular-svg-icons";
 import {
   faAlignLeft,
   faBold,
@@ -23,6 +24,7 @@ import {
   faListOl,
   faListUl,
   faStrikethrough,
+  faTasks,
   faUnderline,
   faImage,
   faTable,
@@ -32,18 +34,25 @@ import {
   faMinusSquare
 } from "@fortawesome/free-solid-svg-icons";
 
-import { Editor } from "@tiptap/core"
 
-import { Transaction } from "prosemirror-state";
+
+import { Editor } from "@tiptap/core";
 
 import Link from "@tiptap/extension-link";
-import StarterKit from "@tiptap/starter-kit"
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
 import Underline from "@tiptap/extension-underline";
+import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Table from "@tiptap/extension-table"
 import TableRow from "@tiptap/extension-table-row"
 import TableCell from "@tiptap/extension-table-cell"
 import TableHeader from "@tiptap/extension-table-header"
+
+import { lowlight } from 'lowlight/lib/common';
+import { Transaction } from "prosemirror-state";
+
 
 import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
 import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
@@ -97,6 +106,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
   activeMarks = {
     bold: false,
     code: false,
+    codeBlock: false,
     heading1: false,
     heading2: false,
     heading3: false,
@@ -107,15 +117,27 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
     link: false,
     listOrdered: false,
     listUnordered: false,
+    listTask: false,
     strike: false,
     table: false,
     underline: false
   };
+  // Keyboard shortcut label for ctrl key
+  ctrlLabel = window.navigator.appVersion.indexOf("Mac") !== -1 ? "⌘" : "^";
+
+  headings = [
+    { name: "Heading 1", selected: "heading1", mark: TiptapMarkType.Heading1, title: `${this.ctrlLabel} + Alt + 1` },
+    { name: "Heading 2", selected: "heading2", mark: TiptapMarkType.Heading2, title: `${this.ctrlLabel} + Alt + 2` },
+    { name: "Heading 3", selected: "heading3", mark: TiptapMarkType.Heading3, title: `${this.ctrlLabel} + Alt + 3` },
+    { name: "Heading 4", selected: "heading4", mark: TiptapMarkType.Heading4, title: `${this.ctrlLabel} + Alt + 4` },
+    { name: "Heading 5", selected: "heading5", mark: TiptapMarkType.Heading5, title: `${this.ctrlLabel} + Alt + 5` },
+  ]
 
   icons = {
     faAlignLeft: faAlignLeft,
     faBold: faBold,
     faCode: faCode,
+    faFileCode: faFileCode,
     faHeading: faHeading,
     faImage: faImage,
     faItalic: faItalic,
@@ -126,6 +148,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
     faListUl: faListUl,
     faMinusSquare: faMinusSquare,
     faStrikethrough: faStrikethrough,
+    faTasks: faTasks,
     faTable: faTable,
     faTrash: faTrash,
     faUnderline: faUnderline
@@ -156,6 +179,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
 
     let content: string | Object;
+    const self = this
 
     try {
       content = ((this.field.value as string).includes(`"type":"doc"`)) ? JSON.parse(this.field.value ?? "{}") : this.field.value;
@@ -163,15 +187,39 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
     catch (error) {
       content = this.field.value;
     }
-
+    
     if (this.canEdit) {
+      // Disable spellcheck in code blocks
+      const CustomCodeBlockLowlight = CodeBlockLowlight.extend({
+        addAttributes() {
+          return {
+            spellcheck: { default: "false" },
+          }
+        }
+      });
+
       this.editor = new Editor({
         element: this.richTextElement?.nativeElement,
         extensions: [
-          StarterKit,
+          CustomCodeBlockLowlight.configure({
+            lowlight,
+          }),
           Link.extend({
+            addKeyboardShortcuts() {
+              return {
+                'Mod-k': () => {
+                  self.toggleLink()
+                  return true                
+                },
+              }
+            },
             inclusive: false
           }),
+          StarterKit.configure({
+            heading: { levels: [1, 2, 3, 4, 5] },
+          }),
+          TaskList,
+          TaskItem,
           Underline,
           Image,
           Table.configure({
@@ -190,10 +238,10 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
         /**
          * Update the state of the marks at the cursor position
          */
-        onTransaction: (args: { editor: Editor, transaction: Transaction }): void => {
-
+        onTransaction: (args: { editor: Editor, transaction: Transaction }): void => {          
           this.activeMarks.bold = args.editor.isActive("bold");
           this.activeMarks.code = args.editor.isActive("code");
+          this.activeMarks.codeBlock = args.editor.isActive("codeBlock");
           this.activeMarks.heading1 = args.editor.isActive("heading", { level: 1 });
           this.activeMarks.heading2 = args.editor.isActive("heading", { level: 2 });
           this.activeMarks.heading3 = args.editor.isActive("heading", { level: 3 });
@@ -203,6 +251,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
           this.activeMarks.link = args.editor.isActive("link");
           this.activeMarks.listOrdered = args.editor.isActive("orderedList");
           this.activeMarks.listUnordered = args.editor.isActive("bulletList");
+          this.activeMarks.listTask = args.editor.isActive("taskList");
           this.activeMarks.strike = args.editor.isActive("strike");
           this.activeMarks.underline = args.editor.isActive("underline");
           this.activeMarks.image = args.editor.isActive("image");
@@ -391,6 +440,13 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
         this.editor?.commands.toggleCode();
 
         break;
+      case TiptapMarkType.CodeBlock:
+        this.editor?.commands.toggleCodeBlock();
+
+        break;
+      case TiptapMarkType.Paragraph:
+        this.editor?.commands.setParagraph();
+        break;
       case TiptapMarkType.Heading1:
         this.editor?.commands.toggleHeading({ level: 1});
 
@@ -425,6 +481,10 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
         break;
       case TiptapMarkType.ListUnordered:
         this.editor?.commands.toggleBulletList();
+
+        break;
+      case TiptapMarkType.ListTask:
+        this.editor?.commands.toggleTaskList();
 
         break;
       case TiptapMarkType.Strike:

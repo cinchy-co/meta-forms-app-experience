@@ -30,6 +30,7 @@
             ],
             "styles": [
               "./node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
+              "src/assets/styles/atelier-cave-light.min.css",
               "src/styles.scss",
               "src/global-styles/variables.scss",
               "./node_modules/angular2-multiselect-dropdown/themes/default.theme.css"
