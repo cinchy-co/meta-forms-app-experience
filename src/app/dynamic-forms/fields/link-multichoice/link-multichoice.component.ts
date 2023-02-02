@@ -1,7 +1,16 @@
 import { ReplaySubject, Subject } from "rxjs";
 import { take, takeUntil } from "rxjs/operators";
 
-import { AfterViewInit, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, ElementRef } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+  ElementRef
+} from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatSelect } from "@angular/material/select";
 
@@ -38,7 +47,7 @@ import * as R from "ramda";
   providers: [DropdownDatasetService]
 })
 
-export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestroy {
+export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   @ViewChild("fileInput") fileInput: ElementRef;
   @ViewChild("multiSelect", {static: true}) multiSelect: MatSelect;
   @ViewChild("t") public tooltip: NgbTooltip;
@@ -80,28 +89,16 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   faSitemap = faSitemap;
   isCursorIn: boolean = false;
 
-  constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
-              private _cinchyService: CinchyService,
-              private _configService: ConfigService,
-              private _cinchyQueryService: CinchyQueryService,
-              private _toastr: ToastrService) {
-  }
+  constructor(
+    private _dropdownDatasetService: DropdownDatasetService,
+    private spinner: NgxSpinnerService,
+    private _cinchyService: CinchyService,
+    private _configService: ConfigService,
+    private _cinchyQueryService: CinchyQueryService,
+    private _toastr: ToastrService) {}
 
   ngOnInit(): void {
-    // Below for other dropdown lib
-/*    this.dropdownSettings = {
-      singleSelection: false,
-      text:"Select",
-    //  selectAllText:"Select All",
-   //   unSelectAllText:"UnSelect All",
-      enableCheckAll:false,
-      enableSearchFilter: true,
-      lazyLoading: true,
-      labelKey: "label",
-      badgeShowLimit: 2,
-      position: "bottom",
-      height: "200px"
-    };*/
+
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
       this.myControl.disable();
     }
@@ -120,6 +117,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   generateMultipleOptionsFromSingle() {
+
     let selectedIds;
     if (this.field.noPreSelect) {
       return [];
@@ -154,10 +152,12 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   getListItems() {
+
     this.bindDropdownList(this.field, this.field.cinchyColumn.linkTargetColumnId);
   }
 
   async bindDropdownList(dataSet: any, linkTargetId: number) {
+
     if (!this.dropdownListFromLinkedTable) {
       this.isLoading = true;
       let dropdownDataset: DropdownDataset = null;
@@ -197,6 +197,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   checkForAttachmentUrl(){
+
     this.downloadLink = !!this.field.cinchyColumn.attachmentUrl;
     if(this.field.cinchyColumn.attachmentUrl && this.selectedValues && this.selectedValues.length){
       this.downloadLink = true;
@@ -211,6 +212,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   setFilteredOptions(dropdownOptions?) {
+
     this.filteredOptions = dropdownOptions ? dropdownOptions : this.dropdownSetOptions;
     this.myControl.setValue([]);
     // load the initial list
@@ -226,6 +228,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   getSortedList(dropdownDataset) {
+
     let filteredOutNullSets;
     if (dropdownDataset && dropdownDataset.options) {
       filteredOutNullSets = dropdownDataset.options.filter(option => option.label);
@@ -237,6 +240,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   optionClicked(dropdownOption) {
+
     const alreadyExistInSelected = this.selectedValues.find(item => item.id === dropdownOption.id);
     if (alreadyExistInSelected) {
       dropdownOption.selected = false;
@@ -264,26 +268,26 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   isSelected(dropdownOption) {
+
     return this.selectedValues.find(item => item.id === dropdownOption.id);
   }
 
   remove(dropdownOption): void {
+
     this.selectedValues = dropdownOption === "all" ? [] : this.selectedValues.filter(item => item.id !== dropdownOption.id);
     this.myControl.setValue(this.selectedValues);
     this.field.cinchyColumn.hasChanged = true;
     this.field.value = this.selectedValues.map(option => option.id);
   }
 
-  ngAfterViewInit() {
-   // this.setInitialValue();
-  }
-
   ngOnDestroy() {
+
     this.onDestroy.next();
     this.onDestroy.complete();
   }
 
   toggleSelectAll(selectAllValue) {
+
     this.filteredListMulti.pipe(take(1), takeUntil(this.onDestroy))
       .subscribe(val => {
         if (selectAllValue) {
@@ -301,6 +305,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
    * Sets the initial value after the fileteredItems are loaded initially
    */
   protected setInitialValue() {
+
     this.filteredListMulti
       .pipe(take(1), takeUntil(this.onDestroy))
       .subscribe(() => {
@@ -311,6 +316,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   protected filterMulti() {
+
     if (!this.dropdownSetOptions) {
       return;
     }
@@ -329,24 +335,32 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   // Options for multi select library
-  onItemSelect(item:any){
+  onItemSelect(item: any) {
+
     console.log(item);
     console.log(this.selectedValues);
     this.optionClicked(item);
   }
-  OnItemDeSelect(item:any){
+
+  OnItemDeSelect(item: any) {
+
     console.log(item);
     console.log(this.selectedValues);
     this.optionClicked(item);
   }
-  onSelectAll(items: any){
+
+  onSelectAll(items: any) {
+
     console.log(items);
   }
-  onDeSelectAll(items: any){
+
+  onDeSelectAll(items: any) {
+
     console.log(items);
   }
 
   onFileSelected(event: any) {
+
     if (event?.target?.files?.length === 0) {
       return;
     }
@@ -362,6 +376,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   fileNameIsImage(fileName: string) {
+
     const lowercase = fileName.toLowerCase();
     return  lowercase.endsWith(".png") ||
             lowercase.endsWith(".jpg") ||
@@ -371,6 +386,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   getAndSetLatestFileValue() {
+
     this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.rowId).subscribe(resp => {
       if (resp && resp.length) {
         this.field.value = this.field.value != null && this.field.value !== "" ? this.field.value + ", " + resp.map(x => x.fileId).join(", ") : resp.map(x => x.fileId).join(", ");
@@ -397,6 +413,7 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   onDeleteFile(item) {
+
     if (item.fileId && this.field.value) {
       this.field.value = this.field.value.split(",").map(x => x.trim()).filter(x => x !== (item.fileId).toString()).join(", ");
       if (this.field.value === "") {
@@ -407,16 +424,19 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 
-  removeTooltipElement(){
+  removeTooltipElement() {
+
     this.isCursorIn = false;
     this.tooltip.close(); 
   }
-  
-  setTooltipCursor(){
+
+  setTooltipCursor() {
+
     this.isCursorIn = true;
   }
-  
-  openTooltip(tooltip){
+
+  openTooltip(tooltip) {
+
     tooltip.open();
     this.tooltip = tooltip;
     if(tooltip.isOpen()) {
@@ -427,8 +447,9 @@ export class LinkMultichoiceComponent implements OnInit, AfterViewInit, OnDestro
     }
    }
   }
-  
-  closeTooltip(tooltip){
+
+  closeTooltip(tooltip) {
+
     setTimeout(() => {
       if(tooltip.isOpen() &&  !this.isCursorIn) {
         tooltip.close();

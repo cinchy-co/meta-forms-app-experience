@@ -40,6 +40,7 @@ import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { DigitOnlyModule } from "@uiowa/digit-only";
 
 //#region Custom
+import { AddRichTextImageDialogComponent } from "./dialogs/add-rich-text-image/add-rich-text-image.component";
 import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
 import { FieldsWrapperComponent } from "./fields-wrapper/fields-wrapper.component";
 import { AttachFileComponent } from "./fields/attach-file/attach-file.component";
@@ -92,7 +93,8 @@ const CustomSelectOptions: INgxSelectOptions = {
 
 
 @NgModule({
-  declarations   : [
+  declarations: [
+    AddRichTextImageComponent,
     AddRichTextLinkDialogComponent,
     AttachFileComponent,
     CalculatedComponent,
@@ -107,10 +109,10 @@ const CustomSelectOptions: INgxSelectOptions = {
     LinkMultichoiceComponent,
     MessageDialogComponent,
     MultichoiceComponent,
-    TextareaComponent,
-    TextboxComponent,
     NumberComponent,
     RichTextComponent,
+    TextareaComponent,
+    TextboxComponent,
     KeysPipe
   ],
   imports: [
@@ -152,10 +154,16 @@ const CustomSelectOptions: INgxSelectOptions = {
     SharedModule,
     NgxMatSelectSearchModule,
     AceEditorModule,
-    NgbModule
+    NgbModule,
+    MatMenuModule
   ],
   exports        : [CinchyDynamicFormsComponent],
-  entryComponents: [AddRichTextLinkDialogComponent, ChildFormComponent, MessageDialogComponent],
+  entryComponents: [
+    AddRichTextImageComponent,
+    AddRichTextLinkDialogComponent,
+    ChildFormComponent,
+    MessageDialogComponent
+  ],
   providers      : [CinchyModule, DatePipe],
   bootstrap      : []
 })

@@ -1,12 +1,4 @@
 export enum TiptapMarkType {
-  //Blockquote = "BLOCKQUOTE",
-  /*
-   * Alias for a <code> tagged wrapped in a <pre> tag to allow for multi-line code
-   *
-   * Hotkey: ``` or ~~~
-   */
-  //CodeBlock = "CODE_BLOCK",
-  //HorizontalRule = "HORIZONTAL_RULE",
   /**
    * Represents a <b> tag.
    *
@@ -19,6 +11,12 @@ export enum TiptapMarkType {
    * Hotkey: `{text}`
    */
   Code = "CODE",
+  /*
+   * Alias for a <code> tagged wrapped in a <pre> tag to allow for multi-line code
+   *
+   * Hotkey: ``` or ~~~ or ```language
+   */
+  CodeBlock = "CODE_BLOCK",
   /**
    * Default extension, required for Tiptap. The wrapping element.
    */
@@ -65,6 +63,10 @@ export enum TiptapMarkType {
    * Hotkey: ###### || mod + alt + 6
    */
   Heading6 = "HEADING_6",
+   /**
+   * Represents an Image tag.
+   */
+  Image = "IMAGE",
   /**
    * Represents an <i> tag.
    *
@@ -92,7 +94,13 @@ export enum TiptapMarkType {
    */
   ListUnordered = "BULLET_LIST",
   /**
-   * Automatically inserts a <p> tag when doing a soft line breat
+   * Represents a <ul> tag with the data-type attribute set to "task-list"
+   * 
+   * Hotkey: Type [ ] or [x] at the beginning of a new line
+   */
+  ListTask = "TASK_LIST",
+  /**
+   * Automatically inserts a <p> tag when doing a soft line break
    */
   Paragraph = "PARAGRAPH",
   /**
@@ -101,6 +109,10 @@ export enum TiptapMarkType {
    * Hotkey: ~~{text}~~
    */
   Strike = "STRIKE",
+  /**
+   * Represents a Table tag with all table operations like Add Before/After row , Add Before/After column, Delete table, column, row.
+   */
+  Table = "TABLE",
   /**
    * Default extension, required for TipTap. Enables plaintext in the field.
    */

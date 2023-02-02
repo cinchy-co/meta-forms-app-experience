@@ -26,7 +26,7 @@ export interface ICinchyColumn {
   linkedFieldId: any;
   linkTargetColumnId: number;
   linkTargetColumnName: string;
-  LinkTargetTableId: number;
+  linkTargetTableId: number;
   linkTargetTableName: string;
   minValue: number;
   name: string;
@@ -59,8 +59,9 @@ export class CinchyColumn implements ICinchyColumn {
     public canView: boolean,
     public createlinkOptionFormId: string,
     public createlinkOptionName: string,
-    public LinkTargetTableId: number,
+    public linkTargetTableId: number,
     public linkTargetTableName: string,
+    public linkTableDomainName: string,
     public deviationSeverityColor: string,
     public choiceOptions: string,
     public formFieldsJsonData,
