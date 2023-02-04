@@ -3,6 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { IRichTextLink } from "../../interface/rich-text-link";
 
 import { isNullOrUndefined } from "util";
+import { IRichTextImage } from '../../interface/rich-text-image';
 @Component({
   selector: 'app-add-rich-text-image',
   templateUrl: './add-rich-text-image.component.html',
@@ -10,21 +11,21 @@ import { isNullOrUndefined } from "util";
 })
 export class AddRichTextImageComponent {
 
-  href: string;
-
-  targetBlank = true;
+  src: string;
 
 
   get canSave(): boolean {
-    return this.href ? true : false;
+
+    return this.src ? true : false;
   }
 
 
   constructor(
     public dialogRef: MatDialogRef<AddRichTextImageComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: IRichTextLink
+    @Inject(MAT_DIALOG_DATA) public data: IRichTextImage
   ) {
-    if(data.href) this.href = data.href;
+
+    this.src = data.src;
   }
 
 
@@ -38,10 +39,8 @@ export class AddRichTextImageComponent {
 
     if (this.canSave) {
       this.dialogRef.close({
-        href: this.href,
-        targetBlank: this.targetBlank
-      } as IRichTextLink);
+        src: this.src
+      } as IRichTextImage);
     }
   }
-
 }
