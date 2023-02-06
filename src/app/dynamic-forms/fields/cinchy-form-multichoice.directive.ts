@@ -11,7 +11,7 @@ import { faListUl } from '@fortawesome/free-solid-svg-icons';
 @Component({
     selector: 'cinchy-multi-choice',
     template: `
-      <!-- Chioice field For ShowCase Make it Multi-Select-->
+      <!-- Choice field For ShowCase Make it Multi-Select-->
       <div *ngIf=" field.dropdownDataset">
         <mat-form-field class="full-width-element divMarginBottom">
           <div class="link-labels">

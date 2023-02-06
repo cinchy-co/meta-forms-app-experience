@@ -43,7 +43,7 @@ export class AddNewOptionDialogComponent implements OnInit {
       this.loadFormSections();
     } catch (e) {
       this.spinner.hide();
-      console.log('Get meta data Query failing,', e);
+      console.error('Get meta data Query failing,', e);
       this.toastr.error('Operation aborted ! Access denied or temporary issue in execution getting Meta data.', 'Error');
     }
   }
