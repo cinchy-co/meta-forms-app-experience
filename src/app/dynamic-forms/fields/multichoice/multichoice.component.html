@@ -1,4 +1,3 @@
-<!-- Chioice field For ShowCase Make it Multi-Select-->
 <div *ngIf=" field.dropdownDataset">
   <mat-form-field class="full-width-element divMarginBottom">
     <div class="link-labels">
@@ -6,9 +5,9 @@
         <fa-icon [icon]="faListUl"></fa-icon>
       </div>
       &nbsp;
-      <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
-        {{field.label}}
-        {{field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null) ? '*' :''}}
+      <label class="cinchy-label" [title]="field.caption || ''">
+        {{ field.label }}
+        {{ field.cinchyColumn.isMandatory && (field.value === '' || field.value === null) ? '*' :'' }}
       </label>
       <mat-icon *ngIf="field.caption" class="info-icon"
                 ngbTooltip="{{field.caption}}"
@@ -19,23 +18,24 @@
         info
       </mat-icon>
     </div>
-    <mat-select multiple [(ngModel)]="field.value" class="form-control"
+    <mat-select multiple [(ngModel)]="field.value"
+                class="form-control"
                 [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
+                [ngModelOptions]="{ standalone: true }"
                 (selectionChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
-                [ngModelOptions]="{standalone: true}" (openedChange)="changeFilter()">
-
-      <input matInput type="search" placeholder="Search {{field.label}}" class="form-control"
+                (openedChange)="changeFilter()"
+    >
+      <input matInput type="search" placeholder="Search {{ field.label }}" class="form-control"
              [(ngModel)]="choiceFilter" [ngModelOptions]="{standalone: true}">
 
       <mat-option *ngFor="let dropdownOption of field.dropdownDataset| filterBy: choiceFilter"
                   [value]="dropdownOption">
-        {{dropdownOption}}
+        {{ dropdownOption }}
       </mat-option>
-
     </mat-select>
   </mat-form-field>
   <!-- isMandatory Validator-->
-  <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
-    *{{field.label}} is Required.
+  <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory && (field.value === '' || field.value === null))">
+    *{{ field.label }} is Required.
   </mat-error>
 </div>
