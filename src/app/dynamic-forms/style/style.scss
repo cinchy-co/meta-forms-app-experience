@@ -392,17 +392,7 @@ button.btnSave.mat-raised-button {
     padding-top: 20px;
   }
 
-  //border-left COMING FROM THEME COLORS
-
-  .mat-form-field-underline {
-    display: none;
-  }
-
-  .mat-form-field-appearance-legacy .mat-form-field-infix {
-    border-top: 0;
-  }
-
-  .mat-form-field-appearance-legacy .mat-form-field-wrapper {
+  .mat-form-field-wrapper {
     padding-bottom: 0;
   }
 }
@@ -480,12 +470,8 @@ button.btnSave.mat-raised-button {
   }
 }
 
-.multi-search{
-  .mat-select-search-input{
-    margin-left: 5px;
-    border: none;
-    outline: none;
-  }
+.mat-select-panel {
+    max-width: 100% !important;
 }
 
 .date-icon{
@@ -526,7 +512,7 @@ button.btnSave.mat-raised-button {
 
 .mat-form-field-appearance-legacy .mat-form-field-prefix .mat-datepicker-toggle-default-icon,
 .mat-form-field-appearance-legacy .mat-form-field-suffix .mat-datepicker-toggle-default-icon {
-width: 2rem !important;
+  width: 2rem !important;
 }
 
 .mat-form-field-prefix .mat-icon-button,
@@ -535,12 +521,28 @@ width: 2rem !important;
   width: 2.5em !important;
 }
 
+.mat-select-trigger {
+  // display: block !important;
+
+  .mat-select-value {
+    // display: block;
+    // max-width: 100%;
+  }
+}
+
 .svg-inline--fa{
   color: dimgray;
   font: normal normal normal 14px/1 FontAwesome;
 }
 
-
+@media (min-width: 502px) {
+  .fix-width-470 {
+    max-height: 100% !important;
+    max-width: calc(470px + 32px) !important;
+    min-width: calc(470px + 32px) !important;
+    width: calc(470px + 32px) !important;
+  }
+}
 
 .ProseMirror-focused {
   outline: none !important;

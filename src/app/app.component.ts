@@ -43,7 +43,6 @@ export class AppComponent implements OnInit {
       rowId && rowId != "null" ? sessionStorage.setItem('rowId', rowId) : sessionStorage.setItem('rowId', null);
     }
     console.log('Row Id app', rowId, 'session',  sessionStorage.getItem('rowId'));
-
   }
 
   getQueryStringValue(key, url) {
