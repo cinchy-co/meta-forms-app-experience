@@ -19,7 +19,7 @@
         info
       </mat-icon>
     </div>
-    <mat-form-field class="full-width-element divMarginBottom" *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled">
+    <div class="full-width-element divMarginBottom" *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled">
       <mat-select class="single-select form-control" [(ngModel)]="field.value"
                   [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
                   (selectionChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
@@ -31,7 +31,7 @@
         </mat-option>
 
       </mat-select>
-    </mat-form-field>
+    </div>
     <ng-container *ngIf="!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly || isDisabled">
       <label class="font-14" [innerHTML]="field.value ? field.value : '-'"></label>
     </ng-container>

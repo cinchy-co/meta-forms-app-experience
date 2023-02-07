@@ -2,5 +2,5 @@
   "authority": "<cinchy-domain>/id",
   "cinchyRootUrl": "<cinchy-domain>",
   "clientId": "cinchy_meta_forms",
-  "redirectUri": "<cinchy-domain>/metaforms"
+  "redirectUri": "http://localhost:3000/"
 }
