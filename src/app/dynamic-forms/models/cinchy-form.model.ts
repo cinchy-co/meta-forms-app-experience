@@ -310,7 +310,7 @@ export class Form implements IForm {
         )) {
           //todo: check for link type
         } else {
-          if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalculated && element.cinchyColumn.canEdit
+          if (element.cinchyColumn.name != null && element.cinchyColumn.canEdit
           && (element.cinchyColumn.hasChanged) && (!element.cinchyColumn.isViewOnly || forClonedForm) && !element.childForm) {
             paramName = '@p' + i.toString();
             switch (element.cinchyColumn.dataType) {
@@ -509,7 +509,7 @@ export class Form implements IForm {
           console.log('Link type cannot be null');
         } else {
           const isLinkedColumnForInsert = this.isLinkedColumn(element, section) && !rowID;
-          if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalculated && element.cinchyColumn.canEdit
+          if (element.cinchyColumn.name != null && element.cinchyColumn.canEdit
             && (!element.cinchyColumn.isViewOnly || forClonedForm) && (element.cinchyColumn.hasChanged || isLinkedColumnForInsert)) {
             if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
               (element.cinchyColumn.dataType === "Choice" && element.value)

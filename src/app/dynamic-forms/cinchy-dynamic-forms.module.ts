@@ -45,7 +45,6 @@ import { AddRichTextImageDialogComponent } from "./dialogs/add-rich-text-image/a
 import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
 import { FieldsWrapperComponent } from "./fields-wrapper/fields-wrapper.component";
 import { AttachFileComponent } from "./fields/attach-file/attach-file.component";
-import { CalculatedComponent } from "./fields/calculated/calculated.component";
 import { CheckboxComponent } from "./fields/checkbox/checkbox.component";
 import { ChildFormComponent } from "./fields/child-form/child-form.component";
 import { ChildFormTableComponent} from "./fields/child-form-table/child-form-table.component";
@@ -98,7 +97,6 @@ const CustomSelectOptions: INgxSelectOptions = {
     AddRichTextImageDialogComponent,
     AddRichTextLinkDialogComponent,
     AttachFileComponent,
-    CalculatedComponent,
     CheckboxComponent,
     ChildFormComponent,
     ChildFormTableComponent,

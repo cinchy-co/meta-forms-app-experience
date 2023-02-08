@@ -18,7 +18,6 @@ export interface ICinchyColumn {
   formFieldsJsonData: string; // String of json object
   hasChanged: boolean;
   id: number;
-  isCalculated: boolean;
   isDisplayColumn: boolean;
   isMandatory: boolean;
   isMultiple: boolean;
@@ -81,7 +80,6 @@ export class CinchyColumn implements ICinchyColumn {
     public childFormLinkId: string, 
     public doNotWrap: boolean,
     public displayFormat: string,
-    public isCalculated: boolean,
     public textFormat: TextFormatType
   ) {}
 }

@@ -97,10 +97,6 @@
                             (eventHandler)="eventOccurred.emit($event)" [Form]="section.fields">
         </cinchy-attach-file>
 
-        <cinchy-calculated *ngIf="(field.cinchyColumn.dataType == 'Calculated')"
-                           [field]="field">
-        </cinchy-calculated>
-
         <cinchy-choice *ngIf="field.cinchyColumn.dataType == 'Choice' && !field.cinchyColumn.isMultiple"
                        [targetTableName]="field.cinchyColumn.tableName"
                        [field]="field"
