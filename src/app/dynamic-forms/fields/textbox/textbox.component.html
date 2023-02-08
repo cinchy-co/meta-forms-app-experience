@@ -31,7 +31,7 @@
   </ng-container>
 
   <label class="pre-formatted"
-         *ngIf="showActionField && (!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly  || field.label=== 'File Name' || isDisabled)"
+         *ngIf="showActualField && (!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly  || field.label=== 'File Name' || isDisabled)"
          [innerHTML]="field.value || '-'"></label>
 
   <ng-container *ngIf="showImage">
