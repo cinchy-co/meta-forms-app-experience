@@ -34,6 +34,7 @@
     "@tiptap/core": "2.0.0-beta.212",
     "@tiptap/extension-link": "2.0.0-beta.212",
     "@tiptap/extension-underline": "2.0.0-beta.212",
+    "@tiptap/pm": "^2.0.0-beta.212",
     "@tiptap/starter-kit": "2.0.0-beta.212",
     "@uiowa/digit-only": "^1.4.0",
     "angular2-multiselect-dropdown": "^4.6.5",
