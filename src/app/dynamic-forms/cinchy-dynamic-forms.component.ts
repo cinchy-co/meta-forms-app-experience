@@ -1,6 +1,3 @@
-import { Subject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
-
 import {
   Component,
   EventEmitter,
@@ -13,31 +10,26 @@ import {
   ViewChild,
   ViewEncapsulation
 } from "@angular/core";
-import { MatDialog } from "@angular/material/dialog";
-
-import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
-import { NgxSpinnerService } from "ngx-spinner";
-import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
-
-import { MessageDialogComponent } from "./message-dialog/message-dialog.component";
-
-import { ChildFormComponent } from "./fields/child-form/child-form.component";
-
-import { ConfigService } from "../config.service";
-
+import { ChildFormDirective } from "./fields/cinchy-child-form.directive";
+import { MatDialog } from "@angular/material/dialog";
+import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 import { IForm } from "./models/cinchy-form.model";
+import { IQuery } from "./models/cinchy-query.model";
+import { ToastrService } from "ngx-toastr";
+import { NgxSpinnerService } from "ngx-spinner";
+import { AppStateService } from "../services/app-state.service";
+import { takeUntil } from "rxjs/operators";
+import { Subject } from "rxjs";
+import { CinchyQueryService } from "../services/cinchy-query.service";
+import { MessageDialogComponent } from "./message-dialog/message-dialog.component";
+import { PrintService } from "./service/print/print.service";
 import { IFormMetadata } from "../models/form-metadata-model";
 import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 import { ILookupRecord } from "../models/lookup-record.model";
-import { IQuery } from "./models/cinchy-query.model";
-
-import { AppStateService } from "../services/app-state.service";
-import { CinchyQueryService } from "../services/cinchy-query.service";
 import { FormHelperService } from "./service/form-helper/form-helper.service";
-import { PrintService } from "./service/print/print.service";
-
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import { ConfigService } from "../config.service";
 
 
 @Component({
@@ -143,7 +135,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   setLookupRecords(lookupRecords: ILookupRecord[]) {
 
     this.lookupRecordsList = this.checkNoRecord(lookupRecords);
-    this.currentRow = this.lookupRecordsList.find(item => item.id === this.rowId) ?? this.currentRow;
+    this.currentRow = this.lookupRecordsList.find(item => item.id == this.rowId) ?? this.currentRow;
     this.rowUpdated.emit(this.rowId);
   }
 
@@ -202,6 +194,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.childForms = childForm;
 
     if (isNullOrUndefined(eventData)) {
+
       return;
     }
 
@@ -214,6 +207,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     const formvalidation = eventData.data.checkChildFormValidation();
 
     if (formvalidation.status) {
+
       eventData.data.sections.forEach(section => {
 
         if (isNullOrUndefined(section.MultiFields)) {
@@ -227,8 +221,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         });
 
         // Check for the record is new or in edit mode
-        const childFieldRow = this.childFieldArray.filter((rowData) => {
-
+        const childFieldRow = this.childFieldArray.filter(rowData => {
           if (rowData["Cinchy ID"] === eventData.id) {
             return rowData;
           }
@@ -236,17 +229,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
         if (fieldRow.length > 0) {
           // if the code is in edit mode
-          section.fields.forEach((element) => {
+          section.fields.forEach(element => {
 
             if (element.cinchyColumn.dataType === "Link") {
               if (!isNullOrUndefined(element.dropdownDataset)) {
                 let dropdownResult;
-
                 if (element.cinchyColumn.isMultiple) {
                   const numberValueToString = typeof element.value === "number" ? `${element.value}` : element.value;
                   // Still checking for string as it can be an array too
                   const elementValues = typeof numberValueToString === "string" ? numberValueToString.split(",").map(_ => _.trim()) : numberValueToString;
-
                   dropdownResult = elementValues ? 
                     element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal == option.id)) : 
                     [];
@@ -254,6 +245,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                   if (!dropdownResult?.length) {
                     dropdownResult = [element.dropdownDataset.options.find(e => e.id == element.value)].filter(_ => _);
                   }
+                  // CHECK FOR ELEMENT . VALUE AND IF NOT THERE then do same
                 } else {
                   dropdownResult = [element.dropdownDataset.options.find(e => e.id === element.value)].filter(_ => _);
                 }
@@ -270,7 +262,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
           });
         } else {
           // if the code is in add mode.
-          section.fields.forEach((element) => {
+          section.fields.forEach(element => {
 
             if ((element.cinchyColumn.dataType === "Link") && element.cinchyColumn.isMultiple) {
               if (!isNullOrUndefined(element.dropdownDataset) && element.dropdownDataset.options) {                
@@ -280,6 +272,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                 const elementValues = typeof numberValueToString === "string" ? numberValueToString.split(",").map(_ => _.trim()) : numberValueToString;
 
                 dropdownResult = elementValues ? element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal == option.id)) : [];
+
+                //   const dropdownResult = element.dropdownDataset.options.filter(e => element.value.find(eleVal => eleVal === e.id));
 
                 if (dropdownResult && dropdownResult.length) {
                   childResult[element.cinchyColumn.name] = element.value;
@@ -319,7 +313,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               childResult[element.cinchyColumn.name] = element.value;
               childResultForLocal[element.cinchyColumn.name] = element.value;
             }
-
             if (element.cinchyColumn.dataType === "Yes/No") {
               if (element.value === "" || isNullOrUndefined(element.value)) {
                 element.value = false;
@@ -364,7 +357,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       const _cinchyid = eventData.id;
       const _childFormId = `${_cinchyid}-${eventData.childFormId}`;
 
-      if (eventData.id < 1) {
+      if (eventData.id < 1) { // Why there was a logic of = 1??, removing = for now
         eventData.id = null;
       }
 
@@ -394,7 +387,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   openChildDialog(data) {
     const dialogData = { ...data, rowId: this.rowId };
-    const dialogRef = this._dialog.open(ChildFormComponent, {
+    const dialogRef = this._dialog.open(ChildFormDirective, {
       width: "500px",
       data: dialogData
     });
@@ -418,6 +411,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.formHasDataLoaded = false;
     this.enableSaveBtn = false;
 
+    //if (this.isLoadingForm)
+    //  return;
     this.isLoadingForm = true;
 
     try {
@@ -490,8 +485,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
               if (this.addNewFromSideNav) {
                 this.closeAddNewDialog.emit(this.rowId);
               }
-
               this.appStateService.hasFormChanged = false;
+
               // pass response to the project on data save
             },
             error => {
@@ -534,13 +529,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         try {
           await this._cinchyService.executeCsql(fileDetails.query, updateParams).toPromise();
           await this._cinchyService.executeCsql(fileQuery, params).toPromise();
-
           this._toastr.success("Saved successfully", "Success");
-
           this.spinner.hide();
         } catch (e) {
           this._toastr.error("Error while updating file data.", "Error");
-
           this.spinner.hide();
         }
       } else {
@@ -548,7 +540,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                        set [${fileDetails.column}] = @p0
                        from [${fileDetails.domain}].[${fileDetails.table}] t
                        where t.[Cinchy Id] = ${this.rowId} and t.[Deleted] is null`;
-
         await this._cinchyService.executeCsql(query, params).toPromise();
       }
     });
@@ -564,6 +555,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     }
 
     if (this.childDataForm == null || this.childDataForm.length == 0) {
+
       this.eventHandler.emit(rowId);
     }
 
@@ -571,11 +563,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       await this.savechildForm(rowId, 0);
     } else {
       this.spinner.hide();
-
       if (!isNullOrUndefined(this.rowId)) {
         this.getSavedData(childData);
       }
-
       if (!response) {
         this._toastr.warning("No changes were made", "Warning");
       }
@@ -593,51 +583,52 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
     return new Promise((resolve, reject) => {
 
-      if (!this.childDataForm.length && !isNullOrUndefined(this.rowId)) {
+      if (this.childDataForm.length === 0 && !isNullOrUndefined(this.rowId)) {
         this.getSavedData();
+        resolve();
+
+        return;
+      }
+
+      if (this.childDataForm.length <= idx) {
+        resolve();
+
+        return;
+      }
+      
+      this.spinner.show();
+      const element = this.childDataForm[idx];
+
+      if (element.Query.query) {
+        element.Query.query = element.Query.query.replace("{sourceid}", sourceid);
+        const params = JSON.stringify(element.Query.params).replace("{sourceid}", sourceid);
+        this._cinchyService.executeCsql(element.Query.query, JSON.parse(params)).subscribe(
+          async response => {
+
+            this.spinner.hide();
+
+            await this.savechildForm(sourceid, idx + 1);
+
+            this.updateFileAndSaveFileNames(element.Query.attachedFilesInfo);
+
+            if (this.childDataForm.length === (idx + 1)) {
+              await this.getchildSavedData(sourceid);
+              this.childDataForm = [];
+              this.childCinchyId = -1;
+              this._toastr.success("Child form saved successfully", "Success");
+            }
+            resolve();
+          },
+          error => {
+            this.spinner.hide();
+            this._toastr.error("Error while saving child form", "Error");
+
+            reject(error);
+          });
+      } else {
+        this.updateFileAndSaveFileNames(element.Query.attachedFilesInfo);
 
         resolve();
-      }
-      else if (this.childDataForm.length <= idx) {
-        resolve();
-      }
-      else {
-        this.spinner.show();
-        const element = this.childDataForm[idx];
-
-        if (element.Query.query) {
-          element.Query.query = element.Query.query.replace("{sourceid}", sourceid);
-          const params = JSON.stringify(element.Query.params).replace("{sourceid}", sourceid);
-          this._cinchyService.executeCsql(element.Query.query, JSON.parse(params)).subscribe(
-            async () => {
-
-              this.spinner.hide();
-
-              await this.savechildForm(sourceid, idx + 1);
-
-              this.updateFileAndSaveFileNames(element.Query.attachedFilesInfo);
-
-              if (this.childDataForm.length === (idx + 1)) {
-                await this.getchildSavedData(sourceid);
-
-                this.childDataForm = [];
-                this.childCinchyId = -1;
-                this._toastr.success("Child form saved successfully", "Success");
-              }
-
-              resolve();
-            },
-            error => {
-              this.spinner.hide();
-              this._toastr.error("Error while saving child form", "Error");
-
-              reject(error);
-            });
-        } else {
-          this.updateFileAndSaveFileNames(element.Query.attachedFilesInfo);
-
-          resolve();
-        }
       }
     });
   }
@@ -654,6 +645,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   //#region Get Child Form Data After Save in Database
   public async getchildSavedData(rowID) {
+
+    const isChild = true;
 
     this.spinner.show();
 
@@ -691,10 +684,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
 
   handleFieldsEvent($event) {
-
-    this.appStateService.hasFormChanged = this.appStateService.hasFormChanged ?
-                                          this.appStateService.hasFormChanged :
-                                          ($event.Data ? $event.Data.hasChanged : true);
+    this.appStateService.hasFormChanged = this.appStateService.hasFormChanged ? this.appStateService.hasFormChanged
+      : $event.Data ? $event.Data.HasChanged : true;
 
     // If child flattened child form
     if ($event?.Data?.Form?.isChild && $event?.Data?.Form?.flatten) {
@@ -703,7 +694,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         this.afterChildFormEdit({
           "childFormId": $event.Data.Form.id,
           "data": $event.Data.Form,
-          "id": ($event.Data.Form.sections[0].MultiFields?.length && $event.Data.Form.sections[0].MultiFields[$event.Data.Form.sections[0].MultiFields.length - 1]["Cinchy ID"] != null) ? 
+          "id": $event.Data.Form.sections[0].MultiFields?.length && $event.Data.Form.sections[0].MultiFields[$event.Data.Form.sections[0].MultiFields.length - 1]["Cinchy ID"] != null ? 
             $event.Data.Form.sections[0].MultiFields[$event.Data.Form.sections[0].MultiFields.length - 1]["Cinchy ID"] : 
             0
         }, $event.Data.Form);
@@ -712,7 +703,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
     if ($event?.Data?.ColumnName && $event?.Data?.Form?.childFieldsLinkedToColumnName && $event?.Data?.Form?.childFieldsLinkedToColumnName[$event.Data.ColumnName]) {
       for (let linkedFormField of $event?.Data?.Form?.childFieldsLinkedToColumnName[$event.Data.ColumnName]) {
-        if (linkedFormField.form.isChild && linkedFormField.form.flatten) {
+        if (linkedFormField.form.isChild && linkedFormField.form.flatten)
+        {
           linkedFormField.value = $event.Data.Value;
           linkedFormField.cinchyColumn.hasChanged = true;
 
@@ -745,7 +737,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       if (result === "Yes") {
         if (!isNullOrUndefined(field["Cinchy ID"])) {
           const id = field["Cinchy ID"];
-
           if (field["Cinchy ID"] > 0) {
             // Query to delete record by Cinchy ID
             let query = `delete
@@ -755,7 +746,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                            and [Deleted] is null`;
 
             this._cinchyService.executeCsql(query, null).subscribe(
-              () => {
+              response => {
                 const idx = multiarray.indexOf(field);
                 if (idx > -1) {
                   multiarray.splice(idx, 1);
@@ -772,28 +763,23 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                   );
                 }
               },
-              () => {
+              error => {
                 this.spinner.hide();
               }
             );
           } else {
             const idx = multiarray.indexOf(field);
-
             if (idx > -1) {
               multiarray.splice(idx, 1);
-
               this.childDataForm = this.childDataForm.filter(x => x.id !== id);
               this.childFieldArray = this.childFieldArray.filter(
-
                 x => x["Cinchy ID"] !== id
               );
-
               this._toastr.success("Record deleted successfully", "Success");
             }
           }
         } else {
           const idx = multiarray.indexOf(field);
-
           if (idx > -1) {
             multiarray.splice(idx, 1);
           }
@@ -817,41 +803,36 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     this.childDataForm = [];
 
     let showWarningAboutChildFormDuplication = true;
+    this.form.sections?.forEach( (section) => {
+      section.fields?.forEach( (field) => {
 
-    this.form.sections?.forEach((section) => {
-
-      section.fields?.forEach((field) => {
-
-        if (field.cinchyColumn) {
+        if (field.cinchyColumn)
           field.cinchyColumn.hasChanged = true;
-        }
 
         if (field.childForm != null) {
           field.childForm.rowId = null;
           field.childForm.id = -1;
           if (field.childForm.sections && field.childForm.sections[0].MultiFields) {
-            if (field.childForm.childFormLinkId && field.childForm.childFormParentId) {
+
+            if (field.childForm.childFormLinkId && field.childForm.childFormParentId)
+            {
               if (!field.childForm.flatten && showWarningAboutChildFormDuplication) {
                 showWarningAboutChildFormDuplication = false;
-
-                this._toastr.warning("This cloned record contains child records that were also cloned, please ensure the field used to link is updated accordingly.", "Warning", { timeOut: 15000, extendedTimeOut: 15000 });
+                this._toastr.warning("This cloned record contains child records that were also cloned, please ensure the field used to link is updated accordingly.", "Warning", {timeOut: 15000, extendedTimeOut: 15000});
               }
 
               let childRecordsToClone = field.childForm.flatten ? 
-                                        [field.childForm.sections[0].MultiFields[field.childForm.sections[0].MultiFields.length - 1]] :
-                                        field.childForm.sections[0].MultiFields;
+              [field.childForm.sections[0].MultiFields[field.childForm.sections[0].MultiFields.length - 1]] :
+              field.childForm.sections[0].MultiFields;
 
               let startingCloneRecordIdx = field.childForm.flatten ? childRecordsToClone.length - 1 : 0;
               let numOfRecordsToClone = field.childForm.flatten ? 1 : childRecordsToClone.length;
 
-              childRecordsToClone.forEach((childFormRecord) => {
-
+              childRecordsToClone.forEach( (childFormRecord) => {
                 childFormRecord["Cinchy ID"] = Math.random();
 
-                field.childForm.sections.forEach((childFormSection) => {
-
-                  childFormSection.fields?.forEach((childFormField) => {
-
+                field.childForm.sections.forEach( (childFormSection) => {
+                  childFormSection.fields?.forEach( (childFormField) => {
                     if (childFormField.cinchyColumn)
                       childFormField.cinchyColumn.hasChanged = true;
 
@@ -865,21 +846,18 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                         // Hack for non-flattened child forms, for whatever reason, the dropdownDataset ends up being populated with the values of the child form records
                         if (!childFormField.form.flatten && !multiDropdownResult?.length) {
                           let unflattedMultiDropdownResult = childFormField["dropdownDataset"].options.find(e => e.label == childFormRecord[childFormField.cinchyColumn.name]);
-
                           multiDropdownResult = unflattedMultiDropdownResult ? [unflattedMultiDropdownResult] : multiDropdownResult;
                         }
 
                         childFormField.value = multiDropdownResult?.length ? 
-                                               multiDropdownResult.map(item => item.id).join(", ") :
-                                               childFormRecord[childFormField.cinchyColumn.name];
+                          multiDropdownResult.map(item => item.id).join(", ") :
+                          childFormRecord[childFormField.cinchyColumn.name];
                       } else {
                         let singleDropdownResult = childFormField["dropdownDataset"].options.find(e => e.label == childFormRecord[childFormField.cinchyColumn.name]);
-
                         childFormField.value = singleDropdownResult ? singleDropdownResult.id : childFormRecord[childFormField.cinchyColumn.name];
                       }
                     } else if (childFormField.cinchyColumn.dataType === "Choice" && childFormField.cinchyColumn.isMultiple && childFormRecord[childFormField.cinchyColumn.name]) {
                       const fieldValueLabels = typeof childFormRecord[childFormField.cinchyColumn.name] === "string" ? childFormRecord[childFormField.cinchyColumn.name].split(",") : childFormRecord[childFormField.cinchyColumn.name];
-
                       childFormField.value = fieldValueLabels?.length ? fieldValueLabels.map(label => label.trim()) : childFormRecord[childFormField.cinchyColumn.name];
                     } else {
                       childFormField.value = childFormRecord[childFormField.cinchyColumn.name] ?? null;
@@ -893,7 +871,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
                   "id": 0
                 }, field.childForm);
               });
-
               field.childForm.sections[0].MultiFields.splice(startingCloneRecordIdx, numOfRecordsToClone);
             }
             else 
