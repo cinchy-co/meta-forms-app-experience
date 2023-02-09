@@ -1,7 +1,10 @@
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component, Inject, EventEmitter } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+import { DropdownDatasetService } from '../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
+
 import { isNullOrUndefined } from 'util';
-import { DropdownDatasetService } from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
+
 
 //#region Cinchy Dynamic Child Form
 /**
@@ -9,24 +12,13 @@ import { DropdownDatasetService } from '../service/cinchy-dropdown-dataset/cinch
  */
 //#endregion
 @Component({
-  selector: 'cinchy-child-form',
-  template: `
-    <h1 mat-dialog-title>
-      <div class="mat-card-header-child">{{data.title}}</div>
-    </h1>
-    <div mat-dialog-content *ngIf="data">
-      <app-fields-wrapper [form]="this._ChildFormData.childFormData" [isChild]=true [rowId]="_ChildFormData.rowId" [formHasDataLoaded]="true"></app-fields-wrapper>
-    </div>
-    
-    <div mat-dialog-actions>
-      <button mat-button color="primary" (click)="onOkClick()" cdkFocusInitial>OK</button>
-      <button mat-button color="warn" (click)="onNoClick()">Cancel</button>
-    </div>
-  `,
+  selector: "cinchy-child-form",
+  templateUrl: "./child-form.component.html",
+  styleUrls: ["./child-form.component.scss"],
   // TODO Need to set this environment Dynamically
   providers: [DropdownDatasetService]
 })
-export class ChildFormDirective {
+export class ChildFormComponent {
   public data: any;
   public datachild = [];
   public cinchyID = null;
@@ -35,7 +27,7 @@ export class ChildFormDirective {
   eventHandler = new EventEmitter();
 
   constructor(
-    public dialogRef: MatDialogRef<ChildFormDirective>,
+    public dialogRef: MatDialogRef<ChildFormComponent>,
     @Inject(MAT_DIALOG_DATA) public _ChildFormData: any
   ) {
   }
@@ -47,7 +39,7 @@ export class ChildFormDirective {
       const linkedColumn = section['LinkedColumnDetails'];
       section.fields.forEach(element => {
         element.noPreSelect = false;
-        if (!element.cinchyColumn.IsDisplayColumn) {
+        if (!element.cinchyColumn.isDisplayColumn) {
           if (linkedColumn && (linkedColumn.linkLabel == element.label)) {
             if (linkedColumn.linkValue) {
               element.value = element.value ? element.value : linkedColumn.linkValue;
@@ -96,7 +88,7 @@ export class ChildFormDirective {
               }
             } else if (element.cinchyColumn.dataType === 'Binary') {
               const keyForBinary = element.cinchyColumn.name + '_Name';
-              element.cinchyColumn.FileName = this._ChildFormData.values[keyForBinary];
+              element.cinchyColumn.fileName = this._ChildFormData.values[keyForBinary];
               element.value = this._ChildFormData.values[element.cinchyColumn.name];
             } else {
               if (this._ChildFormData.type === 'Add' && linkedColumn && (linkedColumn.linkLabel != element.label)) {
@@ -113,7 +105,7 @@ export class ChildFormDirective {
             element.value = null;
             element.noPreSelect = true;
           }
-        } else if (element.cinchyColumn.IsDisplayColumn) {
+        } else if (element.cinchyColumn.isDisplayColumn) {
           const labelInObj = `${element.cinchyColumn.linkTargetColumnName} label`;
           let selectedValue;
           let hasDropdown = false;
@@ -158,11 +150,11 @@ export class ChildFormDirective {
     let formvalidation = this._ChildFormData.childFormData.checkChildFormValidation();
     this._ChildFormData.childFormData.sections.forEach(section => {
       section.fields.forEach(element => {
-        if (element.cinchyColumn.dataType === 'Binary' && element.cinchyColumn.FileName) {
+        if (element.cinchyColumn.dataType === 'Binary' && element.cinchyColumn.fileName) {
           const keyForBinary = element.cinchyColumn.name + '_Name';
           this._ChildFormData.values = this._ChildFormData.values || {};
-          this._ChildFormData.values[keyForBinary] = element.cinchyColumn.FileName;
-        } else if (element.cinchyColumn.IsDisplayColumn && element.dropdownDataset?.isDummy) {
+          this._ChildFormData.values[keyForBinary] = element.cinchyColumn.fileName;
+        } else if (element.cinchyColumn.isDisplayColumn && element.dropdownDataset?.isDummy) {
           element.dropdownDataset = null;
         }
       });

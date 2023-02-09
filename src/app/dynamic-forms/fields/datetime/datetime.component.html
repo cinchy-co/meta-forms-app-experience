@@ -1,0 +1,43 @@
+<div *ngIf="(field.cinchyColumn.dataType == 'Date and Time' && field.cinchyColumn.canView)"
+     class="full-width-element divMarginBottom relative-pos">
+  <div class="link-labels">
+    <div>
+      <fa-icon [icon]="faCalendar"></fa-icon>
+    </div>
+    &nbsp;
+    <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
+      {{field.label}}
+      {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+    </label>
+    <mat-icon *ngIf="field.caption" class="info-icon"
+              ngbTooltip="{{field.caption}}"
+              placement="auto"
+              container="body"
+              matTooltipClass="tool-tip-body"
+              matTooltipPosition="above">
+      info
+    </mat-icon>
+  </div>
+  <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
+    <mat-form-field class='form-control'>
+      <input matInput readonly
+             [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly  || isDisabled)"
+             type="text" [(ngModel)]="preSelectedDate"
+             (input)="checkForDate()"
+             (change)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')">
+      <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
+      <mat-datepicker #picker3></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field class='form-control hide-date'>
+      <input matInput
+             [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
+             (dateChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
+             (dateInput)="checkForDate()"
+             [matDatepicker]="picker3" [value]="preSelectedDate">
+    </mat-form-field>
+    <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+      *{{field.label}} is Required.
+    </mat-error>
+  </ng-container>
+  <label class="pre-formatted" *ngIf="field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled" [innerHTML]="(field.value | date) || '-' "></label>
+</div>
