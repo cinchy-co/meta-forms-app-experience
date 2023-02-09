@@ -609,7 +609,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
           element.Query.query = element.Query.query.replace("{sourceid}", sourceid);
           const params = JSON.stringify(element.Query.params).replace("{sourceid}", sourceid);
           this._cinchyService.executeCsql(element.Query.query, JSON.parse(params)).subscribe(
-            async response => {
+            async () => {
 
               this.spinner.hide();
 
@@ -619,10 +619,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
               if (this.childDataForm.length === (idx + 1)) {
                 await this.getchildSavedData(sourceid);
+
                 this.childDataForm = [];
                 this.childCinchyId = -1;
                 this._toastr.success("Child form saved successfully", "Success");
               }
+
               resolve();
             },
             error => {
