@@ -350,7 +350,7 @@ export class PrintService {
 
   getTableHeader(key, section) {
     // For child form all fields should be in 1 section
-    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
+    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.IsDisplayColumn);
     // So that the one which is display column doesn't match and show the name, as for display column one also
     // field.cinchyColumn.name is same
     let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name == key);
@@ -363,7 +363,7 @@ export class PrintService {
   }
 
   getDisplayValue(value, section, key) {
-    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
+    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.IsDisplayColumn);
     // So that the one which is display column doesn't match and show the name, as for display column one also
     // field.cinchyColumn.name is same
     let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name == key);

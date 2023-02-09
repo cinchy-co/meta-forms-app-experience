@@ -127,6 +127,7 @@ export class FormHelperService {
         formFields[i].childFormLinkId,
         formFields[i].doNotWrap,
         columnMetadata?.displayFormat,
+        columnMetadata?.$type == 'Calculated',
         columnMetadata?.textFormat
       );
 

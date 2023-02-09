@@ -1,0 +1,74 @@
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {EventCallback, IEventCallback} from "../models/cinchy-event-callback.model";
+import {ResponseType} from "../enums/response-type.enum";
+import { faCheckSquare } from '@fortawesome/free-regular-svg-icons';
+
+//#region Cinchy Dynamic YES/NO fields (Checkbox)
+/**
+ * This section is used to create Yes/No fields for the cinchy.
+ */
+//#endregion
+@Component({
+  selector: 'cinchy-checkbox',
+  template: `
+    <div *ngIf="(field.cinchyColumn.dataType == 'Yes/No' && field.cinchyColumn.canView)">
+      <fa-icon [icon]="faCheckSquare"></fa-icon>
+      &nbsp;
+      <input class="m-tb-10 mr-5" type='checkbox' [(ngModel)]="field.value" [ngModelOptions]="{standalone: true}"
+             [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
+             (change)="valueChanged()" [id]="field.label"/>
+      <div class="checkbox-field">
+
+       &nbsp;
+        <label class="pre-formatted" [for]="field.label" [title]="field.caption ? field.caption : ''">{{field.label}}
+          {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+        </label>
+        <mat-icon *ngIf="field.caption" class="info-icon-checkbox"
+                  ngbTooltip = "{{field.caption}}"
+                  placement="auto"
+                  container="body"
+                  matTooltipClass="tool-tip-body"
+                  matTooltipPosition="above">
+          info
+        </mat-icon>
+      </div>
+      <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+        *{{field.label}} is Required.
+      </mat-error>
+    </div>
+
+  `,
+})
+export class CheckBoxDirective {
+  @Input() field: any;
+
+  @Input('fieldsWithErrors') set fieldsWithErrors(errorFields: any) {
+    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
+  };
+
+  @Input() targetTableName: string;
+  @Input() isDisabled: boolean;
+  @Output() eventHandler = new EventEmitter<any>();
+  showError: boolean;
+  faCheckSquare = faCheckSquare;
+  
+  constructor() {
+
+  }
+
+  valueChanged() {
+    this.field.cinchyColumn.hasChanged = true;
+    const Data = {
+      'TableName':  this.targetTableName,
+      'ColumnName': this.field.cinchyColumn.name,
+      'Value': this.field.value,
+      'event': event,
+      'HasChanged': this.field.cinchyColumn.hasChanged,
+      'Form': this.field.form,
+      'Field': this.field
+    }
+    // pass calback event
+    const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
+    this.eventHandler.emit(callback);
+  }
+}

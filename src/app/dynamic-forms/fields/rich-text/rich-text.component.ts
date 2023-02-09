@@ -39,9 +39,9 @@ import {
 import { Editor } from "@tiptap/core";
 
 import Link from "@tiptap/extension-link";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import TaskItem from "@tiptap/extension-task-item";
-import TaskList from "@tiptap/extension-task-list";
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
 import Underline from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -50,12 +50,12 @@ import TableRow from "@tiptap/extension-table-row"
 import TableCell from "@tiptap/extension-table-cell"
 import TableHeader from "@tiptap/extension-table-header"
 
-import { lowlight } from "lowlight/lib/common";
+import { lowlight } from 'lowlight/lib/common';
 import { Transaction } from "prosemirror-state";
 
 
 import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
-import { AddRichTextImageDialogComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
+import { AddRichTextImageComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
 
 import { ResponseType } from "../../enums/response-type.enum";
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
@@ -207,7 +207,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
           Link.extend({
             addKeyboardShortcuts() {
               return {
-                "Mod-k": () => {
+                'Mod-k': () => {
                   self.toggleLink()
                   return true                
                 },
@@ -342,8 +342,8 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
       currentSrc = selection ? this.editor.state.doc.textBetween(selection.from, selection.to) : undefined;
     }
 
-    const dialogRef: MatDialogRef<AddRichTextImageDialogComponent> = this._dialog.open(
-      AddRichTextImageDialogComponent,
+    const dialogRef: MatDialogRef<AddRichTextImageComponent> = this._dialog.open(
+      AddRichTextImageComponent,
       {
         data: {
           src: currentSrc ?? undefined
@@ -555,7 +555,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
       ColumnName: columnName,
       Value: this.value,
       event: event,
-      hasChanged: this.field.cinchyColumn.hasChanged,
+      HasChanged: this.field.cinchyColumn.hasChanged,
       Form: this.field.form,
       Field: this.field
     }
