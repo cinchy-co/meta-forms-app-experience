@@ -60,19 +60,35 @@
           info
         </mat-icon>
         <ng-template #withcaptiont>
-          {{this.field.caption}}  <br /> <br /> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+          {{this.field.caption}}
+
+          <br /> <br />
+
+          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the
+
+          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
+
+          table.
         </ng-template>
         <ng-template #withoutcaptiont>
-          From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the <a [href]="tableSourceURL" target="_blank">  {{this.field.cinchyColumn.linkTargetTableName}}  </a> table.
+          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the
+
+          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
+
+          table.
         </ng-template>
         <ng-template #hierarchyWithCaption>
-          {{this.field.caption}}  <br /> <br /> From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTargetTableName}} table.
+          {{this.field.caption}}
+
+          <br /> <br />
+
+          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{this.field.cinchyColumn.linkTableDomainName}} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
         </ng-template>
         <ng-template #hierarchyWithoutCaption>
-          From the <b> {{this.field.cinchyColumn.linkTargetColumnName}} </b> field in the {{this.field.cinchyColumn.linkTargetTableName}} table.
+          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
         </ng-template>
-
       </div>
+
       <mat-select class="form-control" multiple #multiSelect [formControl]="myControl" *ngIf="!isLoading && !downloadLink"
                   disableOptionCentering>
         <ng-container *ngIf="dropdownSetOptions">
@@ -109,18 +125,7 @@
           </ng-container>
         </ng-container>
       </mat-select>
-      <!--        <ng-container>
-              <div *ngIf="dropdownSetOptions && !isLoading">
-                <angular2-multiselect [data]="dropdownSetOptions" [formControl]="myControl"
-                                      [(ngModel)]="selectedValues"
-                                      [settings]="dropdownSettings"
-                                      (onSelect)="onItemSelect($event)"
-                                      (onDeSelect)="OnItemDeSelect($event)"
-                                      (onSelectAll)="onSelectAll($event)"
-                                      (onDeSelectAll)="onDeSelectAll($event)">
-                </angular2-multiselect>
-              </div>
-              </ng-container>-->
+
       <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
         *{{field.label}} is Required.
       </mat-error>
@@ -142,6 +147,7 @@
     </div>
   </div>
 </form>
+
 <div *ngIf="isLoading" class="is-loading">
   <mat-spinner diameter="20"></mat-spinner>
 </div>
