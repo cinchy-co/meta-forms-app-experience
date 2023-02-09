@@ -1,0 +1,11 @@
+<h1 mat-dialog-title>
+  <div class="mat-card-header-child">{{data.title}}</div>
+</h1>
+<div mat-dialog-content *ngIf="data">
+  <app-fields-wrapper [form]="this._ChildFormData.childFormData" [isChild]=true [rowId]="_ChildFormData.rowId" [formHasDataLoaded]="true"></app-fields-wrapper>
+</div>
+    
+<div mat-dialog-actions>
+  <button mat-button color="primary" (click)="onOkClick()" cdkFocusInitial>OK</button>
+  <button mat-button color="warn" (click)="onNoClick()">Cancel</button>
+</div>

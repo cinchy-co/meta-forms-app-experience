@@ -81,7 +81,7 @@ export class Form implements IForm {
     this.sections.forEach(section => {
       section.fields.forEach(element => {
         //TODO: GET The values Dynamically
-        if (parentTableId === element.cinchyColumn.LinkTargetTableId) {
+        if (parentTableId === element.cinchyColumn.linkTargetTableId) {
           columnName = element.cinchyColumn.name;
         }
 
@@ -92,9 +92,9 @@ export class Form implements IForm {
           //Todo: CHanges for Short Name
           const splitLinkTargetColumnNames = element.cinchyColumn.linkTargetColumnName ? element.cinchyColumn.linkTargetColumnName.split('.') : [];
           const targetColumnForQuery = (splitLinkTargetColumnNames.map(name => `[${name}]`)).join('.');
-          const labelForColumn = element.cinchyColumn.IsDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
+          const labelForColumn = element.cinchyColumn.isDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
           // Having sep conditions just for clarity
-          if (!element.cinchyColumn.IsDisplayColumn && this.isChild) {
+          if (!element.cinchyColumn.isDisplayColumn && this.isChild) {
             // CASE WHEN CHANGE([column])=1 THEN DRAFT([column]) ELSE [column] END as 'column'
             //  fields.push('[' + element.cinchyColumn.name + '].[Cinchy Id] as \'' + element.cinchyColumn.name + '\'');
             const col = `[${element.cinchyColumn.name}].[Cinchy Id]`
@@ -178,9 +178,9 @@ export class Form implements IForm {
             //console.log('(element.cinchyColumn.dataType === \'Link\'', result);
             let optionArray: IDropdownOption[] = [];
             if (!isNullOrUndefined(Rowelement[element.cinchyColumn.name]) && Rowelement[element.cinchyColumn.name] !== '') {
-              const labelForColumn = element.cinchyColumn.IsDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
+              const labelForColumn = element.cinchyColumn.isDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
               let properLabelForColumn = ' label';
-              if (element.cinchyColumn.IsDisplayColumn) {
+              if (element.cinchyColumn.isDisplayColumn) {
                 if (duplicateLabelColumns[labelForColumn] || duplicateLabelColumns[labelForColumn] === 0) {
                   duplicateLabelColumns[labelForColumn] = duplicateLabelColumns[labelForColumn] + 1;
                   properLabelForColumn = `${properLabelForColumn}${duplicateLabelColumns[labelForColumn]}`;
@@ -256,7 +256,7 @@ export class Form implements IForm {
           if (element.cinchyColumn.dataType === 'Link') {
             if (!isNullOrUndefined(Rowelement[element.cinchyColumn.name]) && Rowelement[element.cinchyColumn.name] !== '') {
               let optionArray: IDropdownOption[] = [];
-              const labelForColumn = element.cinchyColumn.IsDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
+              const labelForColumn = element.cinchyColumn.isDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
 
               optionArray.push(new DropdownOption(Rowelement[element.cinchyColumn.name], Rowelement[labelForColumn + ' label']));
               let result = new DropdownDataset(optionArray);
@@ -272,14 +272,14 @@ export class Form implements IForm {
                 let dropdownResult = element['dropdownDataset'].options.find(e => e.id ===
                   Rowelement[element.cinchyColumn.name]);
                 if (!isNullOrUndefined(dropdownResult)) {
-                  if (!element.cinchyColumn.IsDisplayColumn) {
+                  if (!element.cinchyColumn.isDisplayColumn) {
                     Rowelement[element.cinchyColumn.name] = dropdownResult['label'];
                   }
                 }
 
               }
             }
-            if (!element.cinchyColumn.IsDisplayColumn) {
+            if (!element.cinchyColumn.isDisplayColumn) {
               delete Rowelement[element.cinchyColumn.name + ' label'];
             }
           }
@@ -310,7 +310,7 @@ export class Form implements IForm {
         )) {
           //todo: check for link type
         } else {
-          if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalculated && element.cinchyColumn.canEdit
+          if (element.cinchyColumn.name != null && element.cinchyColumn.canEdit
           && (element.cinchyColumn.hasChanged) && (!element.cinchyColumn.isViewOnly || forClonedForm) && !element.childForm) {
             paramName = '@p' + i.toString();
             switch (element.cinchyColumn.dataType) {
@@ -509,7 +509,7 @@ export class Form implements IForm {
           console.log('Link type cannot be null');
         } else {
           const isLinkedColumnForInsert = this.isLinkedColumn(element, section) && !rowID;
-          if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalculated && element.cinchyColumn.canEdit
+          if (element.cinchyColumn.name != null && element.cinchyColumn.canEdit
             && (!element.cinchyColumn.isViewOnly || forClonedForm) && (element.cinchyColumn.hasChanged || isLinkedColumnForInsert)) {
             if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
               (element.cinchyColumn.dataType === "Choice" && element.value)
@@ -793,9 +793,18 @@ export class Form implements IForm {
   }
 
   getFileNameAndItsTable(field, childCinchyId?) {
-    const [domain, table, column] = field.cinchyColumn.FileNameColumn ? field.cinchyColumn.FileNameColumn.split('.') : [];
-    const query = this.rowId && this.rowId != "null" ? `Insert into [${domain}].[${table}] ([Cinchy Id], [${field.cinchyColumn.name}]) values(@rowId, @fieldValue)` : null;
-    return { domain, table, column, fileName: field.cinchyColumn.FileName, query, value: field.value, childCinchyId };
+    const [domain, table, column] = field.cinchyColumn.fileNameColumn?.split('.') ?? [];
+    const query = (this.rowId && this.rowId) != "null" ? `Insert into [${domain}].[${table}] ([Cinchy Id], [${field.cinchyColumn.name}]) values(@rowId, @fieldValue)` : null;
+
+    return {
+      domain,
+      table,
+      column,
+      fileName: field.cinchyColumn.fileName,
+      query,
+      value: field.value,
+      childCinchyId
+    };
   }
 
   isLinkedColumn(element, section) {
