@@ -28,26 +28,56 @@ export class TextboxComponent implements OnInit {
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
   @Output() eventHandler = new EventEmitter<any>();
+
   showError: boolean;
   showImage: boolean;
   showLinkUrl: boolean;
   showActualField: boolean;
-  size: any;
   faAlignLeft = faAlignLeft;
   
+
+  /**
+   * If the field is displaying an imaged, returns the class name associated with the configured format
+   */
+  get imageSize(): string {
+
+    if (this.showImage) {
+      switch (this.field.cinchyColumn.dataFormatType) {
+        case ImageType.small:
+
+          return "cinchy-images-small";
+        case ImageType.large:
+
+          return "cinchy-images-large";
+        case ImageType.small:
+          // falls through
+        case ImageType.default:
+
+          return "cinchy-images";
+        default:
+
+          return "";
+      }
+    }
+
+    return "";
+  }
+
+
   constructor() {}
 
+
   ngOnInit() {
+
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
-    if(this.showImage){
-      this.size = this.field.cinchyColumn.dataFormatType;
-    }
+
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
     this.showActualField = !this.showImage && !this.showLinkUrl;
   }
 
   //#region pass callback event to the project On blur
   callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
+
     // constant values
     const value = event.target[prop];
     this.field.cinchyColumn.hasChanged = true;
@@ -60,8 +90,10 @@ export class TextboxComponent implements OnInit {
       "Form": this.field.form,
       "Field": this.field
     }
+
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
+
     this.eventHandler.emit(callback);
   }
   //#endregion

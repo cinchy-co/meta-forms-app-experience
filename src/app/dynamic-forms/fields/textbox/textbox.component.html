@@ -35,11 +35,7 @@
          [innerHTML]="field.value || '-'"></label>
 
   <ng-container *ngIf="showImage">
-    <img [ngClass]="{
-        'cinchy-images': size === '${ImageType.default}' || size === '${ImageType.medium}',
-        'cinchy-images-large' : size === '${ImageType.large}',
-        'cinchy-images-small' : size === '${ImageType.small}'
-      }" *ngIf="field.value" [src]="field.value">
+    <img [ngClass]="imageSize" *ngIf="field.value" [src]="field.value">
     <p *ngIf="!field.value">-</p>
   </ng-container>
 
