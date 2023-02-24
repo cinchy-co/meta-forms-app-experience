@@ -26,6 +26,28 @@
   }
 }
 
+/**
+ * The positional 50% is relative to the container, while the transform 50% is relative to its own height, so this pushes
+ * the element down to the bottom half of the container, then nudges it back up so the element's center aligns with the container's
+ * center
+ */
+.center-vertical {
+    position: relative;
+    top: 50%;
+
+    transform: translateY(-50%);
+}
+
+/**
+ * I have separated these so that the user can determine the extent to which the style needs to apply in context
+ */
+.center-vertical-important {
+  position: relative;
+  top: 50% !important;
+
+  transform: translateY(-50%) !important;
+}
+
 .flex-vertical-center {
   align-items: center;
 }
@@ -126,6 +148,10 @@ mat-spinner {
   display: none !important;
 }
 
+.mat-form-field-flex {
+    align-items: center !important;
+}
+
 .selected-list .c-list .c-token .c-label,
 .pure-checkbox input[type="checkbox"] + label {
   font-size: 12px;
@@ -133,10 +159,6 @@ mat-spinner {
 
 .mat-expansion-panel-content {
   font-size: 16px;
-}
-
-.mat-expansion-panel {
-  // overflow: visible !important;
 }
 
 .table-url {
@@ -247,41 +269,14 @@ app-fields-wrapper {
   height: auto;
 }
 
-
-.mat-select.single-select {
-  margin-top: -7px !important;
-}
-
 .is-loading {
   margin-top: -10px;
   text-align: left;
-
-  .mat-progress-spinner {
-    //   display: inline;
-  }
-}
-
-.mat-drawer-content {
-  // height: 100vh !important;
 }
 
 .checkbox-field {
   display: inline-flex;
   align-items: center;
-}
-
-.dropdown-list {
-  // position: relative !important;
-}
-
-app-search-dropdown {
-  .mat-select-search-inner {
-    width: 487px !important;
-  }
-
-  .mat-form-field-wrapper {
-    width: 470px !important;
-  }
 }
 
 .float-right {
@@ -344,8 +339,116 @@ app-search-dropdown {
 .tooltip{
   left: -4px !important;
   font: 400 12px/16px Roboto,Helvetica Neue,sans-serif;
- }
- .tooltip-inner{
-  max-width: 250;
+}
+
+.tooltip-inner{
+  max-width: 280px;
   text-align: left;
- }
+}
+
+.tooltip-newline {
+  text-align: center;
+  white-space: pre-line;
+}
+
+/* Table-specific styling */
+.ProseMirror {
+  table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+
+    td,
+    th {
+      min-width: 1em;
+      border: 2px solid #ced4da;
+      padding: 3px 5px;
+      vertical-align: top;
+      box-sizing: border-box;
+      position: relative;
+
+      > * {
+        margin-bottom: 0;
+      }
+    }
+
+    th {
+      font-weight: bold;
+      text-align: left;
+      background-color: #f1f3f5;
+    }
+
+    .selectedCell:after {
+      z-index: 2;
+      position: absolute;
+      content: "";
+      left: 0; right: 0; top: 0; bottom: 0;
+      background: rgba(200, 200, 255, 0.4);
+      pointer-events: none;
+    }
+
+    .column-resize-handle {
+      position: absolute;
+      right: -2px;
+      top: 0;
+      bottom: -2px;
+      width: 4px;
+      background-color: #adf;
+      pointer-events: none;
+    }
+  }
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+/* Basic editor styles */
+.ProseMirror {
+  > * + * {
+    margin-top: 0.75em;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+
+    &.ProseMirror-selectednode {
+      outline: 3px solid #68CEF8;
+    }
+  }
+
+  li p {
+    margin: 8px 0 0;
+  }
+
+  pre {
+    background-color: #f8f8f8;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+
+    li {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    label {
+      display: inline-flex;
+      flex: 0 0 auto;
+      margin-bottom: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}
