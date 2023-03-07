@@ -45,6 +45,6 @@
   </ng-container>
 
   <ng-container *ngIf="showIFrame && isValidHttpUrl(field.value)">
-    <iframe class="iframe-control" [src]="urlSafe" [ngStyle]="{height: iframeHeightStyle}"></iframe>
+    <iframe class="iframe-control" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
    </ng-container>
 </div>

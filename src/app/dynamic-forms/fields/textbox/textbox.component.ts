@@ -84,7 +84,7 @@ export class TextboxComponent implements OnInit {
     if (this.showIFrame && this.isValidHttpUrl(this.field.value)){
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
       this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
-        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+ 'px;' : '300px;';
+        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';
     }else{
       this.showIFrame = false;
     } 
