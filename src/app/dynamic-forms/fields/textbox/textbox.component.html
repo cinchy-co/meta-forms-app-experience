@@ -43,4 +43,8 @@
     <a *ngIf="field.value" [href]="field.value">Open</a>
     <label *ngIf="!field.value">-</label>
   </ng-container>
+
+  <ng-container *ngIf="showIFrame && isValidHttpUrl(field.value)">
+    <iframe [src]="urlSafe" [ngStyle]="{height: iframeHeightStyle}"></iframe>
+   </ng-container>
 </div>

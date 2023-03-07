@@ -1,9 +1,11 @@
 import { Component, Input, Output, EventEmitter, OnInit } from "@angular/core";
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
 import { ImageType } from "../../enums/imageurl-type";
 import { ResponseType } from "../../enums/response-type.enum";
+import { DataFormatType } from "../../enums/data-format-type.enum";
 
 import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
 
@@ -33,8 +35,10 @@ export class TextboxComponent implements OnInit {
   showImage: boolean;
   showLinkUrl: boolean;
   showActualField: boolean;
+  showIFrame: boolean;
   faAlignLeft = faAlignLeft;
-  
+  urlSafe: SafeResourceUrl;
+  iframeHeightStyle: string = '300px;';
 
   /**
    * If the field is displaying an imaged, returns the class name associated with the configured format
@@ -64,7 +68,7 @@ export class TextboxComponent implements OnInit {
   }
 
 
-  constructor() {}
+  constructor(public sanitizer: DomSanitizer) {}
 
 
   ngOnInit() {
@@ -72,7 +76,16 @@ export class TextboxComponent implements OnInit {
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
 
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
-    this.showActualField = !this.showImage && !this.showLinkUrl;
+
+    this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
+
+    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame;
+
+    if (this.showIFrame && this.isValidHttpUrl(this.field.value)){
+      this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
+      this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
+        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+ 'px;' : '300px;';
+    } 
   }
 
   //#region pass callback event to the project On blur
@@ -97,4 +110,14 @@ export class TextboxComponent implements OnInit {
     this.eventHandler.emit(callback);
   }
   //#endregion
+
+  isValidHttpUrl(str: string) {
+    let url;
+    try {
+      url = new URL(str);
+    } catch (_) {
+      return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
+  }
 }
