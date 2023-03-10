@@ -29,6 +29,7 @@ export class TextboxComponent implements OnInit {
 
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
+  @Input() isInChildForm: boolean;
   @Output() eventHandler = new EventEmitter<any>();
 
   showError: boolean;
@@ -79,15 +80,15 @@ export class TextboxComponent implements OnInit {
 
     this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
 
-    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame;
-
-    if (this.showIFrame && this.isValidHttpUrl(this.field.value)){
+    if (this.showIFrame && this.isValidHttpUrl(this.field.value) && !this.isInChildForm){
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
       this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
         ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';
     }else{
       this.showIFrame = false;
     } 
+
+    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame;
   }
 
   //#region pass callback event to the project On blur
