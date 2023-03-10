@@ -5,7 +5,6 @@ import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
 import { ImageType } from "../../enums/imageurl-type";
 import { ResponseType } from "../../enums/response-type.enum";
-import { DataFormatType } from "../../enums/data-format-type.enum";
 
 import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
 
@@ -78,7 +77,7 @@ export class TextboxComponent implements OnInit {
 
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
 
-    this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
+    this.showIFrame = this.field.cinchyColumn.dataFormatType === ImageType.IFrame;
 
     if (this.showIFrame && this.isValidHttpUrl(this.field.value) && !this.isInChildForm){
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
