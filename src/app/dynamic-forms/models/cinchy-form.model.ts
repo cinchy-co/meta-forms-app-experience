@@ -377,8 +377,10 @@ export class Form implements IForm {
                   let stringLinkArray = [];
                   allValues.forEach(itemVal => {
                     //stringLink = element + ',0';
-                    stringLinkArray.push(itemVal.trim ? itemVal.trim() : itemVal);
-                    stringLinkArray.push(0);
+                    if (itemVal) {
+                      stringLinkArray.push(itemVal.trim ? itemVal.trim() : itemVal);
+                      stringLinkArray.push(0);
+                    }
                   });
                   const joinedValue = stringLinkArray.join(',');
                   params[paramName] = joinedValue ? joinedValue.toString() : joinedValue;
