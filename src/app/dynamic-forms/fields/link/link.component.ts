@@ -48,6 +48,7 @@ import { ToastrService } from "ngx-toastr";
   providers: [DropdownDatasetService]
 })
 export class LinkComponent implements OnInit {
+
   @ViewChild("searchInput") searchInput;
   @ViewChild("fileInput") fileInput: ElementRef;
   
@@ -65,7 +66,9 @@ export class LinkComponent implements OnInit {
   @Input() formFieldMetadataResult: any;
   @Output() eventHandler = new EventEmitter<any>();
   @Output() childform = new EventEmitter<any>();
+
   faPlus = faPlus;
+
   createlinkOptionName: boolean;
   myControl = new FormControl();
   dropdownSetOptions;
@@ -90,14 +93,15 @@ export class LinkComponent implements OnInit {
   faSitemap = faSitemap;
   isCursorIn: boolean = false;
 
-  constructor(private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
-              private _cinchyService: CinchyService,
-              private dialogService: DialogService,
-              private _appStateService: AppStateService,
-              private _cinchyQueryService: CinchyQueryService,
-              private _configService: ConfigService,
-              private _toastr: ToastrService) { // AppStateService is not part of Dynamic forms and is specific to this project
-  }
+  constructor(
+    private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
+    private _cinchyService: CinchyService,
+    private dialogService: DialogService,
+    private _appStateService: AppStateService, // AppStateService is not part of Dynamic forms and is specific to this project
+    private _cinchyQueryService: CinchyQueryService,
+    private _configService: ConfigService,
+    private _toastr: ToastrService)
+  {}
 
   ngOnInit(): void {
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
@@ -138,9 +142,6 @@ export class LinkComponent implements OnInit {
     this.field.cinchyColumn.hasChanged = true;
   }
 
-  getListItems(fromLinkedField?) {
-    this.bindDropdownList(this.field, this.field.cinchyColumn.linkTargetColumnId, fromLinkedField);
-  }
 
   //#region Bind Link type (DropdownList) on click
   /**
@@ -148,6 +149,7 @@ export class LinkComponent implements OnInit {
    * @param linkTargetId (Taget Column ID) of link table
    */
   async bindDropdownList(dataSet: any, linkTargetId: number, fromLinkedField?: boolean) {
+
     if (!this.filteredOptions) {
       this.isLoading = true;
       let dropdownDataset: DropdownDataset = null;
@@ -184,16 +186,179 @@ export class LinkComponent implements OnInit {
     }
   }
 
+
+  callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
+
+    if (Object.keys(event.value).length > 0) {
+      this.field.cinchyColumn.hasChanged = event.value.id !== this.field.value;
+      this.selectedValue = event.value;
+      this.field.value = event.value.id;
+      const value = event.value.id;
+      const text = event.value.label;
+      const Data = {
+        "TableName": targetTableName,
+        "ColumnName": columnName,
+        "Value": value,
+        "Text": text,
+        "Event": event,
+        "hasChanged": this.field.cinchyColumn.hasChanged,
+        "Form": this.field.form,
+        "Field": this.field
+      }
+
+      // pass calback event
+      const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
+      this.eventHandler.emit(callback);
+    }
+  }
+
+
+  checkForAttachmentUrl() {
+
+    this.downloadLink = !!this.field.cinchyColumn.attachmentUrl;
+
+    if (this.field.cinchyColumn.attachmentUrl && this.selectedValue) {
+      this.downloadLink = true;
+      this.downloadableLinks = [];
+      const replacedCinchyIdUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.rowId);
+      const replacedFileIdUrl = replacedCinchyIdUrl.replace("@fileid", this.selectedValue.id);
+      const selectedValuesWithUrl = { fileName: this.selectedValue.label, fileUrl: replacedFileIdUrl, fileId: this.selectedValue.id };
+      this.downloadableLinks.push(selectedValuesWithUrl);
+    }
+  }
+
+
+  checkForDisplayColumnFormatter() {
+
+    if (
+        this.field.cinchyColumn.isDisplayColumn &&
+        this.field.cinchyColumn.numberFormatter &&
+        this.selectedValue &&
+        this.selectedValue.label
+    ) {
+      const numeralValue = new NumeralPipe(this.selectedValue.label);
+
+      this.selectedValue.label = numeralValue.format(this.field.cinchyColumn.numberFormatter);
+    }
+  }
+
+
+  closeTooltip(tooltip) {
+
+    setTimeout(() => {
+
+      if (tooltip.isOpen() && !this.isCursorIn) {
+        tooltip.close();
+      }
+    }, 100);
+  }
+
+
+  deleteDropdownVal(event) {
+
+    const key = event.key;
+
+    if (key === "Delete" || key === "Backspace") {
+      const text = this.getSelectedText();
+      const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+
+      if (text != "") {
+        this.selectedValue = null;
+        this.myControl.setValue("");
+        this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, { value: val }, "value");
+      }
+    }
+  }
+
+
+  displayFn(contact): string {
+
+    return (contact?.label ?? "");
+  }
+
+
+  fileNameIsImage(fileName: string) {
+
+    const lowercase = fileName.toLowerCase();
+
+    return lowercase.endsWith(".png") ||
+      lowercase.endsWith(".jpg") ||
+      lowercase.endsWith(".jpeg") ||
+      lowercase.endsWith(".gif") ||
+      lowercase.endsWith(".svg");
+  }
+
+
   focusAndBlurInputToShowDropdown() {
+
     setTimeout(() => {
       this.searchInput.nativeElement.blur();
+
       setTimeout(() => {
         this.searchInput.nativeElement.focus()
       }, 100)
     }, 0)
   }
 
+
+  getAndSetLatestFileValue() {
+
+    this._cinchyQueryService.getFilesInCell(
+      this.field.cinchyColumn.name,
+      this.field.cinchyColumn.domainName,
+      this.field.cinchyColumn.tableName,
+      this.rowId
+    ).subscribe(
+      {
+        next: (resp) => {
+
+          if (resp?.length) {
+            this.field.value = resp[0].fileId;
+
+            const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.rowId);
+            const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", resp[0].fileId);
+
+            this.downloadableLinks = [
+              {
+                fileName: resp[0].fileName,
+                fileUrl: fileUrl,
+                fileId: resp[0].fileId
+              }
+            ];
+          }
+        }
+      }
+    );
+  }
+
+
+  getFilterValue(value) {
+
+    if (typeof value === "object") {
+      return value.label ? value.label.split(",")[0].toLowerCase() : "";
+    }
+    return value.toLowerCase();
+  }
+
+
+  getListItems(fromLinkedField?) {
+
+    this.bindDropdownList(this.field, this.field.cinchyColumn.linkTargetColumnId, fromLinkedField);
+  }
+
+
+  getSelectedText() {
+
+    if (window.getSelection) {
+      return window.getSelection().toString();
+    }
+
+    return "";
+  }
+
+
   getSortedList(dropdownDataset) {
+
     let filteredOutNullSets;
     if (dropdownDataset && dropdownDataset.options) {
       filteredOutNullSets = dropdownDataset.options.filter(option => option.label);
@@ -204,164 +369,9 @@ export class LinkComponent implements OnInit {
     return dropdownDataset;
   }
 
-  onInputChange() {
-    if (this.isLoading) {
-      this.myControl.setValue("");
-      return;
-    }
-    
-    this.myControl.valueChanges.pipe(
-      startWith("")).subscribe(value => {
-      if (value && typeof value !== "object") {
-        this.selectedValue = null;
-        this.filteredOptions = value ? this._filter(value) : this.filteredOptions;
-      } else if (!(value && value.label)) {
-        this.filteredOptions = this.dropdownSetOptions;
-      }
-    });
-  }
 
-  setSelectedValue() {
-    if (this.field.noPreSelect) {
-      this.selectedValue = null;
-      this.field.value = null;
-      return null;
-    }
-    const preselectedValArr = this.field.dropdownDataset ? this.field.dropdownDataset.options : null;
-    if (preselectedValArr && (preselectedValArr.length > 1 || this.isInChildForm)) {
-      this.selectedValue = preselectedValArr.find(item => item.id === this.field.value);
-    } else {
-      this.selectedValue = preselectedValArr && preselectedValArr[0] ? {...preselectedValArr[0]} : null;
-    }
-    this.selectedValue && this.myControl.setValue(this.selectedValue);
-    this.field.value = this.selectedValue ? this.selectedValue.id : null;
-    this.checkForAttachmentUrl();
-    this.checkForDisplayColumnFormatter();
-  }
+  manageSourceRecords(childFormData: any) {
 
-  displayFn(contact): string {
-    return contact?.label ?? "";
-  }
-
-  private _filter(value: any): string[] {
-    if (value && this.dropdownSetOptions) {
-      const filterValue = this.getFilterValue(value);
-      // Filtering out addNewItem because multiple inputs can cause race condition
-      return this.dropdownSetOptions.filter(option => option && option.label && option.label.toLowerCase
-        ? option.label.toLowerCase().includes(filterValue) : null);
-    }
-    return [];
-  }
-
-  getFilterValue(value) {
-    if (typeof value === "object") {
-      return value.label ? value.label.split(",")[0].toLowerCase() : "";
-    }
-    return value.toLowerCase();
-  }
-
-  setToLastValueSelected(event) {
-    setTimeout(() => {
-      !this.selectedValue && this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, {value: {}}, "value");
-       this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue("");
-       if(this.selectedValue == null){
-        const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
-        if(val){
-          this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, "value");
-        }
-       }
-      }, 300)
-  }
-
-  //#endregion
-  //#region pass callback event to the project On change of link (dropdown)
-  callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    if(Object.keys(event.value).length > 0){
-        // constant values
-        /*const value = event[0].value;
-        const text = event[0].text;*/
-        this.field.cinchyColumn.hasChanged = event.value.id !== this.field.value;
-        this.selectedValue = event.value;
-        this.field.value = event.value.id;
-        const value = event.value.id;
-        const text = event.value.label;
-        const Data = {
-          "TableName": targetTableName,
-          "ColumnName": columnName,
-          "Value": value,
-          "Text": text,
-          "Event": event,
-          "hasChanged": this.field.cinchyColumn.hasChanged,
-          "Form": this.field.form,
-          "Field": this.field
-        }
-        // pass calback event
-        const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
-        this.eventHandler.emit(callback);
-    }
-  }
-
-  checkForAttachmentUrl() {
-    this.downloadLink = !!this.field.cinchyColumn.attachmentUrl;
-    if (this.field.cinchyColumn.attachmentUrl && this.selectedValue) {
-      this.downloadLink = true;
-      this.downloadableLinks = [];
-      const replacedCinchyIdUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.rowId);
-      const replacedFileIdUrl = replacedCinchyIdUrl.replace("@fileid", this.selectedValue.id);
-      const selectedValuesWithUrl = {fileName: this.selectedValue.label, fileUrl: replacedFileIdUrl, fileId: this.selectedValue.id};
-      this.downloadableLinks.push(selectedValuesWithUrl);
-    }
-  }
-
-  checkForDisplayColumnFormatter() {
-    if (this.field.cinchyColumn.isDisplayColumn && this.field.cinchyColumn.numberFormatter
-      && this.selectedValue && this.selectedValue.label) {
-      const numeralValue = new NumeralPipe(this.selectedValue.label);
-      this.selectedValue.label = numeralValue.format(this.field.cinchyColumn.numberFormatter);
-    }
-  }
-
-  onFileSelected(event: any) {
-    if (event?.target?.files?.length === 0) {
-      return;
-    }
-
-    const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.rowId);
-    this._cinchyQueryService.uploadFiles(event?.target?.files, uploadUrl)?.subscribe(
-      resp => {
-        this._toastr.success("File uploaded", "Success");
-        this.fileInput.nativeElement.value = "";
-        this.getAndSetLatestFileValue();
-      }, 
-      error => {
-        this._toastr.error("Could not upload the file", "Error");
-      });
-  }
-
-  getAndSetLatestFileValue() {
-    this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.rowId).subscribe(resp => {
-      if (resp && resp.length) {
-        this.field.value = resp[0].fileId;
-        const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.rowId);
-        const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", resp[0].fileId);
-        this.downloadableLinks = [
-          { 
-            fileName: resp[0].fileName, 
-            fileUrl: fileUrl, 
-            fileId: resp[0].fileId 
-          }
-        ];
-      } 
-    });
-  }
-
-  onDeleteFile(item) {
-    this.field.value = "";
-    this.field.cinchyColumn.hasChanged = true;
-    this.downloadableLinks = [];
-  }
-
-  manageSourceRecords(childFormData: any){
     //implement new method for add new row in source table
     let data = {
       childFormData: childFormData,
@@ -374,78 +384,160 @@ export class LinkComponent implements OnInit {
     this.openChildDialog();
   }
 
+
+  onDeleteFile(item) {
+
+    this.field.value = "";
+    this.field.cinchyColumn.hasChanged = true;
+    this.downloadableLinks = [];
+  }
+
+
+  onFileSelected(event: any) {
+
+    if (event?.target?.files?.length === 0) {
+      return;
+    }
+
+    const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.rowId);
+    this._cinchyQueryService.uploadFiles(event?.target?.files, uploadUrl)?.subscribe(
+      resp => {
+        this._toastr.success("File uploaded", "Success");
+        this.fileInput.nativeElement.value = "";
+        this.getAndSetLatestFileValue();
+      },
+      error => {
+        this._toastr.error("Could not upload the file", "Error");
+      });
+  }
+
+
+  onInputChange() {
+
+    if (this.isLoading) {
+      this.myControl.setValue("");
+
+      return;
+    }
+    
+    this.myControl.valueChanges.pipe(
+      startWith("")).subscribe(
+        {
+          next: (value) => {
+
+            if (value && typeof value !== "object") {
+              this.selectedValue = null;
+              this.filteredOptions = value ? this._filter(value) : this.filteredOptions;
+            } else if (!(value && value.label)) {
+              this.filteredOptions = this.dropdownSetOptions;
+            }
+          }
+        }
+      );
+  }
+
+
   openChildDialog() {
+
     const createLinkOptionFormId = this.field.cinchyColumn.createlinkOptionFormId;
     const createLinkOptionName = this.field.cinchyColumn.createlinkOptionName;
     const newOptionDialogRef = this.dialogService.openDialog(AddNewOptionDialogComponent, {
       createLinkOptionFormId,
       createLinkOptionName
     });
+
     this.spinner.hide();
+
     newOptionDialogRef.afterClosed().subscribe(newContactAdded => {
       newContactAdded && this._appStateService.newContactAdded(newContactAdded)
     });
   }
 
-  fileNameIsImage(fileName: string) {
-    const lowercase = fileName.toLowerCase();
-    return  lowercase.endsWith(".png") ||
-            lowercase.endsWith(".jpg") ||
-            lowercase.endsWith(".jpeg") ||
-            lowercase.endsWith(".gif") ||
-            lowercase.endsWith(".svg");
+
+  openTooltip(tooltip) {
+
+    tooltip.open();
+
+    this.tooltip = tooltip;
+
+    if (tooltip.isOpen()) {
+      const tooltipElement = document.getElementsByTagName("ngb-tooltip-window");
+
+      if (tooltipElement[0]) {
+        tooltipElement[0].addEventListener("mouseleave", this.removeTooltipElement.bind(this));
+        tooltipElement[0].addEventListener("mouseenter", this.setTooltipCursor.bind(this));
+      }
+    }
   }
-  //#endregion
 
 
-  removeTooltipElement(){
+  removeTooltipElement() {
+
     this.isCursorIn = false;
-    this.tooltip.close(); 
+    this.tooltip.close();
   }
 
-  setTooltipCursor(){
+
+  setSelectedValue() {
+
+    if (this.field.noPreSelect) {
+      this.selectedValue = null;
+      this.field.value = null;
+
+      return null;
+    }
+
+    const preselectedValArr = this.field.dropdownDataset ? this.field.dropdownDataset.options : null;
+
+    if (preselectedValArr && (preselectedValArr.length > 1 || this.isInChildForm)) {
+      this.selectedValue = preselectedValArr.find(item => item.id === this.field.value);
+    } else {
+      this.selectedValue = preselectedValArr && preselectedValArr[0] ? {...preselectedValArr[0]} : null;
+    }
+
+    this.selectedValue && this.myControl.setValue(this.selectedValue);
+    this.field.value = this.selectedValue ? this.selectedValue.id : null;
+    this.checkForAttachmentUrl();
+    this.checkForDisplayColumnFormatter();
+  }
+
+
+  setToLastValueSelected(event) {
+
+    setTimeout(() => {
+
+      !this.selectedValue && this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, { value: {} }, "value");
+      this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue("");
+
+      if (this.selectedValue == null) {
+        const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+        if (val) {
+          this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, { value: val }, "value");
+        }
+      }
+    }, 300)
+  }
+
+
+  setTooltipCursor() {
+
     this.isCursorIn = true;
   }
 
-  openTooltip(tooltip){
-    tooltip.open();
-    this.tooltip = tooltip;
-    if(tooltip.isOpen()) {
-      const tooltipElement = document.getElementsByTagName("ngb-tooltip-window");
-      if(tooltipElement[0]){
-        tooltipElement[0].addEventListener("mouseleave",this.removeTooltipElement.bind(this));
-        tooltipElement[0].addEventListener("mouseenter",this.setTooltipCursor.bind(this));
+
+  private _filter(value: any): string[] {
+
+    if (value && this.dropdownSetOptions) {
+      const filterValue = this.getFilterValue(value);
+
+      // Filtering out addNewItem because multiple inputs can cause race condition
+      return this.dropdownSetOptions.filter((option) => {
+
+        return ((option?.label?.toLowerCase) ? option.label.toLowerCase().includes(filterValue) : null);
+      });
     }
-   }
-  }
 
-  closeTooltip(tooltip){
-    setTimeout(() => {
-      if(tooltip.isOpen() &&  !this.isCursorIn) {
-        tooltip.close();
-      }
-    }, 100);
-
-  }
-
-  deleteDropdownVal(event){
-    const key = event.key;
-    if (key === "Delete" || key === "Backspace") {
-      const text= this.getSelectedText();
-      const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
-      if (text!=""){
-        this.selectedValue = null;
-        this.myControl.setValue("");
-        this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name,{value: val}, "value");
-      }
-    }
-  }
-
-  getSelectedText() {
-    if (window.getSelection) {
-        return window.getSelection().toString();
-    }
-    return "";
+    return [];
   }
 }
 

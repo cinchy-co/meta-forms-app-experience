@@ -20,7 +20,7 @@ import { faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { faSitemap } from "@fortawesome/free-solid-svg-icons";
 import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
-import {isNullOrUndefined} from "util";
+import {isArray, isNullOrUndefined} from "util";
 
 import { ResponseType } from "../../enums/response-type.enum";
 
@@ -388,8 +388,13 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   getAndSetLatestFileValue() {
 
     this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.rowId).subscribe(resp => {
-      if (resp && resp.length) {
-        this.field.value = this.field.value != null && this.field.value !== "" ? this.field.value + ", " + resp.map(x => x.fileId).join(", ") : resp.map(x => x.fileId).join(", ");
+      if (resp?.length) {
+        if (isArray(this.field.value)) {
+          this.field.value = this.field.value.concat(resp.map(x => x.fileId));
+          this.field.value = this.field.value.join(", ");
+        } else {
+          this.field.value = this.field.value != null && this.field.value !== "" ? this.field.value + ", " + resp.map(x => x.fileId).join(", ") : resp.map(x => x.fileId).join(", ");
+        }
 
         const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.rowId);
         if (this.selectedValues == null)
