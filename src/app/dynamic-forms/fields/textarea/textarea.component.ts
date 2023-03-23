@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, ViewChild, AfterViewInit, OnIni
 
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
-import { ImageType } from "../../enums/imageurl-type";
+import { DataFormatType } from "../../enums/data-format-type";
 import { ResponseType } from "../../enums/response-type.enum";
 
 import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
@@ -42,8 +42,8 @@ export class TextareaComponent implements AfterViewInit, OnInit {
     if (this.field.cinchyColumn.dataFormatType === "JSON") {
       this.field.value = JSON.stringify(JSON.parse(this.field.value), null, 2)
     }
-    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && !this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default) && this.field.cinchyColumn.dataFormatType !== "LinkUrl";
-    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
+    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && !this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl) && this.field.cinchyColumn.dataFormatType !== "LinkUrl";
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
     this.showActualField = !this.showImage && !this.showLinkUrl;
   }

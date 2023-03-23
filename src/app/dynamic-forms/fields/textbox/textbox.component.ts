@@ -3,7 +3,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
-import { ImageType } from "../../enums/imageurl-type";
+import { DataFormatType } from "../../enums/data-format-type";
 import { ResponseType } from "../../enums/response-type.enum";
 
 import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
@@ -36,9 +36,12 @@ export class TextboxComponent implements OnInit {
   showLinkUrl: boolean;
   showActualField: boolean;
   showIFrame: boolean;
+  showIFrameSandbox: boolean;
+  showIFrameSandboxStrict: boolean;
   faAlignLeft = faAlignLeft;
   urlSafe: SafeResourceUrl;
   iframeHeightStyle: string = '300px;';
+  sandbox: string;
 
   /**
    * If the field is displaying an imaged, returns the class name associated with the configured format
@@ -47,15 +50,15 @@ export class TextboxComponent implements OnInit {
 
     if (this.showImage) {
       switch (this.field.cinchyColumn.dataFormatType) {
-        case ImageType.small:
+        case DataFormatType.small:
 
           return "cinchy-images-small";
-        case ImageType.large:
+        case DataFormatType.large:
 
           return "cinchy-images-large";
-        case ImageType.small:
+        case DataFormatType.small:
           // falls through
-        case ImageType.default:
+        case DataFormatType.ImageUrl:
 
           return "cinchy-images";
         default:
@@ -73,21 +76,26 @@ export class TextboxComponent implements OnInit {
 
   ngOnInit() {
 
-    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
 
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
 
-    this.showIFrame = this.field.cinchyColumn.dataFormatType === ImageType.IFrame;
+    this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
 
-    if (this.showIFrame && this.isValidHttpUrl(this.field.value) && !this.isInChildForm){
+    this.showIFrameSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
+    this.showIFrameSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
+
+    if ((this.showIFrame || this.showIFrameSandbox || this.showIFrameSandboxStrict)  && this.isValidHttpUrl(this.field.value) && !this.isInChildForm){
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
       this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
-        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';
+        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';      
     }else{
       this.showIFrame = false;
+      this.showIFrameSandbox = false;
+      this.showIFrameSandboxStrict = false;
     } 
 
-    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame;
+    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame && !this.showIFrameSandbox && !this.showIFrameSandboxStrict;
   }
 
   //#region pass callback event to the project On blur

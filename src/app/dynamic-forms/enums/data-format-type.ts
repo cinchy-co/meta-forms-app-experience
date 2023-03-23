@@ -1,13 +1,15 @@
-export enum ImageType {
+export enum DataFormatType {
     small = "ImageUrl (small)",
     medium = "ImageUrl (medium)",
     large = "ImageUrl (large)",
-    default = "ImageUrl",
+    ImageUrl = "ImageUrl",
     CQL = "CQL",
     Javascript = "Javascript",
     JSON = "JSON",
     XML = "XML",
     LinkUrl = "LinkUrl",
     RichText = "Rich Text",
-    IFrame = "iFrame"
+    IFrame = "iFrame",
+    IFrameSandbox = "iFrame Sandboxed",
+    IFrameSandboxStrict = "iFrame Sandboxed Strict"
   }
