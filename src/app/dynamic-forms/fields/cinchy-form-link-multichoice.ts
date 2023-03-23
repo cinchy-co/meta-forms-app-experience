@@ -4,7 +4,7 @@ import {ReplaySubject, Subject} from 'rxjs';
 import {MatSelect} from '@angular/material/select';
 import {take, takeUntil} from 'rxjs/operators';
 import {DropdownDataset} from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
-import {isNullOrUndefined} from "util";
+import {isArray, isNullOrUndefined} from "util";
 import {DropdownDatasetService} from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
 import {NgxSpinnerService} from "ngx-spinner";
 import {CinchyService} from "@cinchy-co/angular-sdk";
@@ -508,8 +508,13 @@ export class LinkMultichoice implements OnInit, AfterViewInit, OnDestroy {
 
   getAndSetLatestFileValue() {
     this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.rowId).subscribe(resp => {
-      if (resp && resp.length) {
-        this.field.value = this.field.value != null && this.field.value !== '' ? this.field.value + ', ' + resp.map(x => x.fileId).join(', ') : resp.map(x => x.fileId).join(', ');
+      if (resp?.length) {
+        if (isArray(this.field.value)) {
+          this.field.value = this.field.value.concat(resp.map(x => x.fileId));
+          this.field.value = this.field.value.join(", ");
+        } else {
+          this.field.value = this.field.value != null && this.field.value !== "" ? this.field.value + ", " + resp.map(x => x.fileId).join(", ") : resp.map(x => x.fileId).join(", ");
+        }
 
         const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace('@cinchyid', this.rowId);
         if (this.selectedValues == null)
