@@ -57,7 +57,6 @@ export class Form implements IForm {
   parentForm: IForm;
   tableMetadata: Object;
 
-  private _dropdownDatasets: { [key: number]: DropdownDataset } = {};
 
   constructor(
     public id: number | string,
@@ -73,11 +72,28 @@ export class Form implements IForm {
     public childFormLinkId?: string,
     public childFormFilter?: string,
     public childFormSort?: string
-  ) { }
+  ) {}
+
+
+  /**
+   * Adds an item to a link array, which takes the form of the value followed by a 0 element. Will not add the value
+   * if it is falsey or if it is already in the set.
+   */
+  addLinkArrayItem(set: Array<any>, value: string): Array<any> {
+
+    if (value && !set.includes(value)) {
+      return (set || []).concat([value, 0]);
+    }
+
+    return set;
+  }
+
 
   generateSelectQuery(rowId: number | string, parentTableId: number = 0): IQuery {
+
     let columnName = null;
     let fields: Array<string> = [];
+
     this.sections.forEach(section => {
       section.fields.forEach(element => {
         //TODO: GET The values Dynamically
@@ -88,8 +104,9 @@ export class Form implements IForm {
         if (isNullOrUndefined(element.cinchyColumn.name) || element.cinchyColumn.name == '') {
           return;
         }
+
         if (element.cinchyColumn.dataType === 'Link') {
-          //Todo: CHanges for Short Name
+          //TODO: Changes for Short Name
           const splitLinkTargetColumnNames = element.cinchyColumn.linkTargetColumnName ? element.cinchyColumn.linkTargetColumnName.split('.') : [];
           const targetColumnForQuery = (splitLinkTargetColumnNames.map(name => `[${name}]`)).join('.');
           const labelForColumn = element.cinchyColumn.IsDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
@@ -109,11 +126,11 @@ export class Form implements IForm {
           element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${labelForColumn} label'`);
         }
         // else  if (element.cinchyColumn.dataType === 'Binary') {
-        //   //Todo: CHanges for Short Name
+        //   //TODO: Changes for Short Name
         //   fields.push('Convert(varchar(max),[' + element.cinchyColumn.name + '])');
         // }
         else {
-          //Todo: Changes for Short Name
+          //TODO: Changes for Short Name
           const col = `[${element.cinchyColumn.name}]`
           // fields.push('[' + element.cinchyColumn.name + ']');
           element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${element.cinchyColumn.name}'`);
@@ -152,7 +169,7 @@ export class Form implements IForm {
           return;
         }
         rowData.forEach(Rowelement => {
-          //Todo: Passing array value in case of multiselect
+          //TODO: Passing array value in case of multiselect
           if (element.cinchyColumn.dataType == 'Choice' && element.cinchyColumn.isMultiple == true) {
             const valueArray = (isNullOrUndefined(Rowelement[element.cinchyColumn.name]) ?
               [] : Rowelement[element.cinchyColumn.name].split(','));
@@ -232,7 +249,7 @@ export class Form implements IForm {
         }
 
         rowData.forEach(Rowelement => {
-          //Todo: Passing array value in case of multiselect
+          //TODO: Passing array value in case of multiselect
           if (element.cinchyColumn.dataType == 'Choice' && element.cinchyColumn.isMultiple == true) {
             const valueArray = (isNullOrUndefined(Rowelement[element.cinchyColumn.name]) ?
               [] : Rowelement[element.cinchyColumn.name].split(','));
@@ -308,7 +325,7 @@ export class Form implements IForm {
         //  debugger;
         if (isNullOrUndefined(element.value) && (element.cinchyColumn.dataType === 'Link' || element.cinchyColumn.dataType === 'Yes/No'
         )) {
-          //todo: check for link type
+          //TODO: check for link type
         } else {
           if (element.cinchyColumn.name != null && !element.cinchyColumn.isCalcualted && element.cinchyColumn.canEdit
           && (element.cinchyColumn.hasChanged) && (!element.cinchyColumn.isViewOnly || forClonedForm) && !element.childForm) {
@@ -359,31 +376,26 @@ export class Form implements IForm {
 
                 break;
               case "Link":
-                let stringLink = '';
                 if (element.value instanceof Array) {
                   let stringLinkArray = [];
+
                   element.value.forEach(itemElement => {
-                    //stringLink = element + ',0';
-                    const itemToCheck = itemElement.toString ? itemElement.toString() : itemElement;
-                    if (!(stringLinkArray.indexOf(itemToCheck) > -1)) {
-                      stringLinkArray.push(itemToCheck);
-                      stringLinkArray.push(0);
-                    }
+
+                    stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemElement.toString ? itemElement.toString() : itemElement);
                   });
-                  const joinedValue = stringLinkArray.join(',');
-                  params[paramName] = joinedValue ? joinedValue.toString() : joinedValue;
+
+                  params[paramName] = stringLinkArray.join(',');
                 } else if (element.cinchyColumn.isMultiple) {
                   const allValues = element.value.split(',');
+
                   let stringLinkArray = [];
+
                   allValues.forEach(itemVal => {
-                    //stringLink = element + ',0';
-                    if (itemVal) {
-                      stringLinkArray.push(itemVal.trim ? itemVal.trim() : itemVal);
-                      stringLinkArray.push(0);
-                    }
+
+                    stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                   });
-                  const joinedValue = stringLinkArray.join(',');
-                  params[paramName] = joinedValue ? joinedValue.toString() : joinedValue;
+
+                  params[paramName] = stringLinkArray.join(',');
                 } else {
                   if (element.value === 'DELETE') {
                     params[paramName] = '';
@@ -398,12 +410,12 @@ export class Form implements IForm {
               default:
                 params[paramName] = element.value ? element.value : ``;
             }
-            //TOdo: Return Insert Data when binary
+            //TODO: Return Insert Data when binary
             if (element.cinchyColumn.dataType !== 'Binary') {
               assignmentColumns.push(tableAliasInQuery + '[' + element.cinchyColumn.name + ']');
             }
             if (isNullOrUndefined(element.cinchyColumn.linkTargetColumnName) && element.cinchyColumn.dataType !== 'Binary') {
-              //ToDO: for insert data ... because insert is giving error with parameters
+              //TODO: for insert data ... because insert is giving error with parameters
               if ((element.cinchyColumn.dataType === 'Text') && !element.value) {
                 // Because empty values for text input is throwing error
                 isNullOrUndefined(this.rowId) ? assignmentValues.push('\'' + params[paramName] + '\'') :
@@ -417,37 +429,38 @@ export class Form implements IForm {
               //TODO: code for the multi select Link
               if (element.value instanceof Array) {
                 let stringLinkArray = [];
-                element.value.forEach(itemElement => {
-                  //stringLink = element + ',0';
-                  // Getting duplicate keys with both string and number
-                  const itemToCheck = itemElement.toString ? itemElement.toString() : itemElement;
-                  if (!(stringLinkArray.indexOf(itemToCheck) > -1)) {
-                    stringLinkArray.push(itemToCheck);
-                    stringLinkArray.push(0);
-                  }
+
+                element.value.forEach(itemVal => {
+
+                  stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                 });
-                const joinedValue = stringLinkArray.join(',');
-                let stringifyValue = joinedValue ? joinedValue.toString() : joinedValue;
-                //ToDO: for insert data ... because insert is giving error with parameters
+
+                let stringifyValue = stringLinkArray.join(',');
+
+                //TODO: for insert data ... because insert is giving error with parameters
                 if ((element.cinchyColumn.dataType === 'Link') && (!element.value || (element.value && !element.value.length))) {
                   // Because empty values for multi input is throwing error
-                  isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${stringifyValue}'`) :
+                  isNullOrUndefined(this.rowId) ?
+                    assignmentValues.push(`'${stringifyValue}'`) :
                     assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 } else {
-                  isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${stringifyValue}'`) : assignmentValues.push(paramName);
+                  isNullOrUndefined(this.rowId) ?
+                    assignmentValues.push(`'${stringifyValue}'`) :
+                    assignmentValues.push(paramName);
                 }
               } else if (element.cinchyColumn.isMultiple) {
                 const allValues = element.value.split(',');
+
                 let stringLinkArray = [];
+
                 allValues.forEach(itemVal => {
-                  //stringLink = element + ',0';
-                  stringLinkArray.push(itemVal.trim ? itemVal.trim() : itemVal);
-                  stringLinkArray.push(0);
+
+                  stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                 });
-                const joinedValue = stringLinkArray.join(',');
-                isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${joinedValue}'`) : assignmentValues.push(paramName);
+
+                isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${stringLinkArray.join(',')}'`) : assignmentValues.push(paramName);
               } else {
-                //ToDO: for insert data ... because insert is giving error with parameters
+                //TODO: for insert data ... because insert is giving error with parameters
                 if (element.cinchyColumn.dataType == "Link") {
                   isNullOrUndefined(this.rowId) ?
                     assignmentValues.push("ResolveLink(" + params[paramName] + ",'" + "Cinchy Id" + "')")
@@ -573,29 +586,26 @@ export class Form implements IForm {
                 }
                 break;
               case "Link":
-                let stringLink = '';
                 if (element.value instanceof Array) {
                   let stringLinkArray = [];
-                  element.value.forEach(itemElement => {
-                    //stringLink = element + ',0';
-                    const itemToCheck = itemElement.toString ? itemElement.toString() : itemElement;
-                    if (!(stringLinkArray.indexOf(itemToCheck) > -1)) {
-                      stringLinkArray.push(itemToCheck);
-                      stringLinkArray.push(0);
-                    }
+
+                  element.value.forEach(itemVal => {
+
+                    stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                   });
-                  const joinedValue = stringLinkArray.join(',');
-                  params[paramName] = joinedValue ? joinedValue.toString() : joinedValue;
+
+                  params[paramName] = stringLinkArray.join();
                 } else if (element.cinchyColumn.isMultiple) {
                   const allValues = element.value.split(',');
+
                   let stringLinkArray = [];
+
                   allValues.forEach(itemVal => {
-                    //stringLink = element + ',0';
-                    stringLinkArray.push(itemVal.trim ? itemVal.trim() : itemVal);
-                    stringLinkArray.push(0);
+
+                    stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                   });
-                  const joinedValue = stringLinkArray.join(',');
-                  params[paramName] = joinedValue ? joinedValue.toString() : joinedValue;
+
+                  params[paramName] = stringLinkArray.join();
                 } else {
                   if (element.value === 'DELETE') {
                     params[paramName] = '';
@@ -607,7 +617,7 @@ export class Form implements IForm {
               default:
                 params[paramName] = isNullOrUndefined(element.value) ? '' : element.value;
             }
-            //TOdo: Return Insert Data when binary
+            //TODO: Return Insert Data when binary
             if (element.cinchyColumn.dataType !== 'Binary') {
               if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
                 (element.cinchyColumn.dataType === "Choice" && element.value)
@@ -617,7 +627,7 @@ export class Form implements IForm {
             }
             if (isNullOrUndefined(element.cinchyColumn.linkTargetColumnName) &&
               element.cinchyColumn.dataType !== 'Binary') {
-              //ToDO: for insert data ... because insert is giving error with parameters
+              //TODO: for insert data ... because insert is giving error with parameters
               if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === 'string')) ||
                 (element.cinchyColumn.dataType === "Choice" && element.value)
                 || (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")) {
@@ -634,17 +644,15 @@ export class Form implements IForm {
               //TODO: code for the multi select Link
               if (element.value instanceof Array) {
                 let stringLinkArray = [];
-                element.value.forEach(itemElement => {
-                  // Getting duplicate keys with both string and number
-                  const itemToCheck = itemElement.toString ? itemElement.toString() : itemElement;
-                  if (!(stringLinkArray.indexOf(itemToCheck) > -1)) {
-                    stringLinkArray.push(itemToCheck);
-                    stringLinkArray.push(0);
-                  }
+
+                element.value.forEach(itemVal => {
+
+                  stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                 });
-                const joinedValue = stringLinkArray.join(',');
-                let stringifyValue = joinedValue ? joinedValue.toString() : joinedValue;
-                //ToDO: for insert data ... because insert is giving error with parameters
+
+                const stringifyValue = stringLinkArray.join();
+
+                //TODO: for insert data ... because insert is giving error with parameters
                 if ((element.cinchyColumn.dataType === 'Link') && (!element.value || (element.value && !element.value.length))) {
                   // Because empty values for multi input is throwing error
                   isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${stringifyValue}'`) :
@@ -654,16 +662,17 @@ export class Form implements IForm {
                 }
               } else if (element.cinchyColumn.isMultiple) {
                 const allValues = element.value.split(',');
+
                 let stringLinkArray = [];
+
                 allValues.forEach(itemVal => {
-                  //stringLink = element + ',0';
-                  stringLinkArray.push(itemVal.trim ? itemVal.trim() : itemVal);
-                  stringLinkArray.push(0);
+
+                  stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                 });
-                const joinedValue = stringLinkArray.join(',');
-                isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${joinedValue}'`) : assignmentValues.push(paramName);
+
+                isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${stringLinkArray.join(",")}'`) : assignmentValues.push(paramName);
               } else {
-                //ToDO: for insert data ... because insert is giving error with parameters
+                //TODO: for insert data ... because insert is giving error with parameters
                 if (element.cinchyColumn.dataType == "Link") {
 
                   if (isNullOrUndefined(this.rowId) && element.form.isChild && element.form.flatten && element.form.childFormParentId) {
@@ -705,7 +714,7 @@ export class Form implements IForm {
     const ifUpdateAttachedFilePresent = attachedFilesInfo.find(fileInfo => fileInfo.query);
     if (assignmentValues && assignmentValues.length) {
       if (isNullOrUndefined(rowID)) {
-        //Todo: Change in insert query.
+        //TODO: Change in insert query.
         query = new Query('insert into [' + this.targetTableDomain + '].[' + this.targetTableName + '] (' + assignmentColumns.join(',') + ') values (' + assignmentValues.join(',') + ')', params, attachedFilesInfo);
       } else {
         let assignmentSetClauses: string[] = [];
@@ -730,10 +739,12 @@ export class Form implements IForm {
   // Check For the Required Field Before Save Data
   checkFormValidation() {
     let message = '';
+
     let validationResult = {
       status: true,
-      message: ''
+      message: message
     };
+
     this.errorFields = [];
     this.sections.forEach(section => {
       section.fields.forEach(element => {
