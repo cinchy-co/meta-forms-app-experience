@@ -65,6 +65,7 @@
                          (eventHandler)="eventOccurred.emit($event)"
                          [targetTableName]="field.cinchyColumn.tableName"
                          [field]="field"
+                         [isInChildForm]="isChild"
                          [fieldsWithErrors]="fieldsWithErrors">
         </cinchy-textarea>
 

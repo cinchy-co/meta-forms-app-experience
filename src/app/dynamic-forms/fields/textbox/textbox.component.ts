@@ -41,7 +41,6 @@ export class TextboxComponent implements OnInit {
   faAlignLeft = faAlignLeft;
   urlSafe: SafeResourceUrl;
   iframeHeightStyle: string = '300px;';
-  sandbox: string;
 
   /**
    * If the field is displaying an imaged, returns the class name associated with the configured format

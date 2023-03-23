@@ -52,4 +52,16 @@
     <a *ngIf="field.value" [href]="field.value">Open</a>
     <label *ngIf="!field.value">-</label>
   </ng-container>
+
+  <ng-container *ngIf="showIFrame && isValidHttpUrl(field.value)">
+    <iframe class="iframe-control" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+  </ng-container>
+  
+  <ng-container *ngIf="showIFrameSandbox && isValidHttpUrl(field.value)">
+    <iframe class="iframe-control" sandbox = "allow-forms allow-scripts allow-modals allow-popups allow-same-origin" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+  </ng-container>
+   
+  <ng-container *ngIf="showIFrameSandboxStrict && isValidHttpUrl(field.value)">
+    <iframe class="iframe-control" sandbox = "allow-forms allow-scripts allow-modals allow-popups" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+  </ng-container>
 </div>
