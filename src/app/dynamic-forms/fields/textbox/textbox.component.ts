@@ -49,13 +49,13 @@ export class TextboxComponent implements OnInit {
 
     if (this.showImage) {
       switch (this.field.cinchyColumn.dataFormatType) {
-        case DataFormatType.small:
+        case DataFormatType.ImageUrlSmall:
 
           return "cinchy-images-small";
-        case DataFormatType.large:
+        case DataFormatType.ImageUrlLarge:
 
           return "cinchy-images-large";
-        case DataFormatType.small:
+        case DataFormatType.ImageUrlSmall:
           // falls through
         case DataFormatType.ImageUrl:
 

@@ -1,7 +1,7 @@
 export enum DataFormatType {
-    small = "ImageUrl (small)",
-    medium = "ImageUrl (medium)",
-    large = "ImageUrl (large)",
+    ImageUrlSmall = "ImageUrl (small)",
+    ImageUrlMedium = "ImageUrl (medium)",
+    ImageUrlLarge = "ImageUrl (large)",
     ImageUrl = "ImageUrl",
     CQL = "CQL",
     Javascript = "Javascript",
