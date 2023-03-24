@@ -49,18 +49,21 @@ export class TextareaComponent implements AfterViewInit, OnInit {
     if (this.field.cinchyColumn.dataFormatType === "JSON") {
       this.field.value = JSON.stringify(JSON.parse(this.field.value), null, 2)
     }
-    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && !this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl) && this.field.cinchyColumn.dataFormatType !== "LinkUrl";
+
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
     this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
     this.showIFrameSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
     this.showIFrameSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
 
+    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && !this.showImage && !this.showLinkUrl
+      && !this.showIFrame && !this.showIFrameSandbox && !this.showIFrameSandboxStrict;
+    
+
     if ((this.showIFrame || this.showIFrameSandbox || this.showIFrameSandboxStrict)  && this.isValidHttpUrl(this.field.value) && !this.isInChildForm){
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
       this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
         ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';   
-      this.isFormatted = false;   
     }else{
       this.showIFrame = false;
       this.showIFrameSandbox = false;
