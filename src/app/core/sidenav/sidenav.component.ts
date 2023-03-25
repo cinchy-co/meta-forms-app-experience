@@ -16,11 +16,11 @@ import { IFormMetadata } from 'src/app/models/form-metadata-model';
 })
 export class SidenavComponent implements OnInit, OnDestroy {
   formSectionsMetadata: IFormSectionMetadata[] = [];
-  @Input() formId: string | number;
-  @Input() tableId: string | number;
+  @Input() formId: string;
+  @Input() tableId: number;
   @Input() formMetadata: IFormMetadata;
 
-  rowId: string | number;
+  rowId: number;
 
   @Input() set tableUrl(value: string) {
     this._tableUrl = value
@@ -56,7 +56,7 @@ export class SidenavComponent implements OnInit, OnDestroy {
 
     this.appStateService.onRecordSelected().subscribe(resp => {
       this.rowId = resp.cinchyId;
-      this.filteredTableUrl = !this.rowId.toString().includes('null') ? `${this.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this.rowId}` : this.tableUrl;
+      this.filteredTableUrl = this.rowId ? `${this.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this.rowId}` : this.tableUrl;
     });
   }
 

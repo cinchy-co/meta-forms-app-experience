@@ -50,7 +50,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   @ViewChild("recordDropdown") dropdownComponent: SearchDropdownComponent;
   
-  @Input() formId: number | string;
+  @Input() formId: string;
   @Input() formMetadata: IFormMetadata;
   @Input() formSectionsMetadata: IFormSectionMetadata[];
   @Input() addNewFromSideNav: boolean;
@@ -65,7 +65,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
 
   form: IForm = null;
-  rowId: number | string;
+  rowId: number;
   fieldsWithErrors: Array<any>;
   currentRow: ILookupRecord;
   destroy$: Subject<boolean> = new Subject<boolean>();
@@ -186,7 +186,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   //#region Edit Add Child Form Data
   async openChildForm(data) {
 
-    if (!this.isCloneForm && (!this.rowId || this.rowId === "null")) {
+    if (!this.isCloneForm && !this.rowId) {
       const formvalidation = this.form.checkFormValidation();
       if (formvalidation) {
         this.saveForm(this.form, this.rowId, data);
@@ -430,8 +430,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
           let selectedLookupRecord = this.lookupRecordsList.find(_ => _.id == this.rowId);
          
-          await this._formHelperService.fillWithFields(this.form, this.rowId as string, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
-          await this._formHelperService.fillWithData(this.form, this.rowId as string, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+          await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
+          await this._formHelperService.fillWithData(this.form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
           this.enableSaveBtn = true;
 
           this.isLoadingForm = false;
@@ -477,7 +477,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
               this.spinner.hide();
 
-              if (isNullOrUndefined(this.rowId) || this.rowId == "null") {
+              if (isNullOrUndefined(this.rowId)) {
                 this.appStateService.setRecordSelected(response.queryResult._jsonResult.data[0][0], true);
                 this.isCloneForm = false;
               }
@@ -828,7 +828,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
         if (field.childForm != null) {
           field.childForm.rowId = null;
-          field.childForm.id = -1;
+          field.childForm.id = "-1";
+
           if (field.childForm.sections && field.childForm.sections[0].MultiFields) {
             if (field.childForm.childFormLinkId && field.childForm.childFormParentId) {
               if (!field.childForm.flatten && showWarningAboutChildFormDuplication) {

@@ -27,13 +27,15 @@ import { ILookupRecord } from "src/app/models/lookup-record.model";
 })
 export class FormWrapperComponent implements OnInit {
   @ViewChild("sidenav") sidenav;
+
   formMetadata: IFormMetadata;
   formSectionsMetadata: IFormSectionMetadata[];
   lookupRecords: ILookupRecord[];
 
-  rowId: string | number;
-  formId: string | number;
   mobileQuery: MediaQueryList;
+
+  rowId: number;
+  formId: string;
 
   private mobileQueryListener: () => void;
 
@@ -54,12 +56,12 @@ export class FormWrapperComponent implements OnInit {
 
 
   async ngOnInit() {
+
     await this.loadFormMetadata();
 
-    let { formId, rowId } = this.activatedRoute.snapshot.queryParams;
+    this.formId = this.appStateService.formId;
+    this.rowId = this.appStateService.rowId;
 
-    this.formId = formId || this.appStateService.formId || sessionStorage.getItem("formId");
-    this.rowId = rowId || this.appStateService.rowId || sessionStorage.getItem("rowId");
     this.appStateService.setRecordSelected(this.rowId);
   }
 

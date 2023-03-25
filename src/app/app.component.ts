@@ -1,122 +1,185 @@
-import {ActivatedRoute, Router} from '@angular/router';
-import {ChangeDetectorRef, Component, HostListener, OnInit} from '@angular/core';
-import {MediaMatcher} from '@angular/cdk/layout';
-import {CinchyService} from '@cinchy-co/angular-sdk';
-import {CinchyQueryService} from "./services/cinchy-query.service";
-import {AppStateService} from "./services/app-state.service";
+import { Subscription } from "rxjs";
+
+import { NavigationStart, Router, RouterEvent } from "@angular/router";
+import { Component, HostListener, OnDestroy, OnInit} from "@angular/core";
+
+import { CinchyService } from "@cinchy-co/angular-sdk";
+
+import { AppStateService } from "./services/app-state.service";
+
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  selector: "app-root",
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.scss"]
 })
 
-export class AppComponent implements OnInit {
-  @HostListener('window:beforeunload', ['$event'])
+export class AppComponent implements OnDestroy, OnInit {
+
+  @HostListener("window:beforeunload", ["$event"])
   beforeUnloadHandler($event) {
     if (this.appStateService.hasFormChanged) {
       $event.returnValue = "Are you sure you want to exit? You may have some unsaved changes";
     }
   }
 
+
   fullScreenHeight = 400;
   loginDone;
 
-  constructor(private router: Router, changeDetectorRef: ChangeDetectorRef, media: MediaMatcher,
-              private cinchyService: CinchyService, private cinchyQueryService: CinchyQueryService,
-              private appStateService: AppStateService, private activatedRoute: ActivatedRoute) {
-    this.setRowAndFormId();
-  }
 
-  setRowAndFormId() {
-    let formId = this.getQueryStringValue('formId', window.location.search);
-    let rowId = this.getQueryStringValue('rowId', window.location.search);
-    if (!rowId) {
-      formId = this.getQueryStringValue('formId', document.referrer);
-      rowId = this.getQueryStringValue('rowId', document.referrer);
-    }
-    if(!sessionStorage.getItem('formId') || formId){
-      formId && sessionStorage.setItem('formId', formId);
-    }
+  private _routerEventSubscription: Subscription
 
-    if(!sessionStorage.getItem('rowId') || rowId){
-      rowId && rowId != "null" ? sessionStorage.setItem('rowId', rowId) : sessionStorage.setItem('rowId', null);
-    }
-    console.log('Row Id app', rowId, 'session',  sessionStorage.getItem('rowId'));
-  }
 
-  getQueryStringValue(key, url) {
-    return decodeURIComponent(url.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
-  }
+  constructor(
+      private router: Router,
+      private cinchyService: CinchyService,
+      private appStateService: AppStateService
+  ) {
 
-  ngOnInit(): void {
-    if (localStorage.getItem('fullScreenHeight')) {
-      this.fullScreenHeight = parseInt(localStorage.getItem('fullScreenHeight'), 10);
-      this.setHeight();
-    }else{
-      window.addEventListener('message', this.receiveMessage, false);
-    }
-    this.cinchyService.checkIfSessionValid().toPromise().then(response => {
-      if (response.accessTokenIsValid) {
-        this.loadRoute();
-      } else {
-        this.cinchyService.login().then(success => {
-          if (success) {
-            this.loadRoute();
-          }
-        }, error => {
-          console.error('Could not login: ', error)
-        });
+    this._routerEventSubscription = this.router.events.subscribe({
+      next: (event: RouterEvent) => {
+
+        // This is used if the incoming URL causes an immediate reload which would otherwise destroy the queryparams
+        if (event instanceof NavigationStart && !this.loginDone) {
+          this.setRowAndFormId();
+        }
       }
     });
   }
 
-  loadRoute() {
-    if (localStorage.getItem('fullScreenHeight')) {
-      this.fullScreenHeight = parseInt(localStorage.getItem('fullScreenHeight'), 10);
-      console.log('Login Success!');
-    }
-    if (!sessionStorage.getItem('rowId')) {
-      this.setRowAndFormId();
-    }
-    this.setFormAndRowIdsAndNavigate();
-    this.loginDone = true;
+
+  ngOnDestroy(): void {
+
+    this._routerEventSubscription.unsubscribe();
   }
 
-  setFormAndRowIdsAndNavigate() {
-    const {formId, rowId} = sessionStorage;
-    this.appStateService.formId = formId;
-    this.appStateService.rowId = rowId;
-    this.router.navigate(['/edit-form'], {queryParamsHandling: "merge"});
+
+  ngOnInit(): void {
+
+    if (localStorage.getItem("fullScreenHeight")) {
+      this.fullScreenHeight = parseInt(localStorage.getItem("fullScreenHeight"), 10);
+      this.setHeight();
+    } else {
+      window.addEventListener("message", this.receiveMessage, false);
+    }
+
+    this.cinchyService.checkIfSessionValid().toPromise().then(response => {
+      if (response.accessTokenIsValid) {
+        this.loadRoute();
+      } else {
+        this.cinchyService.login().then(
+          (success: boolean) => {
+
+            if (success) {
+              this.loadRoute();
+            }
+          },
+          (error: any) => {
+
+            console.error("Could not login: ", error)
+          }
+        );
+      }
+    });
   }
+
+
+  /**
+   * Gets the numerical rowId associated with this session regardless of its source
+   */
+  getIdFromSessionOrUri(uri: string, key: string): number {
+
+    let id: string;
+
+    if (uri) {
+      id = this.getQueryStringValue("rowId", uri); 
+    }
+
+    if (id) {
+      return +id;
+    }
+
+    id = sessionStorage.getItem(key);
+
+    return (id ? parseInt(id) : null);
+  }
+
+
+  /**
+   * Pulls the value with the target key out of the querystring
+   */
+  getQueryStringValue(key: string, uri: string): string {
+
+    const idFromUri = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+
+    return (idFromUri && idFromUri !== "null") ? idFromUri : null;
+  }
+
+
+  /**
+   * Initializes the view and sets the appropriate session state
+   */
+  loadRoute(): void {
+
+    if (localStorage.getItem("fullScreenHeight")) {
+      this.fullScreenHeight = parseInt(localStorage.getItem("fullScreenHeight"), 10);
+
+      console.log("Login Success!");
+    }
+
+    // This will be the second call to this function if the router catches an involuntary redirect,
+    // but will be the first call if the entry URL is correctly formed and the session doesn't need
+    // to refresh
+    this.setRowAndFormId();
+
+    this.loginDone = true;
+
+    this.router.navigate(["/edit-form"], { queryParamsHandling: "merge" });
+  }
+
+
+  /**
+   * Receive the screen height from the wrapping element
+   */
+  receiveMessage(event): void {
+
+    if (event.data.toString().startsWith("[Cinchy][innerHeight]")) {
+      this.fullScreenHeight = parseInt(event.data.toString().substring(21), 10) + 4;
+
+      localStorage.setItem("fullScreenHeight", this.fullScreenHeight.toString());
+
+      this.setHeight();
+    }
+  }
+
+
+  /**
+   * Retrieves the rowId and formId from the URL and ensures the session is up to date
+   */
+  setRowAndFormId() {
+
+    const uri = window.location.search;
+
+    this.appStateService.formId = uri ? this.getQueryStringValue("formId", uri) : sessionStorage.getItem("formId");
+    this.appStateService.rowId = this.getIdFromSessionOrUri(uri, "rowId");
+
+    sessionStorage.setItem("formId", this.appStateService.formId ? this.appStateService.formId.toString() : "");
+    sessionStorage.setItem("rowId", this.appStateService.rowId ? this.appStateService.rowId.toString() : "");
+  }
+
 
   setHeight() {
-    console.log('set height  IF', this.fullScreenHeight)
-    const elements = document.getElementsByClassName('full-height-element');
-    // tslint:disable-next-line:prefer-for-of
+
+    const elements = document.getElementsByClassName("full-height-element");
+
     for (let i = 0; i < elements.length; i++) {
       setTimeout(() => {
-        if(this.appStateService.iniFrame()){
-          elements[i]['style'].height = this.fullScreenHeight + 'px';
-        }
-      }, 500)
-    }
-  }
 
-// get Full Screen height of screen
-  receiveMessage(event) {
-    if (event.data.toString().startsWith('[Cinchy][innerHeight]')) {
-      this.fullScreenHeight = parseInt(event.data.toString().substring(21), 10) + 4;
-      localStorage.setItem('fullScreenHeight', this.fullScreenHeight.toString());
-      const elements = document.getElementsByClassName('full-height-element');
-      // tslint:disable-next-line:prefer-for-of
-      for (let i = 0; i < elements.length; i++) {
-        setTimeout(() => {
-          if(this.appStateService.iniFrame()){
-            elements[i]['style'].height = this.fullScreenHeight + 'px';
-          }
-        }, 500)
-      }
+        if (this.appStateService.iniFrame()) {
+          elements[i]["style"].height = this.fullScreenHeight + "px";
+        }
+      }, 500);
     }
   }
 }

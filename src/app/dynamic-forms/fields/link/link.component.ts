@@ -104,25 +104,32 @@ export class LinkComponent implements OnInit {
   {}
 
   ngOnInit(): void {
+
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
     this.showActualField = !this.showImage && !this.showLinkUrl;
+
     let url = this._configService.envConfig.cinchyRootUrl;
+
     this.tableSourceURL = url + "/Tables/" + this.field.cinchyColumn.linkTargetTableId;
+
     if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
       this.myControl.disable();
       this.setSelectedValue();
     } else {
       this.setSelectedValue();
     }
+
     if (this.isInChildForm && this.field.cinchyColumn.linkedFieldId) {
       this.setWhenNewRowAddedForParent();
     }
+
     if (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly && !this.isDisabled) {
       this.onInputChange();
     }
 
     this.createlinkOptionName = this.field.cinchyColumn.createlinkOptionFormId ? true: false;
+
     // Below code is SPECIFIC to this Project ONLY
     this._appStateService.getNewContactAdded().subscribe(value => {
       console.log("getNewContactAdded", value);
@@ -131,19 +138,10 @@ export class LinkComponent implements OnInit {
         this.filteredOptions = null;
         this.getListItems();
       }
-    })
-  }
-
-  setWhenNewRowAddedForParent() {
-    this.field.value = typeof this.rowId === "string" ? +this.rowId : this.rowId;
-    this.getListItems(true);
-    this.field.noPreSelect = false;
-    this.isDisabled = true;
-    this.field.cinchyColumn.hasChanged = true;
+    });
   }
 
 
-  //#region Bind Link type (DropdownList) on click
   /**
    * @param dataSet dataset of the link type
    * @param linkTargetId (Taget Column ID) of link table
@@ -168,7 +166,7 @@ export class LinkComponent implements OnInit {
         dataSet.dropdownDataset = dropdownDataset;
         this.dropdownSetOptions = dropdownDataset ? dropdownDataset.options : [];
         this.onInputChange();
-        if(this.rowId && this.rowId !== "null"){
+        if(this.rowId){
           const emptyOption = new DropdownOption("DELETE", "", "");
           this.dropdownSetOptions.unshift(emptyOption);
         }
@@ -522,6 +520,16 @@ export class LinkComponent implements OnInit {
   setTooltipCursor() {
 
     this.isCursorIn = true;
+  }
+
+
+  setWhenNewRowAddedForParent() {
+
+    this.field.value = typeof this.rowId === "string" ? +this.rowId : this.rowId;
+    this.getListItems(true);
+    this.field.noPreSelect = false;
+    this.isDisabled = true;
+    this.field.cinchyColumn.hasChanged = true;
   }
 
 

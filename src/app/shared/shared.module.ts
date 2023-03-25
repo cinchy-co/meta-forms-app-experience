@@ -35,5 +35,4 @@ import { TypeaheadComponent } from "./typeahead/typeahead.component";
   ],
   providers: []
 })
-export class SharedModule {
-}
+export class SharedModule {}

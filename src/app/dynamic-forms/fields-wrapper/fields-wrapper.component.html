@@ -120,7 +120,7 @@
 
         <cinchy-childform-table *ngIf="field.childForm && !field.childForm.flatten"
                                 [field]="field"
-                                [rowId]='field.form.rowId'
+                                [rowId]="field.form.rowId"
                                 [hasChildTableAccess]="field.childForm.hasAccess"
                                 (childform)='childFormOpened.emit($event)'
                                 (deleteClicked)="deleteDialogOpened.emit($event)">

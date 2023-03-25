@@ -42,7 +42,7 @@ export class CinchyQueryService {
   ) {}
 
 
-  getFormMetadata(formId?: string | number): Observable<IFormMetadata> {
+  getFormMetadata(formId?: string): Observable<IFormMetadata> {
     const id = formId ? formId : sessionStorage.getItem('formId');
     if (this._formMetadataCache[id])
       return of(this._formMetadataCache[id]);
@@ -69,7 +69,7 @@ export class CinchyQueryService {
   }
 
 
-  getFormSections(formId?: string | number): Observable<IFormSectionMetadata[]> {
+  getFormSections(formId?: string): Observable<IFormSectionMetadata[]> {
     const id = formId ? formId : sessionStorage.getItem('formId');
     if (this._formSectionsMetadataCache[id])
       return of(this._formSectionsMetadataCache[id]);
@@ -95,7 +95,7 @@ export class CinchyQueryService {
   }
 
 
-  getFormFieldsMetadata(formId?: string | number): Observable<IFormFieldMetadata[]> {
+  getFormFieldsMetadata(formId?: string): Observable<IFormFieldMetadata[]> {
     const id = formId ? formId : sessionStorage.getItem('formId');
     if (this._formFieldsMetadataCache[id])
       return of(this._formFieldsMetadataCache[id]);
