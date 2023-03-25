@@ -124,21 +124,16 @@ export class CinchyQueryService {
   }
 
 
-  getLookupRecords(subtitleColumn: string, domain: string, table: string, lookupFilter?: string, limitResults?: boolean): Observable<ILookupRecord[]> {
-
-    // If more than LOOKUP_RECORD_LABEL_COUNT records are retrieved, we know to indicate that additional records are available for the given filter.
-    const selectStatement = limitResults ? `SELECT TOP ${CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT + 1}` : `SELECT`;
+  getLookupRecords(subtitleColumn: string, domain: string, table: string, lookupFilter?: string): Observable<ILookupRecord[]> {
 
     const query = `
-      ${selectStatement}
+      SELECT 
         [Cinchy Id]         as 'id',
         [${subtitleColumn}] as 'label'
       FROM [${domain}].[${table}]
-      WHERE [Deleted] IS NULL ${lookupFilter ? `AND ${lookupFilter}` : ''}
-      ORDER BY [${subtitleColumn}];`;
+      WHERE [Deleted] IS NULL ${lookupFilter ? `AND ${lookupFilter}` : ''};`;
 
     return this._cinchyService.executeCsql(query, null).pipe(
-      takeUntil(this.resetLookupRecords),
       map(response => {
 
         return <ILookupRecord[]>response?.queryResult?.toObjectArray();

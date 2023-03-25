@@ -2,13 +2,20 @@
   <div class='navigation-buttons form-header'>
     <!-- <button mat-raised-button>Cancel</button>-->
     <div class="flex-row ml-20">
-      <a class="table-url" [href]="formMetadata.tableUrl" target="_blank"><span
-        class="mr-15"><b>{{formMetadata.formDisplayName}}</b></span></a>
+      <a class="table-url" [href]="formMetadata.tableUrl" target="_blank">
+        <span class="mr-15"><b>{{formMetadata.formDisplayName}}</b></span>
+      </a>
       <app-search-dropdown #recordDropdown *ngIf="lookupRecordsList?.length"
                            [fullList]="lookupRecordsList"
                            [selectedOption]="currentRow"
                            (dropdownClicked)="rowSelected($event)">
       </app-search-dropdown>
+
+      <div *ngIf="lookupRecordsList?.length" class="navigation-icons">
+        <mat-icon (click)="previousRow()">navigate_before</mat-icon>
+
+        <mat-icon (click)="nextRow()">navigate_next</mat-icon>
+      </div>
     </div>
 
     <div class="action-buttons" matTooltip="Data is loading..." [matTooltipDisabled]="enableSaveBtn">

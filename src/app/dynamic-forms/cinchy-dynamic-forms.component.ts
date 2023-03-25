@@ -52,7 +52,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   @Output() closeAddNewDialog = new EventEmitter<any>();
   @Output() eventHandler = new EventEmitter<any>();
   @Output() rowUpdated = new EventEmitter<any>();
-  @Output() onLookupRecordFilter: EventEmitter<string> = new EventEmitter<string>();
 
 
   form: IForm = null;
@@ -85,9 +84,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   ngOnInit() {
 
-    // Intialize with a loading state in case the first load takes some time
-    this.lookupRecordsList = [{ id: -1, label: "Loading..." }];
-
     this.appStateService.getSaveClickedObs().pipe(takeUntil(this.destroy$)).subscribe((saveClicked) => {
 
       saveClicked && this.saveForm(this.form, this.rowId);
@@ -118,11 +114,33 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this.appStateService.setRecordSelected(row?.id ?? this.rowId);
   }
 
+
   setLookupRecords(lookupRecords: ILookupRecord[]) {
 
+    if (lookupRecords == null)
+      return;
+
     this.lookupRecordsList = this.checkNoRecord(lookupRecords);
-    this.currentRow = this.lookupRecordsList.find(item => item.id === this.rowId) ?? this.currentRow;
+    this.currentRow = this.lookupRecordsList.find(item => item.id == this.rowId);
     this.rowUpdated.emit(this.rowId);
+    this.dropdownComponent?.setSelectedOption(this.currentRow);
+    this.dropdownComponent?.resetDropdown();
+  }
+
+
+  nextRow() {
+
+    const currentRowIndex = this.lookupRecordsList.findIndex(item => item.id == this.rowId);
+    const newIndex = currentRowIndex == this.lookupRecordsList.length - 1 ? 0 : currentRowIndex + 1;
+    this.setNewRow(newIndex);
+  }
+
+
+  previousRow() {
+
+    const currentRowIndex = this.lookupRecordsList.findIndex(item => item.id == this.rowId);
+    const newIndex = currentRowIndex ? currentRowIndex - 1 : this.lookupRecordsList.length - 1;
+    this.setNewRow(newIndex);
   }
 
 
@@ -134,12 +152,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     else{
       return [{id: -1, label: "No records available"}];
     }
-  }
-
-
-  handleOnFilter(filterText: string): void {
-
-    this.onLookupRecordFilter.emit(filterText);
   }
 
 
@@ -384,7 +396,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   //#region
   /**
-   * Uses the metadata from Cinchy to create and load the IForm object, then it"ll fill it with the form object with actual data
+   * Uses the metadata from Cinchy to create and load the IForm object, then it'll fill it with the form object with actual data
    * Gets called upon load, save, and row changes
    */
   async loadForm(childData?) {
