@@ -6,6 +6,7 @@ import { IFormMetadata } from "src/app/models/form-metadata-model";
 import { IFormSectionMetadata } from "src/app/models/form-section-metadata.model";
 import { ILookupRecord } from "src/app/models/lookup-record.model";
 import { CinchyQueryService } from "src/app/services/cinchy-query.service";
+import { isNullOrUndefined } from "util";
 import { CinchyColumn, ICinchyColumn } from "../../models/cinchy-column.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { FormSection } from "../../models/cinchy-form-sections.model";
@@ -21,9 +22,21 @@ export class FormHelperService {
     private _cinchyService: CinchyService,
     private _cinchyQueryService: CinchyQueryService,
     private _toastr: ToastrService
-  ) { }
+  ) {}
 
-  public async generateForm(formMetadata: IFormMetadata, rowId: string | number,tableEntitlements: any, isChild: boolean = false, flatten: boolean = false, childFormParentId?: string, childFormLinkId?: string, childFormFilter?: string, childFormSort?: string, parentForm: IForm = null): Promise<IForm> {
+
+  public async generateForm(
+      formMetadata: IFormMetadata,
+      rowId: number,
+      tableEntitlements: any,
+      isChild: boolean = false,
+      flatten: boolean = false,
+      childFormParentId?: string,
+      childFormLinkId?: string,
+      childFormFilter?: string,
+      childFormSort?: string,
+      parentForm: IForm = null
+  ): Promise<IForm> {
     if (formMetadata == null)
       return null;
 
@@ -60,7 +73,8 @@ export class FormHelperService {
     });
   }
 
-  public async fillWithFields(form: IForm, cinchyId: string, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord,tableEntitlements: any) {
+  public async fillWithFields(form: IForm, cinchyId: number, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord,tableEntitlements: any) {
+
     if (!formFieldsMetadata?.length)
       return;
 
@@ -227,9 +241,12 @@ export class FormHelperService {
   }
 
   // TODO: Refactor to smaller function, remove the need to use afterChildFormEdit as a function, it's only a workaround for the bad existing code in cinchy-dynamic-forms.component.ts that handles child forms queries
-  public async fillWithData(form: IForm, cinchyId: string, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string, afterChildFormEdit?: Function) {
-    if (cinchyId == null || cinchyId == 'null')
+  public async fillWithData(form: IForm, cinchyId: number, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string, afterChildFormEdit?: Function) {
+
+    if (isNullOrUndefined(cinchyId)) {
+
       return;
+    }
 
     const selectQuery: IQuery = form.generateSelectQuery(cinchyId, parentTableId);
     try {
@@ -295,7 +312,7 @@ export class FormHelperService {
     }
   }
 
-  private async getCellEntitlements(domainName: string, tableName: string, cinchyId: string, formFieldsMetadata: IFormFieldMetadata[]): Promise<Object> {
+  private async getCellEntitlements(domainName: string, tableName: string, cinchyId: number, formFieldsMetadata: IFormFieldMetadata[]): Promise<Object> {
     const selectClause = formFieldsMetadata
       .filter(_ => _.columnName)
       .map(_ => ` editable([${_.columnName}]) as 'entitlement-${_.columnName.substring(0, 114)}'`);
@@ -316,7 +333,7 @@ export class FormHelperService {
     return {};
   }
 
-  private async getFileName(cinchyId: string, fileNameColumn: string) {
+  private async getFileName(cinchyId: number, fileNameColumn: string) {
     const [domain, table, column] = fileNameColumn ? fileNameColumn.split('.') : [];
     const whereCondition = `WHERE [Cinchy Id] = ${cinchyId} AND [Deleted] IS NULL `;
 

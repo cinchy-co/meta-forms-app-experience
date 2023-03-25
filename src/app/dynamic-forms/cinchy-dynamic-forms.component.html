@@ -9,16 +9,10 @@
                            [selectedOption]="currentRow"
                            (dropdownClicked)="rowSelected($event)">
       </app-search-dropdown>
-
-      <div *ngIf="lookupRecordsList?.length" class="navigation-icons">
-        <mat-icon (click)="previousRow()">navigate_before</mat-icon>
-
-        <mat-icon (click)="nextRow()">navigate_next</mat-icon>
-      </div>
     </div>
 
     <div class="action-buttons" matTooltip="Data is loading..." [matTooltipDisabled]="enableSaveBtn">
-      <button class="no-bg mr-20" type="button" mat-button color="accent" (click)="cloneFormData()" *ngIf="(rowId && rowId != 'null')" [disabled]="!enableSaveBtn" >
+      <button class="no-bg mr-20" type="button" mat-button color="accent" (click)="cloneFormData()" *ngIf="rowId" [disabled]="!enableSaveBtn" >
         <mat-icon class="font-22" title="Clone Data">queue</mat-icon>
         Duplicate Record
       </button>
