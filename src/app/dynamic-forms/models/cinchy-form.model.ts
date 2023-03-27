@@ -59,6 +59,7 @@ export class Form implements IForm {
   parentForm: IForm;
   tableMetadata: Object;
 
+
   get rowId(): number {
 
     return this._rowId ?? null;
@@ -122,6 +123,7 @@ export class Form implements IForm {
           const splitLinkTargetColumnNames = element.cinchyColumn.linkTargetColumnName ? element.cinchyColumn.linkTargetColumnName.split(".") : [];
           const targetColumnForQuery = (splitLinkTargetColumnNames.map(name => `[${name}]`)).join(".");
           const labelForColumn = element.cinchyColumn.IsDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
+
           // Having sep conditions just for clarity
           if (!element.cinchyColumn.IsDisplayColumn && this.isChild) {
             const col = `[${element.cinchyColumn.name}].[Cinchy Id]`
@@ -642,9 +644,11 @@ export class Form implements IForm {
             if (isNullOrUndefined(element.cinchyColumn.linkTargetColumnName) &&
               element.cinchyColumn.dataType !== "Binary") {
               //TODO: for insert data ... because insert is giving error with parameters
-              if ((element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === "string")) ||
-                (element.cinchyColumn.dataType === "Choice" && element.value)
-                || (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")) {
+              if (
+                   (element.cinchyColumn.dataType === "Date and Time" && (element.value instanceof Date || typeof element.value === "string")) ||
+                   (element.cinchyColumn.dataType === "Choice" && element.value) ||
+                   (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")
+               ) {
                 if (element.cinchyColumn.dataType === "Text" && !element.value) {
                   // Because empty values for text input is throwing error
                   isNullOrUndefined(this.rowId) ? assignmentValues.push("\"" + params[paramName] + "\"") :
