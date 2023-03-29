@@ -1,34 +1,42 @@
-import {Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef} from '@angular/core';
-import {DropdownDatasetService} from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
-import {DropdownDataset} from '../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset';
-import {isNullOrUndefined} from 'util';
-import {IEventCallback, EventCallback} from '../models/cinchy-event-callback.model';
-import {ResponseType} from '../enums/response-type.enum';
-import {NgxSpinnerService} from "ngx-spinner";
-import {FormControl} from "@angular/forms";
-import {startWith} from "rxjs/operators";
-import {AppStateService} from "../../services/app-state.service";
-import {CinchyService} from "@cinchy-co/angular-sdk";
-import {NumeralPipe} from "ngx-numeral";
-import {DropdownOption} from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
-import {CinchyQueryService } from 'src/app/services/cinchy-query.service';
-import {ConfigService } from 'src/app/config.service';
-import {ToastrService } from 'ngx-toastr';
-import {ImageType } from '../enums/imageurl-type';
-import {faPlus} from '@fortawesome/free-solid-svg-icons';
-import {AddNewOptionDialogComponent} from 'src/app/dialogs/add-new-option-dialog/add-new-option-dialog.component';
-import {DialogService} from 'src/app/services/dialog.service';
+import { startWith } from "rxjs/operators";
 
+import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef } from "@angular/core";
+import { FormControl } from "@angular/forms";
 
-import { faShareAlt } from '@fortawesome/free-solid-svg-icons';
-import { faSitemap } from '@fortawesome/free-solid-svg-icons';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-//#region Cinchy Dynamic Link field
+import { CinchyService } from "@cinchy-co/angular-sdk";
+
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faShareAlt } from "@fortawesome/free-solid-svg-icons";
+import { faSitemap } from "@fortawesome/free-solid-svg-icons";
+
+import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
+
+import { AddNewOptionDialogComponent } from "../../dialogs/add-new-option-dialog/add-new-option-dialog.component";
+
+import { ImageType } from "../enums/imageurl-type";
+import { ResponseType } from "../enums/response-type.enum";
+
+import { IEventCallback, EventCallback } from "../models/cinchy-event-callback.model";
+
+import { AppStateService } from "../../services/app-state.service";
+import { CinchyQueryService } from "../../services/cinchy-query.service";
+import { ConfigService } from "../../services/config.service";
+import { DialogService } from "../../services/dialog.service";
+
+import { DropdownDatasetService } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
+import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
+import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
+
+import { isNullOrUndefined } from "util";
+
+import { NumeralPipe } from "ngx-numeral";
+import { NgxSpinnerService } from "ngx-spinner";
+import { ToastrService } from "ngx-toastr";
+
 /**
  * This section is used to create Link field for the cinchy.
  * Lazy loading of the dropdown is used here. Bind dropdown on click
  */
-//#endregion
 @Component({
   selector: 'cinchy-link',
   template: `
@@ -260,7 +268,7 @@ export class LinkDirective implements OnInit {
     private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
     private _cinchyService: CinchyService,
     private dialogService: DialogService,
-    private _appStateService: AppStateService, // AppStateService is not part of Dynamic forms and is specific to this project
+    private _appStateService: AppStateService,
     private _cinchyQueryService: CinchyQueryService,
     private _configService: ConfigService,
     private _toastr: ToastrService) { }
@@ -292,9 +300,8 @@ export class LinkDirective implements OnInit {
 
     this.createlinkOptionName = this.field.cinchyColumn.createlinkOptionFormId ? true : false;
 
-    // Below code is SPECIFIC to this Project ONLY
     this._appStateService.getNewContactAdded().subscribe(value => {
-      console.log("getNewContactAdded", value);
+
       if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]["Table"] === value.tableName) {
         this.updateList = true;
         this.filteredOptions = null;
@@ -710,4 +717,3 @@ export class LinkDirective implements OnInit {
     return [];
   }
 }
-

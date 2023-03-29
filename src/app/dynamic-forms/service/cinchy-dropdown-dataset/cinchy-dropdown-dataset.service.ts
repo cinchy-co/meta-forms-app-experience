@@ -52,7 +52,7 @@ export class DropdownDatasetService {
         dataSetQuery = 'select [Cinchy Id] as \'Id\', [' + metadataQueryResult[0]['Column'] + '] as \'Label\' from [' + metadataQueryResult[0]['Domain'] + '].[' + metadataQueryResult[0]['Table'] + '] ' + whereCondition;
       }
     }
-  //  console.log('------dataSetQuery', dataSetQuery);
+
     const params = {
       '@cinchyid': rowId ? rowId.toString() : null
     }

@@ -210,7 +210,6 @@ export class PrintService {
   async pushFields(field, selectedOptionField?) {
     const actualField = selectedOptionField ? selectedOptionField : field;
     if (field.cinchyColumn.dataFormatType === "LinkUrl") {
-      // console.log('IMAGE', this.toDataURL(field.value, this.getFileData));
       this.content.push({columns: this.getLinkColumns(actualField)});
     } else if (field.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
       const base64Img = this.getBase64ImageFromUrl(field.value);

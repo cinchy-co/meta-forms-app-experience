@@ -39,5 +39,4 @@ export class SaveSuccessComponent implements OnInit {
 
     }
   }
-
 }
