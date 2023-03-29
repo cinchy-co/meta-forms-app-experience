@@ -7,7 +7,6 @@ import {
   ViewChild
 } from "@angular/core";
 import { MediaMatcher } from "@angular/cdk/layout";
-import { ActivatedRoute } from "@angular/router";
 
 import { ToastrService } from "ngx-toastr";
 import { NgxSpinnerService } from "ngx-spinner";
@@ -26,6 +25,7 @@ import { ILookupRecord } from "src/app/models/lookup-record.model";
   styleUrls: ["./form-wrapper.component.scss"]
 })
 export class FormWrapperComponent implements OnInit {
+
   @ViewChild("sidenav") sidenav;
 
   formMetadata: IFormMetadata;
@@ -34,7 +34,6 @@ export class FormWrapperComponent implements OnInit {
 
   mobileQuery: MediaQueryList;
 
-  rowId: number;
   formId: string;
 
   private mobileQueryListener: () => void;
@@ -42,12 +41,12 @@ export class FormWrapperComponent implements OnInit {
   constructor(
     private cinchyQueryService: CinchyQueryService,
     private appStateService: AppStateService,
-    private activatedRoute: ActivatedRoute,
     private toastr: ToastrService,
     private spinner: NgxSpinnerService,
-    changeDetectorRef: ChangeDetectorRef,
-    media: MediaMatcher
+    public changeDetectorRef: ChangeDetectorRef,
+    public media: MediaMatcher
   ) {
+
     // For Sidenav
     this.mobileQuery = media.matchMedia("(max-width: 600px)");
     this.mobileQueryListener = () => changeDetectorRef.detectChanges();
@@ -57,12 +56,14 @@ export class FormWrapperComponent implements OnInit {
 
   async ngOnInit() {
 
-    await this.loadFormMetadata();
+    this.appStateService.formPopulated$.subscribe({
+      next: (formId: string) => {
 
-    this.formId = this.appStateService.formId;
-    this.rowId = this.appStateService.rowId;
+        this.formId = formId;
 
-    this.appStateService.setRecordSelected(this.rowId);
+        this.loadFormMetadata();
+      }
+    })
   }
 
 

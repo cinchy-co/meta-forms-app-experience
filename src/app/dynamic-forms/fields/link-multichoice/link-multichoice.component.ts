@@ -26,13 +26,13 @@ import { ResponseType } from "../../enums/response-type.enum";
 
 import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
 
-import { ConfigService } from "../../../config.service";
 
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
 
 import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 import { DropdownDatasetService } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
 import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
+import { ConfigService } from "../../../services/config.service";
 
 import { ToastrService } from "ngx-toastr";
 

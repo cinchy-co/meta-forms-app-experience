@@ -1,10 +1,17 @@
-import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable, Subject} from 'rxjs';
-import { IFormMetadata } from '../models/form-metadata-model';
-import { IFormSectionMetadata } from '../models/form-section-metadata.model';
+import {
+  BehaviorSubject,
+  Observable,
+  Subject
+} from "rxjs";
+
+import { Injectable } from "@angular/core";
+
+import { IFormMetadata } from "../models/form-metadata-model";
+import { IFormSectionMetadata } from "../models/form-section-metadata.model";
+
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root"
 })
 export class AppStateService {
 
@@ -12,16 +19,29 @@ export class AppStateService {
   hasFormChanged: boolean;
   selectedOpportunityId: number;
 
-  formId: string;
-  rowId: number;
-
   childRecordUpdated$ = new Subject<boolean>();
   currentSection$ = new BehaviorSubject<string>(null);
-  lastRecordSelect$ = new BehaviorSubject<{ cinchyId: number | null, doNotReloadForm: boolean }>(null);
   latestRenderedSections$ = new BehaviorSubject<IFormSectionMetadata[]>(null);
   newContactAdded$ = new Subject<any>();
-  saveClicked$ = new BehaviorSubject<boolean>(null);
   savedParentFromChildPlus$ = new Subject<boolean>();
+
+  formPopulated$ = new BehaviorSubject<string>(null);
+  lastRecordSelect$ = new BehaviorSubject<{ cinchyId: number | null, doNotReloadForm: boolean }>(null);
+  saveClicked$ = new BehaviorSubject<void>(null);
+
+
+  get formId(): string {
+
+    return this._formId;
+  }
+  private _formId: string;
+
+
+  get rowId(): number {
+
+    return this._rowId;
+  }
+  private _rowId: number;
 
 
   getChildRecordUpdateState(): Observable<boolean> {
@@ -54,18 +74,6 @@ export class AppStateService {
   }
 
 
-  getSaveClickedObs(): Observable<any> {
-
-    return this.saveClicked$.asObservable();
-  }
-
-
-  iniFrame() {
-
-    return window.location !== window.parent.location;
-  }
-
-
   newContactAdded(contact) {
 
     this.newContactAdded$.next(contact);
@@ -78,9 +86,9 @@ export class AppStateService {
   }
 
 
-  saveClicked(sectionName) {
+  saveClicked() {
 
-    this.saveClicked$.next(sectionName);
+    this.saveClicked$.next();
   }
 
 
@@ -93,6 +101,14 @@ export class AppStateService {
   setChildRecordUpdateState(isUpdated) {
 
     this.childRecordUpdated$.next(isUpdated);
+  }
+
+
+  setFormSelected(id: string): void {
+
+    this._formId = id;
+
+    this.formPopulated$.next(this._formId);
   }
 
 
@@ -110,6 +126,11 @@ export class AppStateService {
 
   setRecordSelected(cinchyId: number | null, doNotReloadForm: boolean = false): void {
 
+    this._rowId = cinchyId;
+
     this.lastRecordSelect$.next({ cinchyId, doNotReloadForm });
+
+    sessionStorage.setItem("rowId", this._rowId ? this._rowId.toString() : "");
+    sessionStorage.setItem("formId", this.formId ?? "");
   }
 }

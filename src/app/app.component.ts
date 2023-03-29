@@ -13,7 +13,6 @@ import { AppStateService } from "./services/app-state.service";
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"]
 })
-
 export class AppComponent implements OnDestroy, OnInit {
 
   @HostListener("window:beforeunload", ["$event"])
@@ -23,8 +22,6 @@ export class AppComponent implements OnDestroy, OnInit {
     }
   }
 
-
-  fullScreenHeight = 400;
   loginDone;
 
 
@@ -57,14 +54,8 @@ export class AppComponent implements OnDestroy, OnInit {
 
   ngOnInit(): void {
 
-    if (localStorage.getItem("fullScreenHeight")) {
-      this.fullScreenHeight = parseInt(localStorage.getItem("fullScreenHeight"), 10);
-      this.setHeight();
-    } else {
-      window.addEventListener("message", this.receiveMessage, false);
-    }
+    this.cinchyService.checkIfSessionValid().toPromise().then((response: { accessTokenIsValid: boolean }) => {
 
-    this.cinchyService.checkIfSessionValid().toPromise().then(response => {
       if (response.accessTokenIsValid) {
         this.loadRoute();
       } else {
@@ -90,19 +81,40 @@ export class AppComponent implements OnDestroy, OnInit {
    */
   getIdFromSessionOrUri(uri: string, key: string): number {
 
-    let id: string;
+    let idAsString: string;
+    let idAsNumber: number;
 
     if (uri) {
-      id = this.getQueryStringValue("rowId", uri); 
+      idAsString = this.getQueryStringValue("rowId", uri); 
     }
 
-    if (id) {
-      return +id;
+    if (idAsString) {
+      try {
+        idAsNumber = parseInt(idAsString);
+
+        return idAsNumber;
+      }
+      catch (error) {
+        // Since the given ID isn't valid, ignore it and move on
+      }
     }
 
-    id = sessionStorage.getItem(key);
+    idAsString = sessionStorage.getItem(key);
 
-    return (id ? parseInt(id) : null);
+    // We are intentionally performing this action twice so that we can guarantee a fallback in cases where the given rowId is mangled
+    // and cases where it is not provided in the queryParams
+    if (idAsString) {
+      try {
+        idAsNumber = parseInt(idAsString);
+
+        return idAsNumber;
+      }
+      catch (error) {
+        return null;
+      }
+    }
+
+    return null;
   }
 
 
@@ -122,12 +134,6 @@ export class AppComponent implements OnDestroy, OnInit {
    */
   loadRoute(): void {
 
-    if (localStorage.getItem("fullScreenHeight")) {
-      this.fullScreenHeight = parseInt(localStorage.getItem("fullScreenHeight"), 10);
-
-      console.log("Login Success!");
-    }
-
     // This will be the second call to this function if the router catches an involuntary redirect,
     // but will be the first call if the entry URL is correctly formed and the session doesn't need
     // to refresh
@@ -140,46 +146,13 @@ export class AppComponent implements OnDestroy, OnInit {
 
 
   /**
-   * Receive the screen height from the wrapping element
-   */
-  receiveMessage(event): void {
-
-    if (event.data.toString().startsWith("[Cinchy][innerHeight]")) {
-      this.fullScreenHeight = parseInt(event.data.toString().substring(21), 10) + 4;
-
-      localStorage.setItem("fullScreenHeight", this.fullScreenHeight.toString());
-
-      this.setHeight();
-    }
-  }
-
-
-  /**
    * Retrieves the rowId and formId from the URL and ensures the session is up to date
    */
   setRowAndFormId() {
 
-    const uri = window.location.search;
+    const uri = (window.location === window.parent.location) ? window.location.search : window.parent.location.search;
 
-    this.appStateService.formId = uri ? this.getQueryStringValue("formId", uri) : sessionStorage.getItem("formId");
-    this.appStateService.rowId = this.getIdFromSessionOrUri(uri, "rowId");
-
-    sessionStorage.setItem("formId", this.appStateService.formId ? this.appStateService.formId.toString() : "");
-    sessionStorage.setItem("rowId", this.appStateService.rowId ? this.appStateService.rowId.toString() : "");
-  }
-
-
-  setHeight() {
-
-    const elements = document.getElementsByClassName("full-height-element");
-
-    for (let i = 0; i < elements.length; i++) {
-      setTimeout(() => {
-
-        if (this.appStateService.iniFrame()) {
-          elements[i]["style"].height = this.fullScreenHeight + "px";
-        }
-      }, 500);
-    }
+    this.appStateService.setFormSelected(uri ? this.getQueryStringValue("formId", uri) : sessionStorage.getItem("formId"));
+    this.appStateService.setRecordSelected(this.getIdFromSessionOrUri(uri, "rowId"));
   }
 }

@@ -18,11 +18,10 @@ import { ResponseType } from "../../enums/response-type.enum";
 
 import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
 
-import { ConfigService } from "../../../config.service";
-
 import { AppStateService } from "../../../services/app-state.service";
-import { DialogService } from "../../../services/dialog.service";
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
+import { ConfigService } from "../../../services/config.service";
+import { DialogService } from "../../../services/dialog.service";
 
 import { DropdownDatasetService } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
 import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
@@ -35,12 +34,10 @@ import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
 
 
-//#region Cinchy Dynamic Link field
 /**
  * This section is used to create Link field for the cinchy.
  * Lazy loading of the dropdown is used here. Bind dropdown on click
  */
-//#endregion
 @Component({
   selector: "cinchy-link",
   templateUrl: "./link.component.html",
@@ -97,7 +94,7 @@ export class LinkComponent implements OnInit {
     private _dropdownDatasetService: DropdownDatasetService, private spinner: NgxSpinnerService,
     private _cinchyService: CinchyService,
     private dialogService: DialogService,
-    private _appStateService: AppStateService, // AppStateService is not part of Dynamic forms and is specific to this project
+    private _appStateService: AppStateService,
     private _cinchyQueryService: CinchyQueryService,
     private _configService: ConfigService,
     private _toastr: ToastrService)
@@ -130,9 +127,8 @@ export class LinkComponent implements OnInit {
 
     this.createlinkOptionName = this.field.cinchyColumn.createlinkOptionFormId ? true: false;
 
-    // Below code is SPECIFIC to this Project ONLY
     this._appStateService.getNewContactAdded().subscribe(value => {
-      console.log("getNewContactAdded", value);
+
       if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]["Table"] === value.tableName) {
         this.updateList = true;
         this.filteredOptions = null;
