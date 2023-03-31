@@ -38,6 +38,7 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import { IFormFieldMetadata } from "../models/form-field-metadata.model";
 
 
 @Component({
@@ -60,7 +61,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   @Output() closeAddNewDialog = new EventEmitter<any>();
   @Output() eventHandler = new EventEmitter<any>();
-  @Output() rowUpdated = new EventEmitter<any>();
   @Output() onLookupRecordFilter: EventEmitter<string> = new EventEmitter<string>();
 
 
@@ -73,6 +73,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
   isLoadingForm: boolean = false;
+
+
+  get lookupRecordsListPopulated(): boolean {
+
+    return (this.lookupRecordsList?.length && this.lookupRecordsList[0].id !== -1);
+  }
 
 
   private childDataForm = [];
@@ -99,6 +105,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     if (changes.rowId && changes.rowId.currentValue === null) {
       this.currentRow = null;
     }
+
+    if (changes.lookupRecords?.currentValue?.length && !this.formHasDataLoaded) {
+      this.loadForm();
+    }
   }
 
 
@@ -124,7 +134,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           this.currentRow = null;
         }
 
-        if (!record?.doNotReloadForm) {
+        if (!record?.doNotReloadForm && this.lookupRecordsList?.length) {
           this.loadForm();
         }
       }
@@ -143,7 +153,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     this.lookupRecordsList = this.checkNoRecord(lookupRecords);
     this.currentRow = this.lookupRecordsList.find(item => item.id === this.rowId) ?? this.currentRow;
-    this.rowUpdated.emit(this.rowId);
   }
 
 
@@ -416,39 +425,41 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       this._formHelperService.fillWithSections(this.form, this.formSectionsMetadata);
 
       this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
-        async (formFieldsMetadata) => {
+        async (formFieldsMetadata: Array<IFormFieldMetadata>) => {
 
-          let selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
+          if (this.lookupRecordsListPopulated) {
+            const selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
 
-            record.id == this.rowId
-          });
+              return (record.id === this.rowId);
+            });
 
-          await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
+            await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
 
-          // This may occur if the rowId is not provided in the queryParams, but one is
-          if (this.rowId !== null) {
-            if (!selectedLookupRecord) {
-              this.appStateService.setRecordSelected(null);
+            // This may occur if the rowId is not provided in the queryParams, but one is
+            if (this.rowId !== null) {
+              if (!selectedLookupRecord) {
+                this.appStateService.setRecordSelected(null);
+              }
+              else {
+                await this._formHelperService.fillWithData(this.form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+              }
             }
-            else {
-              await this._formHelperService.fillWithData(this.form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
-            }
-          }
 
-          this.enableSaveBtn = true;
+            this.enableSaveBtn = true;
 
-          this.isLoadingForm = false;
-          this.formHasDataLoaded = true;
+            this.isLoadingForm = false;
+            this.formHasDataLoaded = true;
          
-          this.spinner.hide();
+            this.spinner.hide();
 
-          if (childData) {
-            setTimeout(() => {
+            if (childData) {
+              setTimeout(() => {
 
-              childData.rowId = this.rowId;
+                childData.rowId = this.rowId;
 
-              this.appStateService.setOpenOfChildFormAfterParentSave(childData);
-            }, 500);
+                this.appStateService.setOpenOfChildFormAfterParentSave(childData);
+              }, 500);
+            }
           }
         },
         error => {
