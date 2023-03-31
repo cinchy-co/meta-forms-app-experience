@@ -425,10 +425,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
           let selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
 
-            record.id == this.rowId
+            return (record.id === this.rowId);
           });
 
-          await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
+          await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
 
           // This may occur if the rowId is not provided in the queryParams, but one is
           if (this.rowId !== null) {
