@@ -239,11 +239,11 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
       return [];
     }
 
-    if (this.field.dropdownDataset && this.field.dropdownDataset.options) {
+    if (this.field.dropdownDataset?.options?.length) {
       selectedIds = this.field.dropdownDataset.options[0].id.split ? this.field.dropdownDataset.options[0].id.split(",") : null
     }
 
-    if (!this.field.value || (selectedIds && selectedIds.length > 1)) {
+    if (!this.field.value || selectedIds?.length) {
       const options = [];
 
       let selectedIds = this.isInChildForm ? this.field.dropdownDataset.options[0].id
