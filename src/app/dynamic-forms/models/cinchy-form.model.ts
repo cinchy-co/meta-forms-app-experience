@@ -415,7 +415,7 @@ export class Form implements IForm {
                   stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                 });
 
-                params[paramName] = stringLinkArray.join(",");
+                params[paramName] = stringLinkArray.join(",") || null;
               }
               else {
                 if (field.value === "DELETE") {
@@ -453,7 +453,6 @@ export class Form implements IForm {
             }
           }
           else if (field.cinchyColumn.dataType !== "Binary") {
-            //TODO: code for the multi select Link
             if (field.value instanceof Array || field.cinchyColumn.isMultiple) {
               let stringLinkArray = [];
 
