@@ -1,15 +1,12 @@
-import { takeUntil } from "rxjs/operators";
-
 import {
   ChangeDetectorRef,
   Component,
   OnInit,
   ViewChild
 } from "@angular/core";
-import { MediaMatcher } from "@angular/cdk/layout";
 
-import { ToastrService } from "ngx-_toastrService";
-import { NgxSpinnerService } from "ngx-_spinnerService";
+import { ToastrService } from "ngx-toastr";
+import { NgxSpinnerService } from "ngx-spinner";
 
 import { CinchyQueryService } from "../../services/cinchy-query.service";
 import { AppStateService } from "../../services/app-state.service";
