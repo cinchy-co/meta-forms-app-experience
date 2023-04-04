@@ -4,6 +4,7 @@ import {
   OnInit,
   ViewChild
 } from "@angular/core";
+import { MediaMatcher } from "@angular/cdk/layout";
 
 import { ToastrService } from "ngx-toastr";
 import { NgxSpinnerService } from "ngx-spinner";
@@ -11,9 +12,9 @@ import { NgxSpinnerService } from "ngx-spinner";
 import { CinchyQueryService } from "../../services/cinchy-query.service";
 import { AppStateService } from "../../services/app-state.service";
 
-import { IFormMetadata } from "src/app/models/form-metadata-model";
-import { IFormSectionMetadata } from "src/app/models/form-section-metadata.model";
-import { ILookupRecord } from "src/app/models/lookup-record.model";
+import { IFormMetadata } from "../../models/form-metadata-model";
+import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
+import { ILookupRecord } from "../../models/lookup-record.model";
 
 
 @Component({
@@ -33,6 +34,8 @@ export class FormWrapperComponent implements OnInit {
 
   formId: string;
 
+  private mobileQueryListener: () => void;
+
 
   get brandedFormWrapperTheme(): string {
 
@@ -45,8 +48,15 @@ export class FormWrapperComponent implements OnInit {
     private _appStateService: AppStateService,
     private _toastrService: ToastrService,
     private _spinnerService: NgxSpinnerService,
-    public changeDetectorRef: ChangeDetectorRef
-  ) {}
+    public changeDetectorRef: ChangeDetectorRef,
+    public media: MediaMatcher
+  ) {
+
+    // For Sidenav
+    this.mobileQuery = media.matchMedia("(max-width: 600px)");
+    this.mobileQueryListener = () => changeDetectorRef.detectChanges();
+    this.mobileQuery.addListener(this.mobileQueryListener);
+  }
 
 
   async ngOnInit() {
