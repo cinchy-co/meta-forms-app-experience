@@ -92,11 +92,14 @@ export class ConfigService {
 
     if (event.data.toString().startsWith("[Cinchy][innerHeight]")) {
       if (window.location !== window.parent.location) {
-        const fullScreenHeight = parseInt(event.data.toString().substring(21), 10) + 4;
+        setTimeout(() => {
 
-        localStorage.setItem("fullScreenHeight", fullScreenHeight.toString());
+          const fullScreenHeight = parseInt(event.data.toString().substring(21), 10) + 4;
 
-        IframeUtil.setFrameHeight(fullScreenHeight.toString());
+          localStorage.setItem("fullScreenHeight", fullScreenHeight.toString());
+
+          IframeUtil.setFrameHeight(fullScreenHeight.toString());
+        }, 500);
       }
     }
   }
