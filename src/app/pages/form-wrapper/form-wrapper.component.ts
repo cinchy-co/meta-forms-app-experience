@@ -8,8 +8,8 @@ import {
 } from "@angular/core";
 import { MediaMatcher } from "@angular/cdk/layout";
 
-import { ToastrService } from "ngx-toastr";
-import { NgxSpinnerService } from "ngx-spinner";
+import { ToastrService } from "ngx-_toastrService";
+import { NgxSpinnerService } from "ngx-_spinnerService";
 
 import { CinchyQueryService } from "../../services/cinchy-query.service";
 import { AppStateService } from "../../services/app-state.service";
@@ -36,27 +36,25 @@ export class FormWrapperComponent implements OnInit {
 
   formId: string;
 
-  private mobileQueryListener: () => void;
+
+  get brandedFormWrapperTheme(): string {
+
+    return `form-wrapper-theme--${this.formMetadata?.brand}`;
+  }
+
 
   constructor(
-    private cinchyQueryService: CinchyQueryService,
-    private appStateService: AppStateService,
-    private toastr: ToastrService,
-    private spinner: NgxSpinnerService,
-    public changeDetectorRef: ChangeDetectorRef,
-    public media: MediaMatcher
-  ) {
-
-    // For Sidenav
-    this.mobileQuery = media.matchMedia("(max-width: 600px)");
-    this.mobileQueryListener = () => changeDetectorRef.detectChanges();
-    this.mobileQuery.addListener(this.mobileQueryListener);
-  }
+    private _cinchyQueryService: CinchyQueryService,
+    private _appStateService: AppStateService,
+    private _toastrService: ToastrService,
+    private _spinnerService: NgxSpinnerService,
+    public changeDetectorRef: ChangeDetectorRef
+  ) {}
 
 
   async ngOnInit() {
 
-    this.appStateService.formPopulated$.subscribe({
+    this._appStateService.formPopulated$.subscribe({
       next: (formId: string) => {
 
         this.formId = formId;
@@ -74,10 +72,11 @@ export class FormWrapperComponent implements OnInit {
 
 
   async loadFormMetadata() {
+
     try {
-      this.spinner.show();
-      const formMetadata = await this.cinchyQueryService.getFormMetadata().toPromise();
-      this.formMetadata = this.appStateService.formMetadata = formMetadata;
+      this._spinnerService.show();
+      const formMetadata = await this._cinchyQueryService.getFormMetadata().toPromise();
+      this.formMetadata = this._appStateService.formMetadata = formMetadata;
 
       await this.loadLookupRecords(formMetadata);
 
@@ -90,16 +89,16 @@ export class FormWrapperComponent implements OnInit {
 
   async loadFormSections() {
     try {
-      const formSections = await this.cinchyQueryService.getFormSections().toPromise();
+      const formSections = await this._cinchyQueryService.getFormSections().toPromise();
       this.formSectionsMetadata = formSections;
-      this.appStateService.setLatestRenderedSections(formSections);
+      this._appStateService.setLatestRenderedSections(formSections);
       if (this.formSectionsMetadata) {
-        await this.spinner.hide();
+        await this._spinnerService.hide();
       }
     } catch (e) {
       this.showError("Error getting section metadata", e);
     }
-    await this.spinner.hide();
+    await this._spinnerService.hide();
   }
 
 
@@ -109,9 +108,9 @@ export class FormWrapperComponent implements OnInit {
       return;
     }
 
-    this.cinchyQueryService.resetLookupRecords.next();
+    this._cinchyQueryService.resetLookupRecords.next();
 
-    await this.cinchyQueryService.getLookupRecords(
+    await this._cinchyQueryService.getLookupRecords(
       formMetadata.subTitleColumn,
       formMetadata.domainName,
       formMetadata.tableName
@@ -130,10 +129,10 @@ export class FormWrapperComponent implements OnInit {
 
   private showError(message: string, error: any) {
 
-    this.spinner.hide();
+    this._spinnerService.hide();
 
     console.error(message, error);
 
-    this.toastr.error("Could not fetch the form's metadata. You may not have the necessary entitlements to view this form.", "Error");
+    this._toastrService.error("Could not fetch the form's metadata. You may not have the necessary entitlements to view this form.", "Error");
   }
 }
