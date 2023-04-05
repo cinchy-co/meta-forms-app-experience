@@ -502,7 +502,7 @@ export class LinkDirective implements OnInit {
   getFilterValue(value) {
 
     if (typeof value === "object") {
-      return value.label ? value.label.split(",")[0].toLowerCase() : "";
+      return value.label?.split(",")[0].toLowerCase() ?? "";
     }
     return value.toLowerCase();
   }

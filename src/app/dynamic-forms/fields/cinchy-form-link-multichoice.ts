@@ -398,7 +398,7 @@ export class LinkMultichoice implements OnInit, OnDestroy {
     }
 
     if (this.field.dropdownDataset?.options?.length) {
-      selectedIds = this.field.dropdownDataset.options[0].id.split ? this.field.dropdownDataset.options[0].id.split(",") : null
+      selectedIds = this.field.dropdownDataset.options[0].id?.split ? this.field.dropdownDataset.options[0].id.split(",") : null
     }
 
     if (!this.field.value || selectedIds?.length) {
@@ -410,20 +410,24 @@ export class LinkMultichoice implements OnInit, OnDestroy {
       if (selectedIds) {
         selectedIds = typeof selectedIds === "number" ? `${selectedIds}` : selectedIds;
         const allSelectedIds = selectedIds.split(",");
-        const allLabels = this.field.dropdownDataset.options[0].label.split(",");
+        const allLabels = this.field.dropdownDataset.options[0].label?.split(",");
 
         allSelectedIds.forEach((id, index) => {
+
           const option = new DropdownOption(id, allLabels[index]);
+
           options.push(option);
         });
       }
 
       return options;
-    } else if (this.field.value) {
+    }
+    else if (this.field.value) {
       const selectedValue = typeof this.field.value === "number" ? `${this.field.value}` : this.field.value;
-      const allIds = typeof selectedValue === "string" ? selectedValue.split(",") : selectedValue;
+      const allIds = (typeof selectedValue === "string" && selectedValue) ? selectedValue.split(",") : selectedValue;
 
       return this.field.dropdownDataset.options.filter(option => allIds.find(id => {
+
         const trimedId = id.trim ? id.trim() : id;
         return option.id == trimedId;
       }));

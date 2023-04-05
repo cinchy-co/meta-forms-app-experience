@@ -83,7 +83,7 @@ export class FormField implements IFormField {
       this.value = value?.split(",").map((item) => {
 
         return item.trim ? item.trim() : item;
-      });
+      }) ?? [];
     }
     else {
       this.value = value;

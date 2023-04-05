@@ -122,13 +122,15 @@ export class FormWrapperComponent implements OnInit {
       formMetadata.domainName,
       formMetadata.tableName
     ).subscribe(
-      response => {
+      {
+        next: (response: Array<ILookupRecord>) => {
 
-        this.lookupRecords = response;
-      },
-      e => {
+          this.lookupRecords = response;
+        },
+        error: (e) => {
 
-        this.showError("Error getting lookup records", e);
+          this.showError("Error getting lookup records", e);
+        }
       }
     );
   }
