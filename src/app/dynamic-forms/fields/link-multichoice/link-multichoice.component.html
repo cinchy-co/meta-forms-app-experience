@@ -130,7 +130,13 @@
         *{{field.label}} is Required.
       </mat-error>
 
-      <ng-container *ngIf="downloadLink">
+      <ng-container *ngIf="downloadLink && !rowId">
+        <p>
+          Files cannot be uploaded until a record exists. Please select a record or save the form to access the file selector.
+        </p>
+      </ng-container>
+
+      <ng-container *ngIf="downloadLink && rowId">
         <div *ngFor="let item of downloadableLinks" style="margin-top: 6px">
           <a *ngIf="downloadLink" [href]="item.fileUrl" [title]="'Download ' + item.fileName">
             <img *ngIf="renderImageFiles && fileNameIsImage(item.fileName)" style="height: 100px" [src]="item.fileUrl" />

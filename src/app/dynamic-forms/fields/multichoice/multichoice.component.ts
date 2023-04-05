@@ -35,9 +35,10 @@ export class MultichoiceComponent {
 
 
   async ngOnInit() {
+
     const [dataSet, linkTargetId] = [this.field, this.field.cinchyColumn.linkTargetColumnId];
     const choices = this.field.cinchyColumn.choiceOptions;
-    let dropdownDataset = choices ? choices.split(",") : null;
+    let dropdownDataset = choices?.split(",") ?? null;
     dataSet.dropdownDataset = dropdownDataset;
     this.field.dropdownDataset = dropdownDataset;
     this.field.value = Array.isArray(this.field.value) ? this.field.value
