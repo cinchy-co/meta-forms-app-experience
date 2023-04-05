@@ -28,5 +28,4 @@ import {ScrollingModule} from '@angular/cdk/scrolling';
   ],
   providers: []
 })
-export class SharedModule {
-}
+export class SharedModule {}

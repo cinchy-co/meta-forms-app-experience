@@ -7,7 +7,7 @@ import {CinchyService} from "@cinchy-co/angular-sdk";
   styleUrls: ['./save-success.component.scss']
 })
 export class SaveSuccessComponent implements OnInit {
-  formId;
+  formId: string;
   assignedSeat;
   mapPath: string;
   seatPath: string;
@@ -19,7 +19,7 @@ export class SaveSuccessComponent implements OnInit {
   ngOnInit(): void {
     this.formId = sessionStorage.getItem('formId');
     // Calling queries in this component only as it is ONLY SPECIFIC to ONE page and ONE FORM
-    this.formId == 11 && this.getSeatingInformation();
+    this.formId === "11" && this.getSeatingInformation();
   }
 
   async getSeatingInformation() {
@@ -39,5 +39,4 @@ export class SaveSuccessComponent implements OnInit {
 
     }
   }
-
 }

@@ -141,8 +141,8 @@ export class AttachFileDirective implements OnInit {
 
   // Downloads the file
   saveFile(blob, filename) {
-    if (window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveOrOpenBlob(blob, filename);
+    if (window.navigator["msSaveOrOpenBlob"]) {
+      window.navigator["msSaveOrOpenBlob"](blob, filename);
     } else {
       const a = document.createElement('a');
       document.body.appendChild(a);

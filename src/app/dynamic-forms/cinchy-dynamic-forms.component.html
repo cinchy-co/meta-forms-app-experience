@@ -2,8 +2,9 @@
   <div class='navigation-buttons form-header'>
     <!-- <button mat-raised-button>Cancel</button>-->
     <div class="flex-row ml-20">
-      <a class="table-url" [href]="formMetadata.tableUrl" target="_blank"><span
-        class="mr-15"><b>{{formMetadata.formDisplayName}}</b></span></a>
+      <a class="table-url" [href]="formMetadata.tableUrl" target="_blank">
+        <span class="mr-15"><b>{{formMetadata.formDisplayName}}</b></span>
+      </a>
       <app-search-dropdown #recordDropdown *ngIf="lookupRecordsList?.length"
                            [fullList]="lookupRecordsList"
                            [selectedOption]="currentRow"
@@ -18,7 +19,7 @@
     </div>
 
     <div class="action-buttons" matTooltip="Data is loading..." [matTooltipDisabled]="enableSaveBtn">
-      <button class="no-bg mr-20" type="button" mat-button color="accent" (click)="cloneFormData()" *ngIf="(rowId && rowId != 'null')" [disabled]="!enableSaveBtn" >
+      <button class="no-bg mr-20" type="button" mat-button color="accent" (click)="cloneFormData()" *ngIf="rowId" [disabled]="!enableSaveBtn" >
         <mat-icon class="font-22" title="Clone Data">queue</mat-icon>
         Duplicate Record
       </button>

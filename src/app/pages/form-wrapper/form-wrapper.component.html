@@ -1,7 +1,6 @@
 <div *ngIf="formMetadata" class="full-height-element form-wrapper-theme"
-     [ngClass]="'form-wrapper-theme--'+formMetadata.brand"
+     [ngClass]="brandedFormWrapperTheme"
      [class.is-mobile]="mobileQuery.matches">
-  <!--[style.height.px]="fullScreenHeight"-->
   <mat-toolbar color="primary" class="toolbar">
     <mat-icon class="menu-button have-brand" (click)="sidenav.toggle()">menu</mat-icon>
   </mat-toolbar>
@@ -13,7 +12,6 @@
     </mat-drawer>
 
     <ng-container *ngTemplateOutlet="mainContent"></ng-container>
-
   </mat-drawer-container>
 
   <mat-sidenav-container *ngIf="mobileQuery.matches" class="sidenav-container"
@@ -40,12 +38,11 @@
 
   <ng-template #mainContent>
     <div class="form-container" *ngIf="formSectionsMetadata && lookupRecords">
-      <cinchy-dynamic-forms class="full-height-element"
-                            [formId]="formId"
+      <cinchy-dynamic-forms [formId]="formId"
                             [formMetadata]="formMetadata"
                             [formSectionsMetadata]="formSectionsMetadata"
                             [lookupRecords]="lookupRecords"
-                            (eventHandler)="onSaved($event)">
+                            (eventHandler)="onSaved()">
       </cinchy-dynamic-forms>
     </div>
   </ng-template>

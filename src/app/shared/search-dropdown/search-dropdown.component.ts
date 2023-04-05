@@ -120,11 +120,11 @@ export class SearchDropdownComponent implements OnInit, AfterViewInit, OnDestroy
       this.filteredlist.next(this.list.slice());
       return;
     } else {
-      search = search.toLowerCase();
+      search = search?.toLowerCase();
     }
     // filter the list
     this.filteredlist.next(
-      this.list.filter(item => item.label ? item.label.toLowerCase().indexOf(search) > -1 : null)
+      this.list.filter(item => item.label ? item.label.toString().toLowerCase().indexOf(search) > -1 : null)
     );
   }
 
