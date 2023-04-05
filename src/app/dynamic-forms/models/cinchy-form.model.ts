@@ -119,7 +119,7 @@ export class Form implements IForm {
 
         if (element.cinchyColumn.dataType === "Link") {
           //TODO: Changes for Short Name
-          const splitLinkTargetColumnNames = element.cinchyColumn.linkTargetColumnName ? element.cinchyColumn.linkTargetColumnName.split(".") : [];
+          const splitLinkTargetColumnNames = element.cinchyColumn.linkTargetColumnName?.split(".") ?? [];
           const targetColumnForQuery = (splitLinkTargetColumnNames.map(name => `[${name}]`)).join(".");
           const labelForColumn = element.cinchyColumn.isDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
           // Having sep conditions just for clarity
@@ -471,7 +471,7 @@ export class Form implements IForm {
             }
             else {
               if (field.cinchyColumn.dataType == "Link") {
-                assignmentValues.push(isNullOrUndefined(this.rowId) ? `ResolveLink(${params[paramName]},"Cinchy Id")` : `"ResolveLink(${paramName},'Cinchy Id')"`);
+                assignmentValues.push(isNullOrUndefined(this.rowId) ? `ResolveLink(${params[paramName]},"Cinchy Id")` : `ResolveLink(${paramName},'Cinchy Id')`);
               }
               else {
                 if (isNullOrUndefined(field.childForm)) {
@@ -496,13 +496,13 @@ export class Form implements IForm {
               OUTPUT INSERTED.[Cinchy Id] INTO #tmp ([id])
               VALUES (${assignmentValues.join(",")})
               SELECT x.[id] as "id" FROM #tmp x`;
+
         query = new Query(queryString, params, attachedFilesInfo)
       } else {
-        let assignmentSetClauses: string[] = [];
+        const assignmentSetClauses = assignmentColumns.map((value: string, index: number) => {
 
-        for (let j = 0; j < assignmentColumns.length; j++) {
-          assignmentSetClauses.push(assignmentColumns[j] + " = " + assignmentValues[j]);
-        }
+          return `t.${value} = ${assignmentValues[index]}`;
+        });
 
         query = new Query(
           `update t set ${assignmentSetClauses.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy Id] = ${this.rowId} and t.[Deleted] is null SELECT ${this.rowId}`,
@@ -609,7 +609,7 @@ export class Form implements IForm {
 
                   params[paramName] = stringLinkArray.join();
                 } else if (element.cinchyColumn.isMultiple) {
-                  const allValues = element.value.split(",");
+                  const allValues = element.value?.split(",") ?? [];
 
                   let stringLinkArray = [];
 

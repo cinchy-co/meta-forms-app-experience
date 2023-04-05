@@ -1,3 +1,5 @@
+import { takeUntil } from "rxjs/operators";
+
 import {
   ChangeDetectorRef,
   Component,
@@ -130,15 +132,17 @@ export class FormWrapperComponent implements OnInit {
       filter ?? formMetadata.lookupFilter,
       limitResults
     ).pipe(
-      takeUntil(this._cinchyQueryService.resetLookupRecords)    
+      takeUntil(this._cinchyQueryService.resetLookupRecords)
     ).subscribe(
-      response => {
+      {
+        next: (response: Array<ILookupRecord>) => {
 
-        this.lookupRecords = response;
-      },
-      e => {
+          this.lookupRecords = response;
+        },
+        error: (e) => {
 
-        this.showError("Error getting lookup records", e);
+          this.showError("Error getting lookup records", e);
+        }
       }
     );
   }
