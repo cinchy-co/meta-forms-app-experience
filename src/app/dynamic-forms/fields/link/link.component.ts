@@ -13,7 +13,7 @@ import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
 import { AddNewOptionDialogComponent } from "../../../dialogs/add-new-option-dialog/add-new-option-dialog.component";
 
-import { ImageType } from "../../enums/imageurl-type";
+import { DataFormatType } from "../../enums/data-format-type";
 import { ResponseType } from "../../enums/response-type.enum";
 
 import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
@@ -100,9 +100,10 @@ export class LinkComponent implements OnInit {
     private _toastr: ToastrService)
   {}
 
+
   ngOnInit(): void {
 
-    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
     this.showActualField = !this.showImage && !this.showLinkUrl;
 

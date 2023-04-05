@@ -1,8 +1,9 @@
 import { Component, Input, Output, EventEmitter, ViewChild, AfterViewInit, OnInit } from "@angular/core";
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
-import { ImageType } from "../../enums/imageurl-type";
+import { DataFormatType } from "../../enums/data-format-type";
 import { ResponseType } from "../../enums/response-type.enum";
 
 import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
@@ -27,6 +28,7 @@ export class TextareaComponent implements AfterViewInit, OnInit {
 
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
+  @Input() isInChildForm: boolean;
   @Output() eventHandler = new EventEmitter<any>();
   @ViewChild("editor") editor;
   isFormatted;
@@ -34,18 +36,40 @@ export class TextareaComponent implements AfterViewInit, OnInit {
   showImage: boolean;
   showLinkUrl: boolean;
   showActualField: boolean;
+  showIFrame: boolean;
+  showIFrameSandbox: boolean;
+  showIFrameSandboxStrict: boolean;
   faAlignLeft = faAlignLeft;
+  urlSafe: SafeResourceUrl;
+  iframeHeightStyle: string = '300px;';
   
-  constructor() {}
+  constructor(public sanitizer: DomSanitizer) {}
 
   ngOnInit() {
     if (this.field.cinchyColumn.dataFormatType === "JSON") {
       this.field.value = JSON.stringify(JSON.parse(this.field.value), null, 2)
     }
-    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && !this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default) && this.field.cinchyColumn.dataFormatType !== "LinkUrl";
-    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
+
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
-    this.showActualField = !this.showImage && !this.showLinkUrl;
+    this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
+    this.showIFrameSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
+    this.showIFrameSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
+
+    this.isFormatted = !!this.field.cinchyColumn.dataFormatType && !this.showImage && !this.showLinkUrl
+      && !this.showIFrame && !this.showIFrameSandbox && !this.showIFrameSandboxStrict;
+    
+
+    if ((this.showIFrame || this.showIFrameSandbox || this.showIFrameSandboxStrict)  && this.isValidHttpUrl(this.field.value) && !this.isInChildForm){
+      this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
+      this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
+        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';   
+    }else{
+      this.showIFrame = false;
+      this.showIFrameSandbox = false;
+      this.showIFrameSandboxStrict = false;
+    } 
+    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame && !this.showIFrameSandbox && !this.showIFrameSandboxStrict;;
   }
 
   ngAfterViewInit() {
@@ -107,4 +131,14 @@ export class TextareaComponent implements AfterViewInit, OnInit {
     this.eventHandler.emit(callback);
   }
   //#endregion
+
+  isValidHttpUrl(str: string) {
+    let url;
+    try {
+      url = new URL(str);
+    } catch (_) {
+      return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
+  }
 }

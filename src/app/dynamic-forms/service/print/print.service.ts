@@ -6,7 +6,7 @@ import {AppStateService} from "../../../services/app-state.service";
 import {NgxSpinnerService} from "ngx-spinner";
 import {DatePipe} from "@angular/common";
 import {NumeralPipe} from "ngx-numeral";
-import { ImageType } from '../../enums/imageurl-type';
+import { DataFormatType } from '../../enums/data-format-type';
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -211,7 +211,7 @@ export class PrintService {
     const actualField = selectedOptionField ? selectedOptionField : field;
     if (field.cinchyColumn.dataFormatType === "LinkUrl") {
       this.content.push({columns: this.getLinkColumns(actualField)});
-    } else if (field.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
+    } else if (field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
       const base64Img = this.getBase64ImageFromUrl(field.value);
       this.content.push({columns: this.getImageColumns(field, base64Img)});
     } else if (field.cinchyColumn.dataType === "Date and Time") {
@@ -375,7 +375,7 @@ export class PrintService {
       return this.datePipe.transform(value, 'dd-MMM-yyyy');
     } else if (typeof value === 'boolean') {
       return value === true ? 'Yes' : 'No';
-    } else if (value && currentField && currentField.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
+    } else if (value && currentField && currentField.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
       return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
     } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
       const numeralValue = new NumeralPipe(value);
