@@ -123,9 +123,14 @@ export class AppComponent implements OnDestroy, OnInit {
    */
   getQueryStringValue(key: string, uri: string): string {
 
-    const idFromUri = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+    const value = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
 
-    return (idFromUri && idFromUri !== "null") ? idFromUri : null;
+    // Covers the case where there is an ID stored in the session but the queryString explicitly requests to clear it
+    if (value === "null") {
+      sessionStorage.removeItem(key);
+    }
+
+    return (value && value !== "null") ? value : null;
   }
 
 

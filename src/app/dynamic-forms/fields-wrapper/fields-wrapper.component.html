@@ -1,15 +1,5 @@
 <mat-spinner *ngIf="!_formHasDataLoaded && !_sectionsToRender?.length" diameter="50" class="inside"></mat-spinner>
 <ng-container *ngIf="!isChild">
-  <!-- <mat-expansion-panel *ngFor='let section of _formSectionsToRenderMetadata; index as i'
-                       [ngClass]="'section-flex--'+section.columnsInRow"
-                       [expanded]="section.autoExpand" [id]="'section-' + section.name">
-    <mat-expansion-panel-header class="sectionHeaderRow" expandedHeight="40px" collapsedHeight="40px"
-                                (click)="expansionClicked(section)">
-      <mat-panel-title>
-        {{section.name}}
-      </mat-panel-title>
-    </mat-expansion-panel-header> -->
-
     <mat-expansion-panel *ngFor="let section of _sectionsToRender; index as i"
                          [ngClass]="'section-flex--'+section.columnsInRow"
                          [expanded]="section.autoExpand" [id]="'section-' + section.label">

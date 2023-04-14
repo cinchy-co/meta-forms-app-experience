@@ -241,9 +241,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 let dropdownResult;
 
                 if (element.cinchyColumn.isMultiple) {
-                  const numberValueToString = typeof element.value === "number" ? `${element.value}` : element.value;
-                  // Still checking for string as it can be an array too
-                  const elementValues = typeof numberValueToString === "string" ? numberValueToString.split(",").map(_ => _.trim()) : numberValueToString;
+                  const elementValues = element.value?.toString().split(",").map(_ => _.trim());
 
                   dropdownResult = elementValues ? 
                     element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal == option.id)) : 
@@ -256,7 +254,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   dropdownResult = [element.dropdownDataset.options.find(e => e.id === element.value)].filter(_ => _);
                 }
 
-                if (dropdownResult && dropdownResult.length && dropdownResult[0]) {
+                if (dropdownResult?.length && dropdownResult[0]) {
                   fieldRow[0][element.cinchyColumn.name] = dropdownResult.map(item => item.label).join(", ");
                 } else {
                   fieldRow[0][element.cinchyColumn.name] = "";
@@ -271,11 +269,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           section.fields.forEach((element) => {
 
             if ((element.cinchyColumn.dataType === "Link") && element.cinchyColumn.isMultiple) {
-              if (!isNullOrUndefined(element.dropdownDataset) && element.dropdownDataset.options) {                
+              if (element.dropdownDataset?.options) {                
                 let dropdownResult;
-                const numberValueToString = typeof element.value === "number" ? `${element.value}` : element.value;
                 // Still checking for string as it can be an array too
-                const elementValues = typeof numberValueToString === "string" ? numberValueToString.split(",").map(_ => _.trim()) : numberValueToString;
+                const elementValues = element.value?.toString().split(",").map(_ => _.trim());
 
                 dropdownResult = elementValues ? element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal == option.id)) : [];
 

@@ -144,7 +144,7 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
         dropdownDataset = this.getSortedList(dropdownDataset);
         dataSet.dropdownDataset = dropdownDataset;
 
-        this.dropdownSetOptions = dropdownDataset ? dropdownDataset.options : [];
+        this.dropdownSetOptions = dropdownDataset?.options ?? [];
         this.charactersAfterWhichToShowList = this.dropdownSetOptions.length > this.maxLimitForMaterialSelect ? 3 : 0;
         this.setFilteredOptions();
         this.setSelectedValue();
@@ -233,9 +233,9 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
 
   generateMultipleOptionsFromSingle() {
 
-    let selectedIds;
+    let selectedIds: Array<string>;
 
-    if (this.field.noPreSelect) {
+    if (this.field.noPreSelect || !this.field?.value) {
       return [];
     }
 
@@ -243,36 +243,34 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
       selectedIds = this.field.dropdownDataset.options[0].id?.split ? this.field.dropdownDataset.options[0].id.split(",") : null
     }
 
-    if (!this.field.value || selectedIds?.length) {
+    if (selectedIds?.length) {
       const options = [];
 
-      let selectedIds = this.isInChildForm ? this.field.dropdownDataset.options[0].id
-        : !this.field.value ? null : this.field.dropdownDataset.options[0].id;
-
-      if (selectedIds) {
-        selectedIds = typeof selectedIds === "number" ? `${selectedIds}` : selectedIds;
-        const allSelectedIds = selectedIds.split(",");
-        const allLabels = this.field.dropdownDataset.options[0].label?.split(",");
-
-        allSelectedIds.forEach((id, index) => {
-
-          const option = new DropdownOption(id, allLabels[index]);
-
-          options.push(option);
-        });
+      if (this.isInChildForm) {
+        selectedIds = [this.field.dropdownDataset?.options[0]?.id];
       }
+
+      const allLabels = this.field.dropdownDataset?.options[0].label?.split(",");
+
+      selectedIds.forEach((id: string, index: number) => {
+
+        options.push(new DropdownOption(id.toString(), allLabels[index]));
+      });
 
       return options;
     }
-    else if (this.field.value) {
-      const selectedValue = typeof this.field.value === "number" ? `${this.field.value}` : this.field.value;
-      const allIds = (typeof selectedValue === "string" && selectedValue) ? selectedValue.split(",") : selectedValue;
+    else {
+      const allIds = this.field.value.toString().split(",");
 
-      return this.field.dropdownDataset.options.filter(option => allIds.find(id => {
+      if (this.field.dropdownDataset) {
+        return this.field.dropdownDataset.options.filter(option => allIds.find(id => {
 
-        const trimedId = id.trim ? id.trim() : id;
-        return option.id == trimedId;
-      }));
+          return option.id === (id.trim ? id.trim() : id);
+        }));
+      }
+      else {
+        return [];
+      }
     }
   }
 
@@ -434,8 +432,10 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
 
     this.filteredOptions = dropdownOptions ? dropdownOptions : this.dropdownSetOptions;
     this.myControl.setValue([]);
+
     // load the initial list
     this.filteredListMulti.next(this.dropdownSetOptions.slice());
+
     if (this.dropdownSetOptions.length > this.maxLimitForMaterialSelect) {
       this.charactersAfterWhichToShowList = 2;
     }

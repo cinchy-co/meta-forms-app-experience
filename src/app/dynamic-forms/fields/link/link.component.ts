@@ -355,12 +355,15 @@ export class LinkComponent implements OnInit {
   getSortedList(dropdownDataset) {
 
     let filteredOutNullSets;
-    if (dropdownDataset && dropdownDataset.options) {
+
+    if (dropdownDataset?.options) {
       filteredOutNullSets = dropdownDataset.options.filter(option => option.label);
+
       return {
         options: filteredOutNullSets.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
       }
     }
+
     return dropdownDataset;
   }
 
@@ -482,7 +485,7 @@ export class LinkComponent implements OnInit {
       return null;
     }
 
-    const preselectedValArr = this.field.dropdownDataset ? this.field.dropdownDataset.options : null;
+    const preselectedValArr = this.field.dropdownDataset?.options || null;
 
     if (preselectedValArr && (preselectedValArr.length > 1 || this.isInChildForm)) {
       this.selectedValue = preselectedValArr.find(item => item.id === this.field.value);
@@ -505,12 +508,13 @@ export class LinkComponent implements OnInit {
       this.selectedValue ? this.myControl.setValue(this.selectedValue) : this.myControl.setValue("");
 
       if (this.selectedValue == null) {
-        const val = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
+        const val = this.field.dropdownDataset?.options.find(item => item.id === "DELETE");
+
         if (val) {
           this.callbackEvent(this.targetTableName, this.field.cinchyColumn.name, { value: val }, "value");
         }
       }
-    }, 300)
+    }, 300);
   }
 
 

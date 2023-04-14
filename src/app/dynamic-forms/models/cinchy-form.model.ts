@@ -177,28 +177,28 @@ export class Form implements IForm {
 
       section.fields.forEach((field: IFormField) => {
 
-        if (isNullOrUndefined(field.cinchyColumn.name) || field.cinchyColumn.name == "") {
+        if (!field.cinchyColumn.name) {
           return;
         }
 
-        rowData.forEach(Rowelement => {
+        rowData.forEach((Rowelement) => {
+
           //TODO: Passing array value in case of multiselect
           if (field.cinchyColumn.dataType == "Choice" && field.cinchyColumn.isMultiple == true) {
-            const valueArray = (isNullOrUndefined(Rowelement[field.cinchyColumn.name]) ?
-              [] :
-              Rowelement[field.cinchyColumn.name].split(","));
+            const valueArray = Rowelement[field.cinchyColumn.name]?.split(",") ?? [];
 
             let optionArray = [];
 
             valueArray.forEach((element: any) => {
-              if (element !== "" && !isNullOrUndefined(element)) {
+
+              if (element) {
                 const value = element.trim();
                 const objValues = {
                   id: value,
                   itemName: value
                 };
-                optionArray.push(objValues);
 
+                optionArray.push(objValues);
               }
             });
 
@@ -210,7 +210,7 @@ export class Form implements IForm {
           if (field.cinchyColumn.dataType === "Link") {
             let optionArray: IDropdownOption[] = [];
 
-            if (!isNullOrUndefined(Rowelement[field.cinchyColumn.name]) && Rowelement[field.cinchyColumn.name] !== "") {
+            if (Rowelement[field.cinchyColumn.name]) {
               const labelForColumn = field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name;
               let properLabelForColumn = " label";
 

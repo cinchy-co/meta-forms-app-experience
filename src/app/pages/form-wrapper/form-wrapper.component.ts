@@ -92,6 +92,7 @@ export class FormWrapperComponent implements OnInit {
     try {
       this._spinnerService.show();
       const formMetadata = await this._cinchyQueryService.getFormMetadata().toPromise();
+
       this.formMetadata = this._appStateService.formMetadata = formMetadata;
 
       this.lookupRecords = [];

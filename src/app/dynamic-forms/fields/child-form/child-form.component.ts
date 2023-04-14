@@ -59,10 +59,10 @@ export class ChildFormComponent {
                   } else { // Incase obj has multiple names and dropdown has those names in sepratae options
                     if (obj[element.cinchyColumn.name] && element.cinchyColumn.isMultiple) {
                       // Checking for multi select values in obj
-                      const allFieldLabels = obj[element.cinchyColumn.name].split(',')
-                      const trimedValues = allFieldLabels && allFieldLabels.length ? allFieldLabels.map(label => label.trim()) : allFieldLabels;
+                      const allFieldLabels = obj[element.cinchyColumn.name]?.split(",")
+                      const trimedValues = allFieldLabels?.length ? allFieldLabels.map(label => label.trim()) : allFieldLabels;
                       let multiDropdownResult = element['dropdownDataset'].options.filter(e => trimedValues.indexOf(e.label) > -1);
-                      element.value = multiDropdownResult && multiDropdownResult.length ? multiDropdownResult.map(item => item.id).join(',') : null;
+                      element.value = multiDropdownResult?.length ? multiDropdownResult.map(item => item.id).join(',') : null;
                     }
                     else {
                       element.value = null;
@@ -73,11 +73,11 @@ export class ChildFormComponent {
                   element.value = null;
                   element.noPreSelect = true;
                 } else if (obj[element.cinchyColumn.name] && element.cinchyColumn.isMultiple) {
-                  const allFieldLabels = obj[element.cinchyColumn.name].split(',')
+                  const allFieldLabels = obj[element.cinchyColumn.name]?.split(",");
                   const trimedValues = allFieldLabels && allFieldLabels.length ? allFieldLabels.map(label => label.trim()) : allFieldLabels;
 
                   let multiDropdownResult = element['dropdownDataset'].options.filter(e => trimedValues.indexOf(e.label) > -1);
-                  element.value = multiDropdownResult && multiDropdownResult.length ? multiDropdownResult.map(item => item.id).join(',') : element.value;
+                  element.value = multiDropdownResult?.length ? multiDropdownResult.map(item => item.id).join(',') : element.value;
                 } else if (obj[element.cinchyColumn.name] && !element.cinchyColumn.isMultiple) {
                   let singleDropdownResult = element['dropdownDataset'].options.find(e => e.label == obj[element.cinchyColumn.name]);
                   if (!singleDropdownResult && element.value) { // sometimes label contains display label so it won't match, then try id

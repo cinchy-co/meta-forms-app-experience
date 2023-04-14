@@ -79,14 +79,14 @@ export class FormField implements IFormField {
 
       this.value = multiChoiceData;
     }
-    else if (this.cinchyColumn.dataType === "Link" && this.cinchyColumn.isMultiple) {
-      this.value = value?.split(",").map((item) => {
+    else if (value && this.cinchyColumn.dataType === "Link" && this.cinchyColumn.isMultiple) {
+      this.value = value.split(",").map((item) => {
 
         return item.trim ? item.trim() : item;
-      }) ?? [];
+      });
     }
     else {
-      this.value = value;
+      this.value = value ?? [];
     }
 
     if (!isNullOrUndefined(this.formControl)) {
