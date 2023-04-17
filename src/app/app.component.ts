@@ -6,6 +6,7 @@ import { Component, HostListener, OnDestroy, OnInit} from "@angular/core";
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
 import { AppStateService } from "./services/app-state.service";
+import { IframeUtil } from "./util/iframe-util";
 
 
 @Component({
@@ -22,7 +23,7 @@ export class AppComponent implements OnDestroy, OnInit {
     }
   }
 
-  loginDone;
+  loginDone: boolean;
 
 
   private _routerEventSubscription: Subscription

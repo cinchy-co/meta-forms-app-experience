@@ -125,18 +125,18 @@ export class Form implements IForm {
           // Having sep conditions just for clarity
           if (!element.cinchyColumn.isDisplayColumn && this.isChild) {
             const col = `[${element.cinchyColumn.name}].[Cinchy Id]`
-            element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as "${element.cinchyColumn.name}"`);
+            element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${element.cinchyColumn.name}'`);
           } else if (!this.isChild) {
             const col = `[${element.cinchyColumn.name}].[Cinchy Id]`
-            element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as "${element.cinchyColumn.name}"`);
+            element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${element.cinchyColumn.name}'`);
           }
           const col = `[${element.cinchyColumn.name}].${targetColumnForQuery}`
-          element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as "${labelForColumn} label"`);
+          element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${labelForColumn} label'`);
         }
         else {
           //TODO: Changes for Short Name
           const col = `[${element.cinchyColumn.name}]`
-          element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as "${element.cinchyColumn.name}"`);
+          element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${element.cinchyColumn.name}'`);
         }
         fields = R.uniq(fields);
       });
@@ -396,7 +396,7 @@ export class Form implements IForm {
                 params[paramName] = field.value ?? "";
 
                 assignmentColumns.push(`[${field.cinchyColumn.name}]`);
-                assignmentValues.push(`"${params[paramName]}"`);
+                assignmentValues.push(`'${params[paramName]}'`);
                 attachedFilesInfo.push(this.getFileNameAndItsTable(field));
               }
               else if (this.rowId) {
@@ -441,7 +441,7 @@ export class Form implements IForm {
           if (isNullOrUndefined(field.cinchyColumn.linkTargetColumnName) && field.cinchyColumn.dataType !== "Binary") {
             //TODO: for insert data ... because insert is giving error with parameters
             if (isNullOrUndefined(this.rowId)) {
-              assignmentValues.push(`"${params[paramName]}"`);
+              assignmentValues.push(`'${params[paramName]}'`);
             }
             else if ((field.cinchyColumn.dataType === "Text") && !field.value) {
               assignmentValues.push((params[paramName] != "") ? `cast(${paramName} as nvarchar(100))` : paramName);
@@ -460,7 +460,7 @@ export class Form implements IForm {
               });
 
               if (isNullOrUndefined(this.rowId)) {
-                assignmentValues.push(`"${stringLinkArray.join(",")}"`);
+                assignmentValues.push(`'${stringLinkArray.join(",")}'`);
               }
               else if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
                 assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
@@ -471,7 +471,7 @@ export class Form implements IForm {
             }
             else {
               if (field.cinchyColumn.dataType == "Link") {
-                assignmentValues.push(isNullOrUndefined(this.rowId) ? `ResolveLink(${params[paramName]},"Cinchy Id")` : `ResolveLink(${paramName},'Cinchy Id')`);
+                assignmentValues.push(isNullOrUndefined(this.rowId) ? `ResolveLink(${params[paramName]},'Cinchy Id')` : `ResolveLink(${paramName},'Cinchy Id')`);
               }
               else {
                 if (isNullOrUndefined(field.childForm)) {
@@ -495,7 +495,7 @@ export class Form implements IForm {
               INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(",")})
               OUTPUT INSERTED.[Cinchy Id] INTO #tmp ([id])
               VALUES (${assignmentValues.join(",")})
-              SELECT x.[id] as "id" FROM #tmp x`;
+              SELECT x.[id] as 'id' FROM #tmp x`;
 
         query = new Query(queryString, params, attachedFilesInfo)
       } else {
@@ -556,7 +556,7 @@ export class Form implements IForm {
                 if (elementValue) {
                   params[paramName] = elementValue ? elementValue : "";
                 }
-                paramName = date instanceof Date ? paramName : `NULLIF(${paramName},"")`;
+                paramName = date instanceof Date ? paramName : `NULLIF(${paramName},')`;
                 break;
               case "Number":
                 let elementValueNumber = isNullOrUndefined(element.value) ? "" : element.value;
@@ -646,10 +646,10 @@ export class Form implements IForm {
                 || (element.cinchyColumn.dataType !== "Choice" && element.cinchyColumn.dataType !== "Date and Time")) {
                 if (element.cinchyColumn.dataType === "Text" && !element.value) {
                   // Because empty values for text input is throwing error
-                  isNullOrUndefined(this.rowId) ? assignmentValues.push("\"" + params[paramName] + "\"") :
+                  isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${params[paramName]}'`) :
                     assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 } else {
-                  isNullOrUndefined(this.rowId) ? assignmentValues.push("\"" + params[paramName] + "\"") :
+                  isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${params[paramName]}'`) :
                     assignmentValues.push(paramName);
                 }
               }
@@ -668,10 +668,10 @@ export class Form implements IForm {
                 //TODO: for insert data ... because insert is giving error with parameters
                 if ((element.cinchyColumn.dataType === "Link") && (!element.value || (element.value && !element.value.length))) {
                   // Because empty values for multi input is throwing error
-                  isNullOrUndefined(this.rowId) ? assignmentValues.push(`"${stringifyValue}"`) :
+                  isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${stringifyValue}'`) :
                     assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 } else {
-                  isNullOrUndefined(this.rowId) ? assignmentValues.push(`"${stringifyValue}"`) : assignmentValues.push(paramName);
+                  isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${stringifyValue}'`) : assignmentValues.push(paramName);
                 }
               } else if (element.cinchyColumn.isMultiple) {
                 let stringLinkArray = [];
@@ -681,25 +681,25 @@ export class Form implements IForm {
                   stringLinkArray = this.addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
                 });
 
-                isNullOrUndefined(this.rowId) ? assignmentValues.push(`"${stringLinkArray.join(",")}"`) : assignmentValues.push(paramName);
+                isNullOrUndefined(this.rowId) ? assignmentValues.push(`'${stringLinkArray.join(",")}'`) : assignmentValues.push(paramName);
               } else {
                 //TODO: for insert data ... because insert is giving error with parameters
                 if (element.cinchyColumn.dataType == "Link") {
 
                   if (isNullOrUndefined(this.rowId) && element.form.isChild && element.form.flatten && element.form.childFormParentId) {
-                    let assignmentVal = `ResolveLink(${params[paramName]},"Cinchy Id")`;
+                    let assignmentVal = `ResolveLink(${params[paramName]},'Cinchy Id')`;
                     let columnMetadata = element.form.tableMetadata["Columns"]?.find(_ => _.columnId == element.cinchyColumn.id);
                     if (columnMetadata && columnMetadata.primaryLinkedColumnId) {
                       let primaryLinkedColumn = element.form.parentForm.tableMetadata["Columns"]?.find(_ => _.columnId == columnMetadata.primaryLinkedColumnId);
                       if (primaryLinkedColumn) {
-                        assignmentVal = `ResolveLink("${params[paramName]}","${primaryLinkedColumn.name}")`;
+                        assignmentVal = `ResolveLink('${params[paramName]}','${primaryLinkedColumn.name}')`;
                       }
                     }
                     assignmentValues.push(assignmentVal);
                   } else {
                     isNullOrUndefined(this.rowId) ?
-                      assignmentValues.push(`ResolveLink(${params[paramName]},"Cinchy Id")`) :
-                      assignmentValues.push(`ResolveLink(${paramName},"Cinchy Id")`);
+                      assignmentValues.push(`ResolveLink(${params[paramName]},'Cinchy Id')`) :
+                      assignmentValues.push(`ResolveLink(${paramName},'Cinchy Id')`);
                   }
 
                 } else {

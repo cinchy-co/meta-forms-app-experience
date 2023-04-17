@@ -17,6 +17,7 @@ import { AppStateService } from "../../services/app-state.service";
 import { IFormMetadata } from "../../models/form-metadata-model";
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { ILookupRecord } from "../../models/lookup-record.model";
+import { IframeUtil } from "../../util/iframe-util";
 
 
 @Component({
@@ -42,6 +43,12 @@ export class FormWrapperComponent implements OnInit {
   get brandedFormWrapperTheme(): string {
 
     return `form-wrapper-theme--${this.formMetadata?.brand}`;
+  }
+
+
+  get fullScreenHeight(): string {
+
+    return IframeUtil.fullScreenHeight;
   }
 
 
