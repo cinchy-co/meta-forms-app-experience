@@ -134,7 +134,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           this.currentRow = null;
         }
 
-        if (!record?.doNotReloadForm && this.lookupRecordsList?.length) {
+        if (!record?.doNotReloadForm && this.lookupRecordsList?.length && !this.formHasDataLoaded) {
           this.loadForm();
         }
       }
@@ -407,7 +407,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Uses the metadata from Cinchy to create and load the IForm object, then it"ll fill it with the form object with actual data
    * Gets called upon load, save, and row changes
    */
-  async loadForm(childData?): Promise<void> {
+  async loadForm(childData?: any): Promise<void> {
 
     this.isCloneForm = false;
     this.childDataForm = [];

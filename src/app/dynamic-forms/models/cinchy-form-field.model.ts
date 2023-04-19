@@ -79,8 +79,8 @@ export class FormField implements IFormField {
 
       this.value = multiChoiceData;
     }
-    else if (value && this.cinchyColumn.dataType === "Link" && this.cinchyColumn.isMultiple) {
-      this.value = value.split(",").map((item) => {
+    else if (value && this.cinchyColumn.dataType === "Link" && this.cinchyColumn.isMultiple && !Array.isArray(value)) {
+      this.value = value?.split(",").map((item) => {
 
         return item.trim ? item.trim() : item;
       });
@@ -104,7 +104,6 @@ export class FormField implements IFormField {
           return option;
         }
       }
-
     });
   }
 }
