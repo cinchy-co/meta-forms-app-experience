@@ -45,7 +45,7 @@ export class FormHelperService {
       parentForm: IForm = null
   ): Promise<IForm> {
 
-    if (formMetadata) {
+    if (!formMetadata) {
       return null;
     }
 
@@ -74,15 +74,17 @@ export class FormHelperService {
 
   public fillWithSections(form: IForm, formSectionsMetadata: IFormSectionMetadata[]) {
 
-    form.sections = formSectionsMetadata.map(_ => {
+    if (form) {
+      form.sections = formSectionsMetadata.map(_ => {
 
-      let result = new FormSection(_.id, _.name);
+        let result = new FormSection(_.id, _.name);
 
-      result.columnsInRow = _.columnsInRow;
-      result.autoExpand = _.autoExpand;
+        result.columnsInRow = _.columnsInRow;
+        result.autoExpand = _.autoExpand;
 
-      return result;
-    });
+        return result;
+      });
+    }
   }
 
   public async fillWithFields(form: IForm, cinchyId: number, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord,tableEntitlements: any) {
