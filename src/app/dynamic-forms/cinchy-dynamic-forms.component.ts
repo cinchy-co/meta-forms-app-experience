@@ -102,10 +102,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
 
-    if (changes.rowId && changes.rowId.currentValue === null) {
-      this.currentRow = null;
-    }
-
     if (changes.lookupRecords?.currentValue?.length && !this.formHasDataLoaded) {
       this.loadForm();
     }
@@ -129,12 +125,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
         if (this.rowId) {
           this.setLookupRecords(this.lookupRecordsList);
+          this.currentRow = this.lookupRecordsList?.find(item => item.id === this.rowId) ?? this.currentRow ?? null;
         }
         else {
           this.currentRow = null;
         }
 
-        if (!record?.doNotReloadForm && this.lookupRecordsList?.length && !this.formHasDataLoaded) {
+        if (!record?.doNotReloadForm && this.lookupRecordsListPopulated) {
           this.loadForm();
         }
       }
@@ -152,7 +149,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   setLookupRecords(lookupRecords: ILookupRecord[]): void {
 
     this.lookupRecordsList = this.checkNoRecord(lookupRecords);
-    this.currentRow = this.lookupRecordsList.find(item => item.id === this.rowId) ?? this.currentRow;
   }
 
 
@@ -411,7 +407,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     this.isCloneForm = false;
     this.childDataForm = [];
-    this.formHasDataLoaded = false;
+    this.formHasDataLoaded = this.formHasDataLoaded || false;
     this.enableSaveBtn = false;
 
     this.isLoadingForm = true;
@@ -432,7 +428,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
             await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
 
-            // This may occur if the rowId is not provided in the queryParams, but one is
+            // This may occur if the rowId is not provided in the queryParams, but one is available in the session
             if (this.rowId !== null) {
               if (!selectedLookupRecord) {
                 this.appStateService.setRecordSelected(null);

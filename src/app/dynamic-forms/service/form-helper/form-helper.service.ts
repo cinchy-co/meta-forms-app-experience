@@ -1,20 +1,27 @@
 import { Injectable } from "@angular/core";
+
 import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
-import { ToastrService } from "ngx-toastr";
+
+import { IFormField, FormField } from "../../models/cinchy-form-field.model";
+
+import { CinchyColumn, ICinchyColumn } from "../../models/cinchy-column.model";
+import { IFormSection, FormSection} from "../../models/cinchy-form-sections.model";
+import { Form, IForm } from "../../models/cinchy-form.model";
+import { IQuery } from "../../models/cinchy-query.model";
+
 import { IFormFieldMetadata } from "src/app/models/form-field-metadata.model";
 import { IFormMetadata } from "src/app/models/form-metadata-model";
 import { IFormSectionMetadata } from "src/app/models/form-section-metadata.model";
 import { ILookupRecord } from "src/app/models/lookup-record.model";
+
 import { CinchyQueryService } from "src/app/services/cinchy-query.service";
+
+import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
-import { CinchyColumn, ICinchyColumn } from "../../models/cinchy-column.model";
-import { FormField } from "../../models/cinchy-form-field.model";
-import { FormSection } from "../../models/cinchy-form-sections.model";
-import { Form, IForm } from "../../models/cinchy-form.model";
-import { IQuery } from "../../models/cinchy-query.model";
+
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class FormHelperService {
 
@@ -37,10 +44,10 @@ export class FormHelperService {
       childFormSort?: string,
       parentForm: IForm = null
   ): Promise<IForm> {
-    if (formMetadata == null)
-      return null;
 
-   // var tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
+    if (formMetadata) {
+      return null;
+    }
 
     const result = new Form(
       formMetadata.formId,
@@ -61,22 +68,28 @@ export class FormHelperService {
     result.tableMetadata = JSON.parse(formMetadata.tableJson);
     result.parentForm = parentForm
     result.rowId = rowId;
+
     return result;
   }
 
   public fillWithSections(form: IForm, formSectionsMetadata: IFormSectionMetadata[]) {
+
     form.sections = formSectionsMetadata.map(_ => {
+
       let result = new FormSection(_.id, _.name);
+
       result.columnsInRow = _.columnsInRow;
       result.autoExpand = _.autoExpand;
+
       return result;
     });
   }
 
   public async fillWithFields(form: IForm, cinchyId: number, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord,tableEntitlements: any) {
 
-    if (!formFieldsMetadata?.length)
+    if (!formFieldsMetadata?.length) {
       return;
+    }
 
     let tableJson = JSON.parse(formMetadata.tableJson);
     let formFields: IFormFieldMetadata[] = formFieldsMetadata.filter(_ => _.formId == form.id);
@@ -89,6 +102,15 @@ export class FormHelperService {
     let allChildForms: IForm[] = [];
 
     let minSectionIter = 0;
+
+    // Clear out any pre-existing fields in the case that this function is called on a form that has already been processed
+    form.sections = form.sections.map((section: IFormSection) => {
+
+      section.fields = new Array<IFormField>();
+
+      return section;
+    });
+
     for (let i = 0; i < formFields.length; i++) {
       const columnMetadata = tableJson.Columns.find(_ => _.columnId === formFields[i].columnId);
       const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
@@ -99,7 +121,6 @@ export class FormHelperService {
         const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
         columnMetadata.displayFormat = parentMetadata?.displayFormat;
       }
-
 
       const cinchyColumn: ICinchyColumn = new CinchyColumn(
         formFields[i].columnId,
@@ -146,18 +167,26 @@ export class FormHelperService {
 
       let childForm: IForm = null;
       const childFormId = formFields[i].childFormId;
+
       if (childFormId) {
         const displayColumnId = formFields[i].displayColumn.split(',').map(_ => parseInt(_, 10));
+
         displayColumnId.push(formFields[i].linkFieldId);
         
         const childFormMetadata = await this._cinchyQueryService.getFormMetadata(childFormId).toPromise();
         const childFormSectionsMetadata = await this._cinchyQueryService.getFormSections(childFormId).toPromise();
+
         let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
+
         childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => displayColumnId.find(id => id == _.formFieldId) != null);
+
         const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
-        childForm = await this.generateForm(childFormMetadata, null,childTableEntitlements, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
+
+        childForm = await this.generateForm(childFormMetadata, null, childTableEntitlements, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
+
         this.fillWithSections(childForm, childFormSectionsMetadata);
-        await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord,childTableEntitlements);
+
+        await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
         await this.fillWithData(childForm, cinchyId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
 
         // Override these, they will be checked later when opening up the child form
@@ -193,8 +222,9 @@ export class FormHelperService {
 
       const formField: FormField = new FormField(formFields[i].formFieldId, formFields[i].formFieldName, formFields[i].caption, childForm, cinchyColumn, null, form);
 
-      if (childFormId == null)
+      if (!childFormId) {
         parentFieldsByColumn[cinchyColumn.name] = formField;
+      }
 
       for (let j = minSectionIter; j < form.sections.length; j++) {
         if (form.sections[j].id === formFields[i].formSectionId) {
@@ -206,6 +236,7 @@ export class FormHelperService {
         }
       }
     }
+
     form.fieldsByColumnName = parentFieldsByColumn;
 
     for (let i = 0; i < allChildForms.length; i++) {
@@ -230,8 +261,10 @@ export class FormHelperService {
   }
 
   private parseColumnNameByChildFormLinkId(formLinkId: string): string {
-    if (formLinkId == null)
+
+    if (!formLinkId) {
       return null;
+    }
 
     let splitColumnNames = formLinkId.split('].[');
     if (splitColumnNames?.length > 0) {
