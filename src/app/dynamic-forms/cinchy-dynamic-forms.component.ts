@@ -80,6 +80,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     return (this.lookupRecordsList?.length && this.lookupRecordsList[0].id !== -1);
   }
 
+  private _queuedRecordSelection: { cinchyId: number | null, doNotReloadForm: boolean };
+
 
   private childDataForm = [];
   private childCinchyId = -1;
@@ -102,8 +104,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
 
-    if (changes.lookupRecords?.currentValue?.length && !this.formHasDataLoaded) {
-      this.loadForm();
+    if (changes.lookupRecords?.currentValue?.length) {
+      if (this._queuedRecordSelection) {
+        this._handleRecordSelection(this._queuedRecordSelection);
+        this._queuedRecordSelection = null;
+      }
+
+      if (!this.formHasDataLoaded) {
+        this.loadForm();
+      }
     }
   }
 
@@ -121,18 +130,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this.appStateService.onRecordSelected().subscribe(
       (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
 
-        this.rowId = record?.cinchyId;
-
-        if (this.rowId) {
-          this.setLookupRecords(this.lookupRecordsList);
-          this.currentRow = this.lookupRecordsList?.find(item => item.id === this.rowId) ?? this.currentRow ?? null;
+        if (this.lookupRecordsListPopulated) {
+          this._handleRecordSelection(record);
         }
         else {
-          this.currentRow = null;
-        }
-
-        if (!record?.doNotReloadForm && this.lookupRecordsListPopulated) {
-          this.loadForm();
+          this._queuedRecordSelection = record;
         }
       }
     );
@@ -172,6 +174,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   setNewRow(newIndex: number): void {
 
     const newSelectedRow = this.lookupRecordsList[newIndex];
+
     this.currentRow = newSelectedRow;
     this.rowSelected(newSelectedRow);
   }
@@ -407,15 +410,17 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     this.isCloneForm = false;
     this.childDataForm = [];
-    this.formHasDataLoaded = this.formHasDataLoaded || false;
+    this.formHasDataLoaded = false;
     this.enableSaveBtn = false;
 
     this.isLoadingForm = true;
 
     try {
       let tableEntitlements = await this._cinchyService.getTableEntitlementsById(this.formMetadata.tableId).toPromise();
-      this.form = await this._formHelperService.generateForm(this.formMetadata, this.rowId,tableEntitlements);
-      this._formHelperService.fillWithSections(this.form, this.formSectionsMetadata);
+
+      const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
+
+      this._formHelperService.fillWithSections(form, this.formSectionsMetadata);
 
       this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
         async (formFieldsMetadata: Array<IFormFieldMetadata>) => {
@@ -426,7 +431,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               return (record.id === this.rowId);
             });
 
-            await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
+            await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
 
             // This may occur if the rowId is not provided in the queryParams, but one is available in the session
             if (this.rowId !== null) {
@@ -434,9 +439,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 this.appStateService.setRecordSelected(null);
               }
               else {
-                await this._formHelperService.fillWithData(this.form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+                await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
               }
             }
+
+            this.form = form;
 
             this.enableSaveBtn = true;
 
@@ -914,5 +921,26 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     });
 
     this._toastr.info("The record was cloned, please save in order to create it.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
+  }
+
+
+  /**
+   * Ingests the selected record and populates the form accordingly
+   */
+  private _handleRecordSelection(record: { cinchyId: number | null, doNotReloadForm: boolean }) {
+
+    this.rowId = record?.cinchyId;
+
+    if (this.rowId) {
+      this.setLookupRecords(this.lookupRecordsList);
+      this.currentRow = this.lookupRecordsList?.find(item => item.id === this.rowId) ?? this.currentRow ?? null;
+    }
+    else {
+      this.currentRow = null;
+    }
+
+    if (!record?.doNotReloadForm) {
+      this.loadForm();
+    }
   }
 }

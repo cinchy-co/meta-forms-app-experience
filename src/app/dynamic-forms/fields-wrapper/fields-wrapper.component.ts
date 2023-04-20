@@ -1,7 +1,6 @@
 import { Subscription } from "rxjs";
 
 import {
-  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -52,18 +51,20 @@ export class FieldsWrapperComponent {
 
   constructor(
     private appStateService: AppStateService,
-    private cdr: ChangeDetectorRef) {
-  }
+  ) {}
 
 
   expansionClicked(section) {
+
     this.appStateService.sectionClicked(section.label);
   }
 
   setFormHasDataLoaded(value: boolean) {
+
     if (value) {
       this.determineSectionsToRender();
     }
+
     this._formHasDataLoaded = value;
   }
 

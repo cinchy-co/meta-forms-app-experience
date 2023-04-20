@@ -280,27 +280,37 @@ export class FormHelperService {
   public async fillWithData(form: IForm, cinchyId: number, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string, afterChildFormEdit?: Function) {
 
     if (isNullOrUndefined(cinchyId)) {
-
       return;
     }
 
     const selectQuery: IQuery = form.generateSelectQuery(cinchyId, parentTableId);
+
     try {
       if (form.isChild && form.childFormParentId && form.childFormLinkId && parentDomainName && parentTableName) {
         const queryToGetMatchIdFromParent = `SELECT ${form.childFormParentId} AS 'idParent'
                                             FROM [${parentDomainName}].[${parentTableName}]
                                             WHERE [Cinchy Id] = ${cinchyId}`;
+
         let cinchyIdForMatchFromParentResp = (await this._cinchyService.executeCsql(queryToGetMatchIdFromParent, null, null, QueryType.DRAFT_QUERY).toPromise()).queryResult.toObjectArray();
         let idForParentMatch = cinchyIdForMatchFromParentResp?.length ? cinchyIdForMatchFromParentResp[0]['idParent'] : null;
+
         if (idForParentMatch) {
           if (selectQuery.params == null) {
             selectQuery.params = {};
           }
+
           selectQuery.params['@parentCinchyIdMatch'] = idForParentMatch;
         }
       }
-      const selectQueryResult: Object[] =
-        (await this._cinchyService.executeCsql(selectQuery.query, selectQuery.params, null, QueryType.DRAFT_QUERY).toPromise()).queryResult.toObjectArray();
+
+      const selectQueryResult: Object[] = (
+        await this._cinchyService.executeCsql(
+          selectQuery.query,
+          selectQuery.params,
+          null,
+          QueryType.DRAFT_QUERY
+        ).toPromise()
+      ).queryResult.toObjectArray();
 
       if (form.isChild) {
         form.loadMultiRecordData(cinchyId, selectQueryResult, selectedLookupRecord);
@@ -340,6 +350,7 @@ export class FormHelperService {
       }
     } catch (e) {
       console.error(e?.cinchyException?.message, e);
+
       if (e?.cinchyException?.message)
         this._toastr.error('Error while fetching data from the table. Please make sure you have the correct entitlements to view the data.', 'Error')
       else
@@ -348,6 +359,7 @@ export class FormHelperService {
   }
 
   private async getCellEntitlements(domainName: string, tableName: string, cinchyId: number, formFieldsMetadata: IFormFieldMetadata[]): Promise<Object> {
+
     const selectClause = formFieldsMetadata
       .filter(_ => _.columnName)
       .map(_ => ` editable([${_.columnName}]) as 'entitlement-${_.columnName.substring(0, 114)}'`);
