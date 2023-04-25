@@ -58,6 +58,7 @@ export class Form {
 
 
   checkFormValidation() {
+
     let message = "";
 
     let validationResult = {
@@ -66,8 +67,11 @@ export class Form {
     };
 
     this.errorFields = [];
+
     this.sections.forEach(section => {
+
       section.fields.forEach(element => {
+
         if (element.cinchyColumn.isMandatory === true && (isNullOrUndefined(element.value) || element.value === "")) {
           validationResult.status = false;
           this.errorFields.push(element.label);
