@@ -27,9 +27,14 @@ export class AppStateService {
 
   formPopulated$ = new BehaviorSubject<string>(null);
   lastRecordSelect$ = new BehaviorSubject<{ cinchyId: number | null, doNotReloadForm: boolean }>(null);
+
   saveClicked$ = new BehaviorSubject<void>(null);
 
 
+  /**
+   * The ID of the primary form, as provided by the query params when the application is bootstrapped. If there is a secondary form present,
+   * either from the add new option dialog or because a child form is present, that ID is tracked independently
+   */
   get formId(): string {
 
     return this._formId;
@@ -37,6 +42,10 @@ export class AppStateService {
   private _formId: string;
 
 
+  /**
+   * The ID of the currently-selected record. This should be universal to the app, since the concept of "selected record" doesn't exist in the
+   * context of the add new option dialog, which is where the secondary form element resides
+   */
   get rowId(): number {
 
     return this._rowId;
@@ -83,12 +92,6 @@ export class AppStateService {
   onRecordSelected(): Observable<{ cinchyId: number | null, doNotReloadForm: boolean }> {
 
     return this.lastRecordSelect$.asObservable();
-  }
-
-
-  saveClicked() {
-
-    this.saveClicked$.next();
   }
 
 

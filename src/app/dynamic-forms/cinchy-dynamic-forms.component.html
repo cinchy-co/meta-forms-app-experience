@@ -33,7 +33,6 @@
   <div class="all-expansions-wrapper">
     <mat-accordion *ngIf="formMetadata?.isAccordion; else withoutAccordion">
       <app-fields-wrapper [form]="form"
-                          [rowId]="rowId"
                           (eventOccurred)="handleFieldsEvent($event)"
                           (childFormOpened)="openChildForm($event)"
                           [fieldsWithErrors]="fieldsWithErrors"
@@ -44,7 +43,6 @@
 
     <ng-template #withoutAccordion>
       <app-fields-wrapper [form]="form"
-                          [rowId]="rowId"
                           (eventOccurred)="handleFieldsEvent($event)"
                           (childFormOpened)="openChildForm($event)"
                           [fieldsWithErrors]="fieldsWithErrors"

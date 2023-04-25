@@ -317,7 +317,7 @@ export class PrintService {
   getChildFormTable(form) {
     // TODO get proper table header and photos
     const table = this.getDefaultTable();
-    let multiFields = form.sections[0]?.MultiFields;
+    let multiFields = form.sections[0]?.multiFields;
     const fields = form.sections[0]?.fields;
     let [body, widths] = [[], []];
     const colsToRemove = {}

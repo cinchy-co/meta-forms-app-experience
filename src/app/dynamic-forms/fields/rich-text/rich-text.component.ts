@@ -64,7 +64,7 @@ import { IRichTextImage } from "../../interface/rich-text-image";
 import { IRichTextLink } from "../../interface/rich-text-link";
 
 import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
-import { IFormField } from "../../models/cinchy-form-field.model";
+import { FormField } from "../../models/cinchy-form-field.model";
 
 
 @Component({
@@ -74,7 +74,7 @@ import { IFormField } from "../../models/cinchy-form-field.model";
 })
 export class RichTextComponent implements AfterViewInit, OnDestroy {
 
-  @Input() field: IFormField;
+  @Input() field: FormField;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
     this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;

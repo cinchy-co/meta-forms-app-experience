@@ -2,11 +2,9 @@ import { Injectable } from "@angular/core";
 
 import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 
-import { IFormField, FormField } from "../../models/cinchy-form-field.model";
-
 import { CinchyColumn, ICinchyColumn } from "../../models/cinchy-column.model";
-import { IFormSection, FormSection} from "../../models/cinchy-form-sections.model";
-import { Form, IForm } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
+import { Form } from "../../models/cinchy-form.model";
 import { IQuery } from "../../models/cinchy-query.model";
 
 import { IFormFieldMetadata } from "src/app/models/form-field-metadata.model";
@@ -42,8 +40,8 @@ export class FormHelperService {
       childFormLinkId?: string,
       childFormFilter?: string,
       childFormSort?: string,
-      parentForm: IForm = null
-  ): Promise<IForm> {
+      parentForm: Form = null
+  ): Promise<Form> {
 
     if (!formMetadata) {
       return null;
@@ -72,22 +70,12 @@ export class FormHelperService {
     return result;
   }
 
-  public fillWithSections(form: IForm, formSectionsMetadata: IFormSectionMetadata[]) {
+  public fillWithSections(form: Form, metadata: IFormSectionMetadata[]) {
 
-    if (form) {
-      form.sections = formSectionsMetadata.map(_ => {
-
-        let result = new FormSection(_.id, _.name);
-
-        result.columnsInRow = _.columnsInRow;
-        result.autoExpand = _.autoExpand;
-
-        return result;
-      });
-    }
+    form?.populateSectionsFromFormMetadata(metadata);
   }
 
-  public async fillWithFields(form: IForm, cinchyId: number, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord,tableEntitlements: any) {
+  public async fillWithFields(form: Form, cinchyId: number, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord,tableEntitlements: any) {
 
     if (!formFieldsMetadata?.length) {
       return;
@@ -101,17 +89,9 @@ export class FormHelperService {
 
     let parentChildLinkedColumns: {[columnName: string]: FormField[]} = {};
     let parentFieldsByColumn: {[columnName: string]: FormField} = {};
-    let allChildForms: IForm[] = [];
+    let allChildForms: Form[] = [];
 
     let minSectionIter = 0;
-
-    // Clear out any pre-existing fields in the case that this function is called on a form that has already been processed
-    form.sections = form.sections.map((section: IFormSection) => {
-
-      section.fields = new Array<IFormField>();
-
-      return section;
-    });
 
     for (let i = 0; i < formFields.length; i++) {
       const columnMetadata = tableJson.Columns.find(_ => _.columnId === formFields[i].columnId);
@@ -167,7 +147,7 @@ export class FormHelperService {
         columnMetadata?.textFormat
       );
 
-      let childForm: IForm = null;
+      let childForm: Form = null;
       const childFormId = formFields[i].childFormId;
 
       if (childFormId) {
@@ -196,8 +176,8 @@ export class FormHelperService {
         cinchyColumn.canView = true;
 
         // If flatten, we have to check the entitlements for the last record and readjust the entitlements
-        if (childForm.flatten && childForm.sections?.length && childForm.sections[0]['MultiFields'] && childForm.sections[0]['MultiFields'].length) {
-          let childFormData = childForm.sections[0]['MultiFields'];
+        if (childForm.flatten && childForm.sections?.length && childForm.sections[0]['multiFields'] && childForm.sections[0]['multiFields'].length) {
+          let childFormData = childForm.sections[0]['multiFields'];
           let lastRecordId = childFormData[childFormData.length - 1]['Cinchy ID'];
           if (lastRecordId != null) {
           //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
@@ -277,7 +257,7 @@ export class FormHelperService {
   }
 
   // TODO: Refactor to smaller function, remove the need to use afterChildFormEdit as a function, it's only a workaround for the bad existing code in cinchy-dynamic-forms.component.ts that handles child forms queries
-  public async fillWithData(form: IForm, cinchyId: number, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string, afterChildFormEdit?: Function) {
+  public async fillWithData(form: Form, cinchyId: number, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string, afterChildFormEdit?: Function) {
 
     if (isNullOrUndefined(cinchyId)) {
       return;

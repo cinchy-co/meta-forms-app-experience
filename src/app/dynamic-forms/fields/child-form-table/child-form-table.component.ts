@@ -81,7 +81,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   async getFileNames() {
     const allFields = this.field.childForm.sections[0].fields;
     const binaryFields = allFields.filter(field => field.cinchyColumn.dataType === "Binary");
-    const multiFields = this.field.childForm.sections[0].MultiFields;
+    const multiFields = this.field.childForm.sections[0].multiFields;
     if (multiFields && multiFields.length) {
       binaryFields.forEach(field => {
         const key = field.cinchyColumn.name;
@@ -133,7 +133,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
 
   async manageChildRecords(childFormData: any, values: any, title: string, type: string, multiFieldValues: any) {
     if (type !== "Add") {
-      //const valuesForLabels = type === "Add" ? childFormData.sections[0].MultiFields[0] : values;
+      //const valuesForLabels = type === "Add" ? childFormData.sections[0].multiFields[0] : values;
       const valuesForLabels = values;
       let allFields: any = this.getAllFieldsInChildForm(childFormData);
       const columnKeys = Object.keys(valuesForLabels);

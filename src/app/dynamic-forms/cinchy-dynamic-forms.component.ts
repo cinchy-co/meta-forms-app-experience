@@ -1,12 +1,8 @@
-import { Subject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
-
 import {
   Component,
   EventEmitter,
   Input,
   OnChanges,
-  OnDestroy,
   OnInit,
   Output,
   SimpleChanges,
@@ -26,19 +22,23 @@ import { ChildFormComponent } from "./fields/child-form/child-form.component";
 
 import { ConfigService } from "../services/config.service";
 
-import { IForm } from "./models/cinchy-form.model";
+import { Form } from "./models/cinchy-form.model";
+import { FormField } from "./models/cinchy-form-field.model";
+import { FormSection } from "./models/cinchy-form-section.model";
+import { IQuery } from "./models/cinchy-query.model";
+
+import { IFormFieldMetadata } from "../models/form-field-metadata.model";
 import { IFormMetadata } from "../models/form-metadata-model";
 import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 import { ILookupRecord } from "../models/lookup-record.model";
-import { IQuery } from "./models/cinchy-query.model";
+
+import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
 
 import { AppStateService } from "../services/app-state.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
 import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
-import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
-import { IFormFieldMetadata } from "../models/form-field-metadata.model";
 
 
 @Component({
@@ -64,7 +64,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   @Output() onLookupRecordFilter: EventEmitter<string> = new EventEmitter<string>();
 
 
-  form: IForm = null;
+  form: Form = null;
   rowId: number;
   fieldsWithErrors: Array<any>;
   currentRow: ILookupRecord;
@@ -202,8 +202,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       return;
     }
 
-    if (isNullOrUndefined(childForm.sections.MultiFields)) {
-      childForm.sections.MultiFields = [];
+    if (isNullOrUndefined(childForm.sections.multiFields)) {
+      childForm.sections.multiFields = [];
     }
 
     const childResult = {};
@@ -213,11 +213,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     if (formvalidation.status) {
       eventData.data.sections.forEach(section => {
 
-        if (isNullOrUndefined(section.MultiFields)) {
-          section.MultiFields = [];
+        if (isNullOrUndefined(section.multiFields)) {
+          section.multiFields = [];
         }
 
-        const fieldRow = section.MultiFields.filter(rowData => {
+        const fieldRow = section.multiFields.filter(rowData => {
           if (rowData["Cinchy ID"] === eventData.id) {
             return rowData;
           }
@@ -332,7 +332,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           // store child form data in local storage.
           this.childFieldArray.push(childResult);
 
-          section.MultiFields.push(childResultForLocal);
+          section.multiFields.push(childResultForLocal);
         }
 
         if (childFieldRow.length > 0) {
@@ -403,7 +403,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   //#region
   /**
-   * Uses the metadata from Cinchy to create and load the IForm object, then it"ll fill it with the form object with actual data
+   * Uses the metadata from Cinchy to create and load the Form object, then it"ll fill it with the form object with actual data
    * Gets called upon load, save, and row changes
    */
   async loadForm(childData?: any): Promise<void> {
@@ -478,7 +478,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   //#region  Save Values of MetaData
-  public async saveForm(formData: IForm, rowId: number, childData?): Promise<void> {
+  public async saveForm(formData: Form, rowId: number, childData?): Promise<void> {
 
     if (formData) {
       // check validations for the form eg: Required, Regular expression
@@ -717,8 +717,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         this.afterChildFormEdit({
           "childFormId": $event.Data.Form.id,
           "data": $event.Data.Form,
-          "id": ($event.Data.Form.sections[0].MultiFields?.length && $event.Data.Form.sections[0].MultiFields[$event.Data.Form.sections[0].MultiFields.length - 1]["Cinchy ID"] != null) ? 
-            $event.Data.Form.sections[0].MultiFields[$event.Data.Form.sections[0].MultiFields.length - 1]["Cinchy ID"] : 
+          "id": ($event.Data.Form.sections[0].multiFields?.length && $event.Data.Form.sections[0].multiFields[$event.Data.Form.sections[0].multiFields.length - 1]["Cinchy ID"] != null) ? 
+            $event.Data.Form.sections[0].multiFields[$event.Data.Form.sections[0].multiFields.length - 1]["Cinchy ID"] : 
             0
         }, $event.Data.Form);
       }
@@ -733,8 +733,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           this.afterChildFormEdit({
             "childFormId": linkedFormField.form.id,
             "data": linkedFormField.form,
-            "id": linkedFormField.form.sections[0].MultiFields?.length && linkedFormField.form.sections[0].MultiFields[linkedFormField.form.sections[0].MultiFields.length - 1]["Cinchy ID"] != null ? 
-            linkedFormField.form.sections[0].MultiFields[linkedFormField.form.sections[0].MultiFields.length - 1]["Cinchy ID"] : 
+            "id": linkedFormField.form.sections[0].multiFields?.length && linkedFormField.form.sections[0].multiFields[linkedFormField.form.sections[0].multiFields.length - 1]["Cinchy ID"] != null ? 
+            linkedFormField.form.sections[0].multiFields[linkedFormField.form.sections[0].multiFields.length - 1]["Cinchy ID"] : 
               0
           }, linkedFormField.form);
         }
@@ -832,9 +832,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     let showWarningAboutChildFormDuplication = true;
 
-    this.form.sections?.forEach((section) => {
+    this.form.sections?.forEach((section: FormSection, sectionIndex: number) => {
 
-      section.fields?.forEach((field) => {
+      section.fields?.forEach((field: FormField, fieldIndex: number) => {
 
         if (field.cinchyColumn) {
           field.cinchyColumn.hasChanged = true;
@@ -844,7 +844,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           field.childForm.rowId = null;
           field.childForm.id = "-1";
 
-          if (field.childForm.sections && field.childForm.sections[0].MultiFields) {
+          if (field.childForm.sections && field.childForm.sections[0].multiFields) {
             if (field.childForm.childFormLinkId && field.childForm.childFormParentId) {
               if (!field.childForm.flatten && showWarningAboutChildFormDuplication) {
                 showWarningAboutChildFormDuplication = false;
@@ -853,8 +853,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               }
 
               let childRecordsToClone = field.childForm.flatten ? 
-                                        [field.childForm.sections[0].MultiFields[field.childForm.sections[0].MultiFields.length - 1]] :
-                                        field.childForm.sections[0].MultiFields;
+                                        [field.childForm.sections[0].multiFields[field.childForm.sections[0].multiFields.length - 1]] :
+                                        field.childForm.sections[0].multiFields;
 
               let startingCloneRecordIdx = field.childForm.flatten ? childRecordsToClone.length - 1 : 0;
               let numOfRecordsToClone = field.childForm.flatten ? 1 : childRecordsToClone.length;
@@ -909,11 +909,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 }, field.childForm);
               });
 
-              field.childForm.sections[0].MultiFields.splice(startingCloneRecordIdx, numOfRecordsToClone);
+              field.childForm.sections[0].multiFields.splice(startingCloneRecordIdx, numOfRecordsToClone);
             }
             else 
             {
-              field.childForm.sections[0].MultiFields.splice(0, field.childForm.sections[0].MultiFields.length);
+              field.childForm.sections[0].multiFields.splice(0, field.childForm.sections[0].multiFields.length);
             }
           };
         }

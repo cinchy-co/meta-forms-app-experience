@@ -4,7 +4,7 @@ import { map, startWith, isEmpty } from "rxjs/operators";
 import { FormControl } from "@angular/forms";
 
 import { ICinchyColumn } from "./cinchy-column.model";
-import { IForm } from "./cinchy-form.model";
+import { Form } from "./cinchy-form.model";
 
 import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
@@ -12,24 +12,7 @@ import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdo
 import { isNullOrUndefined } from "util";
 
 
-export interface IFormField {
-  // definition
-  id: number;
-  label: string;
-  caption: string;
-  childForm: IForm;
-  cinchyColumn: ICinchyColumn;
-  // value
-  value: any;
-  formControl: FormControl;
-  form: IForm;
-
-  hide: boolean;
-  // functions
-  setInitialValue(value: any);
-}
-
-export class FormField implements IFormField {
+export class FormField {
   value: any;
   formControl: FormControl;
   filteredValues: Observable<DropdownOption[]>;
@@ -41,10 +24,10 @@ export class FormField implements IFormField {
       public id: number,
       public label: string,
       public caption: string,
-      public childForm: IForm,
+      public childForm: Form,
       public cinchyColumn: ICinchyColumn,
       dropdownDataset: DropdownDataset,
-      public form: IForm
+      public form: Form
   ) {
 
     this._dropdownDataset = dropdownDataset;

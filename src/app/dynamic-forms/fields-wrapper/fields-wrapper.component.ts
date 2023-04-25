@@ -12,9 +12,9 @@ import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 
 import { TextFormatType } from "../enums/text-format-type.enum";
 
-import { IForm } from "../models/cinchy-form.model";
-import { IFormField } from "../models/cinchy-form-field.model";
-import { IFormSection } from "../models/cinchy-form-sections.model";
+import { Form } from "../models/cinchy-form.model";
+import { FormField } from "../models/cinchy-form-field.model";
+import { FormSection } from "../models/cinchy-form-section.model";
 import { SpinnerCondition } from "../models/cinchy-spinner.model";
 
 import { AppStateService } from "../../services/app-state.service";
@@ -30,8 +30,7 @@ import { isNullOrUndefined } from "util";
 })
 export class FieldsWrapperComponent {
 
-  @Input() form: IForm;
-  @Input() rowId;
+  @Input() form: Form;
   @Input() isChild: boolean;
   @Input() fieldsWithErrors;
   @Input("formHasDataLoaded") set formHasDataLoaded(value: boolean) { this.setFormHasDataLoaded(value); }
@@ -44,7 +43,7 @@ export class FieldsWrapperComponent {
 
   _formHasDataLoaded: boolean;
 
-  _sectionsToRender: IFormSection[];
+  _sectionsToRender: FormSection[];
 
   subscription: Subscription;
   sectionInfo: SpinnerCondition;
@@ -119,25 +118,25 @@ export class FieldsWrapperComponent {
   }
 
 
-  richTextUseJson(field: IFormField): boolean {
+  richTextUseJson(field: FormField): boolean {
 
     return (field.cinchyColumn.textFormat !== TextFormatType.HTML);
   }
 
 
-  usePlaintext(field: IFormField): boolean {
+  usePlaintext(field: FormField): boolean {
 
     return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
   }
 
 
-  useRichText(field: IFormField): boolean {
+  useRichText(field: FormField): boolean {
 
     return (field.cinchyColumn.dataType === "Text" && !isNullOrUndefined(field.cinchyColumn.textFormat));
   }
 
 
-  useTextarea(field: IFormField): boolean {
+  useTextarea(field: FormField): boolean {
 
     return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
   }
