@@ -70,12 +70,8 @@ export class FormHelperService {
     return result;
   }
 
-  public fillWithSections(form: Form, metadata: IFormSectionMetadata[]) {
 
-    form?.populateSectionsFromFormMetadata(metadata);
-  }
-
-  public async fillWithFields(form: Form, cinchyId: number, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord,tableEntitlements: any) {
+  public async fillWithFields(form: Form, cinchyId: number, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord, tableEntitlements: any) {
 
     if (!formFieldsMetadata?.length) {
       return;
@@ -166,7 +162,7 @@ export class FormHelperService {
 
         childForm = await this.generateForm(childFormMetadata, null, childTableEntitlements, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
 
-        this.fillWithSections(childForm, childFormSectionsMetadata);
+        childForm.populateSectionsFromFormMetadata(childFormSectionsMetadata);
 
         await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
         await this.fillWithData(childForm, cinchyId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
@@ -202,7 +198,7 @@ export class FormHelperService {
         allChildForms.push(childForm);
       }
 
-      const formField: FormField = new FormField(formFields[i].formFieldId, formFields[i].formFieldName, formFields[i].caption, childForm, cinchyColumn, null, form);
+      const formField: FormField = new FormField(formFields[i].formFieldId, formFields[i].formFieldName, formFields[i].caption, childForm, cinchyColumn, form, null);
 
       if (!childFormId) {
         parentFieldsByColumn[cinchyColumn.name] = formField;

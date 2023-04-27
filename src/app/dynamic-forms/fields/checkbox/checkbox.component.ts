@@ -1,51 +1,70 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
-import { faCheckSquare } from '@fortawesome/free-regular-svg-icons';
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
-import { ResponseType } from "../../enums/response-type.enum";
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
+
+import { faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 
 
-//#region Cinchy Dynamic YES/NO fields (Checkbox)
 /**
- * This section is used to create Yes/No fields for the cinchy.
+ * This section is used to create Yes/No fields for cinchy
  */
-//#endregion
 @Component({
-  selector: 'cinchy-checkbox',
+  selector: "cinchy-checkbox",
   templateUrl: "./checkbox.component.html",
   styleUrls: ["./checkbox.component.scss"]
 })
-export class CheckboxComponent {
-  @Input() field: any;
+export class CheckboxComponent implements OnChanges {
 
-  @Input('fieldsWithErrors') set fieldsWithErrors(errorFields: any) {
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
+  @Input() isDisabled: boolean;
+  @Input() sectionIndex: number;
+  @Input() targetTableName: string;
+
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
+
+  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
     this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
   };
 
-  @Input() targetTableName: string;
-  @Input() isDisabled: boolean;
-  @Output() eventHandler = new EventEmitter<any>();
   showError: boolean;
+  value: boolean;
+
   faCheckSquare = faCheckSquare;
 
-  constructor() {
 
+  get canEdit(): boolean {
+
+    if (this.isDisabled) {
+      return false;
+    }
+
+    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
-  valueChanged() {
-    this.field.cinchyColumn.hasChanged = true;
-    const Data = {
-      'TableName': this.targetTableName,
-      'ColumnName': this.field.cinchyColumn.name,
-      'Value': this.field.value,
-      'event': event,
-      'hasChanged': this.field.cinchyColumn.hasChanged,
-      'Form': this.field.form,
-      'Field': this.field
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes.field) {
+      this.value = coerceBooleanProperty(this.field?.value);
     }
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
-    this.eventHandler.emit(callback);
+  }
+
+
+  valueChanged() {
+
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.value,
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
   }
 }

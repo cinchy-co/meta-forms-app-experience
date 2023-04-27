@@ -20,12 +20,9 @@ import { faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { faSitemap } from "@fortawesome/free-solid-svg-icons";
 import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
-import {isArray, isNullOrUndefined} from "util";
+import { isNullOrUndefined } from "util";
 
-import { ResponseType } from "../../enums/response-type.enum";
-
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
-
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
 
@@ -60,7 +57,7 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   @Input() isInChildForm: boolean;
   @Input() isDisabled: boolean;
 
-  @Output() eventHandler = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
   myControl = new FormControl();
   multiFilterCtrl: FormControl = new FormControl();
@@ -408,7 +405,7 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
       "Field": this.field
     }
     const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
-    this.eventHandler.emit(callback);
+    this.onChange.emit(callback);
   }
 
 

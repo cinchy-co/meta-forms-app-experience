@@ -57,13 +57,12 @@ import { Transaction } from "prosemirror-state";
 import { AddRichTextLinkDialogComponent } from "../../dialogs/add-rich-text-link/add-rich-text-link.component";
 import { AddRichTextImageDialogComponent } from "../../dialogs/add-rich-text-image/add-rich-text-image.component";
 
-import { ResponseType } from "../../enums/response-type.enum";
 import { TiptapMarkType } from "../../enums/tiptap-mark-type.enum";
 
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
 import { IRichTextImage } from "../../interface/rich-text-image";
 import { IRichTextLink } from "../../interface/rich-text-link";
 
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 
 
@@ -86,7 +85,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
 
   @Input() useJson: boolean = true;
 
-  @Output() eventHandler = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
   /**
    * The element that contains the actual Tiptap editor
@@ -564,7 +563,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
 
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.eventHandler.emit(callback);
+    this.onChange.emit(callback);
   }
 
   private _resolveValue(): void {

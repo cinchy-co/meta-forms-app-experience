@@ -1,11 +1,9 @@
-import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from "@angular/core";
+import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import {CurrencyPipe} from "@angular/common";
 
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
 import { faHashtag } from "@fortawesome/free-solid-svg-icons";
-
-import { ResponseType } from "../../enums/response-type.enum";
-
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
 
 import { NumeralPipe } from "ngx-numeral";
 
@@ -32,7 +30,7 @@ export class NumberComponent implements OnInit {
   @Input() isDisabled: boolean;
   formattedAmount;
   showError: boolean;
-  @Output() eventHandler = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   numeralValue;
   faHashtag = faHashtag;
   
@@ -81,6 +79,6 @@ export class NumberComponent implements OnInit {
     this.field.value = value && Number(value) ? Number(value) : value;
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.eventHandler.emit(callback);
+    this.onChange.emit(callback);
   }
 }

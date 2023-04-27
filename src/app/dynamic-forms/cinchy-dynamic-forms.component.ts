@@ -38,6 +38,7 @@ import { AppStateService } from "../services/app-state.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
 import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
+import { IFieldChangedEvent } from "./interface/field-changed-event";
 
 
 
@@ -60,7 +61,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   lookupRecordsList: ILookupRecord[];
 
   @Output() closeAddNewDialog = new EventEmitter<any>();
-  @Output() eventHandler = new EventEmitter<any>();
   @Output() onLookupRecordFilter: EventEmitter<string> = new EventEmitter<string>();
 
 
@@ -127,7 +127,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       this.saveForm(this.form, this.rowId);
     });
 
-    this.appStateService.onRecordSelected().subscribe(
+    this.appStateService.onRecordSelected$.subscribe(
       (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
 
         if (this.lookupRecordsListPopulated) {
@@ -420,7 +420,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
 
-      this._formHelperService.fillWithSections(form, this.formSectionsMetadata);
+      form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
 
       this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
         async (formFieldsMetadata: Array<IFormFieldMetadata>) => {
@@ -511,6 +511,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   this.closeAddNewDialog.emit(this.rowId);
                 }
 
+                formData.hasChanged = false;
                 this.appStateService.hasFormChanged = false;
               },
               error => {
@@ -529,7 +530,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         }
       }
       else {
-        this.fieldsWithErrors = formData.getErrorFields();
+        this.fieldsWithErrors = formData.errorFields;
         this._toastr.warning(formvalidation.message, "Warning");
       }
     }
@@ -581,16 +582,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   private async saveMethodLogic(rowId: number, response, childData?): Promise<number> {
 
-    if (response && response.queryResult._jsonResult.data.length > 0) {
+    if (response?.queryResult._jsonResult.data.length > 0) {
       rowId = response.queryResult._jsonResult.data[0][0];
     } else {
       rowId = this.rowId;
     }
-
-    if (!this.childDataForm?.length) {
-      this.eventHandler.emit(rowId);
-    }
-
+     
     if (this.childCinchyId !== -1) {
       await this.saveChildForm(rowId, 0);
     } else {
@@ -604,8 +601,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         this._toastr.warning("No changes were made", "Warning");
       }
     }
-
-    this.eventHandler.emit(rowId);
 
     return rowId;
   }
@@ -706,28 +701,31 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  handleFieldsEvent($event): void {
+  /**
+   * Handles
+   */
+  handleFieldsEvent(event: IFieldChangedEvent): void {
 
-    this.appStateService.hasFormChanged = this.appStateService.hasFormChanged ?? ($event.Data ? $event.Data.hasChanged : true);
+    event.form.updateFieldValue(event.sectionIndex, event.fieldIndex, event.newValue);
 
-    // If child flattened child form
-    if ($event?.Data?.Form?.isChild && $event?.Data?.Form?.flatten) {
+    // flattened child form
+    if (event.form.isChild && event.form.flatten) {
       // If contains a record
-      if ($event.Data.Form.sections?.length && $event.Data.Form.sections[0].fields?.length) {
+      if (event.form.hasFields) {
         this.afterChildFormEdit({
-          "childFormId": $event.Data.Form.id,
-          "data": $event.Data.Form,
-          "id": ($event.Data.Form.sections[0].multiFields?.length && $event.Data.Form.sections[0].multiFields[$event.Data.Form.sections[0].multiFields.length - 1]["Cinchy ID"] != null) ? 
-            $event.Data.Form.sections[0].multiFields[$event.Data.Form.sections[0].multiFields.length - 1]["Cinchy ID"] : 
+          "childFormId": event.form.id,
+          "data": event.form,
+          "id": (event.form.sections[0].multiFields?.length && event.form.sections[0].multiFields[event.form.sections[0].multiFields.length - 1]["Cinchy ID"] != null) ? 
+            event.form.sections[0].multiFields[event.form.sections[0].multiFields.length - 1]["Cinchy ID"] : 
             0
-        }, $event.Data.Form);
+        }, event.form);
       }
     }
 
-    if ($event?.Data?.ColumnName && $event?.Data?.Form?.childFieldsLinkedToColumnName && $event?.Data?.Form?.childFieldsLinkedToColumnName[$event.Data.ColumnName]) {
-      for (let linkedFormField of $event?.Data?.Form?.childFieldsLinkedToColumnName[$event.Data.ColumnName]) {
+    if (event.targetColumnName && event.form.childFieldsLinkedToColumnName && event.form.childFieldsLinkedToColumnName[event.targetColumnName]) {
+      for (let linkedFormField of event.form.childFieldsLinkedToColumnName[event.targetColumnName]) {
         if (linkedFormField.form.isChild && linkedFormField.form.flatten) {
-          linkedFormField.value = $event.Data.Value;
+          linkedFormField.value = event.newValue;
           linkedFormField.cinchyColumn.hasChanged = true;
 
           this.afterChildFormEdit({

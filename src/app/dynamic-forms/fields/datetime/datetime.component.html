@@ -19,7 +19,7 @@
     </mat-icon>
   </div>
   <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
-    <mat-form-field class='form-control'>
+    <mat-form-field class="form-control">
       <input matInput readonly
              [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly  || isDisabled)"
              type="text" [(ngModel)]="preSelectedDate"

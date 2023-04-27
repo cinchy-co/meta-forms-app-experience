@@ -1,19 +1,16 @@
 import { Component, Input, Output, EventEmitter, ViewChild, AfterViewInit, OnInit } from "@angular/core";
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
+import { DataFormatType } from "../../enums/data-format-type";
+
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
-import { DataFormatType } from "../../enums/data-format-type";
-import { ResponseType } from "../../enums/response-type.enum";
 
-import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
-
-
-//#region Cinchy Dynamic TextArea
 /**
  * This section is used to create dynamic textarea fields for the cinchy.
  */
-//#endregion
 @Component({
   selector: "cinchy-textarea",
   templateUrl: "./textarea.component.html",
@@ -29,7 +26,7 @@ export class TextareaComponent implements AfterViewInit, OnInit {
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
   @Input() isInChildForm: boolean;
-  @Output() eventHandler = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   @ViewChild("editor") editor;
   isFormatted;
   showError: boolean;
@@ -128,7 +125,7 @@ export class TextareaComponent implements AfterViewInit, OnInit {
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.eventHandler.emit(callback);
+    this.onChange.emit(callback);
   }
   //#endregion
 

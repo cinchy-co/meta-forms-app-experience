@@ -144,7 +144,7 @@
           </a>
           <mat-icon class="file-delete-icon" (click)="onDeleteFile(item)" title="Delete">close</mat-icon>
         </div>
-        <input #fileInput multiple class='form-control'
+        <input #fileInput multiple class="form-control"
                *ngIf="!(field.cinchyColumn.canEdit=== false)"
                type="file"
                (change)="onFileSelected($event)"

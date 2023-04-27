@@ -22,7 +22,7 @@
     <textarea *ngIf="!isFormatted && showActualField"
               [rows]="field.cinchyColumn.totalTextAreaRows ? field.cinchyColumn.totalTextAreaRows : 4"
               [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
-              class='form-control' type="text" [(ngModel)]="field.value"
+              class="form-control" type="text" [(ngModel)]="field.value"
               (blur)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
               [ngModelOptions]="{standalone: true}">
          </textarea>

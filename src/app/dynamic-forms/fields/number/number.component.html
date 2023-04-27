@@ -19,7 +19,7 @@
     </mat-icon>
   </div>
   <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
-    <input class='form-control' digitOnly decimal="true" inputmode="numeric"
+    <input class="form-control" digitOnly decimal="true" inputmode="numeric"
            [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
            (blur)="transformAmount(targetTableName, field.cinchyColumn.name, $event, 'value')"
            (focus)="reverseTransform()"

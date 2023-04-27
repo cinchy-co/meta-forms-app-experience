@@ -14,9 +14,8 @@ import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 import { AddNewOptionDialogComponent } from "../../../dialogs/add-new-option-dialog/add-new-option-dialog.component";
 
 import { DataFormatType } from "../../enums/data-format-type";
-import { ResponseType } from "../../enums/response-type.enum";
 
-import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 import { AppStateService } from "../../../services/app-state.service";
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
@@ -61,7 +60,7 @@ export class LinkComponent implements OnInit {
   @Input() isInChildForm: boolean;
   @Input() isDisabled: boolean;
   @Input() formFieldMetadataResult: any;
-  @Output() eventHandler = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   @Output() childform = new EventEmitter<any>();
 
   faPlus = faPlus;
@@ -203,7 +202,7 @@ export class LinkComponent implements OnInit {
 
       // pass calback event
       const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
-      this.eventHandler.emit(callback);
+      this.onChange.emit(callback);
     }
   }
 

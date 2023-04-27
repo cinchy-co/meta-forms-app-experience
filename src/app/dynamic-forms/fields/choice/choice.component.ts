@@ -1,10 +1,14 @@
-import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
+import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
+
+import { IDropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
-
-import { ResponseType } from "../../enums/response-type.enum";
-
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
+import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 
 //#region Cinchy Dynamic Choice Field
@@ -18,36 +22,50 @@ import { EventCallback, IEventCallback } from "../../models/cinchy-event-callbac
   styleUrls: ["./choice.component.scss"]
 })
 export class ChoiceComponent implements OnInit {
-  @Input() field: any;
+
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
+  @Input() isDisabled: boolean;
+  @Input() sectionIndex: number;
+  @Input() targetTableName: string;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
     this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
   };
 
-  @Input() targetTableName: string;
-  @Input() isDisabled: boolean;
-
-  @Output() eventHandler = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
   choiceFilter: string;
   showError: boolean;
+  value: string;
+  options: Array<DropdownOption>;
+
   faListUl = faListUl;
-  
-  constructor() {}
+
+
+  get canEdit(): boolean {
+
+    if (this.isDisabled) {
+      return false;
+    }
+
+    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+  }
+
 
   async ngOnInit() {
 
-    const [dataSet, linkTargetId] = [this.field, this.field.cinchyColumn.linkTargetColumnId];
     const choices = this.field.cinchyColumn.choiceOptions;
     const splitFromInvertedCommas = choices?.split(`"`) ?? [];
 
     let allOptions = [];
-    let optionsInSubString = "";
+    let optionsInSubString = [];
 
     if (splitFromInvertedCommas.length === 1) {
       allOptions = choices?.split(",") ?? null;
     }
-    else { // Doing when option have , between them
+    else {
       splitFromInvertedCommas.forEach(option => {
 
         if (option && (option[0] === "," || option[option.length - 1] === ",")) {
@@ -59,14 +77,39 @@ export class ChoiceComponent implements OnInit {
         }
       })
     }
-    allOptions = allOptions.filter(n => n)
-    dataSet.dropdownDataset = allOptions;
-    this.field.dropdownDataset = allOptions;
+
+    allOptions = allOptions.filter(n => n);
+
+    this.options = allOptions.slice();
+
+    this.onChange.emit({
+      additionalPropertiesToUpdate: [
+        {
+          propertyName: "dropdownDataset",
+          propertyValue: new IDropdownDataset(allOptions)
+        }
+      ],
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.value,
+      sectionIndex: this.sectionIndex,
+      targetTableName: this.targetTableName
+    });
   }
 
-  public changeFilter() {
-    this.choiceFilter = "";
+
+  valueChanged() {
+
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.value,
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
   }
+
 
   //#region pass callback event to the project On blur
   callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
@@ -85,6 +128,6 @@ export class ChoiceComponent implements OnInit {
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.eventHandler.emit(callback);
+    this.onChange.emit(callback);
   }
 }

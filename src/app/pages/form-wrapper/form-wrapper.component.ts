@@ -70,7 +70,7 @@ export class FormWrapperComponent implements OnInit {
 
   async ngOnInit() {
 
-    this._appStateService.formPopulated$.subscribe({
+    this._appStateService.rootFormIdSet$.subscribe({
       next: (formId: string) => {
 
         this.formId = formId;

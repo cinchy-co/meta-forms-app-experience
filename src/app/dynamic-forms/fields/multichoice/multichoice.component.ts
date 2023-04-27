@@ -1,17 +1,13 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
 
-import { ResponseType } from "../../enums/response-type.enum";
 
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
-
-
-//#region Cinchy Dynamic Multi Choice
 /**
  * This section is used to create Multi choice driopdownList
  */
-//#endregion
 @Component({
     selector: "cinchy-multi-choice",
     templateUrl: "./multichoice.component.html",
@@ -25,7 +21,7 @@ export class MultichoiceComponent {
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
 
-  @Output() eventHandler = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   choiceFilter: string;
   showError: boolean;
   faListUl = faListUl;
@@ -68,6 +64,6 @@ export class MultichoiceComponent {
     }
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.eventHandler.emit(callback);
+    this.onChange.emit(callback);
   }
 }

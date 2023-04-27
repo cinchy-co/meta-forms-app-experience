@@ -184,7 +184,7 @@ export class ChildFormComponent {
   //#region This method is used to handle the field event
   handleFieldsEvent($event) {
     // Emit the event to the Project.
-    this.eventHandler.emit($event);
+    this.onChange.emit($event);
   }
 
   //#endregion

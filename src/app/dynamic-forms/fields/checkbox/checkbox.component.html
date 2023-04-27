@@ -1,9 +1,11 @@
 <div *ngIf="(field.cinchyColumn.dataType == 'Yes/No' && field.cinchyColumn.canView)">
   <fa-icon [icon]="faCheckSquare"></fa-icon>
   &nbsp;
-  <input class="m-tb-10 mr-5" type='checkbox' [(ngModel)]="field.value" [ngModelOptions]="{standalone: true}"
-         [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
-         (change)="valueChanged()" [id]="field.label" />
+  <input class="m-tb-10 mr-5" type="checkbox"
+         [(ngModel)]="value" [ngModelOptions]="{ standalone: true }"
+         [disabled]="!canEdit"
+         [id]="field.label"
+         (change)="valueChanged()" />
   <div class="checkbox-field">
 
     &nbsp;

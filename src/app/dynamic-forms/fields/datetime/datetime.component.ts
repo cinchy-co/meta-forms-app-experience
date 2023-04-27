@@ -1,19 +1,15 @@
 import {Component, Input, Output, EventEmitter, OnInit} from "@angular/core";
-import {ResponseType} from "../../enums/response-type.enum";
-import {IEventCallback, EventCallback} from "../../models/cinchy-event-callback.model";
 
-import {DatePipe} from "@angular/common";
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 
 import * as moment from "moment";
 
 
-//#region Cinchy Dynamic DateTime Field
 /**
  * This section is used to create dynamic DateTime field for the cinchy.
  */
-//#endregion
 @Component({
   selector: "cinchy-datetime",
   templateUrl: "./datetime.component.html",
@@ -28,7 +24,7 @@ export class DatetimeComponent implements OnInit {
 
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
-  @Output() eventHandler = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   preSelectedDate :any;
   showError;
   faCalendar = faCalendar;
@@ -68,7 +64,7 @@ export class DatetimeComponent implements OnInit {
     this.preSelectedDate = moment(selectedDate).format(this.field.cinchyColumn.displayFormat);
     // pass calback event
     const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.eventHandler.emit(callback);
+    this.onChange.emit(callback);
   }
 
   //#endregion

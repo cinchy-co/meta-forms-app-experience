@@ -71,7 +71,7 @@ export class SidenavComponent implements OnInit {
     this.subscribeToRenderedSectionUpdates();
     this.createNewOptionName = this.formMetadata.createNewOptionName;
 
-    this._appStateService.onRecordSelected().subscribe({
+    this._appStateService.onRecordSelected$.subscribe({
       next: () => {
 
         this._updateFilteredTableUrl();

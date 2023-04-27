@@ -10,6 +10,8 @@ import { IDropdownOption, DropdownOption } from "../service/cinchy-dropdown-data
 import { isNullOrUndefined } from "util";
 
 import * as R from "ramda";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { IAdditionalProperty } from "../interface/additional-property";
 
 
 export class Form {
@@ -21,6 +23,33 @@ export class Form {
   parentForm: Form;
   tableMetadata: Object;
 
+
+  get hasChanged(): boolean {
+
+    return this._hasChanged;
+  }
+  set hasChanged(value: boolean) {
+
+    this._hasChanged = coerceBooleanProperty(value);
+
+    if (!this._hasChanged) {
+      this._sections?.forEach((section: FormSection) => {
+
+        section.fields?.forEach((field: FormField) => {
+
+          field.cinchyColumn.hasChanged = false;
+        });
+      });
+    }
+  }
+  private _hasChanged: boolean = false;
+
+
+  get hasFields(): boolean {
+
+    // TODO: I would like a more robust mechanism for this, e.g. a private fieldCount that gets updated whenever a field is added or removed
+    return coerceBooleanProperty(this._sections?.length && this._sections[0].fields?.length);
+  }
 
   get rowId(): number {
 
@@ -74,15 +103,16 @@ export class Form {
 
         if (element.cinchyColumn.isMandatory === true && (isNullOrUndefined(element.value) || element.value === "")) {
           validationResult.status = false;
+
           this.errorFields.push(element.label);
         }
 
-        if (element.cinchyColumn.validationExpression !== "" && !isNullOrUndefined(element.cinchyColumn.validationExpression)) {
+        if (element.cinchyColumn.validationExpression) {
           var exp = element.cinchyColumn.validationExpression;
           const regex = new RegExp(exp);
-          if (!isNullOrUndefined(element.value) && element.value !== "") {
-            element.value = element.value.trim();
-          }
+
+          element.value = element.value?.trim() ?? "";
+
           if (!regex.test(element.value)) {
             validationResult.status = false;
             validationResult.message = `No special characters are allowed in ${element.cinchyColumn.name}`
@@ -90,21 +120,26 @@ export class Form {
         }
       });
     });
-    const isOrAre = this.errorFields && this.errorFields.length > 1 ? "are" : "is";
-    validationResult.message = this.errorFields && this.errorFields.length ? `Field(s):  ${this.errorFields.join(" and ")} ${isOrAre} required`
-      : validationResult.message;
+
+    const isOrAre = (this.errorFields?.length) > 1 ? "are" : "is";
+
+    validationResult.message = this.errorFields?.length ? `Field(s):  ${this.errorFields.join(" and ")} ${isOrAre} required` : validationResult.message;
+
     return validationResult;
   }
 
 
   checkChildFormValidation() {
-    let message = "";
+
     let validationResult = {
       status: true,
       message: ""
     };
+
     this.sections.forEach(section => {
+
       section.fields.forEach(element => {
+
         if (element.cinchyColumn.isMandatory === true && (isNullOrUndefined(element.value) || element.value === "")) {
           validationResult.status = false;
           validationResult.message = `Field ${element.cinchyColumn.name} is required`;
@@ -112,10 +147,11 @@ export class Form {
 
         if (element.cinchyColumn.validationExpression !== "" && !isNullOrUndefined(element.cinchyColumn.validationExpression)) {
           var exp = element.cinchyColumn.validationExpression;
+
           const regex = new RegExp(exp);
-          if (!isNullOrUndefined(element.value) && element.value !== "") {
-            element.value = element.value.trim();
-          }
+
+          element.value = element.value?.trim() ?? "";
+
           if (!regex.test(element.value)) {
             validationResult.status = false;
             validationResult.message = `No special characters are allowed in ${element.cinchyColumn.name}`
@@ -123,6 +159,7 @@ export class Form {
         }
       });
     });
+
     return validationResult;
   }
 
@@ -622,12 +659,6 @@ export class Form {
   }
 
 
-  getErrorFields() {
-
-    return this.errorFields;
-  }
-
-
   getFileNameAndItsTable(field, childCinchyId?) {
 
     const [domain, table, column] = field.cinchyColumn.fileNameColumn?.split(".") ?? [];
@@ -720,6 +751,7 @@ export class Form {
       });
     });
 
+    // TODO: determine if this is relevant or necessary
     this.rowId = rowId;
   }
 
@@ -822,10 +854,14 @@ export class Form {
       section["multiFields"] = rowData;
     });
 
+    // TODO: determine if this is relevant or necessary
     this.rowId = rowId;
   }
 
 
+  /**
+   * Generates sections for this form based on the given metadata
+   */
   populateSectionsFromFormMetadata(metadata: Array<IFormSectionMetadata>): void {
 
     this._sections = metadata.map(_ => {
@@ -840,11 +876,30 @@ export class Form {
   }
 
 
-  updateFieldValue(sectionIndex: number, fieldIndex: number, newValue: any): void {
+  /**
+   * Updates the value of the given field and marks it as touched
+   */
+  updateFieldValue(sectionIndex: number, fieldIndex: number, newValue: any, additionalPropertiesToUpdate?: Array<IAdditionalProperty>): void {
 
     if (this.sections?.length > sectionIndex && this.sections[sectionIndex].fields?.length < fieldIndex) {
-      this.sections[sectionIndex].fields[fieldIndex].value = newValue;
-      this.sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged = true;
+      // Since we don't store the field's original value, we will mark it as changed if the current value is different from the
+      // value immediately prior, or if the field has already been marked as changed
+      const valueIsDifferent = (newValue !== this._sections[sectionIndex].fields[fieldIndex].value);
+
+      this.hasChanged = this.hasChanged || valueIsDifferent;
+
+      this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged = this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged || valueIsDifferent;
+      this._sections[sectionIndex].fields[fieldIndex].value = newValue;
+
+      additionalPropertiesToUpdate?.forEach((property: IAdditionalProperty) => {
+
+        if (property.cinchyColumn) {
+          this._sections[sectionIndex].fields[fieldIndex].cinchyColumn[property.propertyName] = property.propertyValue;
+        }
+        else {
+          this._sections[sectionIndex].fields[fieldIndex][property.propertyName] = property.propertyValue;
+        }
+      });
     }
   }
 

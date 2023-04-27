@@ -8,7 +8,7 @@
     &nbsp;
     <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
       {{field.label}}
-      {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+      {{field.cinchyColumn.isMandatory == true && (value == '' || value == null) ? '*' : ''}}
     </label>
     <mat-icon *ngIf="field.caption" class="info-icon"
               ngbTooltip="{{field.caption}}"
@@ -19,40 +19,40 @@
       info
     </mat-icon>
   </div>
-  <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit && showActualField">
-    <input class='form-control'
-           [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly  || field.label=== 'File Name' || isDisabled)"
-           type="text" [(ngModel)]="field.value"
-           (blur)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
-           [ngModelOptions]="{standalone: true}">
-    <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+  <ng-container *ngIf="canEdit && showActualField">
+    <input class="form-control"
+           type="text"
+           [(ngModel)]="value" [ngModelOptions]="{standalone: true}"
+           [disabled]="field.label === 'File Name'"
+           (blur)="valueChanged()">
+    <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !value">
       *{{field.label}} is Required.
     </mat-error>
   </ng-container>
 
   <label class="pre-formatted"
-         *ngIf="showActualField && (!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly  || field.label=== 'File Name' || isDisabled)"
-         [innerHTML]="field.value || '-'"></label>
+         *ngIf="showActualField && (!canEdit || field.label === 'File Name')"
+         [innerHTML]="value || '-'"></label>
 
   <ng-container *ngIf="showImage">
-    <img [ngClass]="imageSize" *ngIf="field.value" [src]="field.value">
-    <p *ngIf="!field.value">-</p>
+    <img [ngClass]="imageSize" *ngIf="value" [src]="value">
+    <p *ngIf="!value">-</p>
   </ng-container>
 
   <ng-container *ngIf="showLinkUrl">
-    <a *ngIf="field.value" [href]="field.value">Open</a>
-    <label *ngIf="!field.value">-</label>
+    <a *ngIf="value" [href]="value">Open</a>
+    <label *ngIf="!value">-</label>
   </ng-container>
 
-  <ng-container *ngIf="showIFrame && isValidHttpUrl(field.value)">
+  <ng-container *ngIf="showIFrame && isValidHttpUrl(value)">
     <iframe class="iframe-control" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
    </ng-container>
   
-   <ng-container *ngIf="showIFrameSandbox && isValidHttpUrl(field.value)">
+   <ng-container *ngIf="showIFrameSandbox && isValidHttpUrl(value)">
     <iframe class="iframe-control" sandbox = "allow-forms allow-scripts allow-modals allow-popups allow-same-origin" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
    </ng-container>
    
-   <ng-container *ngIf="showIFrameSandboxStrict && isValidHttpUrl(field.value)">
+   <ng-container *ngIf="showIFrameSandboxStrict && isValidHttpUrl(value)">
     <iframe class="iframe-control" sandbox = "allow-forms allow-scripts allow-modals allow-popups" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
    </ng-container>
 </div>
