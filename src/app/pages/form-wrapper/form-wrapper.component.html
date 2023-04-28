@@ -1,4 +1,4 @@
-<div *ngIf="formMetadata" class="full-height-element form-wrapper-theme"
+<div *ngIf="formMetadata" class="form-wrapper-theme"
      [ngClass]="brandedFormWrapperTheme"
      [class.is-mobile]="mobileQuery.matches">
   <mat-toolbar color="primary" class="toolbar">
@@ -37,7 +37,7 @@
   </ng-template>
 
   <ng-template #mainContent>
-    <div class="form-container" *ngIf="formSectionsMetadata && lookupRecords">
+    <div class="form-container full-height-element" [ngStyle]="{ 'height': fullScreenHeight }" *ngIf="formSectionsMetadata && lookupRecords">
       <cinchy-dynamic-forms [formId]="formId"
                             [formMetadata]="formMetadata"
                             [formSectionsMetadata]="formSectionsMetadata"
