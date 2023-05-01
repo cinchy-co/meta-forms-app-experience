@@ -1,14 +1,15 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 
-import { IDropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
+import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
+import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
-import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 
 //#region Cinchy Dynamic Choice Field
@@ -31,12 +32,17 @@ export class ChoiceComponent implements OnInit {
   @Input() targetTableName: string;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
   };
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
-  choiceFilter: string;
   showError: boolean;
   value: string;
   options: Array<DropdownOption>;
@@ -54,7 +60,7 @@ export class ChoiceComponent implements OnInit {
   }
 
 
-  async ngOnInit() {
+  ngOnInit(): void {
 
     const choices = this.field.cinchyColumn.choiceOptions;
     const splitFromInvertedCommas = choices?.split(`"`) ?? [];
@@ -86,7 +92,7 @@ export class ChoiceComponent implements OnInit {
       additionalPropertiesToUpdate: [
         {
           propertyName: "dropdownDataset",
-          propertyValue: new IDropdownDataset(allOptions)
+          propertyValue: new DropdownDataset(allOptions)
         }
       ],
       form: this.form,
@@ -108,26 +114,5 @@ export class ChoiceComponent implements OnInit {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
-  }
-
-
-  //#region pass callback event to the project On blur
-  callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    // constant values
-    const value = event.value;
-    this.field.value = event.value;
-    this.field.cinchyColumn.hasChanged = true;
-    const Data = {
-      "TableName": targetTableName,
-      "ColumnName": columnName,
-      "Value": value,
-      "event": event,
-      "hasChanged": this.field.cinchyColumn.hasChanged,
-      "Form": this.field.form,
-      "Field": this.field
-    }
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.onChange.emit(callback);
   }
 }

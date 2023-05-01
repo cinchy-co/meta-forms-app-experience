@@ -68,7 +68,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   rowId: number;
   fieldsWithErrors: Array<any>;
   currentRow: ILookupRecord;
-  isCloneForm: boolean = false;
 
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
@@ -183,8 +182,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   //#region Edit Add Child Form Data
   async openChildForm(data) {
 
-    if (!this.isCloneForm && !this.rowId) {
+    if (!this.form.isClone && !this.rowId) {
       const formvalidation = this.form.checkFormValidation();
+
       if (formvalidation) {
         this.saveForm(this.form, this.rowId, data);
       }
@@ -243,11 +243,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   const elementValues = element.value?.toString().split(",").map(_ => _.trim());
 
                   dropdownResult = elementValues ? 
-                    element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal == option.id)) : 
+                    element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal === option.id)) : 
                     [];
 
                   if (!dropdownResult?.length) {
-                    dropdownResult = [element.dropdownDataset.options.find(e => e.id == element.value)].filter(_ => _);
+                    dropdownResult = [element.dropdownDataset.options.find(e => e.id === element.value)].filter(_ => _);
                   }
                 } else {
                   dropdownResult = [element.dropdownDataset.options.find(e => e.id === element.value)].filter(_ => _);
@@ -273,7 +273,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 // Still checking for string as it can be an array too
                 const elementValues = element.value?.toString().split(",").map(_ => _.trim());
 
-                dropdownResult = elementValues ? element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal == option.id)) : [];
+                dropdownResult = elementValues ? element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal === option.id)) : [];
 
                 if (dropdownResult && dropdownResult.length) {
                   childResult[element.cinchyColumn.name] = element.value;
@@ -362,7 +362,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         eventData.id = null;
       }
 
-      const insertQuery: IQuery = eventData.data.generateSaveForChildQuery(eventData.id, this.isCloneForm);
+      const insertQuery: IQuery = eventData.data.generateSaveForChildQuery(eventData.id, this.form.isClone);
 
       // Generate insert query for child form
       const queryResult = {
@@ -408,7 +408,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    */
   async loadForm(childData?: any): Promise<void> {
 
-    this.isCloneForm = false;
+    if (this.form?.isClone) {
+      this.form = this.form.clone(null, true);
+    }
+
     this.childDataForm = [];
     this.formHasDataLoaded = false;
     this.enableSaveBtn = false;
@@ -431,7 +434,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               return (record.id === this.rowId);
             });
 
-            await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord,tableEntitlements);
+            await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
 
             // This may occur if the rowId is not provided in the queryParams, but one is available in the session
             if (this.rowId !== null) {
@@ -487,7 +490,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       if (formvalidation.status) {      
         // Generate dynamic query using dynamic form meta data
         this.spinner.show();
-        const insertQuery: IQuery = formData.generateSaveQuery(rowId, this._configService.cinchyVersion, this.isCloneForm);
+        const insertQuery: IQuery = formData.generateSaveQuery(rowId, this._configService.cinchyVersion, this.form.isClone);
 
         // execute dynamic query
         if (insertQuery) {
@@ -499,7 +502,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
                 if (isNullOrUndefined(this.rowId)) {
                   this.appStateService.setRecordSelected(response.queryResult._jsonResult.data[0][0], true);
-                  this.isCloneForm = false;
+
+                  if (this.form.isClone) {
+                    this.form = this.form.clone(null, true);
+                  }
                 }
 
                 this.saveMethodLogic(this.rowId, response, childData);
@@ -671,7 +677,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     const selectQuery: IQuery = this.childForms.generateSelectQuery(rowID, this.formMetadata.tableId);
 
     if (this.childForms.childFormParentId && this.childForms.childFormLinkId) {
-      const queryToGetMatchIdFromParent = `SELECT TOP 1 ${this.childForms.childFormParentId} as "idParent"
+      const queryToGetMatchIdFromParent = `SELECT TOP 1 ${this.childForms.childFormParentId} as 'idParent'
                                            FROM [${this.formMetadata.domainName}].[${this.formMetadata.tableName}]
                                            WHERE [Cinchy Id] = ${this.rowId}`;
 
@@ -680,7 +686,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       let idForParentMatch = cinchyIdForMatchFromParentResp[0]["idParent"];
 
       if (idForParentMatch) {
-        if (selectQuery.params == null) {
+        if (selectQuery.params === null) {
           selectQuery.params = {};
         }
         selectQuery.params["@parentCinchyIdMatch"] = idForParentMatch;
@@ -702,7 +708,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   /**
-   * Handles
+   * When a field has been updated, consume the event, update that field on the form, and then redistribute the form to this component's
+   * ancestors.
    */
   handleFieldsEvent(event: IFieldChangedEvent): void {
 
@@ -715,7 +722,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         this.afterChildFormEdit({
           "childFormId": event.form.id,
           "data": event.form,
-          "id": (event.form.sections[0].multiFields?.length && event.form.sections[0].multiFields[event.form.sections[0].multiFields.length - 1]["Cinchy ID"] != null) ? 
+          "id": (event.form.sections[0].multiFields?.length && event.form.sections[0].multiFields[event.form.sections[0].multiFields.length - 1]["Cinchy ID"] !== null) ? 
             event.form.sections[0].multiFields[event.form.sections[0].multiFields.length - 1]["Cinchy ID"] : 
             0
         }, event.form);
@@ -731,7 +738,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           this.afterChildFormEdit({
             "childFormId": linkedFormField.form.id,
             "data": linkedFormField.form,
-            "id": linkedFormField.form.sections[0].multiFields?.length && linkedFormField.form.sections[0].multiFields[linkedFormField.form.sections[0].multiFields.length - 1]["Cinchy ID"] != null ? 
+            "id": linkedFormField.form.sections[0].multiFields?.length && linkedFormField.form.sections[0].multiFields[linkedFormField.form.sections[0].multiFields.length - 1]["Cinchy ID"] !== null ? 
             linkedFormField.form.sections[0].multiFields[linkedFormField.form.sections[0].multiFields.length - 1]["Cinchy ID"] : 
               0
           }, linkedFormField.form);
@@ -823,102 +830,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   cloneFormData(): void {
 
-    this.isCloneForm = true;
-    this.form.rowId = null;
-    this.rowId = null;
+    this.form = this.form.clone();
     this.childDataForm = [];
 
-    let showWarningAboutChildFormDuplication = true;
-
-    this.form.sections?.forEach((section: FormSection, sectionIndex: number) => {
-
-      section.fields?.forEach((field: FormField, fieldIndex: number) => {
-
-        if (field.cinchyColumn) {
-          field.cinchyColumn.hasChanged = true;
-        }
-
-        if (field.childForm != null) {
-          field.childForm.rowId = null;
-          field.childForm.id = "-1";
-
-          if (field.childForm.sections && field.childForm.sections[0].multiFields) {
-            if (field.childForm.childFormLinkId && field.childForm.childFormParentId) {
-              if (!field.childForm.flatten && showWarningAboutChildFormDuplication) {
-                showWarningAboutChildFormDuplication = false;
-
-                this._toastr.warning("This cloned record contains child records that were also cloned, please ensure the field used to link is updated accordingly.", "Warning", { timeOut: 15000, extendedTimeOut: 15000 });
-              }
-
-              let childRecordsToClone = field.childForm.flatten ? 
-                                        [field.childForm.sections[0].multiFields[field.childForm.sections[0].multiFields.length - 1]] :
-                                        field.childForm.sections[0].multiFields;
-
-              let startingCloneRecordIdx = field.childForm.flatten ? childRecordsToClone.length - 1 : 0;
-              let numOfRecordsToClone = field.childForm.flatten ? 1 : childRecordsToClone.length;
-
-              childRecordsToClone.forEach((childFormRecord) => {
-
-                childFormRecord["Cinchy ID"] = Math.random();
-
-                field.childForm.sections.forEach((childFormSection) => {
-
-                  childFormSection.fields?.forEach((childFormField) => {
-
-                    if (childFormField.cinchyColumn)
-                      childFormField.cinchyColumn.hasChanged = true;
-
-                    if (childFormField.cinchyColumn.dataType === "Link" && childFormField["dropdownDataset"] && childFormRecord[childFormField.cinchyColumn.name]) {
-                      if (childFormField.cinchyColumn.isMultiple) {
-                        const fieldValueLabels = childFormRecord[childFormField.cinchyColumn.name].split(",");
-                        const trimedValues = fieldValueLabels?.length ? fieldValueLabels.map(label => label.trim()) : fieldValueLabels;
-      
-                        let multiDropdownResult = childFormField["dropdownDataset"].options.filter(e => trimedValues.indexOf(e.label) > -1);
-
-                        // Hack for non-flattened child forms, for whatever reason, the dropdownDataset ends up being populated with the values of the child form records
-                        if (!childFormField.form.flatten && !multiDropdownResult?.length) {
-                          let unflattedMultiDropdownResult = childFormField["dropdownDataset"].options.find(e => e.label == childFormRecord[childFormField.cinchyColumn.name]);
-
-                          multiDropdownResult = unflattedMultiDropdownResult ? [unflattedMultiDropdownResult] : multiDropdownResult;
-                        }
-
-                        childFormField.value = multiDropdownResult?.length ? 
-                                               multiDropdownResult.map(item => item.id).join(", ") :
-                                               childFormRecord[childFormField.cinchyColumn.name];
-                      } else {
-                        let singleDropdownResult = childFormField["dropdownDataset"].options.find(e => e.label == childFormRecord[childFormField.cinchyColumn.name]);
-
-                        childFormField.value = singleDropdownResult ? singleDropdownResult.id : childFormRecord[childFormField.cinchyColumn.name];
-                      }
-                    } else if (childFormField.cinchyColumn.dataType === "Choice" && childFormField.cinchyColumn.isMultiple && childFormRecord[childFormField.cinchyColumn.name]) {
-                      const fieldValueLabels = typeof childFormRecord[childFormField.cinchyColumn.name] === "string" ? childFormRecord[childFormField.cinchyColumn.name].split(",") : childFormRecord[childFormField.cinchyColumn.name];
-
-                      childFormField.value = fieldValueLabels?.length ? fieldValueLabels.map(label => label.trim()) : childFormRecord[childFormField.cinchyColumn.name];
-                    } else {
-                      childFormField.value = childFormRecord[childFormField.cinchyColumn.name] ?? null;
-                    }
-                  });
-                });
-
-                this.afterChildFormEdit({
-                  "childFormId": field.childForm.id,
-                  "data": field.childForm,
-                  "id": 0
-                }, field.childForm);
-              });
-
-              field.childForm.sections[0].multiFields.splice(startingCloneRecordIdx, numOfRecordsToClone);
-            }
-            else 
-            {
-              field.childForm.sections[0].multiFields.splice(0, field.childForm.sections[0].multiFields.length);
-            }
-          };
-        }
-      });
-    });
-
-    this._toastr.info("The record was cloned, please save in order to create it.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
+    this._toastr.info("The record was cloned, please save in order to create it. If this field contained any child records, please ensure the field used to link them is updated accordingly.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
   }
 
 

@@ -12,6 +12,8 @@ import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 
 import { TextFormatType } from "../enums/text-format-type.enum";
 
+import { IFieldChangedEvent } from "../interface/field-changed-event";
+
 import { Form } from "../models/cinchy-form.model";
 import { FormField } from "../models/cinchy-form-field.model";
 import { FormSection } from "../models/cinchy-form-section.model";
@@ -35,7 +37,7 @@ export class FieldsWrapperComponent {
   @Input() fieldsWithErrors;
   @Input("formHasDataLoaded") set formHasDataLoaded(value: boolean) { this.setFormHasDataLoaded(value); }
 
-  @Output() eventOccurred = new EventEmitter<any>();
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   @Output() childFormOpened = new EventEmitter<any>();
   @Output() deleteDialogOpened = new EventEmitter<any>();
 
@@ -98,7 +100,7 @@ export class FieldsWrapperComponent {
             }
           }
 
-          if (this.form.sections[i].fields.length > numOfFlattenedChildForms || numOfFlattenedChildForms == 0) {
+          if (this.form.sections[i].fields.length > numOfFlattenedChildForms || numOfFlattenedChildForms === 0) {
             _newSectionsToRender.push(this.form.sections[i]);
 
             _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
@@ -126,7 +128,7 @@ export class FieldsWrapperComponent {
 
   usePlaintext(field: FormField): boolean {
 
-    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
+    return (field.cinchyColumn.dataType === "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
   }
 
 
@@ -138,6 +140,6 @@ export class FieldsWrapperComponent {
 
   useTextarea(field: FormField): boolean {
 
-    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
+    return (field.cinchyColumn.dataType === "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
   }
 }

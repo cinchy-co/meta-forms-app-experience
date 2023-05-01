@@ -1,18 +1,19 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
-import {CurrencyPipe} from "@angular/common";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { CurrencyPipe } from "@angular/common";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 import { faHashtag } from "@fortawesome/free-solid-svg-icons";
 
 import { NumeralPipe } from "ngx-numeral";
+import { FormField } from "../../models/cinchy-form-field.model";
+import { Form } from "../../models/cinchy-form.model";
 
 
-//#region Cinchy Dynamic Number field
 /**
  * This section is used to create Dynamic Number field
  */
-//#endregion
 @Component({
   selector: "cinchy-number",
   templateUrl: "./number.component.html",
@@ -20,65 +21,85 @@ import { NumeralPipe } from "ngx-numeral";
   providers: [CurrencyPipe]
 })
 export class NumberComponent implements OnInit {
-  @Input() field: any;
+
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
+  @Input() isDisabled: boolean;
+  @Input() sectionIndex: number;
+  @Input() targetTableName: string;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
   };
 
-  @Input() targetTableName: string;
-  @Input() isDisabled: boolean;
-  formattedAmount;
-  showError: boolean;
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
-  numeralValue;
+
+  formattedAmount: string;
+  numeralValue: NumeralPipe;
+  showError: boolean;
+
   faHashtag = faHashtag;
-  
-  constructor(private currencyPipe: CurrencyPipe) {
+
+
+  get canEdit(): boolean {
+
+    if (this.isDisabled) {
+      return false;
+    }
+
+    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
-  ngOnInit() {
+
+  ngOnInit(): void {
+
     if (this.field.cinchyColumn.numberFormatter && this.field.value) {
       this.numeralValue = new NumeralPipe(this.field.value);
       this.formattedAmount = this.numeralValue.format(this.field.cinchyColumn.numberFormatter);
-      //  this.formattedAmount = this.currencyPipe.transform(this.field.value, "$");
     } else {
+      this.numeralValue = null;
       this.formattedAmount = this.field.value;
     }
   }
 
-  transformAmount(targetTableName: string, columnName: string, event: any, prop: string) {
-    this.callbackEvent(targetTableName, columnName, event, prop);
-    if (this.field.cinchyColumn.numberFormatter && this.formattedAmount) {
-      // this.formattedAmount = this.currencyPipe.transform(this.formattedAmount, "$");
+
+  transformAmount() {
+
+    if (this.formattedAmount) {
       this.numeralValue = new NumeralPipe(this.field.value);
-      this.formattedAmount = this.numeralValue.format(this.field.cinchyColumn.numberFormatter);
+      this.formattedAmount = this.field.cinchyColumn.numberFormatter ? this.numeralValue.format(this.field.cinchyColumn.numberFormatter) : this.numeralValue.value().toString();
     }
+    else {
+      this.numeralValue = null;
+      this.formattedAmount = "";
+    }
+
+    this.valueChanged();
   }
+
 
   reverseTransform() {
-    if (this.field.cinchyColumn.numberFormatter && this.formattedAmount) {
-      //  this.formattedAmount = Number(this.formattedAmount.replace(/[^0-9.-]+/g, ""));
-      this.formattedAmount = this.numeralValue.value();
-    }
+
+    this.formattedAmount = this.numeralValue?.value()?.toString() ?? "";
   }
 
-  callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    // constant values
-    const value = event.target[prop];
-    this.field.cinchyColumn.hasChanged = true;
-    const Data = {
-      "TableName": targetTableName,
-      "ColumnName": columnName,
-      "Value": value && Number(value) ? Number(value) : value,
-      "event": event,
-      "hasChanged": this.field.cinchyColumn.hasChanged,
-      "Form": this.field.form,
-      "Field": this.field
-    }
-    this.field.value = value && Number(value) ? Number(value) : value;
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.onChange.emit(callback);
+
+  valueChanged() {
+
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.numeralValue?.value() ?? null,
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
   }
 }

@@ -3,33 +3,35 @@ import { map, startWith, isEmpty } from "rxjs/operators";
 
 import { FormControl } from "@angular/forms";
 
-import { ICinchyColumn } from "./cinchy-column.model";
+import { CinchyColumn } from "./cinchy-column.model";
 import { Form } from "./cinchy-form.model";
 
 import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
-import { DropdownOption, IDropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
+import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 import { isNullOrUndefined } from "util";
 
 
 export class FormField {
 
-  value: any;
   formControl: FormControl;
   filteredValues: Observable<DropdownOption[]>;
   hide: boolean = false;
+
+  value: any;
 
   constructor(
       public id: number,
       public label: string,
       public caption: string,
       public childForm: Form,
-      public cinchyColumn: ICinchyColumn,
+      public cinchyColumn: CinchyColumn,
       public form: Form,
       public dropdownDataset?: DropdownDataset,
+      public noPreselect?: boolean
   ) {
 
-    if (cinchyColumn.dataType == "Link" && dropdownDataset) {
+    if (cinchyColumn.dataType === "Link" && dropdownDataset) {
       this.formControl = new FormControl();
       this.filteredValues = this.formControl.valueChanges.pipe(startWith(""), map(value => this._filter(value)));
     }
@@ -79,7 +81,7 @@ export class FormField {
 
     const lowercaseFilter = filter?.toLowerCase() || "";
 
-    return this.dropdownDataset?.options.filter((option: IDropdownOption) => {
+    return this.dropdownDataset?.options.filter((option: DropdownOption) => {
 
       if (!lowercaseFilter || option.label?.toLowerCase().includes(lowercaseFilter)) {
         return option;

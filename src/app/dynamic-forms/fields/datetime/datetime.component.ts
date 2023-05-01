@@ -1,6 +1,10 @@
-import {Component, Input, Output, EventEmitter, OnInit} from "@angular/core";
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
 
 import { faCalendar } from "@fortawesome/free-regular-svg-icons";
 
@@ -15,57 +19,60 @@ import * as moment from "moment";
   templateUrl: "./datetime.component.html",
   styleUrls: ["./datetime.component.scss"]
 })
-export class DatetimeComponent implements OnInit {
-  @Input() field: any;
+export class DatetimeComponent implements OnChanges {
+
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
+  @Input() isDisabled: boolean;
+  @Input() sectionIndex: number;
+  @Input() targetTableName: string;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
   };
 
-  @Input() targetTableName: string;
-  @Input() isDisabled: boolean;
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
-  preSelectedDate :any;
-  showError;
+
+  showError: boolean;
+  value: string;
+
   faCalendar = faCalendar;
 
-  constructor(){}
 
-  ngOnInit() {
-    this.preSelectedDate = this.field.value ? this.field.value : "";
-   if(this.preSelectedDate){
-     this.preSelectedDate = moment(this.preSelectedDate).format(this.field.cinchyColumn.displayFormat);}
+  get canEdit(): boolean {
+
+    if (this.isDisabled) {
+      return false;
+    }
+
+    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
-  checkForDate(){
-    if(!this.preSelectedDate){
-      this.field.cinchyColumn.hasChanged = true;
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes.field) {
+      this.value = this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat) : "";
     }
   }
 
-  //#region pass callback event to the project On blur
-  callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    // constant values
-    const value = event[prop];
-    this.field.cinchyColumn.hasChanged = true;
-    const Data = {
-      "TableName": targetTableName,
-      "ColumnName": columnName,
-      "Value": value,
-      "event": event,
-      "hasChanged": this.field.cinchyColumn.hasChanged,
-      "Form": this.field.form,
-      "Field": this.field
-    };
-    let selectedDate = value ? value : this.preSelectedDate;
-    this.field.value = moment(selectedDate).format("MM/DD/yyyy");
 
-    // re-assign format of date
-    this.preSelectedDate = moment(selectedDate).format(this.field.cinchyColumn.displayFormat);
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.onChange.emit(callback);
+  valueChanged() {
+
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.value ? moment(this.value).format("MM/DD/yyyy") : null,
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
   }
-
-  //#endregion
 }

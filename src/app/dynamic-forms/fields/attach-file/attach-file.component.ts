@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
@@ -28,7 +29,13 @@ export class AttachFileComponent implements OnInit {
   @Input() targetTableName: string;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
   };
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
@@ -40,13 +47,13 @@ export class AttachFileComponent implements OnInit {
   faFile = faFile;
 
 
-  async ngOnInit() {
+  ngOnInit(): void {
 
     this.fileName = this.field.cinchyColumn.fileName;
   }
 
 
-  async onFileSelected(field, event) {
+  async onFileSelected(event) {
 
     this.field.cinchyColumn.hasChanged = true;
 
@@ -109,9 +116,9 @@ export class AttachFileComponent implements OnInit {
   }
 
 
-  downloadDocument(event, doc) {
+  downloadDocument() {
 
-    const arrayBuffer = this.base64ToArrayBuffer(doc);
+    const arrayBuffer = this.base64ToArrayBuffer(this.field.value);
 
     var blob = new Blob([arrayBuffer], { type: "application/binary" });
 

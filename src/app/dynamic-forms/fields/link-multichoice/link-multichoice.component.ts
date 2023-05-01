@@ -1,16 +1,17 @@
-import { ReplaySubject, Subject } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import { take, takeUntil } from "rxjs/operators";
 
 import {
   Component,
+  ElementRef,
   EventEmitter,
   Input,
   OnDestroy,
   OnInit,
   Output,
-  ViewChild,
-  ElementRef
+  ViewChild
 } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { FormControl } from "@angular/forms";
 import { MatSelect } from "@angular/material/select";
 
@@ -23,6 +24,9 @@ import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 import { isNullOrUndefined } from "util";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
 
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
 
@@ -43,47 +47,68 @@ import * as R from "ramda";
   providers: [DropdownDatasetService]
 })
 
-export class LinkMultichoiceComponent implements OnInit, OnDestroy {
+export class LinkMultichoiceComponent implements OnDestroy, OnInit {
+
   @ViewChild("fileInput") fileInput: ElementRef;
   @ViewChild("multiSelect", {static: true}) multiSelect: MatSelect;
   @ViewChild("t") public tooltip: NgbTooltip;
 
-  @Input() field: any;
-  @Input() rowId: any;
-  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
-  };
-  @Input() targetTableName: string;
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
   @Input() isInChildForm: boolean;
   @Input() isDisabled: boolean;
+  @Input() sectionIndex: number;
+  @Input() targetTableName: string;
+
+  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
+  };
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
-  myControl = new FormControl();
   multiFilterCtrl: FormControl = new FormControl();
-  filteredListMulti: ReplaySubject<any[]> = new ReplaySubject<any[]>(1);
-  onDestroy = new Subject<void>();
-  charactersAfterWhichToShowList = 0;
-  allSelected = false;
+
   selectedValues = [];
-  dropdownSetOptions;
-  filteredOptions;
-  selectedValue;
-  toolTipMessage;
-  metadataQueryResult;
-  isLoading;
-  showError;
+
+  allSelected = false;
+  charactersAfterWhichToShowList = 0;
+  downloadLink: boolean;
+  downloadableLinks: Array<any>;
   dropdownListFromLinkedTable;
   dropdownSettings;
+  dropdownSetOptions: Array<DropdownOption>;
+  filteredOptions;
+  isCursorIn: boolean = false;
+  isLoading: boolean;
   maxLimitForMaterialSelect = 4000;
-  downloadLink;
-  downloadableLinks;
-  tableSourceURL: any;
-
+  metadataQueryResult;
   renderImageFiles = true;
+  showError: boolean;
+  tableSourceURL: any;
+  toolTipMessage: string;
+
+  filteredListMulti = new BehaviorSubject<any[]>([]);
+  onDestroy = new Subject<void>();
+
   faShareAlt = faShareAlt;
   faSitemap = faSitemap;
-  isCursorIn: boolean = false;
+
+
+  get canEdit(): boolean {
+
+    if (this.isDisabled) {
+      return false;
+    }
+
+    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+  }
 
 
   constructor(
@@ -104,11 +129,7 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
 
-    if (this.field.cinchyColumn.canEdit === false || this.field.cinchyColumn.isViewOnly || this.isDisabled) {
-      this.myControl.disable();
-    }
-
-    this.getListItems();
+    this.bindDropdownList();
 
     let url = this._configService.envConfig.cinchyRootUrl;
 
@@ -116,14 +137,16 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   }
 
 
-  async bindDropdownList(dataSet: any, linkTargetId: number) {
+  async bindDropdownList() {
 
     if (!this.dropdownListFromLinkedTable) {
       this.isLoading = true;
-      let dropdownDataset: DropdownDataset = null;
+      let dropdownDataset: DropdownDataset;
       let currentFieldJson;
 
-      let tableColumnQuery: string = "select tc.[Table].[Domain].[Name] as 'Domain', tc.[Table].[Name] as 'Table', tc.[Name] as 'Column' from [Cinchy].[Cinchy].[Table Columns] tc where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy Id] = " + linkTargetId;
+      let tableColumnQuery: string = `select tc.[Table].[Domain].[Name] as 'Domain', tc.[Table].[Name] as 'Table', tc.[Name] as 'Column'
+        from [Cinchy].[Cinchy].[Table Columns] tc
+        where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy Id] = ${this.field.cinchyColumn.linkTargetColumnId}`;
 
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
@@ -133,13 +156,13 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
         currentFieldJson = formFieldsJsonData.Columns.find(field => field.name === this.field.cinchyColumn.name);
       }
 
-      if (!isNullOrUndefined(linkTargetId)) {
-        dropdownDataset = await this._dropdownDatasetService.getDropdownDataset(linkTargetId, dataSet.label, currentFieldJson, this.field.cinchyColumn.dropdownFilter, this.rowId);
+      if (this.field.cinchyColumn.linkTargetColumnId) {
+        dropdownDataset = await this._dropdownDatasetService.getDropdownDataset(this.field.cinchyColumn.linkTargetColumnId, this.field.label, currentFieldJson, this.field.cinchyColumn.dropdownFilter, this.form.rowId);
 
         this.dropdownListFromLinkedTable = true;
 
         dropdownDataset = this.getSortedList(dropdownDataset);
-        dataSet.dropdownDataset = dropdownDataset;
+        this.field.dropdownDataset = dropdownDataset;
 
         this.dropdownSetOptions = dropdownDataset?.options ?? [];
         this.charactersAfterWhichToShowList = this.dropdownSetOptions.length > this.maxLimitForMaterialSelect ? 3 : 0;
@@ -156,37 +179,37 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
           this.filteredListMulti.next(this.dropdownSetOptions.slice());
         }
 
-        this.selectedValues && this.myControl.setValue(this.selectedValues);
         this.checkForAttachmentUrl();
       }
 
-      this.toolTipMessage = `Please type at least ${this.charactersAfterWhichToShowList} characters to see the dropdown
-     list of item. You have to select from the dropdown to update this field`;
+      this.toolTipMessage = `Please type at least ${this.charactersAfterWhichToShowList} characters to see the dropdown list of items. You have to select from the dropdown to update this field`;
 
       this.isLoading = false;
     }
   }
 
 
-  checkForAttachmentUrl() {
+  checkForAttachmentUrl(): void {
 
-    this.downloadLink = !!this.field.cinchyColumn.attachmentUrl;
+    this.downloadLink = coerceBooleanProperty(this.field.cinchyColumn.attachmentUrl);
 
     if (this.field.cinchyColumn.attachmentUrl && this.selectedValues?.length) {
       this.downloadLink = true;
       this.downloadableLinks = [];
 
-      this.selectedValues.forEach(listItem => {
-        const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.rowId);
+      this.selectedValues.forEach((listItem: any) => {
+
+        const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form.rowId?.toString());
         const replacedFileIdUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", listItem.id);
         const selectedValuesWithUrl = { fileName: listItem.label, fileUrl: replacedFileIdUrl, fileId: listItem.id };
+
         this.downloadableLinks.push(selectedValuesWithUrl);
       })
     }
   }
 
 
-  closeTooltip(tooltip) {
+  closeTooltip(tooltip): void {
 
     setTimeout(() => {
 
@@ -197,9 +220,19 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   }
 
 
-  fileNameIsImage(fileName: string) {
+  /**
+   * Generates a tooltip for the given link
+   */
+  downloadableLinkTooltip(link: { fileName: string, fileUrl: string, fileId: string }): string {
+
+    return `Download ${link.fileName}`;
+  }
+
+
+  fileNameIsImage(fileName: string): boolean {
 
     const lowercase = fileName.toLowerCase();
+
     return lowercase.endsWith(".png") ||
       lowercase.endsWith(".jpg") ||
       lowercase.endsWith(".jpeg") ||
@@ -208,89 +241,109 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   }
 
 
-  protected filterMulti() {
+  protected filterMulti(): void {
 
-    if (!this.dropdownSetOptions) {
-      return;
+    if (this.dropdownSetOptions) {
+      // get the search keyword
+      let search = this.multiFilterCtrl.value;
+
+      if (!search) {
+        this.filteredListMulti.next(this.dropdownSetOptions.slice());
+      } else {
+        search = search.toLowerCase();
+
+        // filter the lis
+        this.filteredListMulti.next(
+          this.dropdownSetOptions.filter(item => item.label.toLowerCase().indexOf(search) > -1)
+        );
+      }
     }
-    // get the search keyword
-    let search = this.multiFilterCtrl.value;
-    if (!search) {
-      this.filteredListMulti.next(this.dropdownSetOptions.slice());
-      return;
-    } else {
-      search = search.toLowerCase();
-    }
-    // filter the lis
-    this.filteredListMulti.next(
-      this.dropdownSetOptions.filter(item => item.label.toLowerCase().indexOf(search) > -1)
-    );
+
   }
 
 
-  generateMultipleOptionsFromSingle() {
+  generateMultipleOptionsFromSingle(): Array<DropdownOption> {
 
-    let selectedIds: Array<string>;
-
-    if (this.field.noPreSelect || !this.field?.value) {
+    if (this.field.noPreselect) {
       return [];
     }
 
     if (this.field.dropdownDataset?.options?.length) {
-      selectedIds = this.field.dropdownDataset.options[0].id?.split ? this.field.dropdownDataset.options[0].id.split(",") : null
-    }
+      let selectedIds: Array<string>;
 
-    if (selectedIds?.length) {
-      const options = [];
+      // Fallback for legacy logic
+      if (this.field.dropdownDataset.options.length === 1 && this.field.dropdownDataset.options[0].id.includes(",")) {
+        selectedIds = this.field.dropdownDataset.options[0].id?.split(",").map((id: string) => {
 
-      if (this.isInChildForm) {
-        selectedIds = [this.field.dropdownDataset?.options[0]?.id];
+          return id.trim();
+        });
+
+        this.field.dropdownDataset.options = this.field.dropdownDataset.options[0].label.split(",").map((label: string, index: number) => {
+
+          return new DropdownOption(
+            selectedIds[index],
+            label.trim()
+          );
+        });
       }
 
-      const allLabels = this.field.dropdownDataset?.options[0].label?.split(",");
+      let fieldIds: Array<string>;
 
-      selectedIds.forEach((id: string, index: number) => {
+      if (this.field.value) {
+        // Fallback for legacy logic
+        if (typeof this.field.value === "string") {
+          fieldIds = this.field.value.split(",").map((id: string) => {
 
-        options.push(new DropdownOption(id.toString(), allLabels[index]));
+            return id.trim();
+          });
+        }
+        else if (Array.isArray(this.field.value)) {
+          fieldIds = this.field.value;
+        }
+      }
+
+      selectedIds = fieldIds.filter((id: string) => {
+
+        return fieldIds.includes(id);
       });
 
-      return options;
-    }
-    else {
-      const allIds = this.field.value.toString().split(",");
+      if (selectedIds?.length) {
+        return selectedIds.map((id: string) => {
 
-      if (this.field.dropdownDataset) {
-        return this.field.dropdownDataset.options.filter(option => allIds.find(id => {
+          return this.field.dropdownDataset.options.find((option: DropdownOption) => {
 
-          return option.id === (id.trim ? id.trim() : id);
-        }));
-      }
-      else {
-        return [];
+            return (option.id === id);
+          });
+        });
       }
     }
+
+    return [];
   }
 
 
   getAndSetLatestFileValue() {
 
-    this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.rowId).subscribe(resp => {
+    this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.form.rowId).subscribe((resp: Array<{ fileId: any, fileName: string }>) => {
+
       if (resp?.length) {
         this.field.value = (this.field.value ?? []).concat(resp.map(x => x.fileId));
 
-        const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.rowId);
+        const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form?.rowId.toString());
 
         this.selectedValues = this.selectedValues ?? [];
         this.downloadableLinks = this.downloadableLinks ?? [];
 
-        resp.forEach(newFile => {
-          const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", newFile.fileId);
+        resp.forEach((newFile: { fileId: any, fileName: string }) => {
+
+          const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", newFile.fileId?.toString());
           const newSelectedValue = { fileName: newFile.fileName, fileUrl: fileUrl, fileId: newFile.fileId };
 
           this.selectedValues.push(newSelectedValue);
           this.downloadableLinks.push(newSelectedValue);
         });
-        this._cinchyQueryService.updateFilesInCell(this.downloadableLinks.map(x => x.fileId), this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.rowId).subscribe(resp => {
+
+        this._cinchyQueryService.updateFilesInCell(this.downloadableLinks.map(x => x.fileId), this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.form.rowId).subscribe(resp => {
           this.fileInput.nativeElement.value = null;
           this._toastr.success("File(s) uploaded", "Success");
         });
@@ -299,25 +352,17 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   }
 
 
-  getListItems() {
+  getSortedList(dropdownDataset: DropdownDataset): DropdownDataset {
 
-    this.bindDropdownList(this.field, this.field.cinchyColumn.linkTargetColumnId);
-  }
+    let filteredOutNullSets: Array<DropdownOption>;
 
-
-  getSortedList(dropdownDataset) {
-
-    let filteredOutNullSets;
-
-    if (dropdownDataset && dropdownDataset.options) {
+    if (dropdownDataset?.options) {
       filteredOutNullSets = dropdownDataset.options.filter(option => option.label);
 
-      return {
-        options: filteredOutNullSets.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
-      }
+      return new DropdownDataset(filteredOutNullSets.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase())));
     }
 
-    return filteredOutNullSets;
+    return null;
   }
 
 
@@ -363,7 +408,7 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.rowId);
+    const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.form.rowId?.toString());
 
     this._cinchyQueryService.uploadFiles(event?.target?.files, uploadUrl)?.subscribe(
       {
@@ -380,44 +425,6 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   }
 
 
-  optionClicked(dropdownOption) {
-
-    const alreadyExistInSelected = this.selectedValues.find(item => item.id === dropdownOption.id);
-    if (alreadyExistInSelected) {
-      dropdownOption.selected = false;
-      this.selectedValues = this.selectedValues.filter(item => item.id !== dropdownOption.id);
-    } else {
-      dropdownOption.selected = true;
-      this.selectedValues.push(dropdownOption);
-    }
-    this.myControl.patchValue(this.selectedValues);
-    this.field.cinchyColumn.hasChanged = true;
-    this.field.value = this.selectedValues.map(option => option.id);
-    const text = this.field.cinchyColumn.label;
-    const Data = {
-      "hasChanged": this.field.cinchyColumn.hasChanged,
-      "TableName": this.targetTableName,
-      "ColumnName": this.field.cinchyColumn.name,
-      "Value": this.field.value.join(", "),
-      "Text": text,
-      "Event": event,
-      "Form": this.field.form,
-      "Field": this.field
-    }
-    const callback: IEventCallback = new EventCallback(ResponseType.onChange, Data);
-    this.onChange.emit(callback);
-  }
-
-
-  remove(dropdownOption): void {
-
-    this.selectedValues = dropdownOption === "all" ? [] : this.selectedValues.filter(item => item.id !== dropdownOption.id);
-    this.myControl.setValue(this.selectedValues);
-    this.field.cinchyColumn.hasChanged = true;
-    this.field.value = this.selectedValues.map(option => option.id);
-  }
-
-
   removeTooltipElement() {
 
     this.isCursorIn = false;
@@ -428,7 +435,7 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   setFilteredOptions(dropdownOptions?) {
 
     this.filteredOptions = dropdownOptions ? dropdownOptions : this.dropdownSetOptions;
-    this.myControl.setValue([]);
+    this.selectedValues = [];
 
     // load the initial list
     this.filteredListMulti.next(this.dropdownSetOptions.slice());
@@ -436,9 +443,11 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
     if (this.dropdownSetOptions.length > this.maxLimitForMaterialSelect) {
       this.charactersAfterWhichToShowList = 2;
     }
+
     this.multiFilterCtrl.valueChanges
       .pipe(takeUntil(this.onDestroy))
       .subscribe(() => {
+
         this.filterMulti();
       });
   }
@@ -452,8 +461,10 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
     this.filteredListMulti
       .pipe(take(1), takeUntil(this.onDestroy))
       .subscribe(() => {
+
         this.multiSelect.compareWith = (a, b) => {
-          return a && b && a.id && b.id && a.id === b.id;
+
+          return (a?.id && b?.id && a.id === b.id);
         };
       });
   }
@@ -461,12 +472,10 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
 
   setSelectedValue() {
 
-    const preselectedValArr = this.field.dropdownDataset ? this.field.dropdownDataset.options : null;
+    const preselectedValArr = this.field.dropdownDataset?.options || null;
 
     if (preselectedValArr || this.isInChildForm) {
       this.selectedValues = this.generateMultipleOptionsFromSingle();
-    } else {
-      this.selectedValues = preselectedValArr && preselectedValArr[0] ? { ...preselectedValArr[0] } : null;
     }
   }
 
@@ -477,18 +486,31 @@ export class LinkMultichoiceComponent implements OnInit, OnDestroy {
   }
 
 
-  toggleSelectAll(selectAllValue) {
+  toggleSelectAll(selectAll: boolean) {
 
-    this.filteredListMulti.pipe(take(1), takeUntil(this.onDestroy))
-      .subscribe(val => {
-        if (selectAllValue) {
-          this.selectedValues = val;
-        } else {
-          this.selectedValues = [];
-        }
-        this.myControl.patchValue(this.selectedValues);
-        this.field.cinchyColumn.hasChanged = true;
-        this.field.value = this.selectedValues.map(option => option.id);
-      });
+    if (selectAll) {
+      this.selectedValues = this.filteredListMulti.value;
+    }
+    else {
+      this.selectedValues = [];
+    }
+
+    this.valueChanged();
+  }
+
+
+  valueChanged() {
+
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.selectedValues?.map((value: any) => {
+
+        return value.id;
+      }) || [],
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
   }
 }

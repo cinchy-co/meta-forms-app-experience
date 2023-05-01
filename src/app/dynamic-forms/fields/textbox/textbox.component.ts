@@ -31,7 +31,13 @@ export class TextboxComponent implements OnChanges, OnInit {
   @Input() targetTableName: string;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
   };
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
@@ -42,9 +48,9 @@ export class TextboxComponent implements OnChanges, OnInit {
   showError: boolean;
   showImage: boolean;
   showLinkUrl: boolean;
-  showIFrame: boolean;
-  showIFrameSandbox: boolean;
-  showIFrameSandboxStrict: boolean;
+  showIframe: boolean;
+  showIframeSandbox: boolean;
+  showIframeSandboxStrict: boolean;
   urlSafe: SafeResourceUrl;
   value: string;
 
@@ -88,7 +94,7 @@ export class TextboxComponent implements OnChanges, OnInit {
   }
 
 
-  constructor(public sanitizer: DomSanitizer) { }
+  constructor(public sanitizer: DomSanitizer) {}
 
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -99,28 +105,28 @@ export class TextboxComponent implements OnChanges, OnInit {
   }
 
 
-  ngOnInit() {
+  ngOnInit(): void {
 
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
 
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
 
-    this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
+    this.showIframe = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
 
-    this.showIFrameSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
-    this.showIFrameSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
+    this.showIframeSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
+    this.showIframeSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
 
-    if ((this.showIFrame || this.showIFrameSandbox || this.showIFrameSandboxStrict)  && this.isValidHttpUrl(this.value) && !this.isInChildForm){
+    if ((this.showIframe || this.showIframeSandbox || this.showIframeSandboxStrict) && this.isValidHttpUrl(this.value) && !this.isInChildForm) {
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.value);
-      this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
-        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';      
+
+      this.iframeHeightStyle = (this.field.cinchyColumn?.totalTextAreaRows > 0) ? (100 * this.field.cinchyColumn.totalTextAreaRows).toString() : "300";      
     }else{
-      this.showIFrame = false;
-      this.showIFrameSandbox = false;
-      this.showIFrameSandboxStrict = false;
+      this.showIframe = false;
+      this.showIframeSandbox = false;
+      this.showIframeSandboxStrict = false;
     } 
 
-    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame && !this.showIFrameSandbox && !this.showIFrameSandboxStrict;
+    this.showActualField = (!this.showImage && !this.showLinkUrl && !this.showIframe && !this.showIframeSandbox && !this.showIframeSandboxStrict);
   }
 
 
@@ -130,11 +136,11 @@ export class TextboxComponent implements OnChanges, OnInit {
 
     try {
       url = new URL(str);
-    } catch (_) {
+    } catch (error) {
       return false;
     }
 
-    return url.protocol === "http:" || url.protocol === "https:";
+    return (url.protocol === "http:" || url.protocol === "https:");
   }
 
 

@@ -1,11 +1,11 @@
-import { IDropdownOption } from "./cinchy-dropdown-options";
+import { DropdownOption } from "./cinchy-dropdown-options";
 
 
 export class DropdownDataset {
 
-  options: Array<IDropdownOption>;
+  options: Array<DropdownOption>;
 
-  constructor(options: Array<IDropdownOption>) {
+  constructor(options: Array<DropdownOption>) {
 
     this.options = options || [];
   }

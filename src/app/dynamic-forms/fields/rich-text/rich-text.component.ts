@@ -8,6 +8,7 @@ import {
   Output,
   ViewChild
 } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import {
   MatDialog,
   MatDialogRef
@@ -33,8 +34,6 @@ import {
   faLevelUpAlt,
   faMinusSquare
 } from "@fortawesome/free-solid-svg-icons";
-
-
 
 import { Editor } from "@tiptap/core";
 
@@ -63,6 +62,7 @@ import { IFieldChangedEvent } from "../../interface/field-changed-event";
 import { IRichTextImage } from "../../interface/rich-text-image";
 import { IRichTextLink } from "../../interface/rich-text-link";
 
+import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 
 
@@ -75,15 +75,27 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
 
   @Input() field: FormField;
 
-  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
-  };
+  @Input() fieldIndex: number;
+
+  @Input() form: Form;
 
   @Input() targetTableName: string;
 
   @Input() isDisabled: boolean = false;
 
+  @Input() sectionIndex: number;
+
   @Input() useJson: boolean = true;
+
+  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
+  };
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
@@ -166,7 +178,11 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
    */
   get canEdit(): boolean {
 
-    return (!this.field.cinchyColumn.isViewOnly && !this.isDisabled && this.field.cinchyColumn.canEdit);
+    if (this.isDisabled) {
+      return false;
+    }
+
+    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
 
@@ -207,7 +223,9 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
             addKeyboardShortcuts() {
               return {
                 "Mod-k": () => {
+
                   self.toggleLink()
+
                   return true                
                 },
               }
@@ -230,9 +248,9 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
         ],
         content: content,
         editable: true,
-        onBlur: (event: any): void => {
+        onBlur: (): void => {
 
-          this.onBlur(event);
+          this.onBlur();
         },
         /**
          * Update the state of the marks at the cursor position
@@ -409,11 +427,14 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
   }
 
 
-  onBlur(event: any) {
+  /**
+   * Propagate the changes when the user leaves the field
+   */
+  onBlur() {
 
     this._resolveValue();
 
-    this._callbackEvent(this.targetTableName, this.field.cinchyColumn.name, event, "value");
+    this._valueChanged();
   }
 
 
@@ -545,27 +566,26 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private _callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
 
-    this.field.cinchyColumn.hasChanged = true;
+  /**
+   * Notifies the parent of the updated value so that we can resolve that update into the form model
+   */
+  private _valueChanged() {
 
-    const Data = {
-      TableName: targetTableName,
-      ColumnName: columnName,
-      Value: this.value,
-      event: event,
-      hasChanged: this.field.cinchyColumn.hasChanged,
-      Form: this.field.form,
-      Field: this.field
-    }
-
-    this.field.value = this.value;
-
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.onChange.emit(callback);
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.value,
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
   }
 
+
+  /**
+   * Parses the editor's contents into the field's value so that it can be saved
+   */
   private _resolveValue(): void {
 
     this.value = this.useJson ? JSON.stringify(this.editor?.getJSON()) : this.editor?.getHTML();

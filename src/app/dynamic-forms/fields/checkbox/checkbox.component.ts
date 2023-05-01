@@ -29,7 +29,13 @@ export class CheckboxComponent implements OnChanges {
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
   };
 
   showError: boolean;

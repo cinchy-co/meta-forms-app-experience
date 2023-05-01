@@ -1,4 +1,4 @@
-<div style="width:100%;display:inline" *ngIf="(field.cinchyColumn.dataType == 'Binary')"
+<div style="width:100%;display:inline" *ngIf="(field.cinchyColumn.dataType === 'Binary')"
      class="full-width-element divMarginBottom">
   <div>
     <div>
@@ -13,18 +13,17 @@
              [disabled]="(field.cinchyColumn.canEdit=== false)"
              type="file"
              id="file"
-             (change)="onFileSelected(field,$event)">
+             (change)="onFileSelected($event)">
 
-      <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+      <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.value">
         *{{field.label}} is Required.
       </mat-error>
     </div>
   </div>
 
-  <div>
+  <div *ngIf="field.value">
     <div *ngIf="fileName" style="margin: 5px;">
-
-      <a class="download-link" (click)="downloadDocument($event, field.value)">
+      <a class="download-link" (click)="downloadDocument()">
         Existing file: <strong>{{fileName}}</strong>
         <mat-icon>cloud_download</mat-icon>
       </a>

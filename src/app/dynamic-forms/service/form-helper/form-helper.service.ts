@@ -2,20 +2,20 @@ import { Injectable } from "@angular/core";
 
 import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 
-import { CinchyColumn, ICinchyColumn } from "../../models/cinchy-column.model";
+import { CinchyColumn } from "../../models/cinchy-column.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { Form } from "../../models/cinchy-form.model";
 import { IQuery } from "../../models/cinchy-query.model";
 
 import { IFormFieldMetadata } from "src/app/models/form-field-metadata.model";
 import { IFormMetadata } from "src/app/models/form-metadata-model";
-import { IFormSectionMetadata } from "src/app/models/form-section-metadata.model";
 import { ILookupRecord } from "src/app/models/lookup-record.model";
 
 import { CinchyQueryService } from "src/app/services/cinchy-query.service";
 
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
+import { DataFormatType } from "../../enums/data-format-type";
 
 
 @Injectable({
@@ -78,7 +78,7 @@ export class FormHelperService {
     }
 
     let tableJson = JSON.parse(formMetadata.tableJson);
-    let formFields: IFormFieldMetadata[] = formFieldsMetadata.filter(_ => _.formId == form.id);
+    let formFields: IFormFieldMetadata[] = formFieldsMetadata.filter(_ => _.formId === form.id);
 
    // const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
     const cellEntitlements = await this.getCellEntitlements(formMetadata.domainName, formMetadata.tableName, cinchyId, formFields);
@@ -90,17 +90,23 @@ export class FormHelperService {
     let minSectionIter = 0;
 
     for (let i = 0; i < formFields.length; i++) {
+
       const columnMetadata = tableJson.Columns.find(_ => _.columnId === formFields[i].columnId);
       const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
       const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
       const attachedFileName = await this.getFileName(cinchyId, formFields[i].fileNameColumn);
+
+      // DEBUG
+      if (i === 17) {
+        console.log("here!");
+      }
       
       if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
         const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
         columnMetadata.displayFormat = parentMetadata?.displayFormat;
       }
 
-      const cinchyColumn: ICinchyColumn = new CinchyColumn(
+      const cinchyColumn: CinchyColumn = new CinchyColumn(
         formFields[i].columnId,
         formMetadata.tableId,
         formMetadata.tableName,
@@ -111,11 +117,11 @@ export class FormHelperService {
         formFields[i].columnMaxLength,
         formFields[i].linkTargetColumnId,
         formFields[i].linkTargetColumnName,
-        columnMetadata?.allowMultiple == null ? false : columnMetadata?.allowMultiple,
+        columnMetadata?.allowMultiple === null ? false : columnMetadata?.allowMultiple,
         columnMetadata?.validationExpression,
-        columnMetadata?.minValue == null ? 0 : columnMetadata?.minValue,
-        (columnEntitlements == null || cellEntitlements && cellEntitlements[columnEntitlementKey] === 0) ? false : columnEntitlements.canEdit,
-        (columnEntitlements?.canView != null) ? columnEntitlements.canView : false,
+        columnMetadata?.minValue === null ? 0 : columnMetadata?.minValue,
+        (columnEntitlements === null || cellEntitlements && cellEntitlements[columnEntitlementKey] === 0) ? false : columnEntitlements.canEdit,
+        (columnEntitlements?.canView !== null) ? columnEntitlements.canView : false,
         formFields[i].createlinkOptionFormId,
         formFields[i].createlinkOptionName,
         formFields[i].linkTargetTableId,
@@ -124,7 +130,7 @@ export class FormHelperService {
         '#dddddd',
         formFields[i].choiceOptions,
         formMetadata.tableJson,
-        formFields[i].dataFormatType,
+        <DataFormatType>formFields[i].dataFormatType,
         false,
         formFields[i].viewOnly || formFields[i].isDisplayColumn,
         formFields[i].linkFieldId,
@@ -156,7 +162,7 @@ export class FormHelperService {
 
         let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
 
-        childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => displayColumnId.find(id => id == _.formFieldId) != null);
+        childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => displayColumnId.find(id => id === _.formFieldId) !== null);
 
         const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
 
@@ -175,7 +181,7 @@ export class FormHelperService {
         if (childForm.flatten && childForm.sections?.length && childForm.sections[0]['multiFields'] && childForm.sections[0]['multiFields'].length) {
           let childFormData = childForm.sections[0]['multiFields'];
           let lastRecordId = childFormData[childFormData.length - 1]['Cinchy ID'];
-          if (lastRecordId != null) {
+          if (lastRecordId !== null) {
           //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
             const childCellEntitlements = await this.getCellEntitlements(childFormMetadata.domainName, childFormMetadata.tableName, lastRecordId, childFormFieldsMetadata);
             childForm.rowId = lastRecordId;
@@ -186,8 +192,8 @@ export class FormHelperService {
                     const childColumnEntitlements = childTableEntitlements.columnEntitlements.find(_ => _.columnId === childForm.sections[x].fields[y].cinchyColumn.id);
                     const childColumnEntitlementKey = childColumnEntitlements ? `entitlement-${childColumnEntitlements?.columnName.substring(0, 114)}` : '';
 
-                    childForm.sections[x].fields[y].cinchyColumn.canEdit = (childColumnEntitlements == null || childCellEntitlements && childCellEntitlements[childColumnEntitlementKey] === 0) ? false : childColumnEntitlements.canEdit;
-                    childForm.sections[x].fields[y].cinchyColumn.canView = (childColumnEntitlements?.canView != null) ? childColumnEntitlements.canView : false;
+                    childForm.sections[x].fields[y].cinchyColumn.canEdit = (childColumnEntitlements === null || childCellEntitlements && childCellEntitlements[childColumnEntitlementKey] === 0) ? false : childColumnEntitlements.canEdit;
+                    childForm.sections[x].fields[y].cinchyColumn.canView = (childColumnEntitlements?.canView !== null) ? childColumnEntitlements.canView : false;
                   }
                 }
               }
@@ -222,9 +228,9 @@ export class FormHelperService {
         let parentColName = this.parseColumnNameByChildFormLinkId(allChildForms[i].childFormParentId);
         let childColName = this.parseColumnNameByChildFormLinkId(allChildForms[i].childFormLinkId);
         
-        if (parentColName != null && form.fieldsByColumnName[parentColName] != null && childColName != null && allChildForms[i].fieldsByColumnName[childColName] != null) {
+        if (parentColName !== null && form.fieldsByColumnName[parentColName] !== null && childColName !== null && allChildForms[i].fieldsByColumnName[childColName] !== null) {
 
-          if (parentChildLinkedColumns[parentColName] == null)
+          if (parentChildLinkedColumns[parentColName] === null)
             parentChildLinkedColumns[parentColName] = [];
           parentChildLinkedColumns[parentColName].push(allChildForms[i].fieldsByColumnName[childColName]);
 
@@ -271,7 +277,7 @@ export class FormHelperService {
         let idForParentMatch = cinchyIdForMatchFromParentResp?.length ? cinchyIdForMatchFromParentResp[0]['idParent'] : null;
 
         if (idForParentMatch) {
-          if (selectQuery.params == null) {
+          if (selectQuery.params === null) {
             selectQuery.params = {};
           }
 
@@ -296,18 +302,18 @@ export class FormHelperService {
       }
 
       // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
-      if (form.childFieldsLinkedToColumnName != null) {
+      if (form.childFieldsLinkedToColumnName !== null) {
         for (let parentColName in form.childFieldsLinkedToColumnName) {
 
           let linkedParentField = form.fieldsByColumnName[parentColName];
           let linkedChildFields = form.childFieldsLinkedToColumnName[parentColName];
 
-          if (linkedParentField == null || linkedChildFields.length === 0)
+          if (linkedParentField === null || linkedChildFields.length === 0)
             continue;
 
           for (let linkedChildField of linkedChildFields) {
             // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
-            if (!linkedChildField.form.flatten || linkedChildField.value != null || linkedParentField.value == linkedChildField.value)
+            if (!linkedChildField.form.flatten || linkedChildField.value !== null || linkedParentField.value === linkedChildField.value)
               continue;
 
             // Update the child form field's value

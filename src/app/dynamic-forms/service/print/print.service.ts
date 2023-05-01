@@ -294,7 +294,7 @@ export class PrintService {
       if (field.value) {
         selectedOptions = dropdownSet.filter(option => fieldValues.find(id => {
           const trimedId = id.trim ? id.trim() : id;
-          return option.id == trimedId;
+          return option.id === trimedId;
         }));
       }
       return {
@@ -302,7 +302,7 @@ export class PrintService {
         value: selectedOptions?.map(option => option.label).join(', ') || ''
       }
     } else if (dropdownSet) {
-      const selectedOption = dropdownSet.find(option => option.id == field.value);
+      const selectedOption = dropdownSet.find(option => option.id === field.value);
       return {
         label: field.label,
         value: selectedOption.label
@@ -352,7 +352,7 @@ export class PrintService {
     const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
     // So that the one which is display column doesn't match and show the name, as for display column one also
     // field.cinchyColumn.name is same
-    let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name == key);
+    let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name === key);
     if (!currentField) {
       currentField = section.fields.find(field => {
         return field.cinchyColumn.linkTargetColumnName + ' label' === key;
@@ -365,7 +365,7 @@ export class PrintService {
     const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
     // So that the one which is display column doesn't match and show the name, as for display column one also
     // field.cinchyColumn.name is same
-    let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name == key);
+    let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name === key);
     if (!currentField) {
       currentField = section.fields.find(field => {
         return field.cinchyColumn.linkTargetColumnName + ' label' === key;
@@ -392,9 +392,9 @@ export class PrintService {
       const backStr = anchorWithText[1];
       const returnStr: any[] = [];
 
-      if (frontStr && frontStr != '') returnStr.push(frontStr);
+      if (frontStr && frontStr !== '') returnStr.push(frontStr);
       returnStr.push({ text: urlText, link: urlLink, color: '#007bff' });
-      if (backStr && backStr != '') returnStr.push(backStr);  
+      if (backStr && backStr !== '') returnStr.push(backStr);  
 
       return returnStr;
     }
@@ -402,7 +402,7 @@ export class PrintService {
   }
 
   isLinkedColumn(section, key) {
-    return section['LinkedColumnDetails'] && (key == section['LinkedColumnDetails']['linkLabel']);
+    return section['LinkedColumnDetails'] && (key === section['LinkedColumnDetails']['linkLabel']);
   }
 
   getDefaultTable() {

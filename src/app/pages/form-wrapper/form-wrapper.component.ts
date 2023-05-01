@@ -68,7 +68,7 @@ export class FormWrapperComponent implements OnInit {
   }
 
 
-  async ngOnInit() {
+  ngOnInit(): void {
 
     this._appStateService.rootFormIdSet$.subscribe({
       next: (formId: string) => {
@@ -127,7 +127,7 @@ export class FormWrapperComponent implements OnInit {
 
   async loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): Promise<void> {
 
-    if (formMetadata?.subTitleColumn == null) {
+    if (formMetadata?.subTitleColumn === null) {
       return;
     }
 
