@@ -27,7 +27,7 @@ export interface IForm {
   childFormFilter?: string;
   childFormSort?: string;
   fieldsByColumnName: { [columnName: string]: FormField };
-  childFieldsLinkedToColumnName: {[columnName: string]: FormField[]};
+  childFieldsLinkedToColumnName: { [columnName: string]: FormField[] };
   parentForm: IForm;
   tableMetadata: Object;
 
@@ -55,7 +55,7 @@ export class Form implements IForm {
   linkedColumnElement;
   errorFields = [];
   fieldsByColumnName: { [columnName: string]: FormField } = {};
-  childFieldsLinkedToColumnName: {[columnName: string]: FormField[]} = {};
+  childFieldsLinkedToColumnName: { [columnName: string]: FormField[] } = {};
   parentForm: IForm;
   tableMetadata: Object;
 
@@ -84,7 +84,7 @@ export class Form implements IForm {
     public childFormLinkId?: string,
     public childFormFilter?: string,
     public childFormSort?: string
-  ) {}
+  ) { }
 
 
   /**
@@ -150,8 +150,8 @@ export class Form implements IForm {
       } else {
         defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] is null`
       }
-      const whereConditionWithFilter = this.childFormFilter ? 
-      `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
+      const whereConditionWithFilter = this.childFormFilter ?
+        `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
       const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy Id]`
       let query: IQuery = new Query(
         `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
@@ -357,7 +357,6 @@ export class Form implements IForm {
     this.sections.forEach((section: IFormSection) => {
 
       section.fields.forEach((field: IFormField) => {
-
         if (
           field.cinchyColumn.name != null &&
           field.cinchyColumn.canEdit &&
@@ -441,7 +440,7 @@ export class Form implements IForm {
           if (isNullOrUndefined(field.cinchyColumn.linkTargetColumnName) && field.cinchyColumn.dataType !== "Binary") {
             //TODO: for insert data ... because insert is giving error with parameters
             if (isNullOrUndefined(this.rowId)) {
-              assignmentValues.push(`"${params[paramName]}"`);
+              assignmentValues.push(`'${params[paramName]}'`);
             }
             else if ((field.cinchyColumn.dataType === "Text") && !field.value) {
               assignmentValues.push((params[paramName] != "") ? `cast(${paramName} as nvarchar(100))` : paramName);
@@ -488,10 +487,10 @@ export class Form implements IForm {
 
     if (assignmentValues?.length) {
       if (!this.rowId) {
-        const queryString = 
+        const queryString =
           cinchyVersion == null || cinchyVersion.startsWith("4.") ?
-          `INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(",")}) VALUES (${assignmentValues.join(",")}) SELECT @cinchy_row_id` :
-          `CREATE TABLE #tmp([id] int) 
+            `INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(",")}) VALUES (${assignmentValues.join(",")}) SELECT @cinchy_row_id` :
+            `CREATE TABLE #tmp([id] int) 
               INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(",")})
               OUTPUT INSERTED.[Cinchy Id] INTO #tmp ([id])
               VALUES (${assignmentValues.join(",")})
