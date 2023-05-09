@@ -50,11 +50,7 @@ export class NumberComponent implements OnInit {
 
   get canEdit(): boolean {
 
-    if (this.isDisabled) {
-      return false;
-    }
-
-    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+    return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
 

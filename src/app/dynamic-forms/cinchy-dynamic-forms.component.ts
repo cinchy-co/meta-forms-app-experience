@@ -20,25 +20,29 @@ import { MessageDialogComponent } from "./message-dialog/message-dialog.componen
 
 import { ChildFormComponent } from "./fields/child-form/child-form.component";
 
-import { ConfigService } from "../services/config.service";
-
 import { Form } from "./models/cinchy-form.model";
 import { FormField } from "./models/cinchy-form-field.model";
 import { FormSection } from "./models/cinchy-form-section.model";
-import { IQuery } from "./models/cinchy-query.model";
+import { IQuery, Query } from "./models/cinchy-query.model";
 
 import { IFormFieldMetadata } from "../models/form-field-metadata.model";
 import { IFormMetadata } from "../models/form-metadata-model";
 import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 import { ILookupRecord } from "../models/lookup-record.model";
 
-import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import { IFieldChangedEvent } from "./interface/field-changed-event";
 
 import { AppStateService } from "../services/app-state.service";
+import { ConfigService } from "../services/config.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
+
 import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
-import { IFieldChangedEvent } from "./interface/field-changed-event";
+
+import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import { DropdownOption } from "./service/cinchy-dropdown-dataset/cinchy-dropdown-options";
+import { IChildFormQuery } from "./interface/child-form-query";
+
 
 
 
@@ -82,10 +86,25 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   private _queuedRecordSelection: { cinchyId: number | null, doNotReloadForm: boolean };
 
 
-  private childDataForm = [];
-  private childCinchyId = -1;
-  private childFieldArray: Array<any> = [];
-  private childForms: any;
+  private _childForm: Form;
+
+  /**
+   * Contains the set of all pending updates and inserts for child form records on this form. When the form is saved,
+   * these queries are run after the save resolves to ensure that the child forms are correctly updated, and then the
+   * set is cleared (as those queries are no longer pending)
+   */
+  private _pendingChildFormQueries = new Array<IChildFormQuery>();
+
+  /**
+   * In the event that we are adding a record to a child form, the query gets generated and then mapped to a temporary
+   * cinchy ID so that it can be referenced later if the newly-added record is modified before the form is saved. This
+   * temporary ID is sequential and increasingly-negative to avoid relying on something like Math.random() which could
+   * easily result in a duplicate.
+   *
+   * Since -1 is the initial placeholder ID that indicates that the incoming record is an add instead of an edit, we're
+   * starting this variable at -2.
+   */
+  private _lastTemporaryCinchyId: number = -2;
 
 
   constructor(
@@ -93,7 +112,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     private _cinchyService: CinchyService,
     private _toastr: ToastrService,
     private spinner: NgxSpinnerService,
-    private appStateService: AppStateService,
+    private _appStateService: AppStateService,
     private cinchyQueryService: CinchyQueryService,
     private printService: PrintService,
     private _formHelperService: FormHelperService,
@@ -121,12 +140,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     // Intialize with a loading state in case the first load takes some time
     this.lookupRecordsList = [{ id: -1, label: "Loading..." }];
 
-    this.appStateService.saveClicked$.subscribe((saveClicked) => {
-
-      this.saveForm(this.form, this.rowId);
-    });
-
-    this.appStateService.onRecordSelected$.subscribe(
+    this._appStateService.onRecordSelected$.subscribe(
       (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
 
         if (this.lookupRecordsListPopulated) {
@@ -140,16 +154,148 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  rowSelected(row: ILookupRecord): void {
+  afterChildFormEdit(childRowId: number, childForm: Form): void {
 
-    this.currentRow = row ?? this.currentRow;
-    this.appStateService.setRecordSelected(row?.id ?? this.rowId);
-  }
+    this._childForm = childForm.clone();
 
+    const formvalidation = childForm.checkChildFormValidation();
 
-  setLookupRecords(lookupRecords: ILookupRecord[]): void {
+    if (formvalidation.status) {
+      childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
 
-    this.lookupRecordsList = this.checkNoRecord(lookupRecords);
+        section.fields.forEach((field: FormField, fieldIndex: number) => {
+
+          let rowData = {};
+
+          // Adding a new record
+          if (childRowId === -1) {
+            rowData["Cinchy ID"] = this._lastTemporaryCinchyId--;
+
+            switch (field.cinchyColumn.dataType) {
+              case "Link":
+
+                if (field.cinchyColumn.isMultiple) {
+                  if (field.dropdownDataset?.options.length) {
+                    const valueSet: Array<any> = (Array.isArray(field.value)) ? field.value : [field.value];
+
+                    const dropdownResult = field.dropdownDataset.options.filter((option: DropdownOption) => {
+
+                      return valueSet.find((value: any) => {
+
+                        return (option.id === value);
+                      });
+                    });
+
+                    rowData[field.cinchyColumn.name] = dropdownResult.map((option: DropdownOption) => {
+
+                      return option.id;
+                    }).join(",");
+
+                    rowData[`${field.cinchyColumn.name} label`] = dropdownResult.map((option: DropdownOption) => {
+
+                      return option.label;
+                    }).join(",");
+                  }
+                  else {
+                    rowData[field.cinchyColumn.name] = field.value ?? "";
+                  }
+
+                  break;
+                }
+
+              // falls through
+              case "Choice":
+                const dropdownResult = field.dropdownDataset?.options?.find((option: DropdownOption) => {
+
+                  return (option.id === field.value);
+                });
+
+                if (dropdownResult) {
+                  rowData[field.cinchyColumn.name] = dropdownResult.id;
+                  rowData[`${field.cinchyColumn.name} label`] = dropdownResult.label;
+                }
+                else {
+                  rowData[field.cinchyColumn.name] = "";
+                }
+
+                break;
+              case "Binary":
+                rowData[field.cinchyColumn.name] = field.value;
+                rowData[`${field.cinchyColumn.name}_Name`] = field.cinchyColumn.fileName;
+
+                break;
+              case "Yes/No":
+                rowData[field.cinchyColumn.name] = field.value ?? false;
+
+                break;
+              default:
+                rowData[field.cinchyColumn.name] = field.value ?? "";
+            }
+          }
+          // Editing a record
+          else {
+            // First, check to see if the selected row is already pending a change
+            rowData = this._pendingChildFormQueries.find((item: IChildFormQuery) => {
+
+              return (item.rowId === childRowId);
+            });
+
+            // If not, check against the record data for the form to get the record associated with this rowId
+            if (!rowData) {
+              rowData = (section.flattenedChildFormRecordValues || []).find(record => {
+
+                if (record["Cinchy ID"] === childRowId) {
+                  return record;
+                }
+              });
+            }
+
+            if (field.cinchyColumn.dataType === "Link") {
+              if (field.dropdownDataset?.options.length) {
+                const valueSet: Array<any> = (Array.isArray(field.value)) ? field.value : [field.value];
+
+                rowData[field.cinchyColumn.name] = field.dropdownDataset.options.filter((option: DropdownOption) => {
+
+                  return valueSet.find((value: any) => {
+
+                    return (option.id === value);
+                  });
+                }).map((option: DropdownOption) => {
+
+                  // TODO: I'm not sure why we're putting a label into the value slot here instead of adding " label" to the column name,
+                  //       as above. This logic is unchanged from the original, but it makes me wary.
+                  return option.label;
+                }).join(",");
+              }
+              else {
+                rowData[field.cinchyColumn.name] = field.value ?? "";
+              }
+            }
+          }
+
+          this.form.addOrModifyFlattenedChildRecord(sectionIndex, rowData);
+        });
+      });
+
+      const insertQuery: Query = childForm.generateSaveForChildQuery(childRowId < 0 ? null : childRowId, childForm.isClone);
+
+      const existingQueryIndex = this._pendingChildFormQueries?.findIndex((query: IChildFormQuery) => {
+
+        return (query.childFormId === childForm.id);
+      });
+
+      if (existingQueryIndex > -1) {
+        this._pendingChildFormQueries[existingQueryIndex].query = insertQuery;
+      }
+      else {
+        this._pendingChildFormQueries.push({
+          childFormId: childForm.id,
+          formId: this.formId,
+          rowId: childRowId,
+          query: insertQuery
+        });
+      }
+    }
   }
 
 
@@ -164,256 +310,120 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
+  cloneFormData(): void {
+
+    this.form = this.form.clone();
+
+    this._pendingChildFormQueries = new Array<IChildFormQuery>();
+    this._lastTemporaryCinchyId = -2;
+
+    this.form.restoreFormReferenceOnAllFields();
+
+    this._toastr.info("The record was cloned, please save in order to create it. If this field contained any child records, please ensure the field used to link them is updated accordingly.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
+  }
+
+
+  async getChildSavedData(rowId: number): Promise<void> {
+
+    this.spinner.show();
+
+    const selectQuery: IQuery = this._childForm.generateSelectQuery(rowId, this.formMetadata.tableId);
+
+    if (this._childForm.childFormParentId && this._childForm.childFormLinkId) {
+      const queryToGetMatchIdFromParent = `SELECT TOP 1 ${this._childForm.childFormParentId} as 'idParent'
+                                           FROM [${this.formMetadata.domainName}].[${this.formMetadata.tableName}]
+                                           WHERE [Cinchy Id] = ${this.rowId}`;
+
+      let cinchyIdForMatchFromParentResp = (await this._cinchyService.executeCsql(queryToGetMatchIdFromParent, null, null, QueryType.DRAFT_QUERY).toPromise()).queryResult.toObjectArray();
+
+      let idForParentMatch = cinchyIdForMatchFromParentResp[0]["idParent"];
+
+      if (idForParentMatch) {
+        selectQuery.params = selectQuery.params ?? {};
+
+        selectQuery.params["@parentCinchyIdMatch"] = idForParentMatch;
+      }
+    }
+
+    const selectQueryResult: Array<{ [key: string]: any }> = (
+      await this._cinchyService.executeCsql(
+        selectQuery.query,
+        selectQuery.params,
+        null,
+        QueryType.DRAFT_QUERY
+      ).toPromise()
+    ).queryResult.toObjectArray();
+
+    this.spinner.hide();
+
+    this._childForm.populateChildRecordData(rowId, selectQueryResult);
+  }
+
+
+  /**
+   * When a field has been updated, consume the event, update that field on the form, and then redistribute the form to this component's
+   * ancestors.
+   */
+  handleFieldsEvent(event: IFieldChangedEvent): void {
+
+    event.form.updateFieldValue(event.sectionIndex, event.fieldIndex, event.newValue);
+
+    // flattened child form
+    if (event.form.isChild && event.form.flatten && event.form.hasFields) {
+      let targetCinchyId = (event.form.sections[0].flattenedChildFormRecordValues?.length && event.form.sections[0].flattenedChildFormRecordValues[event.form.sections[0].flattenedChildFormRecordValues.length - 1]["Cinchy ID"]) ?
+        event.form.sections[0].flattenedChildFormRecordValues[event.form.sections[0].flattenedChildFormRecordValues.length - 1]["Cinchy ID"] :
+        -1;
+
+      this.afterChildFormEdit(targetCinchyId, event.form);
+
+      if (event.targetColumnName && event.form.childFieldsLinkedToColumnName && event.form.childFieldsLinkedToColumnName[event.targetColumnName]) {
+        event.form.childFieldsLinkedToColumnName[event.targetColumnName].forEach((field: FormField, fieldIndex: number) => {
+
+          field.form.updateFieldValue(
+            0,
+            fieldIndex,
+            event.newValue
+          );
+
+          targetCinchyId = field.form.sections[0].flattenedChildFormRecordValues?.length && field.form.sections[0].flattenedChildFormRecordValues[field.form.sections[0].flattenedChildFormRecordValues.length - 1]["Cinchy ID"] ?
+            field.form.sections[0].flattenedChildFormRecordValues[field.form.sections[0].flattenedChildFormRecordValues.length - 1]["Cinchy ID"] :
+            -1;
+
+          this.afterChildFormEdit(
+            targetCinchyId,
+            field.form);
+        });
+      }
+    }
+  }
+
+
   handleOnFilter(filterText: string): void {
 
     this.onLookupRecordFilter.emit(filterText);
   }
 
 
-  setNewRow(newIndex: number): void {
-
-    const newSelectedRow = this.lookupRecordsList[newIndex];
-
-    this.currentRow = newSelectedRow;
-    this.rowSelected(newSelectedRow);
-  }
-
-
-  //#region Edit Add Child Form Data
-  async openChildForm(data) {
-
-    if (!this.form.isClone && !this.rowId) {
-      const formvalidation = this.form.checkFormValidation();
-
-      if (formvalidation) {
-        this.saveForm(this.form, this.rowId, data);
-      }
-    } else {
-      this.openChildDialog(data);
-    }
-  }
-
-
-  afterChildFormEdit(eventData, childForm): void {
-
-    this.childForms = childForm;
-
-    if (isNullOrUndefined(eventData)) {
-      return;
-    }
-
-    if (isNullOrUndefined(childForm.sections.multiFields)) {
-      childForm.sections.multiFields = [];
-    }
-
-    const childResult = {};
-    const childResultForLocal = {};
-    const formvalidation = eventData.data.checkChildFormValidation();
-
-    if (formvalidation.status) {
-      eventData.data.sections.forEach(section => {
-
-        if (isNullOrUndefined(section.multiFields)) {
-          section.multiFields = [];
-        }
-
-        const fieldRow = section.multiFields.filter(rowData => {
-          if (rowData["Cinchy ID"] === eventData.id) {
-            return rowData;
-          }
-        });
-
-        // Check for the record is new or in edit mode
-        const childFieldRow = this.childFieldArray.filter((rowData) => {
-
-          if (rowData["Cinchy ID"] === eventData.id) {
-            return rowData;
-          }
-        });
-
-        if (fieldRow.length > 0) {
-          // if the code is in edit mode
-          section.fields.forEach((element) => {
-
-            if (element.cinchyColumn.dataType === "Link") {
-              if (!isNullOrUndefined(element.dropdownDataset)) {
-                let dropdownResult;
-
-                if (element.cinchyColumn.isMultiple) {
-                  const elementValues = element.value?.toString().split(",").map(_ => _.trim());
-
-                  dropdownResult = elementValues ? 
-                    element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal === option.id)) : 
-                    [];
-
-                  if (!dropdownResult?.length) {
-                    dropdownResult = [element.dropdownDataset.options.find(e => e.id === element.value)].filter(_ => _);
-                  }
-                } else {
-                  dropdownResult = [element.dropdownDataset.options.find(e => e.id === element.value)].filter(_ => _);
-                }
-
-                if (dropdownResult?.length && dropdownResult[0]) {
-                  fieldRow[0][element.cinchyColumn.name] = dropdownResult.map(item => item.label).join(", ");
-                } else {
-                  fieldRow[0][element.cinchyColumn.name] = "";
-                }
-              }
-            } else {
-              fieldRow[0][element.cinchyColumn.name] = element.value;
-            }
-          });
-        } else {
-          // if the code is in add mode.
-          section.fields.forEach((element) => {
-
-            if ((element.cinchyColumn.dataType === "Link") && element.cinchyColumn.isMultiple) {
-              if (element.dropdownDataset?.options) {                
-                let dropdownResult;
-                // Still checking for string as it can be an array too
-                const elementValues = element.value?.toString().split(",").map(_ => _.trim());
-
-                dropdownResult = elementValues ? element.dropdownDataset.options.filter(option => elementValues.find(eleVal => eleVal === option.id)) : [];
-
-                if (dropdownResult && dropdownResult.length) {
-                  childResult[element.cinchyColumn.name] = element.value;
-                  childResult[element.cinchyColumn.name + " label"] = dropdownResult.map(item => item.label).join(",");
-                  childResultForLocal[element.cinchyColumn.name] = dropdownResult.map(item => item.label).join(",");
-                } else {
-                  childResultForLocal[element.cinchyColumn.name] = "";
-                }
-              } else {
-                childResult[element.cinchyColumn.name] = element.value;
-                childResultForLocal[element.cinchyColumn.name] = element.value;
-              }
-            } else if (element.cinchyColumn.dataType === "Link" || element.cinchyColumn.dataType === "Choice") {
-              if (!isNullOrUndefined(element.dropdownDataset) && element.dropdownDataset.options) {
-                const dropdownResult = element.dropdownDataset.options.find(e => e.id === element.value);
-
-                if (!isNullOrUndefined(dropdownResult)) {
-                  childResult[element.cinchyColumn.name] = dropdownResult.id;
-                  childResult[element.cinchyColumn.name + " label"] = dropdownResult.label;
-                  childResultForLocal[element.cinchyColumn.name] = dropdownResult.label;
-                } else {
-                  childResultForLocal[element.cinchyColumn.name] = "";
-                }
-              } else {
-                childResult[element.cinchyColumn.name] = element.value;
-                childResultForLocal[element.cinchyColumn.name] = element.value;
-              }
-            } else if (element.cinchyColumn.dataType === "Binary") {
-              childResult[element.cinchyColumn.name] = element.value;
-              childResultForLocal[element.cinchyColumn.name] = element.value;
-
-              const keyForBinary = element.cinchyColumn.name + "_Name";
-
-              childResult[keyForBinary] = element.cinchyColumn.FileName;
-              childResultForLocal[keyForBinary] = element.cinchyColumn.FileName;
-            } else {
-              childResult[element.cinchyColumn.name] = element.value;
-              childResultForLocal[element.cinchyColumn.name] = element.value;
-            }
-
-            if (element.cinchyColumn.dataType === "Yes/No") {
-              if (element.value === "" || isNullOrUndefined(element.value)) {
-                element.value = false;
-                childResult[element.cinchyColumn.name] = false;
-                childResultForLocal[element.cinchyColumn.name] = false;
-              }
-            }
-          });
-
-          // create a random cinchy id for the local storage.
-          const random = eventData.id = Math.random();
-
-          childResultForLocal["Cinchy ID"] = random;
-          childResult["Cinchy ID"] = random;
-
-          // store child form data in local storage.
-          this.childFieldArray.push(childResult);
-
-          section.multiFields.push(childResultForLocal);
-        }
-
-        if (childFieldRow.length > 0) {
-          section.fields.forEach(element => {
-            if (element.cinchyColumn.dataType === "Link") {
-              if (!isNullOrUndefined(element.dropdownDataset) && element.dropdownDataset.options) {
-                const dropdownResult = element.dropdownDataset.options.find(e => e.id === element.value);
-
-                if (!isNullOrUndefined(dropdownResult)) {
-                  childFieldRow[0][element.cinchyColumn.name + " label"] = dropdownResult.label;
-                  childFieldRow[0][element.cinchyColumn.name] = dropdownResult.id;
-                } else {
-                  childFieldRow[0][element.cinchyColumn.name] = "";
-                }
-              }
-            } else {
-              childFieldRow[0][element.cinchyColumn.name] = element.value;
-            }
-          });
-        }
-      });
-
-      const _cinchyid = eventData.id;
-      const _childFormId = `${_cinchyid}-${eventData.childFormId}`;
-
-      if (eventData.id < 1) {
-        eventData.id = null;
-      }
-
-      const insertQuery: IQuery = eventData.data.generateSaveForChildQuery(eventData.id, this.form.isClone);
-
-      // Generate insert query for child form
-      const queryResult = {
-        id: _cinchyid,
-        Query: insertQuery,
-        result: eventData.data,
-        childFormId: _childFormId
-      };
-
-      // check query for add/edit mode
-      const _query = this.childDataForm.filter(x => x.childFormId === _childFormId);
-
-      if (_query.length > 0) { // Issue was when both child rows have same ID it was overriding it, that"s why using uniquee childFormId
-        _query[0].Query = insertQuery;
-      } else {
-        // create a collection of queries for child form
-        this.childDataForm.push(queryResult);
-      }
-      this.childCinchyId = eventData.id;
-    }
-  }
-
-
-  openChildDialog(data): void {
-
-    const dialogData = { ...data, rowId: this.rowId };
-    const dialogRef = this._dialog.open(ChildFormComponent, {
-      width: "500px",
-      data: dialogData
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      this.afterChildFormEdit(result, data.multiFieldValues);
-    });
-  }
-  //#endregion
-
-
-  //#region
   /**
    * Uses the metadata from Cinchy to create and load the Form object, then it"ll fill it with the form object with actual data
    * Gets called upon load, save, and row changes
    */
-  async loadForm(childData?: any): Promise<void> {
+  async loadForm(
+      childData?: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        title: string
+      }
+  ): Promise<void> {
 
     if (this.form?.isClone) {
       this.form = this.form.clone(null, true);
+
+      this.form.restoreFormReferenceOnAllFields();
     }
 
-    this.childDataForm = [];
-    this.formHasDataLoaded = false;
+    this._pendingChildFormQueries = new Array<IChildFormQuery>();
+    this.formHasDataLoaded = this.formHasDataLoaded || false;
     this.enableSaveBtn = false;
 
     this.isLoadingForm = true;
@@ -437,12 +447,41 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
             await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
 
             // This may occur if the rowId is not provided in the queryParams, but one is available in the session
-            if (this.rowId !== null) {
+            if (this.rowId) {
               if (!selectedLookupRecord) {
-                this.appStateService.setRecordSelected(null);
+                this._appStateService.setRecordSelected(null);
               }
               else {
-                await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+                const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null, null);
+
+                if (success && form.childFieldsLinkedToColumnName?.length) {
+                  // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
+                  for (let parentColumnName in form.childFieldsLinkedToColumnName) {
+                    let linkedParentField = form.fieldsByColumnName[parentColumnName];
+                    let linkedChildFields = form.childFieldsLinkedToColumnName[parentColumnName] || [];
+
+                    for (let linkedChildField of linkedChildFields) {
+                      // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
+                      if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
+                        continue;
+                      }
+
+                      // Update the child form field's value
+                      const fieldIndex = form.sections[0].fields.findIndex((field: FormField) => {
+
+                        return (field.id === linkedChildField.id);
+                      });
+
+                      form.updateFieldValue(
+                        0,
+                        fieldIndex,
+                        linkedParentField.value
+                      );
+
+                      this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
+                    }
+                  }
+                }
               }
             }
 
@@ -452,15 +491,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
             this.isLoadingForm = false;
             this.formHasDataLoaded = true;
-         
+
             this.spinner.hide();
 
             if (childData) {
               setTimeout(() => {
 
-                childData.rowId = this.rowId;
+                childData.childForm.rowId = this.rowId;
 
-                this.appStateService.setOpenOfChildFormAfterParentSave(childData);
+                this._appStateService.parentFormSavedFromChild$.next(childData);
               }, 500);
             }
           }
@@ -477,17 +516,214 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       console.error(e);
     }
   }
-  //#endregion
 
 
-  //#region  Save Values of MetaData
-  public async saveForm(formData: Form, rowId: number, childData?): Promise<void> {
+  openChildDialog(
+      data: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        title: string
+      }
+  ): void {
+
+    data.childForm.rowId = this.rowId;
+
+    const dialogRef = this._dialog.open(
+      ChildFormComponent,
+      {
+        width: "500px",
+        data: data
+      }
+    );
+
+    dialogRef.afterClosed().subscribe((resultId: number) => {
+
+      if (!isNullOrUndefined(resultId)) {
+        this.afterChildFormEdit(resultId, data.childForm);
+      }
+    });
+  }
+
+
+  async openChildForm(
+      data: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        title: string
+      }
+  ) {
+
+    if (!this.form.isClone && !this.rowId) {
+      const formvalidation = this.form.checkFormValidation();
+
+      if (formvalidation) {
+        this.saveForm(this.form, this.rowId, data);
+      }
+    } else {
+      this.openChildDialog(data);
+    }
+  }
+
+
+  openDeleteConfirm(data): void {
+
+    const { domain, table, field, multiarray } = data;
+
+    const dialogRef = this._dialog.open(MessageDialogComponent, {
+      width: "400px",
+      data: {
+        title: "Please confirm",
+        message: "Are you sure you want to delete this record?"
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === "Yes") {
+        if (!isNullOrUndefined(field["Cinchy ID"])) {
+          const id = field["Cinchy ID"];
+
+          if (field["Cinchy ID"] > 0) {
+            // Query to delete record by Cinchy ID
+            let query = `delete
+                         from [${domain}].[${table}]
+                         where
+                             [Cinchy Id] = ${id}
+                         and [Deleted] is null`;
+
+            this._cinchyService.executeCsql(query, null).subscribe(
+              () => {
+                const idx = multiarray.indexOf(field);
+
+                if (idx > -1) {
+                  multiarray.splice(idx, 1);
+
+                  // Remove record from local collection.
+                  this._pendingChildFormQueries = this._pendingChildFormQueries.filter((query: IChildFormQuery) => {
+
+                    return query.rowId !== id;
+                  });
+
+                  this._toastr.success(
+                    "Record deleted successfully",
+                    "Success"
+                  );
+                }
+              },
+              () => {
+                this.spinner.hide();
+              }
+            );
+          } else {
+            const idx = multiarray.indexOf(field);
+
+            if (idx > -1) {
+              multiarray.splice(idx, 1);
+
+              this._pendingChildFormQueries = this._pendingChildFormQueries.filter((query: IChildFormQuery) => {
+
+                return query.rowId !== id;
+              });
+
+              this._toastr.success("Record deleted successfully", "Success");
+            }
+          }
+        } else {
+          const idx = multiarray.indexOf(field);
+
+          if (idx > -1) {
+            multiarray.splice(idx, 1);
+          }
+        }
+      }
+    });
+  }
+
+
+  printCurrentForm(): void {
+
+    this.printService.generatePdf(this.form, this.currentRow);
+  }
+
+
+  rowSelected(row: ILookupRecord): void {
+
+    this.currentRow = row ?? this.currentRow;
+    this._appStateService.setRecordSelected(row?.id ?? this.rowId);
+  }
+
+
+  saveChildForm(rowId: number, recursionCounter: number): Promise<void> {
+
+    return new Promise((resolve, reject) => {
+
+      if (!this._pendingChildFormQueries.length && !isNullOrUndefined(this.rowId)) {
+        this.loadForm();
+
+        resolve();
+      }
+      else if (this._pendingChildFormQueries.length <= recursionCounter) {
+        resolve();
+      }
+      else {
+        this.spinner.show();
+        const pendingItem = this._pendingChildFormQueries[recursionCounter];
+
+        if (pendingItem.query.query) {
+          const queryToExecute = pendingItem.query.query.replace("{sourceid}", rowId.toString());
+          const params = JSON.parse(JSON.stringify(pendingItem.query.params).replace("{sourceId}", rowId.toString()));
+
+          this._cinchyService.executeCsql(queryToExecute, params).subscribe(
+            async () => {
+
+              this.spinner.hide();
+
+              await this.saveChildForm(rowId, recursionCounter + 1);
+
+              this._updateFileAndSaveFileNames(pendingItem.query.attachedFilesInfo);
+
+              if (this._pendingChildFormQueries.length === (recursionCounter + 1)) {
+                await this.getChildSavedData(rowId);
+
+                this._pendingChildFormQueries = new Array<IChildFormQuery>();
+                this._lastTemporaryCinchyId = -2;
+
+                this._toastr.success("Child form saved successfully", "Success");
+              }
+
+              resolve();
+            },
+            error => {
+              this.spinner.hide();
+              this._toastr.error("Error while saving child form", "Error");
+
+              reject(error);
+            });
+        }
+        else {
+          this._updateFileAndSaveFileNames(pendingItem.query.attachedFilesInfo);
+
+          resolve();
+        }
+      }
+    });
+  }
+
+
+  async saveForm(
+      formData: Form,
+      rowId: number,
+      childData?: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        title: string
+      }
+  ): Promise<void> {
 
     if (formData) {
       // check validations for the form eg: Required, Regular expression
       const formvalidation = formData.checkFormValidation();
 
-      if (formvalidation.status) {      
+      if (formvalidation.status) {
         // Generate dynamic query using dynamic form meta data
         this.spinner.show();
         const insertQuery: IQuery = formData.generateSaveQuery(rowId, this._configService.cinchyVersion, this.form.isClone);
@@ -501,15 +737,17 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 this.spinner.hide();
 
                 if (isNullOrUndefined(this.rowId)) {
-                  this.appStateService.setRecordSelected(response.queryResult._jsonResult.data[0][0], true);
+                  this._appStateService.setRecordSelected(response.queryResult._jsonResult.data[0][0], true);
 
                   if (this.form.isClone) {
                     this.form = this.form.clone(null, true);
+
+                    this.form.restoreFormReferenceOnAllFields();
                   }
                 }
 
-                this.saveMethodLogic(this.rowId, response, childData);
-                this.updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
+                this._saveMethodLogic(this.rowId, response, childData);
+                this._updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
 
                 this._toastr.success("Data Saved Successfully", "Success");
 
@@ -518,7 +756,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 }
 
                 formData.hasChanged = false;
-                this.appStateService.hasFormChanged = false;
+                this._appStateService.hasFormChanged = false;
               },
               error => {
                 console.error("Error in cinchy-dynamic-forms save method", error);
@@ -528,11 +766,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               });
           }
           else if (insertQuery.attachedFilesInfo && insertQuery.attachedFilesInfo.length) {
-            this.updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
+            this._updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
           }
         }
         else {
-          this.saveMethodLogic(this.rowId, null);
+          this._saveMethodLogic(this.rowId, null);
         }
       }
       else {
@@ -540,11 +778,80 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         this._toastr.warning(formvalidation.message, "Warning");
       }
     }
-
   }
 
 
-  private updateFileAndSaveFileNames(attachedFilesInfo): void {
+  setLookupRecords(lookupRecords: ILookupRecord[]): void {
+
+    this.lookupRecordsList = this.checkNoRecord(lookupRecords);
+  }
+
+
+  setNewRow(newIndex: number): void {
+
+    const newSelectedRow = this.lookupRecordsList[newIndex];
+
+    this.currentRow = newSelectedRow;
+    this.rowSelected(newSelectedRow);
+  }
+
+
+  /**
+   * Ingests the selected record and populates the form accordingly
+   */
+  private _handleRecordSelection(record: { cinchyId: number | null, doNotReloadForm: boolean }) {
+
+    this.rowId = record?.cinchyId;
+
+    if (this.rowId) {
+      this.setLookupRecords(this.lookupRecordsList);
+      this.currentRow = this.lookupRecordsList?.find(item => item.id === this.rowId) ?? this.currentRow ?? null;
+    }
+    else {
+      this.currentRow = null;
+    }
+
+    if (!record?.doNotReloadForm) {
+      this.loadForm();
+    }
+  }
+
+
+  private async _saveMethodLogic(
+      rowId: number,
+      response,
+      childData?: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        title: string
+      }
+  ): Promise<number> {
+
+    if (response?.queryResult._jsonResult.data.length > 0) {
+      rowId = response.queryResult._jsonResult.data[0][0];
+    } else {
+      rowId = this.rowId;
+    }
+
+    if (this._pendingChildFormQueries?.length) {
+      await this.saveChildForm(rowId, 0);
+    } else {
+      this.spinner.hide();
+
+      if (!isNullOrUndefined(this.rowId)) {
+        this.loadForm(childData);
+      }
+
+      if (!response) {
+        this._toastr.warning("No changes were made", "Warning");
+      }
+    }
+
+    return rowId;
+  }
+
+
+  private _updateFileAndSaveFileNames(attachedFilesInfo): void {
 
     attachedFilesInfo.forEach(async (fileDetails) => {
       const params = {
@@ -583,277 +890,5 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         await this._cinchyService.executeCsql(query, params).toPromise();
       }
     });
-  }
-
-
-  private async saveMethodLogic(rowId: number, response, childData?): Promise<number> {
-
-    if (response?.queryResult._jsonResult.data.length > 0) {
-      rowId = response.queryResult._jsonResult.data[0][0];
-    } else {
-      rowId = this.rowId;
-    }
-     
-    if (this.childCinchyId !== -1) {
-      await this.saveChildForm(rowId, 0);
-    } else {
-      this.spinner.hide();
-
-      if (!isNullOrUndefined(this.rowId)) {
-        this.loadForm(childData);
-      }
-
-      if (!response) {
-        this._toastr.warning("No changes were made", "Warning");
-      }
-    }
-
-    return rowId;
-  }
-  //#endregion
-
-
-  //#region save Child Form Values
-  public async saveChildForm(rowId: number, idx): Promise<void> {
-
-    return new Promise((resolve, reject) => {
-
-      if (!this.childDataForm.length && !isNullOrUndefined(this.rowId)) {
-        this.loadForm();
-
-        resolve();
-      }
-      else if (this.childDataForm.length <= idx) {
-        resolve();
-      }
-      else {
-        this.spinner.show();
-        const element = this.childDataForm[idx];
-
-        if (element.Query.query) {
-          element.Query.query = element.Query.query.replace("{sourceid}", rowId.toString());
-          const params = JSON.stringify(element.Query.params).replace("{sourceid}", rowId.toString());
-          this._cinchyService.executeCsql(element.Query.query, JSON.parse(params)).subscribe(
-            async () => {
-
-              this.spinner.hide();
-
-              await this.saveChildForm(rowId, idx + 1);
-
-              this.updateFileAndSaveFileNames(element.Query.attachedFilesInfo);
-
-              if (this.childDataForm.length === (idx + 1)) {
-                await this.getchildSavedData(rowId);
-
-                this.childDataForm = [];
-                this.childCinchyId = -1;
-                this._toastr.success("Child form saved successfully", "Success");
-              }
-
-              resolve();
-            },
-            error => {
-              this.spinner.hide();
-              this._toastr.error("Error while saving child form", "Error");
-
-              reject(error);
-            });
-        } else {
-          this.updateFileAndSaveFileNames(element.Query.attachedFilesInfo);
-
-          resolve();
-        }
-      }
-    });
-  }
-  //#endregion
-
-
-  //#region Get Child Form Data After Save in Database
-  public async getchildSavedData(rowID): Promise<void> {
-
-    this.spinner.show();
-
-    const selectQuery: IQuery = this.childForms.generateSelectQuery(rowID, this.formMetadata.tableId);
-
-    if (this.childForms.childFormParentId && this.childForms.childFormLinkId) {
-      const queryToGetMatchIdFromParent = `SELECT TOP 1 ${this.childForms.childFormParentId} as 'idParent'
-                                           FROM [${this.formMetadata.domainName}].[${this.formMetadata.tableName}]
-                                           WHERE [Cinchy Id] = ${this.rowId}`;
-
-      let cinchyIdForMatchFromParentResp = (await this._cinchyService.executeCsql(queryToGetMatchIdFromParent, null, null, QueryType.DRAFT_QUERY).toPromise()).queryResult.toObjectArray();
-
-      let idForParentMatch = cinchyIdForMatchFromParentResp[0]["idParent"];
-
-      if (idForParentMatch) {
-        if (selectQuery.params === null) {
-          selectQuery.params = {};
-        }
-        selectQuery.params["@parentCinchyIdMatch"] = idForParentMatch;
-      }
-    }
-
-    const selectQueryResult: Object[] = (
-      await this._cinchyService.executeCsql(
-        selectQuery.query,
-        selectQuery.params,
-        null,
-        QueryType.DRAFT_QUERY
-      ).toPromise()
-    ).queryResult.toObjectArray();
-
-    this.spinner.hide();
-    this.childForms.loadMultiRecordData(rowID, selectQueryResult);
-  }
-
-
-  /**
-   * When a field has been updated, consume the event, update that field on the form, and then redistribute the form to this component's
-   * ancestors.
-   */
-  handleFieldsEvent(event: IFieldChangedEvent): void {
-
-    event.form.updateFieldValue(event.sectionIndex, event.fieldIndex, event.newValue);
-
-    // flattened child form
-    if (event.form.isChild && event.form.flatten) {
-      // If contains a record
-      if (event.form.hasFields) {
-        this.afterChildFormEdit({
-          "childFormId": event.form.id,
-          "data": event.form,
-          "id": (event.form.sections[0].multiFields?.length && event.form.sections[0].multiFields[event.form.sections[0].multiFields.length - 1]["Cinchy ID"] !== null) ? 
-            event.form.sections[0].multiFields[event.form.sections[0].multiFields.length - 1]["Cinchy ID"] : 
-            0
-        }, event.form);
-      }
-    }
-
-    if (event.targetColumnName && event.form.childFieldsLinkedToColumnName && event.form.childFieldsLinkedToColumnName[event.targetColumnName]) {
-      for (let linkedFormField of event.form.childFieldsLinkedToColumnName[event.targetColumnName]) {
-        if (linkedFormField.form.isChild && linkedFormField.form.flatten) {
-          linkedFormField.value = event.newValue;
-          linkedFormField.cinchyColumn.hasChanged = true;
-
-          this.afterChildFormEdit({
-            "childFormId": linkedFormField.form.id,
-            "data": linkedFormField.form,
-            "id": linkedFormField.form.sections[0].multiFields?.length && linkedFormField.form.sections[0].multiFields[linkedFormField.form.sections[0].multiFields.length - 1]["Cinchy ID"] !== null ? 
-            linkedFormField.form.sections[0].multiFields[linkedFormField.form.sections[0].multiFields.length - 1]["Cinchy ID"] : 
-              0
-          }, linkedFormField.form);
-        }
-      }
-    }
-  }
-
-
-  openDeleteConfirm(data): void {
-
-    const { domain, table, field, multiarray } = data;
-
-    const dialogRef = this._dialog.open(MessageDialogComponent, {
-      width: "400px",
-      data: {
-        title: "Please confirm",
-        message: "Are you sure you want to delete this record ?"
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result === "Yes") {
-        if (!isNullOrUndefined(field["Cinchy ID"])) {
-          const id = field["Cinchy ID"];
-
-          if (field["Cinchy ID"] > 0) {
-            // Query to delete record by Cinchy ID
-            let query = `delete
-                         from [${domain}].[${table}]
-                         where
-                             [Cinchy Id] = ${id}
-                           and [Deleted] is null`;
-
-            this._cinchyService.executeCsql(query, null).subscribe(
-              () => {
-                const idx = multiarray.indexOf(field);
-                if (idx > -1) {
-                  multiarray.splice(idx, 1);
-                  // Remove record from local collection.
-                  this.childDataForm = this.childDataForm.filter(
-                    x => x.id !== id
-                  );
-                  this.childFieldArray = this.childFieldArray.filter(
-                    x => x["Cinchy ID"] !== id
-                  );
-                  this._toastr.success(
-                    "Record deleted successfully",
-                    "Success"
-                  );
-                }
-              },
-              () => {
-                this.spinner.hide();
-              }
-            );
-          } else {
-            const idx = multiarray.indexOf(field);
-
-            if (idx > -1) {
-              multiarray.splice(idx, 1);
-
-              this.childDataForm = this.childDataForm.filter(x => x.id !== id);
-              this.childFieldArray = this.childFieldArray.filter(
-
-                x => x["Cinchy ID"] !== id
-              );
-
-              this._toastr.success("Record deleted successfully", "Success");
-            }
-          }
-        } else {
-          const idx = multiarray.indexOf(field);
-
-          if (idx > -1) {
-            multiarray.splice(idx, 1);
-          }
-        }
-      }
-    });
-  }
-
-
-  printCurrentForm(): void {
-
-    this.printService.generatePdf(this.form, this.currentRow);
-  }
-
-
-  cloneFormData(): void {
-
-    this.form = this.form.clone();
-    this.childDataForm = [];
-
-    this._toastr.info("The record was cloned, please save in order to create it. If this field contained any child records, please ensure the field used to link them is updated accordingly.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
-  }
-
-
-  /**
-   * Ingests the selected record and populates the form accordingly
-   */
-  private _handleRecordSelection(record: { cinchyId: number | null, doNotReloadForm: boolean }) {
-
-    this.rowId = record?.cinchyId;
-
-    if (this.rowId) {
-      this.setLookupRecords(this.lookupRecordsList);
-      this.currentRow = this.lookupRecordsList?.find(item => item.id === this.rowId) ?? this.currentRow ?? null;
-    }
-    else {
-      this.currentRow = null;
-    }
-
-    if (!record?.doNotReloadForm) {
-      this.loadForm();
-    }
   }
 }

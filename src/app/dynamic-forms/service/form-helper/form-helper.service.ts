@@ -16,6 +16,7 @@ import { CinchyQueryService } from "src/app/services/cinchy-query.service";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
 import { DataFormatType } from "../../enums/data-format-type";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
 @Injectable({
@@ -30,7 +31,7 @@ export class FormHelperService {
   ) {}
 
 
-  public async generateForm(
+  async generateForm(
       formMetadata: IFormMetadata,
       rowId: number,
       tableEntitlements: any,
@@ -71,213 +72,217 @@ export class FormHelperService {
   }
 
 
-  public async fillWithFields(form: Form, cinchyId: number, formMetadata: IFormMetadata, formFieldsMetadata: IFormFieldMetadata[], selectedLookupRecord: ILookupRecord, tableEntitlements: any) {
+  async fillWithFields(
+      form: Form,
+      cinchyId: number,
+      formMetadata: IFormMetadata,
+      formFieldsMetadata: IFormFieldMetadata[],
+      selectedLookupRecord: ILookupRecord,
+      tableEntitlements: any
+  ): Promise<void> {
 
-    if (!formFieldsMetadata?.length) {
-      return;
-    }
+    if (formFieldsMetadata?.length) {
+      let tableJson = JSON.parse(formMetadata.tableJson);
+      let formFields: IFormFieldMetadata[] = formFieldsMetadata.filter(_ => _.formId === form.id);
 
-    let tableJson = JSON.parse(formMetadata.tableJson);
-    let formFields: IFormFieldMetadata[] = formFieldsMetadata.filter(_ => _.formId === form.id);
+     // const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
+      const cellEntitlements = await this._getCellEntitlements(formMetadata.domainName, formMetadata.tableName, cinchyId, formFields);
 
-   // const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
-    const cellEntitlements = await this.getCellEntitlements(formMetadata.domainName, formMetadata.tableName, cinchyId, formFields);
+      let parentChildLinkedColumns: {[columnName: string]: FormField[]} = {};
+      let parentFieldsByColumn: {[columnName: string]: FormField} = {};
+      let allChildForms: Form[] = [];
 
-    let parentChildLinkedColumns: {[columnName: string]: FormField[]} = {};
-    let parentFieldsByColumn: {[columnName: string]: FormField} = {};
-    let allChildForms: Form[] = [];
+      let minSectionIter = 0;
 
-    let minSectionIter = 0;
+      for (let i = 0; i < formFields.length; i++) {
 
-    for (let i = 0; i < formFields.length; i++) {
-
-      const columnMetadata = tableJson.Columns.find(_ => _.columnId === formFields[i].columnId);
-      const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
-      const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
-      const attachedFileName = await this.getFileName(cinchyId, formFields[i].fileNameColumn);
-
-      // DEBUG
-      if (i === 17) {
-        console.log("here!");
-      }
+        const columnMetadata = tableJson.Columns.find(_ => _.columnId === formFields[i].columnId);
+        const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
+        const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
+        const attachedFileName = await this._getFileName(cinchyId, formFields[i].fileNameColumn);
       
-      if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
-        const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
-        columnMetadata.displayFormat = parentMetadata?.displayFormat;
-      }
+        if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
+          const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
+          columnMetadata.displayFormat = parentMetadata?.displayFormat;
+        }
 
-      const cinchyColumn: CinchyColumn = new CinchyColumn(
-        formFields[i].columnId,
-        formMetadata.tableId,
-        formMetadata.tableName,
-        formMetadata.domainName,
-        formFields[i].columnName,
-        formFields[i].columnType,
-        formFields[i].overrideMandatory ? false : formFields[i].columnIsMandatory,
-        formFields[i].columnMaxLength,
-        formFields[i].linkTargetColumnId,
-        formFields[i].linkTargetColumnName,
-        columnMetadata?.allowMultiple === null ? false : columnMetadata?.allowMultiple,
-        columnMetadata?.validationExpression,
-        columnMetadata?.minValue === null ? 0 : columnMetadata?.minValue,
-        (columnEntitlements === null || cellEntitlements && cellEntitlements[columnEntitlementKey] === 0) ? false : columnEntitlements.canEdit,
-        (columnEntitlements?.canView !== null) ? columnEntitlements.canView : false,
-        formFields[i].createlinkOptionFormId,
-        formFields[i].createlinkOptionName,
-        formFields[i].linkTargetTableId,
-        formFields[i].linkTargetTableName,
-        formFields[i].linkTableDomainName,
-        '#dddddd',
-        formFields[i].choiceOptions,
-        formMetadata.tableJson,
-        <DataFormatType>formFields[i].dataFormatType,
-        false,
-        formFields[i].viewOnly || formFields[i].isDisplayColumn,
-        formFields[i].linkFieldId,
-        formFields[i].isDisplayColumn,
-        attachedFileName,
-        formFields[i].fileNameColumn,
-        formFields[i].dropdownFilter,
-        formFields[i].totalTextAreaRows,
-        formFields[i].numberFormatter,
-        formFields[i].attachmentUrl,
-        formFields[i].uploadUrl,
-        formFields[i].childFormParentId,
-        formFields[i].childFormLinkId,
-        formFields[i].doNotWrap,
-        columnMetadata?.displayFormat,
-        columnMetadata?.textFormat
-      );
+        const cinchyColumn: CinchyColumn = new CinchyColumn(
+          formFields[i].columnId || null,
+          formMetadata.tableId || null,
+          formMetadata.tableName || null,
+          formMetadata.domainName || null,
+          formFields[i].columnName || null,
+          formFields[i].columnType || null,
+          formFields[i].overrideMandatory ? false : coerceBooleanProperty(formFields[i].columnIsMandatory),
+          formFields[i].columnMaxLength || null,
+          formFields[i].linkTargetColumnId || null,
+          formFields[i].linkTargetColumnName || null,
+          columnMetadata?.allowMultiple ?? false,
+          columnMetadata?.validationExpression || null,
+          columnMetadata?.minValue ?? 0,
+          (isNullOrUndefined(columnEntitlements) || cellEntitlements && cellEntitlements[columnEntitlementKey] === 0) ? false : columnEntitlements.canEdit,
+          columnEntitlements?.canView ?? false,
+          formFields[i].createlinkOptionFormId || null,
+          formFields[i].createlinkOptionName || null,
+          formFields[i].linkTargetTableId || null,
+          formFields[i].linkTargetTableName || null,
+          formFields[i].linkTableDomainName || null,
+          "#dddddd",
+          formFields[i].choiceOptions || null,
+          formMetadata.tableJson || null,
+          <DataFormatType>formFields[i].dataFormatType || null,
+          coerceBooleanProperty(formFields[i].viewOnly || formFields[i].isDisplayColumn),
+          formFields[i].linkFieldId || null,
+          coerceBooleanProperty(formFields[i].isDisplayColumn),
+          attachedFileName || null,
+          formFields[i].fileNameColumn || null,
+          formFields[i].dropdownFilter || null,
+          formFields[i].totalTextAreaRows ?? null,
+          formFields[i].numberFormatter || null,
+          formFields[i].attachmentUrl || null,
+          formFields[i].uploadUrl || null,
+          formFields[i].childFormParentId || null,
+          formFields[i].childFormLinkId || null,
+          coerceBooleanProperty(formFields[i].doNotWrap),
+          columnMetadata?.displayFormat || null,
+          columnMetadata?.textFormat || null
+        );
 
-      let childForm: Form = null;
-      const childFormId = formFields[i].childFormId;
+        let childForm: Form = null;
+        const childFormId = formFields[i].childFormId;
 
-      if (childFormId) {
-        const displayColumnId = formFields[i].displayColumn.split(',').map(_ => parseInt(_, 10));
+        if (childFormId) {
+          const displayColumnId = formFields[i].displayColumn.split(',').map(_ => parseInt(_, 10));
 
-        displayColumnId.push(formFields[i].linkFieldId);
+          displayColumnId.push(formFields[i].linkFieldId);
         
-        const childFormMetadata = await this._cinchyQueryService.getFormMetadata(childFormId).toPromise();
-        const childFormSectionsMetadata = await this._cinchyQueryService.getFormSections(childFormId).toPromise();
+          const childFormMetadata = await this._cinchyQueryService.getFormMetadata(childFormId).toPromise();
+          const childFormSectionsMetadata = await this._cinchyQueryService.getFormSections(childFormId).toPromise();
 
-        let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
+          let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
 
-        childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => displayColumnId.find(id => id === _.formFieldId) !== null);
+          childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => !isNullOrUndefined(displayColumnId.find(id => id === _.formFieldId)));
 
-        const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
+          const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
 
-        childForm = await this.generateForm(childFormMetadata, null, childTableEntitlements, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
+          childForm = await this.generateForm(childFormMetadata, null, childTableEntitlements, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
 
-        childForm.populateSectionsFromFormMetadata(childFormSectionsMetadata);
+          childForm.populateSectionsFromFormMetadata(childFormSectionsMetadata);
 
-        await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
-        await this.fillWithData(childForm, cinchyId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
+          await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
+          await this.fillWithData(childForm, cinchyId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
 
-        // Override these, they will be checked later when opening up the child form
-        cinchyColumn.canEdit = true;
-        cinchyColumn.canView = true;
+          // Override these, they will be checked later when opening up the child form
+          cinchyColumn.canEdit = true;
+          cinchyColumn.canView = true;
 
-        // If flatten, we have to check the entitlements for the last record and readjust the entitlements
-        if (childForm.flatten && childForm.sections?.length && childForm.sections[0]['multiFields'] && childForm.sections[0]['multiFields'].length) {
-          let childFormData = childForm.sections[0]['multiFields'];
-          let lastRecordId = childFormData[childFormData.length - 1]['Cinchy ID'];
-          if (lastRecordId !== null) {
-          //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
-            const childCellEntitlements = await this.getCellEntitlements(childFormMetadata.domainName, childFormMetadata.tableName, lastRecordId, childFormFieldsMetadata);
-            childForm.rowId = lastRecordId;
-            if (childForm.sections) {
-              for (let x = 0; x < childForm.sections.length; x++) {
-                if (childForm.sections[x].fields?.length) {
-                  for (let y = 0; y < childForm.sections[x].fields.length; y++) {
-                    const childColumnEntitlements = childTableEntitlements.columnEntitlements.find(_ => _.columnId === childForm.sections[x].fields[y].cinchyColumn.id);
-                    const childColumnEntitlementKey = childColumnEntitlements ? `entitlement-${childColumnEntitlements?.columnName.substring(0, 114)}` : '';
+          // If flatten, we have to check the entitlements for the last record and readjust the entitlements
+          if (childForm.flatten && childForm.sections?.length && childForm.sections[0].flattenedChildFormRecordValues?.length) {
+            let childFormData = childForm.sections[0].flattenedChildFormRecordValues;
+            let lastRecordId = childFormData[childFormData.length - 1]['Cinchy ID'];
+            if (lastRecordId) {
+            //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
+              const childCellEntitlements = await this._getCellEntitlements(childFormMetadata.domainName, childFormMetadata.tableName, lastRecordId, childFormFieldsMetadata);
+              childForm.rowId = lastRecordId;
+              if (childForm.sections) {
+                for (let x = 0; x < childForm.sections.length; x++) {
+                  if (childForm.sections[x].fields?.length) {
+                    for (let y = 0; y < childForm.sections[x].fields.length; y++) {
+                      const childColumnEntitlements = childTableEntitlements.columnEntitlements.find(_ => _.columnId === childForm.sections[x].fields[y].cinchyColumn.id);
+                      const childColumnEntitlementKey = childColumnEntitlements ? `entitlement-${childColumnEntitlements?.columnName.substring(0, 114)}` : '';
 
-                    childForm.sections[x].fields[y].cinchyColumn.canEdit = (childColumnEntitlements === null || childCellEntitlements && childCellEntitlements[childColumnEntitlementKey] === 0) ? false : childColumnEntitlements.canEdit;
-                    childForm.sections[x].fields[y].cinchyColumn.canView = (childColumnEntitlements?.canView !== null) ? childColumnEntitlements.canView : false;
+                      childForm.sections[x].fields[y].cinchyColumn.canEdit = (isNullOrUndefined(childColumnEntitlements) || childCellEntitlements && childCellEntitlements[childColumnEntitlementKey] === 0) ? false : childColumnEntitlements.canEdit;
+                      childForm.sections[x].fields[y].cinchyColumn.canView = !isNullOrUndefined(childColumnEntitlements?.canView) ? childColumnEntitlements.canView : false;
+                    }
                   }
                 }
               }
             }
           }
+
+          allChildForms.push(childForm);
         }
 
-        allChildForms.push(childForm);
-      }
+        const formField: FormField = new FormField(formFields[i].formFieldId, formFields[i].formFieldName, formFields[i].caption, childForm, cinchyColumn, form, null);
 
-      const formField: FormField = new FormField(formFields[i].formFieldId, formFields[i].formFieldName, formFields[i].caption, childForm, cinchyColumn, form, null);
+        if (!childFormId) {
+          parentFieldsByColumn[cinchyColumn.name] = formField;
+        }
 
-      if (!childFormId) {
-        parentFieldsByColumn[cinchyColumn.name] = formField;
-      }
-
-      for (let j = minSectionIter; j < form.sections.length; j++) {
-        if (form.sections[j].id === formFields[i].formSectionId) {
-          minSectionIter = j;
-          form.sections[j].fields.push(formField);
-          form.sections[j].childFilter = formFields[i].childFormFilter;
-          form.sections[j].childSort = formFields[i].sortChildTable;
-          break;
+        for (let j = minSectionIter; j < form.sections.length; j++) {
+          if (form.sections[j].id === formFields[i].formSectionId) {
+            minSectionIter = j;
+            form.sections[j].fields.push(formField);
+            form.sections[j].childFilter = formFields[i].childFormFilter;
+            form.sections[j].childSort = formFields[i].sortChildTable;
+            break;
+          }
         }
       }
-    }
 
-    form.fieldsByColumnName = parentFieldsByColumn;
+      form.fieldsByColumnName = parentFieldsByColumn;
 
-    for (let i = 0; i < allChildForms.length; i++) {
-      if (allChildForms[i].childFormParentId && allChildForms[i].childFormLinkId) {
-        let parentColName = this.parseColumnNameByChildFormLinkId(allChildForms[i].childFormParentId);
-        let childColName = this.parseColumnNameByChildFormLinkId(allChildForms[i].childFormLinkId);
+      for (let i = 0; i < allChildForms.length; i++) {
+        if (allChildForms[i].childFormParentId && allChildForms[i].childFormLinkId) {
+          let parentColName = this._parseColumnNameByChildFormLinkId(allChildForms[i].childFormParentId);
+          let childColName = this._parseColumnNameByChildFormLinkId(allChildForms[i].childFormLinkId);
         
-        if (parentColName !== null && form.fieldsByColumnName[parentColName] !== null && childColName !== null && allChildForms[i].fieldsByColumnName[childColName] !== null) {
+          if (parentColName && form.fieldsByColumnName[parentColName] && childColName && allChildForms[i].fieldsByColumnName[childColName]) {
+            if (isNullOrUndefined(parentChildLinkedColumns[parentColName])) {
+              parentChildLinkedColumns[parentColName] = [];
+            }
 
-          if (parentChildLinkedColumns[parentColName] === null)
-            parentChildLinkedColumns[parentColName] = [];
-          parentChildLinkedColumns[parentColName].push(allChildForms[i].fieldsByColumnName[childColName]);
+            parentChildLinkedColumns[parentColName].push(allChildForms[i].fieldsByColumnName[childColName]);
 
-          // If this is a flat child form, hide the link column otherwise it'll appear twice on the form
-          if (allChildForms[i].flatten)
-            allChildForms[i].fieldsByColumnName[childColName].hide = true;
+            // If this is a flat child form, hide the link column otherwise it'll appear twice on the form
+            if (allChildForms[i].flatten) {
+              allChildForms[i].fieldsByColumnName[childColName].hide = true;
+            }
+          }
         }
       }
+
+      form.childFieldsLinkedToColumnName = parentChildLinkedColumns;
     }
 
-    form.childFieldsLinkedToColumnName = parentChildLinkedColumns;
   }
 
-  private parseColumnNameByChildFormLinkId(formLinkId: string): string {
-
-    if (!formLinkId) {
-      return null;
-    }
-
-    let splitColumnNames = formLinkId.split('].[');
-    if (splitColumnNames?.length > 0) {
-      let colName = splitColumnNames[0].replace(/[\[\]]+/g, '');
-      return colName;
-    }
-    return null;
-  }
 
   // TODO: Refactor to smaller function, remove the need to use afterChildFormEdit as a function, it's only a workaround for the bad existing code in cinchy-dynamic-forms.component.ts that handles child forms queries
-  public async fillWithData(form: Form, cinchyId: number, selectedLookupRecord: ILookupRecord, parentTableId?: number, parentTableName?: string, parentDomainName?: string, afterChildFormEdit?: Function) {
+  async fillWithData(
+      form: Form,
+      targetRowId: number,
+      selectedLookupRecord: ILookupRecord,
+      parentTableId?: number,
+      parentTableName?: string,
+      parentDomainName?: string
+  ): Promise<boolean> {
 
-    if (isNullOrUndefined(cinchyId)) {
-      return;
+    if (isNullOrUndefined(targetRowId)) {
+      return false;
     }
 
-    const selectQuery: IQuery = form.generateSelectQuery(cinchyId, parentTableId);
+    const selectQuery: IQuery = form.generateSelectQuery(targetRowId, parentTableId);
 
     try {
       if (form.isChild && form.childFormParentId && form.childFormLinkId && parentDomainName && parentTableName) {
         const queryToGetMatchIdFromParent = `SELECT ${form.childFormParentId} AS 'idParent'
                                             FROM [${parentDomainName}].[${parentTableName}]
-                                            WHERE [Cinchy Id] = ${cinchyId}`;
+                                            WHERE [Cinchy Id] = ${targetRowId}`;
 
-        let cinchyIdForMatchFromParentResp = (await this._cinchyService.executeCsql(queryToGetMatchIdFromParent, null, null, QueryType.DRAFT_QUERY).toPromise()).queryResult.toObjectArray();
+        let cinchyIdForMatchFromParentResp = (
+          await this._cinchyService.executeCsql(
+            queryToGetMatchIdFromParent,
+            null,
+            null,
+            QueryType.DRAFT_QUERY
+          ).toPromise()
+        ).queryResult.toObjectArray();
+
         let idForParentMatch = cinchyIdForMatchFromParentResp?.length ? cinchyIdForMatchFromParentResp[0]['idParent'] : null;
 
         if (idForParentMatch) {
-          if (selectQuery.params === null) {
+          if (isNullOrUndefined(selectQuery.params)) {
             selectQuery.params = {};
           }
 
@@ -285,7 +290,7 @@ export class FormHelperService {
         }
       }
 
-      const selectQueryResult: Object[] = (
+      const selectQueryResult: Array<{ [key: string]: any }> = (
         await this._cinchyService.executeCsql(
           selectQuery.query,
           selectQuery.params,
@@ -295,52 +300,29 @@ export class FormHelperService {
       ).queryResult.toObjectArray();
 
       if (form.isChild) {
-        form.loadMultiRecordData(cinchyId, selectQueryResult, selectedLookupRecord);
+        form.populateChildRecordData(targetRowId, selectQueryResult, selectedLookupRecord);
       }
       else {
-        form.loadRecordData(cinchyId, selectQueryResult);
+        form.loadRecordData(targetRowId, selectQueryResult);
       }
 
-      // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
-      if (form.childFieldsLinkedToColumnName !== null) {
-        for (let parentColName in form.childFieldsLinkedToColumnName) {
-
-          let linkedParentField = form.fieldsByColumnName[parentColName];
-          let linkedChildFields = form.childFieldsLinkedToColumnName[parentColName];
-
-          if (linkedParentField === null || linkedChildFields.length === 0)
-            continue;
-
-          for (let linkedChildField of linkedChildFields) {
-            // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
-            if (!linkedChildField.form.flatten || linkedChildField.value !== null || linkedParentField.value === linkedChildField.value)
-              continue;
-
-            // Update the child form field's value
-            linkedChildField.value = linkedParentField.value;
-            linkedChildField.cinchyColumn.hasChanged = true;
-
-            if (afterChildFormEdit) {
-              afterChildFormEdit({
-                'childFormId': linkedChildField.form.id,
-                'data': linkedChildField.form,
-                'id': 0
-              }, linkedChildField.form);
-            }
-          }
-        }
-      }
+      return true;
     } catch (e) {
       console.error(e?.cinchyException?.message, e);
 
-      if (e?.cinchyException?.message)
+      if (e?.cinchyException?.message) {
         this._toastr.error('Error while fetching data from the table. Please make sure you have the correct entitlements to view the data.', 'Error')
-      else
+      }
+      else {
         this._toastr.error(selectedLookupRecord ? e : 'Selected row is either deleted or doesn\'t exist.', 'Error');
+      }
+
+      return false;
     }
   }
 
-  private async getCellEntitlements(domainName: string, tableName: string, cinchyId: number, formFieldsMetadata: IFormFieldMetadata[]): Promise<Object> {
+
+  private async _getCellEntitlements(domainName: string, tableName: string, cinchyId: number, formFieldsMetadata: IFormFieldMetadata[]): Promise<Object> {
 
     const selectClause = formFieldsMetadata
       .filter(_ => _.columnName)
@@ -362,7 +344,8 @@ export class FormHelperService {
     return {};
   }
 
-  private async getFileName(cinchyId: number, fileNameColumn: string) {
+
+  private async _getFileName(cinchyId: number, fileNameColumn: string) {
     const [domain, table, column] = fileNameColumn ? fileNameColumn.split('.') : [];
     const whereCondition = `WHERE [Cinchy Id] = ${cinchyId} AND [Deleted] IS NULL `;
 
@@ -378,5 +361,21 @@ export class FormHelperService {
       return fileNameResp && fileNameResp.queryResult && fileNameResp.queryResult.toObjectArray()[0] ?
         fileNameResp.queryResult.toObjectArray()[0]['fullName'] : null;
     }
+  }
+
+
+  private _parseColumnNameByChildFormLinkId(formLinkId: string): string {
+
+    if (formLinkId) {
+      let splitColumnNames = formLinkId.split('].[');
+
+      if (splitColumnNames?.length > 0) {
+        let colName = splitColumnNames[0].replace(/[\[\]]+/g, '');
+
+        return colName;
+      }
+    }
+
+    return null;
   }
 }

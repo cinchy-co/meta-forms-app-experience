@@ -87,9 +87,16 @@ export class SidenavComponent implements OnInit {
   }
 
 
+  isSelected(targetSection: string): boolean {
+
+    return (this.selectedSection === targetSection);
+  }
+
+
   async loadTableEntitlements(): Promise<void> {
 
     const resp = await this.cinchyService.getTableEntitlementsById(this.tableId).toPromise();
+
     this.canInsert = resp.canAddRows;
   }
 
@@ -112,12 +119,6 @@ export class SidenavComponent implements OnInit {
         this._appStateService.newContactAdded(newContactAdded)
       }
     });
-  }
-
-
-  saveForm(): void {
-
-    this._appStateService.saveClicked$.next();
   }
 
 

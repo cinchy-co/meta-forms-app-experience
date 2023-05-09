@@ -103,11 +103,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
 
   get canEdit(): boolean {
 
-    if (this.isDisabled) {
-      return false;
-    }
-
-    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+    return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
 
@@ -287,7 +283,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
         });
       }
 
-      let fieldIds: Array<string>;
+      let fieldIds = new Array<string>();
 
       if (this.field.value) {
         // Fallback for legacy logic
@@ -507,7 +503,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
       newValue: this.selectedValues?.map((value: any) => {
 
         return value.id;
-      }) || [],
+      }) ?? [],
       sectionIndex: this.sectionIndex,
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName

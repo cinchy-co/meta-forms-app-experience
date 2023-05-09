@@ -110,24 +110,29 @@ export class CinchyQueryService {
 
     const id = formId ?? this._appStateService.formId;
 
-    if (this._formFieldsMetadataCache[id])
+    if (this._formFieldsMetadataCache[id]) {
       return of(this._formFieldsMetadataCache[id]);
+    }
 
-    const query = 'Get Form Fields Metadata';
+    const query = "Get Form Fields Metadata";
     const params = {
-      '@formId': id
+      "@formId": id
     };
 
     return this._cinchyService.executeQuery(this.DOMAIN, query, params).pipe(
       map(response => {
+
         return <IFormFieldMetadata[]> response?.queryResult?.toObjectArray();
       }),
       tap((result: IFormFieldMetadata[]) => {
-        if (result)
+
+        if (result) {
           this._formFieldsMetadataCache[id] = result;
+        }
       }),
       catchError(error => {
         console.error("Error fetching form fields metadata:", error);
+
         return throwError(error);
       })
     );
@@ -141,10 +146,10 @@ export class CinchyQueryService {
 
     const query = `
       ${selectStatement}
-        [Cinchy Id]         as 'id',
+        [Cinchy Id] as 'id',
         [${subtitleColumn}] as 'label'
       FROM [${domain}].[${table}]
-      WHERE [Deleted] IS NULL ${lookupFilter ? `AND ${lookupFilter}` : ''}
+      WHERE [Deleted] IS NULL AND [${subtitleColumn}] IS NOT NULL ${lookupFilter ? `AND ${lookupFilter}` : ''}
       ORDER BY [${subtitleColumn}];`;
 
     return this._cinchyService.executeCsql(query, null).pipe(

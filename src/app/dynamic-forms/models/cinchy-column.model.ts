@@ -3,6 +3,8 @@ import { TextFormatType } from "../enums/text-format-type.enum";
 
 
 export class CinchyColumn {
+  hasChanged = false;
+
   constructor(
     public id: number,
     public tableId: number,
@@ -28,7 +30,6 @@ export class CinchyColumn {
     public choiceOptions?: string,
     public formFieldsJsonData?,
     public dataFormatType?: DataFormatType,
-    public hasChanged?: boolean,
     public isViewOnly?: boolean,
     public linkedFieldId?: any,
     public isDisplayColumn?: boolean,

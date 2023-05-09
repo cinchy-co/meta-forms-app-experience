@@ -11,10 +11,8 @@
       <div class="mt-10">
         <ul>
           <li *ngFor="let section of formSectionsMetadata" (click)="sectionClicked(section)">
-            <div class="bullet-point"
-                 [ngClass]="{'bullet-point--selected': selectedSection===section.name}"></div>
-            <span class="section-item"
-                  [ngClass]="{'section-item--selected': selectedSection===section.name}">
+            <div class="bullet-point" [class.bullet-point--selected]="isSelected(section.name)"></div>
+            <span class="section-item" [class.section-item--selected]="isSelected(section.name)">
               {{section.name}}
             </span>
           </li>

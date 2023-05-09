@@ -6,6 +6,8 @@ import {
 
 import { Injectable } from "@angular/core";
 
+import { Form } from "../dynamic-forms/models/cinchy-form.model";
+
 import { IFormMetadata } from "../models/form-metadata-model";
 import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 
@@ -23,7 +25,11 @@ export class AppStateService {
   currentSection$ = new BehaviorSubject<string>(null);
   latestRenderedSections$ = new BehaviorSubject<IFormSectionMetadata[]>(null);
   newContactAdded$ = new Subject<any>();
-  savedParentFromChildPlus$ = new Subject<boolean>();
+  parentFormSavedFromChild$ = new Subject<{
+    childForm: Form,
+    presetValues ?: { [key: string]: any },
+    title: string
+  }>();
 
 
   /**
@@ -35,8 +41,6 @@ export class AppStateService {
    * Notifies subscribers that a new record has been selected
    */
   onRecordSelected$ = new BehaviorSubject<{ cinchyId: number | null, doNotReloadForm: boolean }>(null);
-
-  saveClicked$ = new BehaviorSubject<void>(null);
 
 
   /**
@@ -85,12 +89,6 @@ export class AppStateService {
   }
 
 
-  getOpenOfChildFormAfterParentSave(): Observable<any> {
-
-    return this.savedParentFromChildPlus$.asObservable();
-  }
-
-
   newContactAdded(contact) {
 
     this.newContactAdded$.next(contact);
@@ -114,12 +112,6 @@ export class AppStateService {
     this._formId = id;
 
     this.rootFormIdSet$.next(this._formId);
-  }
-
-
-  setOpenOfChildFormAfterParentSave(childData) {
-
-    return this.savedParentFromChildPlus$.next(childData);
   }
 
 

@@ -52,11 +52,7 @@ export class ChoiceComponent implements OnInit {
 
   get canEdit(): boolean {
 
-    if (this.isDisabled) {
-      return false;
-    }
-
-    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+    return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
 
@@ -69,7 +65,7 @@ export class ChoiceComponent implements OnInit {
     let optionsInSubString = [];
 
     if (splitFromInvertedCommas.length === 1) {
-      allOptions = choices?.split(",") ?? null;
+      allOptions = choices?.split(",") ?? [];
     }
     else {
       splitFromInvertedCommas.forEach(option => {
@@ -109,7 +105,7 @@ export class ChoiceComponent implements OnInit {
     this.onChange.emit({
       form: this.form,
       fieldIndex: this.fieldIndex,
-      newValue: this.value,
+      newValue: this.value ?? [],
       sectionIndex: this.sectionIndex,
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName

@@ -35,17 +35,27 @@ export class FieldsWrapperComponent {
   @Input() form: Form;
   @Input() isChild: boolean;
   @Input() fieldsWithErrors;
-  @Input("formHasDataLoaded") set formHasDataLoaded(value: boolean) { this.setFormHasDataLoaded(value); }
+
+  @Input()
+  get formHasDataLoaded(): boolean {
+
+    return this._formHasDataLoaded;
+  }
+  set formHasDataLoaded(value: boolean) {
+
+    if (value) {
+      this.determineSectionsToRender();
+    }
+
+    this._formHasDataLoaded = value;
+  }
+  private _formHasDataLoaded: boolean;
+
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   @Output() childFormOpened = new EventEmitter<any>();
   @Output() deleteDialogOpened = new EventEmitter<any>();
 
-  _formSectionsToRenderMetadata: IFormSectionMetadata[] = [];
-
-  _formHasDataLoaded: boolean;
-
-  _sectionsToRender: FormSection[];
 
   subscription: Subscription;
   sectionInfo: SpinnerCondition;
@@ -60,63 +70,40 @@ export class FieldsWrapperComponent {
     this.appStateService.sectionClicked(section.label);
   }
 
-  setFormHasDataLoaded(value: boolean) {
-
-    if (value) {
-      this.determineSectionsToRender();
-    }
-
-    this._formHasDataLoaded = value;
-  }
 
   determineSectionsToRender() {
 
-    let _newSectionsToRenderMetadata = [];
-    let _newSectionsToRender = [];
+    this.form?.sections?.forEach((section: FormSection, sectionIndex: number) => {
 
-    if (this.form?.sections) {
-      for (let i = 0; i < this.form.sections.length; i++) {
-        if (this.form.sections[i].fields) {
-          let numOfFlattenedChildForms = 0;
+      section.fields?.forEach((field: FormField, fieldIndex: number) => {
 
-          for (let j = 0; j < this.form.sections[i].fields.length; j++) {
-            if (this.form.sections[i].fields[j].childForm?.flatten && this.form.sections[i].fields[j].childForm.sections) {
-              numOfFlattenedChildForms++;
-              for (let k = 0; k < this.form.sections[i].fields[j].childForm.sections.length; k++) {
-                // Don't auto expand the child column if this is an accordion form
-                if (this.form.isAccordion) {
-                  this.form.sections[i].fields[j].childForm.sections[k].autoExpand = false;
-                }
-
-                _newSectionsToRender.push(this.form.sections[i].fields[j].childForm.sections[k]);
-
-                _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
-                  id: this.form.sections[i].fields[j].childForm.sections[k].id,
-                  name: this.form.sections[i].fields[j].childForm.sections[k].label,
-                  columnsInRow: this.form.sections[i].fields[j].childForm.sections[k].columnsInRow,
-                  autoExpand: this.form.sections[i].fields[j].childForm.sections[k].autoExpand
-                });
-              }
+        if (field.childForm?.flatten && field.childForm.sections) {
+          this.form.updateAdditionalProperty(
+            sectionIndex,
+            fieldIndex,
+            {
+              propertyName: "childForm",
+              propertyValue: field.childForm.flattenForm()
             }
-          }
+          );
 
-          if (this.form.sections[i].fields.length > numOfFlattenedChildForms || numOfFlattenedChildForms === 0) {
-            _newSectionsToRender.push(this.form.sections[i]);
-
-            _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
-              id: this.form.sections[i].id,
-              name: this.form.sections[i].label,
-              columnsInRow: this.form.sections[i].columnsInRow,
-              autoExpand: this.form.sections[i].autoExpand
-            });
-          }
         }
-      }
-    }
+      });
 
-    this._formSectionsToRenderMetadata = _newSectionsToRenderMetadata;
-    this._sectionsToRender = _newSectionsToRender;
-    this.appStateService.setLatestRenderedSections(_newSectionsToRenderMetadata);
+      if (this.form?.sections?.length) {
+        this.appStateService.latestRenderedSections$.next(
+          this.form.sections.map((section: FormSection) => {
+
+            return {
+              autoExpand: section.autoExpand,
+              columnsInRow: section.columnsInRow,
+              id: section.id,
+              name: section.label
+            };
+          })
+        );
+      }
+    });
   }
 
 

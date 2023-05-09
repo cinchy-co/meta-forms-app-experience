@@ -49,11 +49,7 @@ export class MultichoiceComponent {
 
   get canEdit(): boolean {
 
-    if (this.isDisabled) {
-      return false;
-    }
-
-    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+    return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
 
@@ -97,7 +93,7 @@ export class MultichoiceComponent {
     this.onChange.emit({
       form: this.form,
       fieldIndex: this.fieldIndex,
-      newValue: this.value,
+      newValue: this.value ?? [],
       sectionIndex: this.sectionIndex,
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName

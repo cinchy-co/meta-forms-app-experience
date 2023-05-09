@@ -2,6 +2,7 @@ import { Subject } from "rxjs";
 import { debounceTime, distinctUntilChanged, startWith } from "rxjs/operators";
 
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
@@ -10,7 +11,6 @@ import { faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { faSitemap } from "@fortawesome/free-solid-svg-icons";
 
 import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { AddNewOptionDialogComponent } from "../../../dialogs/add-new-option-dialog/add-new-option-dialog.component";
 
@@ -95,11 +95,6 @@ export class LinkComponent implements OnInit {
 
   selectedValue: DropdownOption;
 
-  /**
-   * The text displayed in the input, either as part of an active filter or the label of the current selectedValue
-   */
-  selectedValueText: string;
-
   renderImageFiles = true;
 
   faPlus = faPlus;
@@ -111,20 +106,15 @@ export class LinkComponent implements OnInit {
 
   get canEdit(): boolean {
 
-    if (this.isDisabled) {
-      return false;
-    }
-
-    return (this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+    return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
 
   get optionViewportScrolls(): boolean {
 
     return coerceBooleanProperty(
-      this.selectedValueText &&
       this.charactersAfterWhichToShowList &&
-      (this.selectedValueText.length >= this.charactersAfterWhichToShowList)
+      (this.selectedValue?.label.length >= this.charactersAfterWhichToShowList)
     );
   }
 
@@ -257,7 +247,7 @@ export class LinkComponent implements OnInit {
 
   filterChanged(): void {
 
-    this._filterChanged.next(this.selectedValueText);
+    this._filterChanged.next(this.selectedValue?.label || null);
   }
 
   focusAndBlurInputToShowDropdown() {
@@ -502,8 +492,6 @@ export class LinkComponent implements OnInit {
         this.selectedValue = preselectedValArr && preselectedValArr[0] ? {...preselectedValArr[0]} : null;
       }
 
-      this.selectedValueText = this.selectedValue?.label || "";
-
       this.valueChanged();
 
       this.checkForAttachmentUrl();
@@ -518,7 +506,6 @@ export class LinkComponent implements OnInit {
 
       if (!this.selectedValue) {
         this.selectedValue = this.field.dropdownDataset?.options.find(item => item.id === "DELETE");
-        this.selectedValueText = this.selectedValue?.label || "";
 
         this.valueChanged();
       }

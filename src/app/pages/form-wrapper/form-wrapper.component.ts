@@ -19,6 +19,8 @@ import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { ILookupRecord } from "../../models/lookup-record.model";
 import { IframeUtil } from "../../util/iframe-util";
 
+import { isNullOrUndefined } from "util";
+
 
 @Component({
   selector: "app-form-wrapper",
@@ -124,10 +126,9 @@ export class FormWrapperComponent implements OnInit {
     await this._spinnerService.hide();
   }
 
-
   async loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): Promise<void> {
 
-    if (formMetadata?.subTitleColumn === null) {
+    if (isNullOrUndefined(formMetadata?.subTitleColumn)) {
       return;
     }
 

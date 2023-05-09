@@ -104,7 +104,7 @@
     <ng-container *ngIf="canEdit && !downloadLink && showActualField">
       <div class="search-input-link">
         <input #searchInput type="text" class="form-control"
-               [(ngModel)]="selectedValueText" [ngModelOptions]="{standalone: true}"
+               [(ngModel)]="selectedValue" [ngModelOptions]="{standalone: true}"
                [matAutocomplete]="auto"
                (blur)="setToLastValueSelected()"
                (focus)="getListItems()"
