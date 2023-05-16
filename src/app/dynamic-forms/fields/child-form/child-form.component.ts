@@ -36,11 +36,12 @@ export class ChildFormComponent {
 
   ngOnInit(): void {
 
-    this.childFormData.childForm.sections.forEach((section: FormSection) => {
+    // TODO: atomize this function
+    this.childFormData.childForm?.sections?.forEach((section: FormSection) => {
 
       const linkedColumn = section.linkedColumnDetails;
 
-      section.fields.forEach((field: FormField, fieldIndex: number) => {
+      section.fields?.forEach((field: FormField, fieldIndex: number) => {
 
         field.noPreselect = false;
 
@@ -61,7 +62,10 @@ export class ChildFormComponent {
               if (!isNullOrUndefined(field.dropdownDataset)) {
                 // When element value is not there but obj can have value and we have dropdown set
                 if (!field.value) {
-                  let dropdownResult = field.dropdownDataset.options.find(e => e.label === this.childFormData.presetValues[field.cinchyColumn.name]);
+                  let dropdownResult = field.dropdownDataset.options.find((option: DropdownOption) => {
+
+                    return (option.label === this.childFormData.presetValues[field.cinchyColumn.name]);
+                  });
 
                   if (dropdownResult) {
                     this.childFormData.childForm.updateFieldValue(
@@ -170,7 +174,9 @@ export class ChildFormComponent {
               );
             }
             else {
-              if (this.childFormData.presetValues && (linkedColumn?.linkLabel !== field.label)) {
+              // Note: We're explicitly not using optional chaining here because we need to evaluate the
+              //       conditions of "exists" and "not equal" separately to ensure the correct execution
+              if (linkedColumn && linkedColumn.linkLabel !== field.label) {
                 this.childFormData.childForm.updateFieldValue(
                   0,
                   fieldIndex,
@@ -185,7 +191,7 @@ export class ChildFormComponent {
               }
             }
           }
-          else if (linkedColumn?.linkLabel !== field.label || !linkedColumn) {
+          else if (linkedColumn?.linkLabel !== field.label) {
             this.childFormData.childForm.updateFieldValue(
               0,
               fieldIndex,
@@ -203,39 +209,44 @@ export class ChildFormComponent {
           const displayColumnLabel = `${field.cinchyColumn.linkTargetColumnName} label`;
           let selectedValue: DropdownOption;
 
-          if (field.dropdownDataset?.options) {
-            selectedValue = field.dropdownDataset.options.find(item => item.label === this.childFormData.presetValues[displayColumnLabel]);
+          if (this.childFormData.presetValues) {
+            if (field.dropdownDataset?.options) {
+              selectedValue = field.dropdownDataset.options.find((option: DropdownOption) => {
 
-            if (selectedValue) {
+                return (option.label === this.childFormData.presetValues[displayColumnLabel]);
+              });
+
+              if (selectedValue) {
+                this.childFormData.childForm.updateFieldValue(
+                  0,
+                  fieldIndex,
+                  selectedValue.id
+                );
+              }
+            }
+
+            if (!selectedValue) {
+              // Creating dummy dropdown and value using multi-field value since it's read only value
               this.childFormData.childForm.updateFieldValue(
                 0,
                 fieldIndex,
-                selectedValue.id
+                this.childFormData.presetValues[displayColumnLabel],
+                [
+                  {
+                    propertyName: "dropdownDataset",
+                    propertyValue: new DropdownDataset(
+                      [
+                        {
+                          id: this.childFormData.presetValues[displayColumnLabel],
+                          label: this.childFormData.presetValues[displayColumnLabel]
+                        }
+                      ],
+                      true
+                    )
+                  }
+                ]
               );
             }
-          }
-
-          if (!selectedValue && this.childFormData.presetValues) {
-            // Creating dummy dropdown and value using multi-field value since it's read only value
-            this.childFormData.childForm.updateFieldValue(
-              0,
-              fieldIndex,
-              this.childFormData.presetValues[displayColumnLabel],
-              [
-                {
-                  propertyName: "dropdownDataset",
-                  propertyValue: new DropdownDataset(
-                    [
-                      {
-                        id: this.childFormData.presetValues[displayColumnLabel],
-                        label: this.childFormData.presetValues[displayColumnLabel]
-                      }
-                    ],
-                    true
-                  )
-                }
-              ]
-            );
           }
         }
       });
@@ -244,12 +255,18 @@ export class ChildFormComponent {
 
 
   /**
-   * On click of Ok Button
-   *
-   * 1. Check validation for the fields.
-   * 2. pass data to parent form
+   * Closes the dialog and discards the form contents
    */
-  async onOkClick() {
+  cancel(): void {
+
+    this.dialogRef.close();
+  }
+
+
+  /**
+   * Validates the form data, and the passes it back to the parent for processing
+   */
+  save() {
 
     let formvalidation = this.childFormData.childForm.checkChildFormValidation();
 
@@ -273,11 +290,5 @@ export class ChildFormComponent {
     } else {
       console.error("Child form was invalid:", formvalidation.message);
     }
-  }
-
-
-  onNoClick(): void {
-
-    this.dialogRef.close();
   }
 }

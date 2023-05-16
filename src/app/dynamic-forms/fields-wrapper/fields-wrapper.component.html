@@ -4,9 +4,9 @@
   <ng-container *ngIf="!isChild">
       <mat-expansion-panel *ngFor="let section of form?.sections; index as sectionIndex"
                            [ngClass]="'section-flex--'+section.columnsInRow"
-                           [expanded]="section.autoExpand" [id]="'section-' + section.label">
-        <mat-expansion-panel-header class="sectionHeaderRow" expandedHeight="40px" collapsedHeight="40px"
-                    (click)="expansionClicked(section)">
+                           [expanded]="section.autoExpand" [id]="'section-' + section.label"
+                           (opened)="onPanelExpanded(section)">
+        <mat-expansion-panel-header class="sectionHeaderRow" expandedHeight="40px" collapsedHeight="40px">
         <mat-panel-title>
           {{section.label}}
         </mat-panel-title>
@@ -18,7 +18,7 @@
 
   <ng-container *ngIf="isChild">
     <ng-container *ngFor="let section of form.sections; let sectionIndex = index">
-      <ng-container *ngTemplateOutlet="formFields; context:{ section: section, index: sectionIndex}"></ng-container>
+      <ng-container *ngTemplateOutlet="formFields; context:{ section: section, sectionIndex: sectionIndex}"></ng-container>
     </ng-container>
   </ng-container>
 </ng-container>
@@ -146,8 +146,8 @@
                               [fieldIndex]="fieldIndex"
                               [sectionIndex]="sectionIndex"
                               [hasChildTableAccess]="field.childForm.hasAccess"
-                              (childformOpened)="childFormOpened.emit($event)"
-                              (deleteClicked)="deleteDialogOpened.emit($event)">
+                              (childRowDeleted)="childRowDeleted.emit($event)"
+                              (childformOpened)="childFormOpened.emit($event)">
       </cinchy-childform-table>
     </div>
   </div>

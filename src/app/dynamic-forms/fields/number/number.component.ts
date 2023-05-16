@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { CurrencyPipe } from "@angular/common";
 
@@ -20,7 +28,7 @@ import { Form } from "../../models/cinchy-form.model";
   styleUrls: ["./number.component.scss"],
   providers: [CurrencyPipe]
 })
-export class NumberComponent implements OnInit {
+export class NumberComponent implements OnChanges, OnInit {
 
   @Input() field: FormField;
   @Input() fieldIndex: number;
@@ -41,9 +49,18 @@ export class NumberComponent implements OnInit {
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
+  /**
+   * The display value when the user is not actively entering the number
+   */
   formattedAmount: string;
+
+  /**
+   * The numeric value of the field
+   */
   numeralValue: NumeralPipe;
+
   showError: boolean;
+
 
   faHashtag = faHashtag;
 
@@ -54,15 +71,17 @@ export class NumberComponent implements OnInit {
   }
 
 
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
+
+
   ngOnInit(): void {
 
-    if (this.field.cinchyColumn.numberFormatter && this.field.value) {
-      this.numeralValue = new NumeralPipe(this.field.value);
-      this.formattedAmount = this.numeralValue.format(this.field.cinchyColumn.numberFormatter);
-    } else {
-      this.numeralValue = null;
-      this.formattedAmount = this.field.value;
-    }
+    this._setValue();
   }
 
 
@@ -81,13 +100,16 @@ export class NumberComponent implements OnInit {
   }
 
 
+  /**
+   * Transforms the numeral value back into a string for display
+   */
   reverseTransform() {
 
     this.formattedAmount = this.numeralValue?.value()?.toString() ?? "";
   }
 
 
-  valueChanged() {
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -97,5 +119,17 @@ export class NumberComponent implements OnInit {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
+  }
+
+
+  private _setValue(): void {
+
+    if (this.field?.cinchyColumn?.numberFormatter && this.field?.value) {
+      this.numeralValue = new NumeralPipe(this.field.value);
+      this.formattedAmount = this.numeralValue.format(this.field.cinchyColumn.numberFormatter);
+    } else {
+      this.numeralValue = null;
+      this.formattedAmount = this.field?.value ?? null;
+    }
   }
 }

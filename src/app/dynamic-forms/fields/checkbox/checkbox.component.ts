@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
@@ -17,7 +25,7 @@ import { faCheckSquare } from "@fortawesome/free-regular-svg-icons";
   templateUrl: "./checkbox.component.html",
   styleUrls: ["./checkbox.component.scss"]
 })
-export class CheckboxComponent implements OnChanges {
+export class CheckboxComponent implements OnChanges, OnInit {
 
   @Input() field: FormField;
   @Input() fieldIndex: number;
@@ -52,13 +60,19 @@ export class CheckboxComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
 
-    if (changes.field) {
-      this.value = coerceBooleanProperty(this.field?.value);
+    if (changes?.field) {
+      this._setValue();
     }
   }
 
 
-  valueChanged() {
+  ngOnInit(): void {
+
+    this._setValue();
+  }
+
+
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -68,5 +82,10 @@ export class CheckboxComponent implements OnChanges {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
+  }
+
+
+  private _setValue(): void {
+    this.value = coerceBooleanProperty(this.field?.value);
   }
 }

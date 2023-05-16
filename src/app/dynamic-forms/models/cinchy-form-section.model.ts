@@ -19,7 +19,7 @@ export class FormSection {
     linkValue?: ILookupRecord
   };
 
-  flattenedChildFormRecordValues: Array<any>;
+  childFormRowValues: Array<any>;
 
 
   constructor(

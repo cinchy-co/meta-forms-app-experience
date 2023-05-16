@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from "@angular/core";
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
@@ -19,7 +19,7 @@ import * as moment from "moment";
   templateUrl: "./datetime.component.html",
   styleUrls: ["./datetime.component.scss"]
 })
-export class DatetimeComponent implements OnChanges {
+export class DatetimeComponent implements OnChanges, OnInit {
 
   @Input() field: FormField;
   @Input() fieldIndex: number;
@@ -54,13 +54,19 @@ export class DatetimeComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
 
-    if (changes.field) {
-      this.value = this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat) : "";
+    if (changes?.field) {
+      this._setValue();
     }
   }
 
 
-  valueChanged() {
+  ngOnInit(): void {
+
+    this._setValue();
+  }
+
+
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -70,5 +76,11 @@ export class DatetimeComponent implements OnChanges {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
+  }
+
+
+  private _setValue(): void {
+
+    this.value = this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "") : "";
   }
 }

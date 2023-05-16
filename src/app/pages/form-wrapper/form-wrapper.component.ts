@@ -113,47 +113,48 @@ export class FormWrapperComponent implements OnInit {
 
 
   async loadFormSections() {
+
     try {
       const formSections = await this._cinchyQueryService.getFormSections().toPromise();
+
       this.formSectionsMetadata = formSections;
-      this._appStateService.setLatestRenderedSections(formSections);
-      if (this.formSectionsMetadata) {
-        await this._spinnerService.hide();
-      }
+
+      this._appStateService.latestRenderedSections$.next(formSections);
+
+      this._spinnerService.hide();
     } catch (e) {
       this.showError("Error getting section metadata", e);
+
+      this._spinnerService.hide();
     }
-    await this._spinnerService.hide();
   }
 
   async loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): Promise<void> {
 
-    if (isNullOrUndefined(formMetadata?.subTitleColumn)) {
-      return;
-    }
+    if (formMetadata?.subTitleColumn) {
+      this._cinchyQueryService.resetLookupRecords.next();
 
-    this._cinchyQueryService.resetLookupRecords.next();
+      await this._cinchyQueryService.getLookupRecords(
+        formMetadata.subTitleColumn,
+        formMetadata.domainName,
+        formMetadata.tableName,
+        filter ?? formMetadata.lookupFilter,
+        limitResults
+      ).pipe(
+        takeUntil(this._cinchyQueryService.resetLookupRecords)
+      ).subscribe(
+        {
+          next: (response: Array<ILookupRecord>) => {
 
-    await this._cinchyQueryService.getLookupRecords(
-      formMetadata.subTitleColumn,
-      formMetadata.domainName,
-      formMetadata.tableName,
-      filter ?? formMetadata.lookupFilter,
-      limitResults
-    ).pipe(
-      takeUntil(this._cinchyQueryService.resetLookupRecords)
-    ).subscribe(
-      {
-        next: (response: Array<ILookupRecord>) => {
+            this.lookupRecords = response;
+          },
+          error: (e) => {
 
-          this.lookupRecords = response;
-        },
-        error: (e) => {
-
-          this.showError("Error getting lookup records", e);
+            this.showError("Error getting lookup records", e);
+          }
         }
-      }
-    );
+      );
+    }
   }
 
 

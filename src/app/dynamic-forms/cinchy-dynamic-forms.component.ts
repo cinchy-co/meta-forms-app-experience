@@ -11,7 +11,7 @@ import {
 } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 
-import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
+import { Cinchy, CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
@@ -30,20 +30,22 @@ import { IFormMetadata } from "../models/form-metadata-model";
 import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 import { ILookupRecord } from "../models/lookup-record.model";
 
+import { IChildFormQuery } from "./interface/child-form-query";
 import { IFieldChangedEvent } from "./interface/field-changed-event";
+import { INewEntityDialogResponse } from "./interface/new-entity-dialog-response";
 
 import { AppStateService } from "../services/app-state.service";
 import { ConfigService } from "../services/config.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
 
+import { DropdownOption } from "./service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
-import { DropdownOption } from "./service/cinchy-dropdown-dataset/cinchy-dropdown-options";
-import { IChildFormQuery } from "./interface/child-form-query";
 
 
+const INITIAL_TEMPORARY_CINCHY_ID = -2;
 
 
 @Component({
@@ -64,7 +66,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   @Input("lookupRecords") set lookupRecords(value: ILookupRecord[]) { this.setLookupRecords(value); }
   lookupRecordsList: ILookupRecord[];
 
-  @Output() closeAddNewDialog = new EventEmitter<any>();
+  @Output() closeAddNewDialog = new EventEmitter<INewEntityDialogResponse>();
   @Output() onLookupRecordFilter: EventEmitter<string> = new EventEmitter<string>();
 
 
@@ -75,7 +77,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
-  isLoadingForm: boolean = false;
 
 
   get lookupRecordsListPopulated(): boolean {
@@ -83,10 +84,18 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     return (this.lookupRecordsList?.length && this.lookupRecordsList[0].id !== -1);
   }
 
+
+  /**
+   * Set to true when the loadForm function is currently executing, which prevents multiple sources from trying to
+   * load the form simultaneously (e.g. when the lookupRecords list is populated and immediately selects a record)
+   */
+  private _formIsLoading: boolean = false;
+
+
   private _queuedRecordSelection: { cinchyId: number | null, doNotReloadForm: boolean };
 
 
-  private _childForm: Form;
+  private _lastTouchedChildForm: Form;
 
   /**
    * Contains the set of all pending updates and inserts for child form records on this form. When the form is saved,
@@ -104,14 +113,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Since -1 is the initial placeholder ID that indicates that the incoming record is an add instead of an edit, we're
    * starting this variable at -2.
    */
-  private _lastTemporaryCinchyId: number = -2;
+  private _lastTemporaryCinchyId: number = INITIAL_TEMPORARY_CINCHY_ID;
 
 
   constructor(
     private _dialog: MatDialog,
     private _cinchyService: CinchyService,
     private _toastr: ToastrService,
-    private spinner: NgxSpinnerService,
+    private _spinner: NgxSpinnerService,
     private _appStateService: AppStateService,
     private cinchyQueryService: CinchyQueryService,
     private printService: PrintService,
@@ -156,7 +165,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   afterChildFormEdit(childRowId: number, childForm: Form): void {
 
-    this._childForm = childForm.clone();
+    this._lastTouchedChildForm = childForm.clone();
 
     const formvalidation = childForm.checkChildFormValidation();
 
@@ -242,7 +251,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
             // If not, check against the record data for the form to get the record associated with this rowId
             if (!rowData) {
-              rowData = (section.flattenedChildFormRecordValues || []).find(record => {
+              rowData = (section.childFormRowValues || []).find(record => {
 
                 if (record["Cinchy ID"] === childRowId) {
                   return record;
@@ -315,7 +324,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this.form = this.form.clone();
 
     this._pendingChildFormQueries = new Array<IChildFormQuery>();
-    this._lastTemporaryCinchyId = -2;
+    this._lastTemporaryCinchyId = INITIAL_TEMPORARY_CINCHY_ID;
 
     this.form.restoreFormReferenceOnAllFields();
 
@@ -325,12 +334,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   async getChildSavedData(rowId: number): Promise<void> {
 
-    this.spinner.show();
+    this._spinner.show();
 
-    const selectQuery: IQuery = this._childForm.generateSelectQuery(rowId, this.formMetadata.tableId);
+    const selectQuery: IQuery = this._lastTouchedChildForm.generateSelectQuery(rowId, this.formMetadata.tableId);
 
-    if (this._childForm.childFormParentId && this._childForm.childFormLinkId) {
-      const queryToGetMatchIdFromParent = `SELECT TOP 1 ${this._childForm.childFormParentId} as 'idParent'
+    if (this._lastTouchedChildForm.childFormParentId && this._lastTouchedChildForm.childFormLinkId) {
+      const queryToGetMatchIdFromParent = `SELECT TOP 1 ${this._lastTouchedChildForm.childFormParentId} as 'idParent'
                                            FROM [${this.formMetadata.domainName}].[${this.formMetadata.tableName}]
                                            WHERE [Cinchy Id] = ${this.rowId}`;
 
@@ -354,9 +363,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       ).toPromise()
     ).queryResult.toObjectArray();
 
-    this.spinner.hide();
+    this._spinner.hide();
 
-    this._childForm.populateChildRecordData(rowId, selectQueryResult);
+    this._lastTouchedChildForm.populateChildRecordData(rowId, selectQueryResult);
   }
 
 
@@ -370,8 +379,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     // flattened child form
     if (event.form.isChild && event.form.flatten && event.form.hasFields) {
-      let targetCinchyId = (event.form.sections[0].flattenedChildFormRecordValues?.length && event.form.sections[0].flattenedChildFormRecordValues[event.form.sections[0].flattenedChildFormRecordValues.length - 1]["Cinchy ID"]) ?
-        event.form.sections[0].flattenedChildFormRecordValues[event.form.sections[0].flattenedChildFormRecordValues.length - 1]["Cinchy ID"] :
+      let targetCinchyId = (event.form.sections[0].childFormRowValues?.length && event.form.sections[0].childFormRowValues[event.form.sections[0].childFormRowValues.length - 1]["Cinchy ID"]) ?
+        event.form.sections[0].childFormRowValues[event.form.sections[0].childFormRowValues.length - 1]["Cinchy ID"] :
         -1;
 
       this.afterChildFormEdit(targetCinchyId, event.form);
@@ -385,8 +394,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
             event.newValue
           );
 
-          targetCinchyId = field.form.sections[0].flattenedChildFormRecordValues?.length && field.form.sections[0].flattenedChildFormRecordValues[field.form.sections[0].flattenedChildFormRecordValues.length - 1]["Cinchy ID"] ?
-            field.form.sections[0].flattenedChildFormRecordValues[field.form.sections[0].flattenedChildFormRecordValues.length - 1]["Cinchy ID"] :
+          targetCinchyId = field.form.sections[0].childFormRowValues?.length && field.form.sections[0].childFormRowValues[field.form.sections[0].childFormRowValues.length - 1]["Cinchy ID"] ?
+            field.form.sections[0].childFormRowValues[field.form.sections[0].childFormRowValues.length - 1]["Cinchy ID"] :
             -1;
 
           this.afterChildFormEdit(
@@ -416,132 +425,110 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       }
   ): Promise<void> {
 
-    if (this.form?.isClone) {
-      this.form = this.form.clone(null, true);
+    if (!this._formIsLoading) {
+      this._formIsLoading = true;
 
-      this.form.restoreFormReferenceOnAllFields();
-    }
+      if (this.form?.isClone) {
+        this.form = this.form.clone(null, true);
 
-    this._pendingChildFormQueries = new Array<IChildFormQuery>();
-    this.formHasDataLoaded = this.formHasDataLoaded || false;
-    this.enableSaveBtn = false;
+        this.form.restoreFormReferenceOnAllFields();
+      }
 
-    this.isLoadingForm = true;
+      this._pendingChildFormQueries = new Array<IChildFormQuery>();
+      this.formHasDataLoaded = this.formHasDataLoaded || false;
+      this.enableSaveBtn = false;
 
-    try {
-      let tableEntitlements = await this._cinchyService.getTableEntitlementsById(this.formMetadata.tableId).toPromise();
+      try {
+        let tableEntitlements = await this._cinchyService.getTableEntitlementsById(this.formMetadata.tableId).toPromise();
 
-      const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
+        const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
 
-      form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
+        form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
 
-      this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
-        async (formFieldsMetadata: Array<IFormFieldMetadata>) => {
+        this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
+          async (formFieldsMetadata: Array<IFormFieldMetadata>) => {
 
-          if (this.lookupRecordsListPopulated) {
-            const selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
+            if (this.lookupRecordsListPopulated) {
+              const selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
 
-              return (record.id === this.rowId);
-            });
+                return (record.id === this.rowId);
+              });
 
-            await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
+              await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
 
-            // This may occur if the rowId is not provided in the queryParams, but one is available in the session
-            if (this.rowId) {
-              if (!selectedLookupRecord) {
-                this._appStateService.setRecordSelected(null);
-              }
-              else {
-                const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null, null);
+              // This may occur if the rowId is not provided in the queryParams, but one is available in the session
+              if (this.rowId) {
+                if (!selectedLookupRecord) {
+                  this._appStateService.setRecordSelected(null);
+                }
+                else {
+                  const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null, null);
 
-                if (success && form.childFieldsLinkedToColumnName?.length) {
-                  // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
-                  for (let parentColumnName in form.childFieldsLinkedToColumnName) {
-                    let linkedParentField = form.fieldsByColumnName[parentColumnName];
-                    let linkedChildFields = form.childFieldsLinkedToColumnName[parentColumnName] || [];
+                  if (success && form.childFieldsLinkedToColumnName?.length) {
+                    // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
+                    for (let parentColumnName in form.childFieldsLinkedToColumnName) {
+                      let linkedParentField = form.fieldsByColumnName[parentColumnName];
+                      let linkedChildFields = form.childFieldsLinkedToColumnName[parentColumnName] || [];
 
-                    for (let linkedChildField of linkedChildFields) {
-                      // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
-                      if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
-                        continue;
+                      for (let linkedChildField of linkedChildFields) {
+                        // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
+                        if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
+                          continue;
+                        }
+
+                        // Update the child form field's value
+                        const fieldIndex = form.sections[0].fields.findIndex((field: FormField) => {
+
+                          return (field.id === linkedChildField.id);
+                        });
+
+                        form.updateFieldValue(
+                          0,
+                          fieldIndex,
+                          linkedParentField.value
+                        );
+
+                        this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
                       }
-
-                      // Update the child form field's value
-                      const fieldIndex = form.sections[0].fields.findIndex((field: FormField) => {
-
-                        return (field.id === linkedChildField.id);
-                      });
-
-                      form.updateFieldValue(
-                        0,
-                        fieldIndex,
-                        linkedParentField.value
-                      );
-
-                      this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
                     }
                   }
                 }
               }
+
+              this.form = form;
+
+              this.enableSaveBtn = true;
+
+              this._formIsLoading = false;
+              this.formHasDataLoaded = true;
+
+              this._spinner.hide();
+
+              if (childData) {
+                setTimeout(() => {
+
+                  childData.childForm.rowId = this.rowId;
+
+                  this._appStateService.parentFormSavedFromChild$.next(childData);
+                }, 500);
+              }
             }
+          },
+          error => {
 
-            this.form = form;
+            this._spinner.hide();
+            this._formIsLoading = false;
 
-            this.enableSaveBtn = true;
+            console.error(error);
+          });
+      } catch (e) {
+        this._spinner.hide();
 
-            this.isLoadingForm = false;
-            this.formHasDataLoaded = true;
+        this._formIsLoading = false;
 
-            this.spinner.hide();
-
-            if (childData) {
-              setTimeout(() => {
-
-                childData.childForm.rowId = this.rowId;
-
-                this._appStateService.parentFormSavedFromChild$.next(childData);
-              }, 500);
-            }
-          }
-        },
-        error => {
-
-          this.spinner.hide();
-
-          console.error(error);
-        });
-    } catch (e) {
-      this.spinner.hide();
-
-      console.error(e);
+        console.error(e);
+      }
     }
-  }
-
-
-  openChildDialog(
-      data: {
-        childForm: Form,
-        presetValues?: { [key: string]: any },
-        title: string
-      }
-  ): void {
-
-    data.childForm.rowId = this.rowId;
-
-    const dialogRef = this._dialog.open(
-      ChildFormComponent,
-      {
-        width: "500px",
-        data: data
-      }
-    );
-
-    dialogRef.afterClosed().subscribe((resultId: number) => {
-
-      if (!isNullOrUndefined(resultId)) {
-        this.afterChildFormEdit(resultId, data.childForm);
-      }
-    });
   }
 
 
@@ -560,81 +547,23 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         this.saveForm(this.form, this.rowId, data);
       }
     } else {
-      this.openChildDialog(data);
+      this._openChildFormDialog(data);
     }
   }
 
 
-  openDeleteConfirm(data): void {
+  /**
+   * Removes any pending operations that would have affected the deleted row
+   */
+  onChildRowDeleted(data: {
+      childForm: Form,
+      rowId: number,
+      sectionIndex: number
+  }): void {
 
-    const { domain, table, field, multiarray } = data;
+    this._pendingChildFormQueries = this._pendingChildFormQueries.filter((query: IChildFormQuery) => {
 
-    const dialogRef = this._dialog.open(MessageDialogComponent, {
-      width: "400px",
-      data: {
-        title: "Please confirm",
-        message: "Are you sure you want to delete this record?"
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result === "Yes") {
-        if (!isNullOrUndefined(field["Cinchy ID"])) {
-          const id = field["Cinchy ID"];
-
-          if (field["Cinchy ID"] > 0) {
-            // Query to delete record by Cinchy ID
-            let query = `delete
-                         from [${domain}].[${table}]
-                         where
-                             [Cinchy Id] = ${id}
-                         and [Deleted] is null`;
-
-            this._cinchyService.executeCsql(query, null).subscribe(
-              () => {
-                const idx = multiarray.indexOf(field);
-
-                if (idx > -1) {
-                  multiarray.splice(idx, 1);
-
-                  // Remove record from local collection.
-                  this._pendingChildFormQueries = this._pendingChildFormQueries.filter((query: IChildFormQuery) => {
-
-                    return query.rowId !== id;
-                  });
-
-                  this._toastr.success(
-                    "Record deleted successfully",
-                    "Success"
-                  );
-                }
-              },
-              () => {
-                this.spinner.hide();
-              }
-            );
-          } else {
-            const idx = multiarray.indexOf(field);
-
-            if (idx > -1) {
-              multiarray.splice(idx, 1);
-
-              this._pendingChildFormQueries = this._pendingChildFormQueries.filter((query: IChildFormQuery) => {
-
-                return query.rowId !== id;
-              });
-
-              this._toastr.success("Record deleted successfully", "Success");
-            }
-          }
-        } else {
-          const idx = multiarray.indexOf(field);
-
-          if (idx > -1) {
-            multiarray.splice(idx, 1);
-          }
-        }
-      }
+      return query.rowId !== data.rowId;
     });
   }
 
@@ -665,7 +594,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         resolve();
       }
       else {
-        this.spinner.show();
+        this._spinner.show();
         const pendingItem = this._pendingChildFormQueries[recursionCounter];
 
         if (pendingItem.query.query) {
@@ -675,7 +604,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           this._cinchyService.executeCsql(queryToExecute, params).subscribe(
             async () => {
 
-              this.spinner.hide();
+              this._spinner.hide();
 
               await this.saveChildForm(rowId, recursionCounter + 1);
 
@@ -685,7 +614,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 await this.getChildSavedData(rowId);
 
                 this._pendingChildFormQueries = new Array<IChildFormQuery>();
-                this._lastTemporaryCinchyId = -2;
+                this._lastTemporaryCinchyId = INITIAL_TEMPORARY_CINCHY_ID;
 
                 this._toastr.success("Child form saved successfully", "Success");
               }
@@ -693,7 +622,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               resolve();
             },
             error => {
-              this.spinner.hide();
+              this._spinner.hide();
               this._toastr.error("Error while saving child form", "Error");
 
               reject(error);
@@ -725,19 +654,25 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       if (formvalidation.status) {
         // Generate dynamic query using dynamic form meta data
-        this.spinner.show();
+        this._spinner.show();
         const insertQuery: IQuery = formData.generateSaveQuery(rowId, this._configService.cinchyVersion, this.form.isClone);
 
         // execute dynamic query
         if (insertQuery) {
           if (insertQuery.query) {
             this._cinchyService.executeCsql(insertQuery.query, insertQuery.params).subscribe(
-              response => {
+              (response: {
+                queryResult: Cinchy.QueryResult,
+                callbackState?: any
+              }) => {
 
-                this.spinner.hide();
+                this._spinner.hide();
 
                 if (isNullOrUndefined(this.rowId)) {
-                  this._appStateService.setRecordSelected(response.queryResult._jsonResult.data[0][0], true);
+                  // Technically this will also be done by the setRecordSelected handlers, but by doing it manually now we can use this immediately and won't'
+                  this.rowId = response.queryResult._jsonResult.data[0][0];
+
+                  this._appStateService.setRecordSelected(this.rowId, true);
 
                   if (this.form.isClone) {
                     this.form = this.form.clone(null, true);
@@ -746,13 +681,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   }
                 }
 
-                this._saveMethodLogic(this.rowId, response, childData);
+                this._saveMethodLogic(response, childData);
                 this._updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
 
                 this._toastr.success("Data Saved Successfully", "Success");
 
                 if (this.addNewFromSideNav) {
-                  this.closeAddNewDialog.emit(this.rowId);
+                  this.closeAddNewDialog.emit({ newRowId: this.rowId });
                 }
 
                 formData.hasChanged = false;
@@ -762,7 +697,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 console.error("Error in cinchy-dynamic-forms save method", error);
 
                 this._toastr.error("Error while updating file data.", "Error");
-                this.spinner.hide();
+                this._spinner.hide();
               });
           }
           else if (insertQuery.attachedFilesInfo && insertQuery.attachedFilesInfo.length) {
@@ -770,7 +705,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           }
         }
         else {
-          this._saveMethodLogic(this.rowId, null);
+          this._saveMethodLogic();
         }
       }
       else {
@@ -817,28 +752,52 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
+  private _openChildFormDialog(
+    data: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      title: string
+    }
+  ): void {
+
+    data.childForm.rowId = this.rowId;
+
+    const dialogRef = this._dialog.open(
+      ChildFormComponent,
+      {
+        width: "500px",
+        data: data
+      }
+    );
+
+    dialogRef.afterClosed().subscribe((resultId: number) => {
+
+      if (!isNullOrUndefined(resultId)) {
+        this.afterChildFormEdit(resultId, data.childForm);
+      }
+    });
+  }
+
+
+  /**
+   * Runs after a save has been completed. Will complete any pending queries relevant to child forms in this view
+   * and, if relevant, load the provided child form
+   */
   private async _saveMethodLogic(
-      rowId: number,
-      response,
+      response?,
       childData?: {
         childForm: Form,
         presetValues?: { [key: string]: any },
         title: string
       }
-  ): Promise<number> {
-
-    if (response?.queryResult._jsonResult.data.length > 0) {
-      rowId = response.queryResult._jsonResult.data[0][0];
-    } else {
-      rowId = this.rowId;
-    }
+  ): Promise<void> {
 
     if (this._pendingChildFormQueries?.length) {
-      await this.saveChildForm(rowId, 0);
+      await this.saveChildForm(this.rowId, 0);
     } else {
-      this.spinner.hide();
+      this._spinner.hide();
 
-      if (!isNullOrUndefined(this.rowId)) {
+      if (!isNullOrUndefined(this.rowId) && childData) {
         this.loadForm(childData);
       }
 
@@ -846,8 +805,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         this._toastr.warning("No changes were made", "Warning");
       }
     }
-
-    return rowId;
   }
 
 
@@ -875,11 +832,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
           this._toastr.success("Saved successfully", "Success");
 
-          this.spinner.hide();
+          this._spinner.hide();
         } catch (e) {
           this._toastr.error("Error while updating file data.", "Error");
 
-          this.spinner.hide();
+          this._spinner.hide();
         }
       } else {
         const query = `update t

@@ -15,6 +15,7 @@ import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdo
 import { isNullOrUndefined } from "util";
 
 import * as R from "ramda";
+import { IFindChildFormResponse } from "../interface/find-child-form-response";
 
 
 export class Form {
@@ -123,20 +124,20 @@ export class Form {
   addOrModifyFlattenedChildRecord(sectionIndex: number, recordData: { [columnName: string]: any }): void {
 
     if (recordData["Cinchy ID"] && recordData["Cinchy ID"] > 0) {
-      const existingRecordIndex = this._sections[sectionIndex].flattenedChildFormRecordValues.findIndex((existingRecordData: { [columnName: string]: any }) => {
+      const existingRecordIndex = this._sections[sectionIndex].childFormRowValues.findIndex((existingRecordData: { [columnName: string]: any }) => {
 
         return (existingRecordData.rowId === recordData["Cinchy ID"]);
       });
 
       if (existingRecordIndex !== -1) {
-        this._sections[sectionIndex].flattenedChildFormRecordValues.splice(existingRecordIndex, 1, [recordData]);
+        this._sections[sectionIndex].childFormRowValues.splice(existingRecordIndex, 1, [recordData]);
       }
       else {
-        this._sections[sectionIndex].flattenedChildFormRecordValues.push(recordData);
+        this._sections[sectionIndex].childFormRowValues.push(recordData);
       }
     }
     else {
-      this._sections[sectionIndex].flattenedChildFormRecordValues.push(recordData);
+      this._sections[sectionIndex].childFormRowValues.push(recordData);
     }
   }
 
@@ -257,7 +258,7 @@ export class Form {
 
         // We want to save every field of the cloned record when the form is saved,
         // so we'll manually mark them as dirty
-        clonedForm.updateAdditionalProperty(
+        clonedForm.updateFieldAdditionalProperty(
           sectionIndex,
           fieldIndex,
           {
@@ -268,7 +269,7 @@ export class Form {
         );
 
         if (field.childForm) {
-          clonedForm.updateAdditionalProperty(
+          clonedForm.updateFieldAdditionalProperty(
             sectionIndex,
             fieldIndex,
             {
@@ -277,11 +278,11 @@ export class Form {
             }
           );
 
-          if (field.childForm.sections[0].flattenedChildFormRecordValues) {
+          if (field.childForm.sections[0].childFormRowValues) {
             if (field.childForm.childFormLinkId && field.childForm.childFormParentId) {
               let childRecordsToClone = field.childForm.flatten ?
-                [field.childForm.sections[0].flattenedChildFormRecordValues[field.childForm.sections[0].flattenedChildFormRecordValues.length - 1]] :
-                field.childForm.sections[0].flattenedChildFormRecordValues;
+                [field.childForm.sections[0].childFormRowValues[field.childForm.sections[0].childFormRowValues.length - 1]] :
+                field.childForm.sections[0].childFormRowValues;
 
               let startingCloneRecordIdx = field.childForm.flatten ? childRecordsToClone.length - 1 : 0;
               let numOfRecordsToClone = field.childForm.flatten ? 1 : childRecordsToClone.length;
@@ -294,7 +295,7 @@ export class Form {
 
                   childSection.fields?.forEach((childField: FormField, childFieldIndex: number) => {
 
-                    clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateAdditionalProperty(
+                    clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateFieldAdditionalProperty(
                       childSectionIndex,
                       childFieldIndex,
                       {
@@ -369,17 +370,40 @@ export class Form {
                 });
               });
 
-              clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].flattenedChildFormRecordValues.splice(startingCloneRecordIdx, numOfRecordsToClone);
+              clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].childFormRowValues.splice(startingCloneRecordIdx, numOfRecordsToClone);
             }
           }
           else {
-            clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].flattenedChildFormRecordValues.splice(0, clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].flattenedChildFormRecordValues.length);
+            clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].childFormRowValues.splice(0, clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].childFormRowValues.length);
           }
         }
       });
     });
 
     return clonedForm;
+  }
+
+
+  /**
+   * Searches the form's fields to find a reference to a specific child forn
+   */
+  findChildForm(targetChildFormId: string): IFindChildFormResponse {
+
+    if (this._sections?.length) {
+      for (let sectionIndex = 0; sectionIndex < this._sections.length; sectionIndex++) {
+        if (this._sections[sectionIndex].fields?.length) {
+          for (let fieldIndex = 0; fieldIndex < this._sections[sectionIndex].fields.length; fieldIndex++) {
+            if (this._sections[sectionIndex].fields[fieldIndex].childForm?.id === targetChildFormId) {
+              return {
+                childForm: this._sections[sectionIndex].fields[fieldIndex].childForm,
+                fieldIndex: fieldIndex,
+                sectionIndex: sectionIndex
+              };
+            }
+          }
+        }
+      }
+    }
   }
 
 
@@ -430,7 +454,7 @@ export class Form {
       this.isClone
     );
 
-    outputForm.sections = [newSection];
+    outputForm.sections = new Array<FormSection>(newSection);
 
     outputForm.restoreFormReferenceOnAllFields();
 
@@ -1032,8 +1056,8 @@ export class Form {
           };
         }
 
-        if (isNullOrUndefined(section.flattenedChildFormRecordValues)) {
-          section.flattenedChildFormRecordValues = [];
+        if (isNullOrUndefined(section.childFormRowValues)) {
+          section.childFormRowValues = [];
         }
 
         if (isNullOrUndefined(field.cinchyColumn.name) || field.cinchyColumn.name === "") {
@@ -1101,7 +1125,7 @@ export class Form {
         });
       });
 
-      section.flattenedChildFormRecordValues = rowData;
+      section.childFormRowValues = rowData;
     });
 
     // TODO: determine if this is relevant or necessary
@@ -1142,11 +1166,26 @@ export class Form {
 
 
   /**
+   * Updates a specific property on the root of the given field's child form
+   */
+  updateChildformProperty(sectionIndex: number, fieldIndex: number, property: IAdditionalProperty): void {
+
+    if (
+        this._sections?.length > sectionIndex &&
+        this._sections[sectionIndex].fields?.length < fieldIndex &&
+        this._sections[sectionIndex].fields[fieldIndex].childForm
+    ) {
+      this._sections[sectionIndex].fields[fieldIndex].childForm.updateRootProperty(property);
+    }
+  }
+
+
+  /**
    * Updates a specific property of a field
    */
-  updateAdditionalProperty(sectionIndex: number, fieldIndex: number, property: IAdditionalProperty): void {
+  updateFieldAdditionalProperty(sectionIndex: number, fieldIndex: number, property: IAdditionalProperty): void {
 
-    if (this.sections?.length > sectionIndex && this.sections[sectionIndex].fields?.length < fieldIndex) {
+    if (this._sections?.length > sectionIndex && this._sections[sectionIndex].fields?.length < fieldIndex) {
       if (property.cinchyColumn) {
         this._sections[sectionIndex].fields[fieldIndex].cinchyColumn[property.propertyName] = property.propertyValue;
       }
@@ -1175,8 +1214,28 @@ export class Form {
 
       additionalPropertiesToUpdate?.forEach((property: IAdditionalProperty) => {
 
-        this.updateAdditionalProperty(sectionIndex, fieldIndex, property);
+        this.updateFieldAdditionalProperty(sectionIndex, fieldIndex, property);
       });
+    }
+  }
+
+
+  /**
+   * Updates a specific property on the main form object. Should be used in place of directly assigning any value
+   */
+  updateRootProperty(property: IAdditionalProperty): void {
+
+    this[property.propertyName] = property.propertyValue;
+  }
+
+
+  /**
+   * Updates a specific property of a section
+   */
+  updateSectionProperty(sectionIndex: number, property: IAdditionalProperty): void {
+
+    if (this._sections?.length > sectionIndex) {
+      this._sections[sectionIndex][property.propertyName] = property.propertyValue;
     }
   }
 

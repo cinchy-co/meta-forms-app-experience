@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from "@angular/core";
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { DataFormatType } from "../../enums/data-format-type";
@@ -95,13 +103,15 @@ export class TextboxComponent implements OnChanges, OnInit {
 
   ngOnChanges(changes: SimpleChanges): void {
 
-    if (changes.field) {
-      this.value = this.field?.value;
+    if (changes?.field) {
+      this._setValue();
     }
   }
 
 
   ngOnInit(): void {
+
+    this._setValue();
 
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
 
@@ -140,7 +150,7 @@ export class TextboxComponent implements OnChanges, OnInit {
   }
 
 
-  valueChanged() {
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -150,5 +160,11 @@ export class TextboxComponent implements OnChanges, OnInit {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
+  }
+
+
+  private _setValue(): void {
+
+    this.value = this.field?.value ?? null;
   }
 }

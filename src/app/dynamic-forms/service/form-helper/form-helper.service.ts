@@ -1,22 +1,23 @@
 import { Injectable } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
+
+import { DataFormatType } from "../../enums/data-format-type";
 
 import { CinchyColumn } from "../../models/cinchy-column.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { Form } from "../../models/cinchy-form.model";
 import { IQuery } from "../../models/cinchy-query.model";
 
-import { IFormFieldMetadata } from "src/app/models/form-field-metadata.model";
-import { IFormMetadata } from "src/app/models/form-metadata-model";
-import { ILookupRecord } from "src/app/models/lookup-record.model";
+import { IFormFieldMetadata } from "../../../models/form-field-metadata.model";
+import { IFormMetadata } from "../../../models/form-metadata-model";
+import { ILookupRecord } from "../../../models/lookup-record.model";
 
-import { CinchyQueryService } from "src/app/services/cinchy-query.service";
+import { CinchyQueryService } from "../../../services/cinchy-query.service";
 
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
-import { DataFormatType } from "../../enums/data-format-type";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
 @Injectable({
@@ -95,7 +96,6 @@ export class FormHelperService {
       let minSectionIter = 0;
 
       for (let i = 0; i < formFields.length; i++) {
-
         const columnMetadata = tableJson.Columns.find(_ => _.columnId === formFields[i].columnId);
         const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
         const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
@@ -177,9 +177,9 @@ export class FormHelperService {
           cinchyColumn.canView = true;
 
           // If flatten, we have to check the entitlements for the last record and readjust the entitlements
-          if (childForm.flatten && childForm.sections?.length && childForm.sections[0].flattenedChildFormRecordValues?.length) {
-            let childFormData = childForm.sections[0].flattenedChildFormRecordValues;
-            let lastRecordId = childFormData[childFormData.length - 1]['Cinchy ID'];
+          if (childForm.flatten && childForm.sections?.length && childForm.sections[0].childFormRowValues?.length) {
+            let childFormData = childForm.sections[0].childFormRowValues;
+            let lastRecordId = childFormData[childFormData.length - 1]["Cinchy ID"];
             if (lastRecordId) {
             //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
               const childCellEntitlements = await this._getCellEntitlements(childFormMetadata.domainName, childFormMetadata.tableName, lastRecordId, childFormFieldsMetadata);
@@ -203,7 +203,14 @@ export class FormHelperService {
           allChildForms.push(childForm);
         }
 
-        const formField: FormField = new FormField(formFields[i].formFieldId, formFields[i].formFieldName, formFields[i].caption, childForm, cinchyColumn, form, null);
+        const formField: FormField = new FormField(
+          formFields[i].formFieldId,
+          formFields[i].formFieldName,
+          formFields[i].caption,
+          childForm,
+          cinchyColumn,
+          form
+        );
 
         if (!childFormId) {
           parentFieldsByColumn[cinchyColumn.name] = formField;
@@ -244,11 +251,9 @@ export class FormHelperService {
 
       form.childFieldsLinkedToColumnName = parentChildLinkedColumns;
     }
-
   }
 
 
-  // TODO: Refactor to smaller function, remove the need to use afterChildFormEdit as a function, it's only a workaround for the bad existing code in cinchy-dynamic-forms.component.ts that handles child forms queries
   async fillWithData(
       form: Form,
       targetRowId: number,
@@ -286,7 +291,7 @@ export class FormHelperService {
             selectQuery.params = {};
           }
 
-          selectQuery.params['@parentCinchyIdMatch'] = idForParentMatch;
+          selectQuery.params["@parentCinchyIdMatch"] = idForParentMatch;
         }
       }
 
@@ -308,13 +313,16 @@ export class FormHelperService {
 
       return true;
     } catch (e) {
-      console.error(e?.cinchyException?.message, e);
 
       if (e?.cinchyException?.message) {
-        this._toastr.error('Error while fetching data from the table. Please make sure you have the correct entitlements to view the data.', 'Error')
+        console.error(e.cinchyException.message, e);
+
+        this._toastr.error("Error while fetching data from the table. Please make sure you have the correct entitlements to view the data.", "Error");
       }
       else {
-        this._toastr.error(selectedLookupRecord ? e : 'Selected row is either deleted or doesn\'t exist.', 'Error');
+        console.error(e);
+
+        this._toastr.error(selectedLookupRecord ? e : "Selected row is either deleted or doesn't exist.", "Error");
       }
 
       return false;
@@ -332,21 +340,23 @@ export class FormHelperService {
       SELECT ${selectClause.toString()}
       FROM [${domainName}].[${tableName}] t
       WHERE t.[Deleted] IS NULL
-        AND t.[Cinchy Id]=${cinchyId};
-    `;
+        AND t.[Cinchy Id]=${cinchyId};`;
 
     try {
       let response = await this._cinchyService.executeCsql(query, null).toPromise();
+
       return response.queryResult.toObjectArray()[0];
     } catch (e) {
       this._toastr.error('Error while checking the entitlements for the form fields. You may face issues upon saving the form.', 'Error');
     }
+
     return {};
   }
 
 
-  private async _getFileName(cinchyId: number, fileNameColumn: string) {
-    const [domain, table, column] = fileNameColumn ? fileNameColumn.split('.') : [];
+  private async _getFileName(cinchyId: number, fileNameColumn: string): Promise<string> {
+
+    const [domain, table, column] = fileNameColumn?.split(".") || [];
     const whereCondition = `WHERE [Cinchy Id] = ${cinchyId} AND [Deleted] IS NULL `;
 
     if (domain) {
@@ -354,12 +364,11 @@ export class FormHelperService {
                        [Cinchy Id] as 'id'
                      FROM
                        [${domain}].[${table}]
-                       ${whereCondition}
-      `;
+                       ${whereCondition}`;
 
       const fileNameResp = await this._cinchyService.executeCsql(query, null, null, QueryType.DRAFT_QUERY).toPromise();
-      return fileNameResp && fileNameResp.queryResult && fileNameResp.queryResult.toObjectArray()[0] ?
-        fileNameResp.queryResult.toObjectArray()[0]['fullName'] : null;
+
+      return fileNameResp?.queryResult?.toObjectArray()[0] ? fileNameResp.queryResult.toObjectArray()[0]["fullName"] : null;
     }
   }
 
@@ -367,10 +376,10 @@ export class FormHelperService {
   private _parseColumnNameByChildFormLinkId(formLinkId: string): string {
 
     if (formLinkId) {
-      let splitColumnNames = formLinkId.split('].[');
+      let splitColumnNames = formLinkId.split("].[");
 
       if (splitColumnNames?.length > 0) {
-        let colName = splitColumnNames[0].replace(/[\[\]]+/g, '');
+        let colName = splitColumnNames[0].replace(/[\[\]]+/g, "");
 
         return colName;
       }

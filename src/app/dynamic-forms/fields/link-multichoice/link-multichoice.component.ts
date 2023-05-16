@@ -6,9 +6,11 @@ import {
   ElementRef,
   EventEmitter,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
+  SimpleChanges,
   ViewChild
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
@@ -47,7 +49,7 @@ import * as R from "ramda";
   providers: [DropdownDatasetService]
 })
 
-export class LinkMultichoiceComponent implements OnDestroy, OnInit {
+export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   @ViewChild("fileInput") fileInput: ElementRef;
   @ViewChild("multiSelect", {static: true}) multiSelect: MatSelect;
@@ -113,10 +115,18 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
     private _configService: ConfigService,
     private _cinchyQueryService: CinchyQueryService,
     private _toastr: ToastrService
-  ) {}
+  ) { }
 
 
-  ngOnDestroy() {
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
+
+
+  ngOnDestroy(): void {
 
     this.onDestroy.next();
     this.onDestroy.complete();
@@ -133,7 +143,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
   }
 
 
-  async bindDropdownList() {
+  async bindDropdownList(): Promise<void> {
 
     if (!this.dropdownListFromLinkedTable) {
       this.isLoading = true;
@@ -163,7 +173,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
         this.dropdownSetOptions = dropdownDataset?.options ?? [];
         this.charactersAfterWhichToShowList = this.dropdownSetOptions.length > this.maxLimitForMaterialSelect ? 3 : 0;
         this.setFilteredOptions();
-        this.setSelectedValue();
+        this._setValue();
 
         if (this.dropdownSetOptions.length > this.maxLimitForMaterialSelect && this.selectedValues) {
           this.dropdownSetOptions = this.selectedValues.concat(this.dropdownSetOptions);
@@ -205,7 +215,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
   }
 
 
-  closeTooltip(tooltip): void {
+  closeTooltip(tooltip: NgbTooltip): void {
 
     setTimeout(() => {
 
@@ -318,7 +328,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
   }
 
 
-  getAndSetLatestFileValue() {
+  getAndSetLatestFileValue(): void {
 
     this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.form.rowId).subscribe((resp: Array<{ fileId: any, fileName: string }>) => {
 
@@ -362,13 +372,13 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
   }
 
 
-  isSelected(dropdownOption) {
+  isSelected(dropdownOption: DropdownOption): boolean {
 
     return this.selectedValues.find(item => item.id === dropdownOption.id);
   }
 
 
-  openTooltip(tooltip) {
+  openTooltip(tooltip: NgbTooltip): void {
 
     tooltip.open();
     this.tooltip = tooltip;
@@ -384,51 +394,51 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
   }
 
 
-  onDeleteFile(item) {
+  onDeleteFile(item: any): void {
 
-    if (item.fileId && this.field.value) {
-      this.field.value = this.field.value.filter((fileId: string) => {
+    if (item.fileId && this.selectedValues?.length) {
+      this.selectedValues = this.selectedValues.filter((value: any) => {
 
-        return (fileId !== item.fileId?.toString());
+        return (value.fileId?.toString !== item.fileId?.toString());
       });
 
-      this.field.cinchyColumn.hasChanged = true;
       this.downloadableLinks = this.downloadableLinks.filter(x => x.fileId !== item.fileId);
+
+      this.valueChanged();
     }
   }
 
 
-  onFileSelected(event: any) {
+  onFileSelected(event: any): void {
 
-    if (event?.target?.files?.length === 0) {
-      return;
-    }
+    if (!event?.target?.files?.length) {
+      const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.form.rowId?.toString());
 
-    const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.form.rowId?.toString());
+      this._cinchyQueryService.uploadFiles(event?.target?.files, uploadUrl)?.subscribe(
+        {
+          error: () => {
 
-    this._cinchyQueryService.uploadFiles(event?.target?.files, uploadUrl)?.subscribe(
-      {
-        error: () => {
+            this._toastr.error("Could not upload the file(s)", "Error");
+          },
+          next: () => {
 
-          this._toastr.error("Could not upload the file(s)", "Error");
-        },
-        next: () => {
-
-          this.getAndSetLatestFileValue();
+            this.getAndSetLatestFileValue();
+          }
         }
-      }
-    );
+      );
+    }
+
   }
 
 
-  removeTooltipElement() {
+  removeTooltipElement(): void {
 
     this.isCursorIn = false;
     this.tooltip.close();
   }
 
 
-  setFilteredOptions(dropdownOptions?) {
+  setFilteredOptions(dropdownOptions?: Array<DropdownOption>): void {
 
     this.filteredOptions = dropdownOptions ? dropdownOptions : this.dropdownSetOptions;
     this.selectedValues = [];
@@ -452,7 +462,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
   /**
    * Sets the initial value after the fileteredItems are loaded initially
    */
-  protected setInitialValue() {
+  protected setInitialValue(): void {
 
     this.filteredListMulti
       .pipe(take(1), takeUntil(this.onDestroy))
@@ -466,23 +476,13 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
   }
 
 
-  setSelectedValue() {
-
-    const preselectedValArr = this.field.dropdownDataset?.options || null;
-
-    if (preselectedValArr || this.isInChildForm) {
-      this.selectedValues = this.generateMultipleOptionsFromSingle();
-    }
-  }
-
-
-  setTooltipCursor() {
+  setTooltipCursor(): void {
 
     this.isCursorIn = true;
   }
 
 
-  toggleSelectAll(selectAll: boolean) {
+  toggleSelectAll(selectAll: boolean): void {
 
     if (selectAll) {
       this.selectedValues = this.filteredListMulti.value;
@@ -495,7 +495,7 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
   }
 
 
-  valueChanged() {
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -508,5 +508,15 @@ export class LinkMultichoiceComponent implements OnDestroy, OnInit {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
+  }
+
+
+  private _setValue(): void {
+
+    const preselectedValArr = this.field.dropdownDataset?.options || null;
+
+    if (preselectedValArr || this.isInChildForm) {
+      this.selectedValues = this.generateMultipleOptionsFromSingle();
+    }
   }
 }

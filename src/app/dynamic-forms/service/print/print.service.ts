@@ -317,18 +317,18 @@ export class PrintService {
   getChildFormTable(form) {
     // TODO get proper table header and photos
     const table = this.getDefaultTable();
-    let flattenedChildFormRecordValues = form.sections[0]?.flattenedChildFormRecordValues;
+    let childFormRowValues = form.sections[0]?.childFormRowValues;
     const fields = form.sections[0]?.fields;
     let [body, widths] = [[], []];
     const colsToRemove = {}
-    if (flattenedChildFormRecordValues?.length) {
+    if (childFormRowValues?.length) {
 
-      let tableColumns = Object.keys(flattenedChildFormRecordValues[0]);
+      let tableColumns = Object.keys(childFormRowValues[0]);
 
       tableColumns = tableColumns.filter(col => col !== 'Cinchy ID' && col !== 'Actions' && !colsToRemove[col]);
       widths = tableColumns.map(column => 'auto');
       body.push(tableColumns.map(col => ({text: this.getTableHeader(col, form.sections[0]), style: 'tableHeader'})));
-      flattenedChildFormRecordValues.forEach(field => {
+      childFormRowValues.forEach(field => {
         body.push(tableColumns.map(colKey => {
           return {text: this.getDisplayValue(field[colKey], form.sections[0], colKey), style: 'tableRow'}
         }));

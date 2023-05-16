@@ -8,6 +8,8 @@ import { Injectable } from "@angular/core";
 
 import { Form } from "../dynamic-forms/models/cinchy-form.model";
 
+import { INewEntityDialogResponse } from "../dynamic-forms/interface/new-entity-dialog-response";
+
 import { IFormMetadata } from "../models/form-metadata-model";
 import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 
@@ -21,10 +23,11 @@ export class AppStateService {
   hasFormChanged: boolean;
   selectedOpportunityId: number;
 
+  addNewEntityDialogClosed$ = new Subject<INewEntityDialogResponse>();
   childRecordUpdated$ = new Subject<boolean>();
   currentSection$ = new BehaviorSubject<string>(null);
   latestRenderedSections$ = new BehaviorSubject<IFormSectionMetadata[]>(null);
-  newContactAdded$ = new Subject<any>();
+
   parentFormSavedFromChild$ = new Subject<{
     childForm: Form,
     presetValues ?: { [key: string]: any },
@@ -71,36 +74,6 @@ export class AppStateService {
   }
 
 
-  getCurrentSectionClicked(): Observable<any> {
-
-    return this.currentSection$.asObservable();
-  }
-
-
-  getLatestRenderedSections(): Observable<IFormSectionMetadata[]> {
-
-    return this.latestRenderedSections$.asObservable();
-  }
-
-
-  getNewContactAdded(): Observable<any> {
-
-    return this.newContactAdded$.asObservable();
-  }
-
-
-  newContactAdded(contact) {
-
-    this.newContactAdded$.next(contact);
-  }
-
-
-  sectionClicked(sectionName) {
-
-    this.currentSection$.next(sectionName);
-  }
-
-
   setChildRecordUpdateState(isUpdated) {
 
     this.childRecordUpdated$.next(isUpdated);
@@ -112,12 +85,6 @@ export class AppStateService {
     this._formId = id;
 
     this.rootFormIdSet$.next(this._formId);
-  }
-
-
-  setLatestRenderedSections(sections: IFormSectionMetadata[]) {
-
-    this.latestRenderedSections$.next(sections);
   }
 
 

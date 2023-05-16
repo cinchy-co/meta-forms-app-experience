@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges
+} from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
@@ -19,7 +26,7 @@ import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dro
     templateUrl: "./multichoice.component.html",
     styleUrls: ["./multichoice.component.scss"]
 })
-export class MultichoiceComponent {
+export class MultichoiceComponent implements OnChanges {
 
   @Input() field: FormField;
   @Input() fieldIndex: number;
@@ -53,11 +60,17 @@ export class MultichoiceComponent {
   }
 
 
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
+
+
   ngOnInit(): void {
 
-    this.value = Array.isArray(this.field.value) ?
-      this.field.value :
-      (this.field.value ? [this.field.value] : null);
+    this._setValue()
 
     if (this.field.cinchyColumn.choiceOptions) {
       const allOptions = this.field.cinchyColumn.choiceOptions.split(",").map((option: string) => {
@@ -88,7 +101,7 @@ export class MultichoiceComponent {
   }
 
 
-  valueChanged() {
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -98,5 +111,16 @@ export class MultichoiceComponent {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
+  }
+
+
+  private _setValue(): void {
+
+    if (this.field?.value) {
+      this.value = Array.isArray(this.field.value) ? this.field.value : [this.field.value];
+    }
+    else {
+      this.value = null;
+    }
   }
 }

@@ -1,7 +1,17 @@
 import { Subject } from "rxjs";
 import { debounceTime, distinctUntilChanged, startWith } from "rxjs/operators";
 
-import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef } from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  ViewChild
+} from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
@@ -12,11 +22,12 @@ import { faSitemap } from "@fortawesome/free-solid-svg-icons";
 
 import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
-import { AddNewOptionDialogComponent } from "../../../dialogs/add-new-option-dialog/add-new-option-dialog.component";
+import { AddNewEntityDialogComponent } from "../../../dialogs/add-new-entity-dialog/add-new-entity-dialog.component";
 
 import { DataFormatType } from "../../enums/data-format-type";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
+import { INewEntityDialogResponse } from "../../interface/new-entity-dialog-response";
 
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
@@ -47,7 +58,7 @@ import { ToastrService } from "ngx-toastr";
   styleUrls: ["./link.component.scss"],
   providers: [DropdownDatasetService]
 })
-export class LinkComponent implements OnInit {
+export class LinkComponent implements OnChanges, OnInit {
 
   @ViewChild("searchInput") searchInput;
   @ViewChild("fileInput") fileInput: ElementRef;
@@ -91,7 +102,6 @@ export class LinkComponent implements OnInit {
   showLinkUrl: boolean;
   tableSourceURL: string;
   toolTipMessage: string;
-  updateList: boolean;
 
   selectedValue: DropdownOption;
 
@@ -128,7 +138,15 @@ export class LinkComponent implements OnInit {
     private _cinchyQueryService: CinchyQueryService,
     private _configService: ConfigService,
     private _toastr: ToastrService
-  ) {}
+  ) { }
+
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
 
 
   ngOnInit(): void {
@@ -141,7 +159,7 @@ export class LinkComponent implements OnInit {
 
     this.tableSourceURL = `${url}/Tables/${this.field.cinchyColumn.linkTargetTableId}`;
 
-    this.setSelectedValue();
+    this._setValue();
 
     if (this.isInChildForm && this.field.cinchyColumn.linkedFieldId) {
       this.setWhenNewRowAddedForParent();
@@ -149,12 +167,11 @@ export class LinkComponent implements OnInit {
 
     this.createlinkOptionName = this.field.cinchyColumn.createlinkOptionFormId ? true: false;
 
-    this._appStateService.getNewContactAdded().subscribe(value => {
+    this._appStateService.addNewEntityDialogClosed$.subscribe((value: INewEntityDialogResponse) => {
 
       if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]["Table"] === value.tableName) {
-        this.updateList = true;
         this.filteredOptions = null;
-        this.getListItems();
+        this.getListItems(true);
       }
     });
 
@@ -305,7 +322,7 @@ export class LinkComponent implements OnInit {
   }
 
 
-  async getListItems(fromLinkedField?: boolean): Promise<void> {
+  async getListItems(updateList: boolean, fromLinkedField?: boolean): Promise<void> {
 
     if (!this.filteredOptions) {
       this.isLoading = true;
@@ -329,7 +346,7 @@ export class LinkComponent implements OnInit {
           currentFieldJson,
           this.field.cinchyColumn.dropdownFilter,
           this.form.rowId,
-          this.updateList
+          updateList
         );
 
         this.field.dropdownDataset = this.getSortedList(dropdownDataset);
@@ -345,7 +362,7 @@ export class LinkComponent implements OnInit {
         this.filteredOptions = this.dropdownSetOptions;
 
         if (fromLinkedField) {
-          this.setSelectedValue();
+          this._setValue();
         }
       }
 
@@ -354,11 +371,9 @@ export class LinkComponent implements OnInit {
 
       this.isLoading = false;
 
-      if (!fromLinkedField && !this.updateList) {
+      if (!fromLinkedField && !updateList) {
         this.focusAndBlurInputToShowDropdown();
       }
-
-      this.updateList = false;
     }
   }
 
@@ -404,52 +419,53 @@ export class LinkComponent implements OnInit {
   }
 
 
-  onDeleteFile(item) {
+  onDeleteFile() {
 
-    this.field.value = "";
-    this.field.cinchyColumn.hasChanged = true;
+    this.selectedValue = null;
+
     this.downloadableLinks = [];
+
+    this.valueChanged();
   }
 
 
   onFileSelected(event: Event) {
 
-    if ((event?.target as HTMLInputElement)?.files?.length === 0) {
-      return;
-    }
+    if ((event?.target as HTMLInputElement)?.files?.length) {
+      const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.form.rowId?.toString());
 
-    const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.form.rowId?.toString());
+      this._cinchyQueryService.uploadFiles(Array.from((event.target as HTMLInputElement).files), uploadUrl).subscribe(
+        {
+          next: () => {
 
-    this._cinchyQueryService.uploadFiles(Array.from((event?.target as HTMLInputElement)?.files), uploadUrl)?.subscribe(
-      {
-        next: () => {
+            this._toastr.success("File uploaded", "Success");
+            this.fileInput.nativeElement.value = "";
+            this.getAndSetLatestFileValue();
+          },
+          error: () => {
 
-          this._toastr.success("File uploaded", "Success");
-          this.fileInput.nativeElement.value = "";
-          this.getAndSetLatestFileValue();
-        },
-        error: () => {
-
-          this._toastr.error("Could not upload the file", "Error");
+            this._toastr.error("Could not upload the file", "Error");
+          }
         }
-      }
-    );
+      );
+    }
   }
 
 
   openChildDialog() {
 
-    const createLinkOptionFormId = this.field.cinchyColumn.createlinkOptionFormId;
-    const createLinkOptionName = this.field.cinchyColumn.createlinkOptionName;
-    const newOptionDialogRef = this._dialogService.openDialog(AddNewOptionDialogComponent, {
-      createLinkOptionFormId,
-      createLinkOptionName
+    const newOptionDialogRef = this._dialogService.openDialog(AddNewEntityDialogComponent, {
+      createLinkOptionFormId: this.field.cinchyColumn.createlinkOptionFormId,
+      createLinkOptionName: this.field.cinchyColumn.createlinkOptionName
     });
 
     this._spinner.hide();
 
-    newOptionDialogRef.afterClosed().subscribe(newContactAdded => {
-      newContactAdded && this._appStateService.newContactAdded(newContactAdded)
+    newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
+
+      if (value) {
+        this._appStateService.addNewEntityDialogClosed$.next(value);
+      }
     });
   }
 
@@ -478,28 +494,6 @@ export class LinkComponent implements OnInit {
   }
 
 
-  setSelectedValue(): void {
-
-    if (this.field.noPreselect) {
-      this.selectedValue = null;
-    }
-    else {
-      const preselectedValArr = this.field.dropdownDataset?.options || null;
-
-      if (preselectedValArr?.length > 1 || this.isInChildForm) {
-        this.selectedValue = preselectedValArr.find(item => item.id === this.field.value);
-      } else {
-        this.selectedValue = preselectedValArr && preselectedValArr[0] ? {...preselectedValArr[0]} : null;
-      }
-
-      this.valueChanged();
-
-      this.checkForAttachmentUrl();
-      this.checkForDisplayColumnFormatter();
-    }
-  }
-
-
   setToLastValueSelected() {
 
     setTimeout(() => {
@@ -522,14 +516,14 @@ export class LinkComponent implements OnInit {
   setWhenNewRowAddedForParent() {
 
     this.field.value = typeof this.form.rowId === "string" ? +this.form.rowId : this.form.rowId;
-    this.getListItems(true);
+    this.getListItems(false, true);
     this.field.noPreselect = false;
     this.isDisabled = true;
     this.field.cinchyColumn.hasChanged = true;
   }
 
 
-  valueChanged() {
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -555,6 +549,28 @@ export class LinkComponent implements OnInit {
     }
 
     return [];
+  }
+
+
+  private _setValue(): void {
+
+    if (this.field.noPreselect) {
+      this.selectedValue = null;
+    }
+    else {
+      const preselectedValArr = this.field.dropdownDataset?.options || null;
+
+      if (preselectedValArr?.length > 1 || this.isInChildForm) {
+        this.selectedValue = preselectedValArr.find(item => item.id === this.field.value);
+      } else {
+        this.selectedValue = preselectedValArr && preselectedValArr[0] ? { ...preselectedValArr[0] } : null;
+      }
+
+      this.valueChanged();
+
+      this.checkForAttachmentUrl();
+      this.checkForDisplayColumnFormatter();
+    }
   }
 }
 

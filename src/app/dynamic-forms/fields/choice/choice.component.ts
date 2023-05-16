@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
@@ -22,7 +30,7 @@ import { faListUl } from "@fortawesome/free-solid-svg-icons";
   templateUrl: "./choice.component.html",
   styleUrls: ["./choice.component.scss"]
 })
-export class ChoiceComponent implements OnInit {
+export class ChoiceComponent implements OnChanges, OnInit {
 
   @Input() field: FormField;
   @Input() fieldIndex: number;
@@ -56,7 +64,17 @@ export class ChoiceComponent implements OnInit {
   }
 
 
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
+
+
   ngOnInit(): void {
+
+    this._setValue();
 
     const choices = this.field.cinchyColumn.choiceOptions;
     const splitFromInvertedCommas = choices?.split(`"`) ?? [];
@@ -100,7 +118,7 @@ export class ChoiceComponent implements OnInit {
   }
 
 
-  valueChanged() {
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -110,5 +128,11 @@ export class ChoiceComponent implements OnInit {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
+  }
+
+
+  private _setValue(): void {
+
+    this.value = this.field?.value ?? null;
   }
 }

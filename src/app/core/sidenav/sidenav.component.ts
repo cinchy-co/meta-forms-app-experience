@@ -1,17 +1,19 @@
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
-import { CinchyService } from "@cinchy-co/angular-sdk";
+import { AddNewEntityDialogComponent } from "../../dialogs/add-new-entity-dialog/add-new-entity-dialog.component";
 
-import { NgxSpinnerService } from "ngx-spinner";
-
-import { AddNewOptionDialogComponent } from "../../dialogs/add-new-option-dialog/add-new-option-dialog.component";
+import { INewEntityDialogResponse } from "../../dynamic-forms/interface/new-entity-dialog-response";
 
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { IFormMetadata } from "../../models/form-metadata-model";
 
 import { AppStateService } from "../../services/app-state.service";
 import { DialogService } from "../../services/dialog.service";
+
+import { CinchyService } from "@cinchy-co/angular-sdk";
+
+import { NgxSpinnerService } from "ngx-spinner";
 
 
 @Component({
@@ -42,7 +44,6 @@ export class SidenavComponent implements OnInit {
 
 
   canInsert: boolean;
-  createNewOptionName: string;
   filteredTableUrl: string;
   formSectionsMetadata: IFormSectionMetadata[] = [];
   selectedSection: string;
@@ -52,29 +53,54 @@ export class SidenavComponent implements OnInit {
 
   get canCreateNewRecord(): boolean {
 
+    // We're checking for rowId here so that the create button isn't visible if when the form
+    // is already in create mode
     return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
+  }
+
+
+  /**
+   * Used to display the correct entity on the create button
+   */
+  get createNewEntityLabel(): string {
+
+    return (this.formMetadata?.createNewOptionName ?? "New");
   }
 
 
   constructor(
     private _appStateService: AppStateService,
-    private dialogService: DialogService,
-    private cinchyService: CinchyService,
-    private spinner: NgxSpinnerService
+    private _dialogService: DialogService,
+    private _cinchyService: CinchyService,
+    private _spinner: NgxSpinnerService
   ) {}
 
 
   ngOnInit(): void {
 
     this.loadTableEntitlements();
-    this.subscribeToSectionClickedFromForm();
-    this.subscribeToRenderedSectionUpdates();
-    this.createNewOptionName = this.formMetadata.createNewOptionName;
 
+    
     this._appStateService.onRecordSelected$.subscribe({
       next: () => {
 
         this._updateFilteredTableUrl();
+      }
+    });
+
+
+    this._appStateService.currentSection$.subscribe((sectionLabel: string) => {
+
+      this.selectedSection = sectionLabel ?? this.selectedSection;
+    });
+
+
+    this._appStateService.latestRenderedSections$.subscribe((sectionMetadata: Array<IFormSectionMetadata>) => {
+
+      this.formSectionsMetadata = sectionMetadata;
+
+      if (this.formSectionsMetadata?.length) {
+        this.sectionClicked(this.formSectionsMetadata[0]);
       }
     });
   }
@@ -95,7 +121,7 @@ export class SidenavComponent implements OnInit {
 
   async loadTableEntitlements(): Promise<void> {
 
-    const resp = await this.cinchyService.getTableEntitlementsById(this.tableId).toPromise();
+    const resp = await this._cinchyService.getTableEntitlementsById(this.tableId).toPromise();
 
     this.canInsert = resp.canAddRows;
   }
@@ -103,20 +129,20 @@ export class SidenavComponent implements OnInit {
 
   openAddNewOptionDialog(): void {
 
-    const newOptionDialogRef = this.dialogService.openDialog(
-      AddNewOptionDialogComponent,
+    const newOptionDialogRef = this._dialogService.openDialog(
+      AddNewEntityDialogComponent,
       {
         createNewOptionFormId: this._appStateService.formId,
         createNewOptionName: this.formMetadata.createNewOptionName
       }
     );
 
-    this.spinner.hide();
+    this._spinner.hide();
 
-    newOptionDialogRef.afterClosed().subscribe(newContactAdded => {
+    newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
 
-      if (newContactAdded) {
-        this._appStateService.newContactAdded(newContactAdded)
+      if (value) {
+        this._appStateService.addNewEntityDialogClosed$.next(value);
       }
     });
   }
@@ -139,30 +165,8 @@ export class SidenavComponent implements OnInit {
   }
 
 
-  subscribeToRenderedSectionUpdates(): void {
-
-    this._appStateService.getLatestRenderedSections().subscribe(resp => {
-
-      this.formSectionsMetadata = resp;
-
-      if (this.formSectionsMetadata?.length) {
-        this.sectionClicked(this.formSectionsMetadata[0]);
-      }
-    });
-  }
-
-
-  subscribeToSectionClickedFromForm(): void {
-
-    this._appStateService.getCurrentSectionClicked().subscribe(section => {
-
-      this.selectedSection = section ?? this.selectedSection;
-    });
-  }
-
-
   /**
-   * Adds the current record information to the querystring of the table URL
+   * Adds the current row information to the querystring of the table URL
    */
   private _updateFilteredTableUrl() {
 

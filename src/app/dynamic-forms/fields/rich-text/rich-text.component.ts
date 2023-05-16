@@ -251,7 +251,8 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
         /**
          * Update the state of the marks at the cursor position
          */
-        onTransaction: (args: { editor: Editor, transaction: Transaction }): void => {          
+        onTransaction: (args: { editor: Editor, transaction: Transaction }): void => {
+          
           this.activeMarks.bold = args.editor.isActive("bold");
           this.activeMarks.code = args.editor.isActive("code");
           this.activeMarks.codeBlock = args.editor.isActive("codeBlock");
@@ -566,7 +567,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
   /**
    * Notifies the parent of the updated value so that we can resolve that update into the form model
    */
-  private _valueChanged() {
+  private _valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,

@@ -1,4 +1,14 @@
-import { Component, Input, Output, EventEmitter, ViewChild, AfterViewInit, OnInit } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  ViewChild
+} from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
@@ -20,7 +30,7 @@ import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
   templateUrl: "./textarea.component.html",
   styleUrls: ["./textarea.component.scss"]
 })
-export class TextareaComponent implements AfterViewInit, OnInit {
+export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
 
   @ViewChild("editor") editor;
 
@@ -65,12 +75,20 @@ export class TextareaComponent implements AfterViewInit, OnInit {
   }
   
 
-  constructor(public sanitizer: DomSanitizer) {}
+  constructor(public sanitizer: DomSanitizer) { }
+
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
 
 
   ngOnInit(): void {
 
-    this.value = (this.field.cinchyColumn.dataFormatType === "JSON") ? JSON.stringify(JSON.parse(this.field.value), null, 2) : this.field.value;
+    this._setValue();
 
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
@@ -157,7 +175,7 @@ export class TextareaComponent implements AfterViewInit, OnInit {
   }
 
 
-  valueChanged() {
+  valueChanged(): void {
 
     this.onChange.emit({
       form: this.form,
@@ -167,5 +185,11 @@ export class TextareaComponent implements AfterViewInit, OnInit {
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
     });
+  }
+
+
+  private _setValue(): void {
+
+    this.value = ((this.field?.cinchyColumn?.dataFormatType === "JSON") ? JSON.stringify(JSON.parse(this.field.value ?? ""), null, 2) : this.field?.value) ?? null;
   }
 }

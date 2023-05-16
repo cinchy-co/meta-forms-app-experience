@@ -53,22 +53,21 @@ export class FieldsWrapperComponent {
 
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
+  @Output() childRowDeleted = new EventEmitter<{
+    childForm: Form,
+    rowId: number,
+    sectionIndex: number
+  }>();
   @Output() childFormOpened = new EventEmitter<any>();
-  @Output() deleteDialogOpened = new EventEmitter<any>();
 
 
   subscription: Subscription;
   sectionInfo: SpinnerCondition;
 
+
   constructor(
-    private appStateService: AppStateService,
+    private _appStateService: AppStateService,
   ) {}
-
-
-  expansionClicked(section) {
-
-    this.appStateService.sectionClicked(section.label);
-  }
 
 
   determineSectionsToRender() {
@@ -78,7 +77,7 @@ export class FieldsWrapperComponent {
       section.fields?.forEach((field: FormField, fieldIndex: number) => {
 
         if (field.childForm?.flatten && field.childForm.sections) {
-          this.form.updateAdditionalProperty(
+          this.form.updateFieldAdditionalProperty(
             sectionIndex,
             fieldIndex,
             {
@@ -86,24 +85,15 @@ export class FieldsWrapperComponent {
               propertyValue: field.childForm.flattenForm()
             }
           );
-
         }
       });
-
-      if (this.form?.sections?.length) {
-        this.appStateService.latestRenderedSections$.next(
-          this.form.sections.map((section: FormSection) => {
-
-            return {
-              autoExpand: section.autoExpand,
-              columnsInRow: section.columnsInRow,
-              id: section.id,
-              name: section.label
-            };
-          })
-        );
-      }
     });
+  }
+
+
+  onPanelExpanded(section: FormSection): void {
+
+    this._appStateService.currentSection$.next(section.label);
   }
 
 

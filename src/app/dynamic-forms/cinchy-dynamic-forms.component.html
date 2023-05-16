@@ -32,21 +32,21 @@
   <div class="all-expansions-wrapper">
     <mat-accordion *ngIf="formMetadata?.isAccordion; else withoutAccordion">
       <app-fields-wrapper [form]="form"
-                          (onChange)="handleFieldsEvent($event)"
-                          (childFormOpened)="openChildForm($event)"
                           [fieldsWithErrors]="fieldsWithErrors"
-                          (deleteDialogOpened)="openDeleteConfirm($event)"
-                          [formHasDataLoaded]="formHasDataLoaded">
+                          [formHasDataLoaded]="formHasDataLoaded"
+                          (childFormOpened)="openChildForm($event)"
+                          (childRowDeleted)="onChildRowDeleted($event)"
+                          (onChange)="handleFieldsEvent($event)">
       </app-fields-wrapper>
     </mat-accordion>
 
     <ng-template #withoutAccordion>
       <app-fields-wrapper [form]="form"
-                          (onChange)="handleFieldsEvent($event)"
-                          (childFormOpened)="openChildForm($event)"
                           [fieldsWithErrors]="fieldsWithErrors"
-                          (deleteDialogOpened)="openDeleteConfirm($event)"
-                          [formHasDataLoaded]="formHasDataLoaded">
+                          [formHasDataLoaded]="formHasDataLoaded"
+                          (childRowDeleted)="onChildRowDeleted($event)"
+                          (childFormOpened)="openChildForm($event)"
+                          (onChange)="handleFieldsEvent($event)">
       </app-fields-wrapper>
     </ng-template>
   </div>

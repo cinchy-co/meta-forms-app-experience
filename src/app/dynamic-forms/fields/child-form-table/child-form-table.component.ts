@@ -10,13 +10,15 @@ import {
   Output,
   ViewEncapsulation
 } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { DatePipe } from "@angular/common";
+import { MatDialog } from "@angular/material/dialog";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
 import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 
-import { NumeralPipe } from "ngx-numeral";
+import { MessageDialogComponent } from "../../message-dialog/message-dialog.component";
 
 import { DataFormatType } from "../../enums/data-format-type";
 
@@ -25,7 +27,9 @@ import { FormField } from "../../models/cinchy-form-field.model";
 
 import { AppStateService } from "../../../services/app-state.service";
 import { FormSection } from "../../models/cinchy-form-section.model";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
+
+import { NumeralPipe } from "ngx-numeral";
+import { ToastrService } from "ngx-toastr";
 
 
 //#region Cinchy Dynamic Child form Table
@@ -54,7 +58,11 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
     presetValues?: { [key: string]: any },
     title: string
   }>();
-  @Output() deleteClicked = new EventEmitter<any>();
+  @Output() childRowDeleted = new EventEmitter<{
+    childForm: Form,
+    rowId: number,
+    sectionIndex: number
+  }>();
 
 
   fileNameAndValueMap = {};
@@ -86,13 +94,15 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
 
 
   constructor(
-    private _datePipe: DatePipe,
+    private _appStateService: AppStateService,
     private _cinchyService: CinchyService,
-    private _appStateService: AppStateService
+    private _datePipe: DatePipe,
+    private _dialog: MatDialog,
+    private _toastr: ToastrService
   ) {}
 
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
 
     this._destroy$.next();
     this._destroy$.complete();
@@ -139,75 +149,111 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   }
 
 
-  deleteRow(domain, table, field, multiarray) {
+  deleteRow(rowData: { [key: string]: any }): void {
 
-    this.deleteClicked.emit({ domain, table, field, multiarray });
+    if (!rowData["Cinchy ID"]) {
+      this._toastr.error("You are attempting to delete a record without a proper ID. The data may be corrupted or configured incorrectly.");
+    }
+    else {
+      const dialogRef = this._dialog.open(
+        MessageDialogComponent,
+        {
+          width: "400px",
+          data: {
+            title: "Please confirm",
+            message: "Are you sure you want to delete this record?"
+          }
+        }
+      );
+
+      dialogRef.afterClosed().subscribe({
+        next: (confirmed: boolean) => {
+
+          if (confirmed) {
+            const childFormReference = this.form.findChildForm(this.childForm.id);
+
+            if (rowData["Cinchy ID"] > 0) {
+              let query = `delete
+                         from [${childFormReference.childForm.targetTableDomain}].[${childFormReference.childForm.targetTableName}]
+                         where
+                             [Cinchy Id] = ${rowData["Cinchy ID"]}
+                         and [Deleted] is null`;
+
+              this._cinchyService.executeCsql(query, null).subscribe(
+                {
+                  next: () => {
+
+                    this._deleteRowValue(rowData);
+
+                    this.childRowDeleted.emit({
+                      childForm: this.childForm,
+                      rowId: rowData["Cinchy ID"],
+                      sectionIndex: this.sectionIndex
+                    })
+                  }
+                }
+              );
+            }
+            else {
+              this._deleteRowValue(rowData);
+            }
+          }
+        }
+      });
+    }
   }
 
 
   /**
    * Notifies the parent to initiate editing a record from the child form represented by this table
    *
-   * @param recordData Contains all of the current values of the record
+   * @param rowData Contains all of the current values of the record
    */
-  editChildRecord(dialogTitle: string, recordData: { [key: string]: any }): void {
+  editChildRecord(dialogTitle: string, rowData: { [key: string]: any }): void {
 
-    // DEBUG
-    console.log("-- EDIT -----");
-    console.log(this.childForm);
-    console.log(dialogTitle);
-    console.log(recordData);
+    this._updateEntitlements(rowData);
 
-    this._updateEntitlements(recordData);
-
-    this.childForm.updateAdditionalProperty(
-      this.sectionIndex,
-      this.fieldIndex,
-      {
-        propertyName: "rowId",
-        propertyValue: recordData["Cinchy ID"]
-      }
-    );
+    this.childForm.rowId = rowData["Cinchy ID"];
 
     this.childformOpened.emit(
       {
         childForm: this.childForm,
-        presetValues: recordData,
+        presetValues: rowData,
         title: dialogTitle
       }
     );
   }
 
 
-  async getFileNames() {
+  async getFileNames(): Promise<void> {
 
     const binaryFields = this.section.fields.filter((field: FormField) => {
 
       return (field.cinchyColumn.dataType === "Binary")
     });
 
-    if (this.section.flattenedChildFormRecordValues?.length) {
+    if (this.section.childFormRowValues?.length) {
       binaryFields.forEach((field: FormField) => {
 
         const binaryFieldColumnName = field.cinchyColumn.name;
         const fileNameColumn = field.cinchyColumn.fileNameColumn;
 
-        this.section.flattenedChildFormRecordValues.forEach(
-          async (recordData: {
+        this.section.childFormRowValues.forEach(
+          async (rowData: {
             childForm: Form,
             presetValues?: { [key: string]: any },
             title: string
           }) => {
 
-            const fieldData = recordData[binaryFieldColumnName];
+            const fieldData = rowData[binaryFieldColumnName];
 
             if (fieldData) {
-              const cinchyId = recordData["Cinchy ID"];
-              const fileName = await this.getFileName(fileNameColumn, cinchyId);
+              const rowId = rowData["Cinchy ID"];
+              const fileName = await this.getFileName(fileNameColumn, rowId);
 
               this.fileNameAndValueMap[fileName] = fieldData;
 
-              recordData[`${binaryFieldColumnName}_Name`] = fileName;
+              rowData[`${binaryFieldColumnName}_Name`] = fileName;
             }
           });
         });
@@ -215,7 +261,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   }
 
 
-  async getFileName(fileNameColumn, cinchyId) {
+  async getFileName(fileNameColumn: string, rowId: number): Promise<string> {
 
     const [domain, table, column] = fileNameColumn?.split(".") ?? [];
 
@@ -225,7 +271,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
             [${column}] as 'fullName',
             [Cinchy Id] as 'id'
           FROM [${domain}].[${table}]
-          WHERE [Cinchy Id] = ${cinchyId}
+          WHERE [Cinchy Id] = ${rowId}
             AND [Deleted] IS NULL`;
 
       const fileNameResp = await this._cinchyService.executeCsql(query, null).toPromise();
@@ -235,9 +281,9 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   }
 
 
-  isLinkedColumn(section, key) {
+  isLinkedColumn(section: FormSection, key: string): boolean {
 
-    return section.linkedColumnDetails && (key === section.linkedColumnDetails.linkLabel);
+    return coerceBooleanProperty(section.linkedColumnDetails && (key === section.linkedColumnDetails.linkLabel));
   }
 
 
@@ -247,7 +293,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   }
 
 
-  getDisplayValue(value, section, key) {
+  getDisplayValue(value: any, section: FormSection, key: string): string {
 
     const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
 
@@ -264,8 +310,9 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
     if (value && currentField?.cinchyColumn.dataType === "Date and Time") {
       let dateFormat = currentField.cinchyColumn.displayFormat;
 
-      dateFormat = dateFormat.replaceAll("Y", "y");
-      dateFormat = dateFormat.replaceAll("D", "d");
+      // Can use String.replaceAll instead when app is upgraded to ES2021
+      dateFormat = dateFormat.replace(new RegExp("Y", "g"), "y");
+      dateFormat = dateFormat.replace(new RegExp("D", "g"), "d");
 
       return this._datePipe.transform(value, dateFormat);
     }
@@ -287,7 +334,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   }
 
 
-  getTableHeader(key, section) {
+  getTableHeader(key: string, section: FormSection): string {
 
     // For child form all fields should be in 1 section
     const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
@@ -304,6 +351,46 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
     }
 
     return currentField ? currentField.label : key;
+  }
+
+
+  private _deleteRowValue(rowData: { [key: string]: any }): void {
+
+    const childFormRowValues = this.section.childFormRowValues.filter((originalRowData: { [key: string]: any }) => {
+
+      if (originalRowData["Cinchy ID"] && rowData["Cinchy ID"]) {
+        return (!originalRowData["Cinchy ID"] || originalRowData["Cinchy ID"] !== rowData["Cinchy ID"]);
+      }
+      else if (!originalRowData["Cinchy ID"] && !rowData["Cinchy ID"]) {
+        // Since we can't just compare the ID here, we need to compare everything else and see if there's a match
+        const keys = Object.keys(rowData);
+
+        for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+          // We are intentionally using a weak comparison here in case there are some object references in the data
+          if (originalRowData[keys[keyIndex]] != rowData[keys[keyIndex]]) {
+            return true;
+          }
+        }
+
+        // If all properties match,
+        return false;
+      }
+
+      return true;
+    });
+
+    this.form.updateSectionProperty(
+      this.sectionIndex,
+      {
+        propertyName: "childForRowValues",
+        propertyValue: childFormRowValues
+      }
+    );
+
+    this._toastr.success(
+      "Record deleted successfully",
+      "Success"
+    );
   }
 
 
@@ -331,7 +418,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   }
 
 
-  private _setChildFieldDictionary() {
+  private _setChildFieldDictionary(): void {
 
     this.section.fields.forEach(field => {
 
@@ -340,12 +427,12 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   }
 
 
-  private async _updateEntitlements(recordData: { [key: string]: any }): Promise<void> {
+  private async _updateEntitlements(rowData: { [key: string]: any }): Promise<void> {
 
     const domainAndTable = `[${this.childForm.targetTableDomain}].[${this.childForm.targetTableName}]`;
     const fieldSet = this._getAllFieldsInChildForm();
 
-    const columnNames: Array<string> = Object.keys(recordData).filter((key: string) => {
+    const columnNames: Array<string> = Object.keys(rowData).filter((key: string) => {
 
       // Ensure we're only using the fields that are actually present on in the table
       return (key !== "Cinchy ID" && coerceBooleanProperty(fieldSet.find((field: FormField) => {
@@ -363,7 +450,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
         SELECT ${selectLabels.join(",")}
           FROM ${domainAndTable} t
           WHERE t.[Deleted] is NULL
-            AND t.[Cinchy Id]=${recordData["Cinchy ID"]}
+            AND t.[Cinchy Id]=${rowData["Cinchy ID"]}
           ORDER BY t.[Cinchy Id]`;
 
     const entitlements = (await this._cinchyService.executeCsql(entitlementQuery, null).toPromise())?.queryResult.toObjectArray();
@@ -372,7 +459,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
       this.section.fields.forEach((field: FormField, fieldIndex: number) => {
 
         if (!entitlements[`entitlement-${field.cinchyColumn.name}`]) {
-          this.childForm.updateAdditionalProperty(
+          this.childForm.updateFieldAdditionalProperty(
             0,
             fieldIndex,
             {
