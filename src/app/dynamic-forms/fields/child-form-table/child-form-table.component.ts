@@ -18,7 +18,7 @@ import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 import { NumeralPipe } from "ngx-numeral";
 
-import { ImageType } from "../../enums/imageurl-type";
+import { DataFormatType } from "../../enums/data-format-type";
 
 import { AppStateService } from "../../../services/app-state.service";
 
@@ -206,7 +206,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
       return this.datePipe.transform(value, dateFormat);
     } else if (typeof value === "boolean") {
       return value === true ? "Yes" : "No";
-    } else if (value && currentField && currentField.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
+    } else if (value && currentField && currentField.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
       return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
     } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
       const numeralValue = new NumeralPipe(value);

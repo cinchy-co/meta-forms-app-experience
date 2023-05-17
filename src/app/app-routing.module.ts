@@ -6,11 +6,16 @@ import {SaveSuccessComponent} from "./pages/save-success/save-success.component"
 
 const routes: Routes = [
   {
-    path: 'edit-form',
+    path: "",
+    redirectTo: "edit-form",
+    pathMatch: "full"
+  },
+  {
+    path: "edit-form",
     component: FormWrapperComponent
   },
   {
-    path: 'save-success',
+    path: "save-success",
     component: SaveSuccessComponent
   }
 ];
@@ -19,5 +24,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' })],
   exports: [RouterModule]
 })
-export class AppRoutingModule {
-}
+export class AppRoutingModule {}
