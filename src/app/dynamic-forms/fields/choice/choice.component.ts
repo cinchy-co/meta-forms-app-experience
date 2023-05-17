@@ -36,19 +36,25 @@ export class ChoiceComponent implements OnInit {
   constructor() {}
 
   async ngOnInit() {
+
     const [dataSet, linkTargetId] = [this.field, this.field.cinchyColumn.linkTargetColumnId];
     const choices = this.field.cinchyColumn.choiceOptions;
-    const splitFromInvertedCommas = choices.split(`"`);
+    const splitFromInvertedCommas = choices?.split(`"`) ?? [];
+
     let allOptions = [];
     let optionsInSubString = "";
+
     if (splitFromInvertedCommas.length === 1) {
-      allOptions = choices ? choices.split(",") : null;
-    } else { // Doing when option have , between them
+      allOptions = choices?.split(",") ?? null;
+    }
+    else { // Doing when option have , between them
       splitFromInvertedCommas.forEach(option => {
+
         if (option && (option[0] === "," || option[option.length - 1] === ",")) {
           optionsInSubString = option.split(",");
           allOptions = [...allOptions, ...optionsInSubString];
-        } else if (option) {
+        }
+        else if (option) {
           allOptions.push(option);
         }
       })

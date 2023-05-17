@@ -65,6 +65,7 @@
                          (eventHandler)="eventOccurred.emit($event)"
                          [targetTableName]="field.cinchyColumn.tableName"
                          [field]="field"
+                         [isInChildForm]="isChild"
                          [fieldsWithErrors]="fieldsWithErrors">
         </cinchy-textarea>
 
@@ -72,6 +73,7 @@
                         [targetTableName]="field.cinchyColumn.tableName"
                         [field]="field"
                         [fieldsWithErrors]="fieldsWithErrors"
+                        [isInChildForm]="isChild"
                         (eventHandler)="eventOccurred.emit($event)">
         </cinchy-textbox>
 
@@ -120,7 +122,7 @@
 
         <cinchy-childform-table *ngIf="field.childForm && !field.childForm.flatten"
                                 [field]="field"
-                                [rowId]='field.form.rowId'
+                                [rowId]="field.form.rowId"
                                 [hasChildTableAccess]="field.childForm.hasAccess"
                                 (childform)='childFormOpened.emit($event)'
                                 (deleteClicked)="deleteDialogOpened.emit($event)">

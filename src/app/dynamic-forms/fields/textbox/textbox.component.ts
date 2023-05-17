@@ -1,8 +1,9 @@
 import { Component, Input, Output, EventEmitter, OnInit } from "@angular/core";
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
-import { ImageType } from "../../enums/imageurl-type";
+import { DataFormatType } from "../../enums/data-format-type";
 import { ResponseType } from "../../enums/response-type.enum";
 
 import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
@@ -27,14 +28,19 @@ export class TextboxComponent implements OnInit {
 
   @Input() targetTableName: string;
   @Input() isDisabled: boolean;
+  @Input() isInChildForm: boolean;
   @Output() eventHandler = new EventEmitter<any>();
 
   showError: boolean;
   showImage: boolean;
   showLinkUrl: boolean;
   showActualField: boolean;
+  showIFrame: boolean;
+  showIFrameSandbox: boolean;
+  showIFrameSandboxStrict: boolean;
   faAlignLeft = faAlignLeft;
-  
+  urlSafe: SafeResourceUrl;
+  iframeHeightStyle: string = '300px;';
 
   /**
    * If the field is displaying an imaged, returns the class name associated with the configured format
@@ -43,15 +49,15 @@ export class TextboxComponent implements OnInit {
 
     if (this.showImage) {
       switch (this.field.cinchyColumn.dataFormatType) {
-        case ImageType.small:
+        case DataFormatType.ImageUrlSmall:
 
           return "cinchy-images-small";
-        case ImageType.large:
+        case DataFormatType.ImageUrlLarge:
 
           return "cinchy-images-large";
-        case ImageType.small:
+        case DataFormatType.ImageUrlSmall:
           // falls through
-        case ImageType.default:
+        case DataFormatType.ImageUrl:
 
           return "cinchy-images";
         default:
@@ -64,15 +70,31 @@ export class TextboxComponent implements OnInit {
   }
 
 
-  constructor() {}
+  constructor(public sanitizer: DomSanitizer) {}
 
 
   ngOnInit() {
 
-    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(ImageType.default);
+    this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
 
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
-    this.showActualField = !this.showImage && !this.showLinkUrl;
+
+    this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
+
+    this.showIFrameSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
+    this.showIFrameSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
+
+    if ((this.showIFrame || this.showIFrameSandbox || this.showIFrameSandboxStrict)  && this.isValidHttpUrl(this.field.value) && !this.isInChildForm){
+      this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
+      this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
+        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';      
+    }else{
+      this.showIFrame = false;
+      this.showIFrameSandbox = false;
+      this.showIFrameSandboxStrict = false;
+    } 
+
+    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame && !this.showIFrameSandbox && !this.showIFrameSandboxStrict;
   }
 
   //#region pass callback event to the project On blur
@@ -97,4 +119,14 @@ export class TextboxComponent implements OnInit {
     this.eventHandler.emit(callback);
   }
   //#endregion
+
+  isValidHttpUrl(str: string) {
+    let url;
+    try {
+      url = new URL(str);
+    } catch (_) {
+      return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
+  }
 }
