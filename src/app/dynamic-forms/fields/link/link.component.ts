@@ -13,7 +13,6 @@ import {
   ViewChild
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
-import { MatAutocomplete, MatAutocompleteSelectedEvent } from "@angular/material/autocomplete";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
@@ -45,6 +44,7 @@ import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dr
 import { isNullOrUndefined } from "util";
 
 import { NumeralPipe } from "ngx-numeral";
+import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
 
 
@@ -60,7 +60,7 @@ import { ToastrService } from "ngx-toastr";
 })
 export class LinkComponent implements OnChanges, OnInit {
 
-  @ViewChild("auto") autocompleteOptions: MatAutocomplete;
+  @ViewChild("searchInput") searchInput;
   @ViewChild("fileInput") fileInput: ElementRef;
   @ViewChild("t") public tooltip: NgbTooltip;
 
@@ -87,7 +87,6 @@ export class LinkComponent implements OnChanges, OnInit {
   @Output() childform = new EventEmitter<any>();
 
 
-  autocompleteText: string = "";
   charactersAfterWhichToShowList = 0;
   createlinkOptionName: boolean;
   downloadLink;
@@ -102,6 +101,7 @@ export class LinkComponent implements OnChanges, OnInit {
   showImage: boolean;
   showLinkUrl: boolean;
   tableSourceURL: string;
+  toolTipMessage: string;
 
   selectedValue: DropdownOption;
 
@@ -124,19 +124,14 @@ export class LinkComponent implements OnChanges, OnInit {
 
     return coerceBooleanProperty(
       this.charactersAfterWhichToShowList &&
-      (this.autocompleteText?.length >= this.charactersAfterWhichToShowList)
+      (this.selectedValue?.label.length >= this.charactersAfterWhichToShowList)
     );
-  }
-
-
-  get tooltipMessage(): string {
-
-    return `Please type at least ${this.charactersAfterWhichToShowList} characters to see the dropdown list of items. You have to select from the dropdown to update this field`;
   }
 
 
   constructor(
     private _dropdownDatasetService: DropdownDatasetService,
+    private _spinner: NgxSpinnerService,
     private _cinchyService: CinchyService,
     private _dialogService: DialogService,
     private _appStateService: AppStateService,
@@ -155,7 +150,6 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   ngOnInit(): void {
-    console.log("Attempt 1")
 
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
@@ -178,16 +172,6 @@ export class LinkComponent implements OnChanges, OnInit {
       if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]["Table"] === value.tableName) {
         this.filteredOptions = null;
         this.getListItems(true);
-
-        this.form.updateFieldAdditionalProperty(
-          this.sectionIndex,
-          this.fieldIndex,
-          {
-            cinchyColumn: true,
-            propertyName: "hasChanged",
-            propertyValue: true
-          }
-        );
       }
     });
 
@@ -196,15 +180,20 @@ export class LinkComponent implements OnChanges, OnInit {
       distinctUntilChanged(),
       debounceTime(400)
     ).subscribe({
-      next: (value: string) => {
+      next: (value: string | DropdownOption) => {
 
-        this.filteredOptions = this._filter(value);
+        if (typeof value === "string") {
+          this.filteredOptions = value ? this._filter(value) : this.dropdownSetOptions;
+        }
+        else {
+          this.valueChanged();
+        }
       }
     });
   }
 
 
-  checkForAttachmentUrl(): void {
+  checkForAttachmentUrl() {
 
     this.downloadLink = coerceBooleanProperty(this.field.cinchyColumn.attachmentUrl);
 
@@ -218,7 +207,7 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  checkForDisplayColumnFormatter(): void {
+  checkForDisplayColumnFormatter() {
 
     if (
         this.field.cinchyColumn.isDisplayColumn &&
@@ -232,7 +221,7 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  closeTooltip(tooltip: NgbTooltip): void {
+  closeTooltip(tooltip) {
 
     setTimeout(() => {
 
@@ -243,13 +232,12 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  deleteDropdownVal(event: KeyboardEvent): void {
+  deleteDropdownVal(event) {
 
     const key = event.key;
 
     if ((key === "Delete" || key === "Backspace") && this.getSelectedText()) {
       this.selectedValue = this.field.dropdownDataset.options.find(item => item.id === "DELETE");
-      this.autocompleteText = "";
 
       this.valueChanged();
     }
@@ -262,7 +250,7 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  fileNameIsImage(fileName: string): boolean {
+  fileNameIsImage(fileName: string) {
 
     const lowercase = fileName.toLowerCase();
 
@@ -276,11 +264,22 @@ export class LinkComponent implements OnChanges, OnInit {
 
   filterChanged(): void {
 
-    this._filterChanged.next(this.autocompleteText);
+    this._filterChanged.next(this.selectedValue?.label || null);
+  }
+
+  focusAndBlurInputToShowDropdown() {
+
+    setTimeout(() => {
+      this.searchInput.nativeElement.blur();
+
+      setTimeout(() => {
+        this.searchInput.nativeElement.focus()
+      }, 100)
+    }, 0)
   }
 
 
-  getAndSetLatestFileValue(): void {
+  getAndSetLatestFileValue() {
 
     this._cinchyQueryService.getFilesInCell(
       this.field.cinchyColumn.name,
@@ -314,9 +313,18 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
+  getFilterValue(value) {
+
+    if (typeof value === "object") {
+      return value.label?.split(",")[0].toLowerCase() ?? "";
+    }
+    return value.toLowerCase();
+  }
+
+
   async getListItems(updateList: boolean, fromLinkedField?: boolean): Promise<void> {
 
-    if (!this.filteredOptions?.length || updateList) {
+    if (!this.filteredOptions) {
       this.isLoading = true;
 
       let dropdownDataset: DropdownDataset = null;
@@ -354,23 +362,23 @@ export class LinkComponent implements OnChanges, OnInit {
         this.filteredOptions = this.dropdownSetOptions;
 
         if (fromLinkedField) {
-          this._setValue(true);
+          this._setValue();
         }
       }
+
+      this.toolTipMessage = `Please type at least ${this.charactersAfterWhichToShowList} characters to see the dropdown
+        list of items. You have to select from the dropdown to update this field`;
 
       this.isLoading = false;
 
       if (!fromLinkedField && !updateList) {
-        // this.focusAndBlurInputToShowDropdown();
+        this.focusAndBlurInputToShowDropdown();
       }
     }
   }
 
 
-  /**
-   * @returns the text that the user currently has selected, if any
-   */
-  getSelectedText(): string {
+  getSelectedText() {
 
     if (window.getSelection) {
       return window.getSelection().toString();
@@ -380,40 +388,34 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  getSortedList(dropdownDataset: DropdownDataset): DropdownDataset {
+  getSortedList(dropdownDataset) {
 
     let filteredOutNullSets;
 
     if (dropdownDataset?.options) {
       filteredOutNullSets = dropdownDataset.options.filter(option => option.label);
 
-      return new DropdownDataset(
-        filteredOutNullSets.sort((a: DropdownOption, b: DropdownOption) => {
-          return (
-            a.label.toLowerCase().localeCompare(b.label.toLowerCase())
-          );
-        })
-      );
+      return {
+        options: filteredOutNullSets.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
+      }
     }
 
     return dropdownDataset;
   }
 
 
-  /**
-   * Sets the selected value of the field to match that selected in the dropdown. This is necessary because the input itself
-   * has its value set to a string to faciliate searching, so the value of the option being selected is merely its label.
-   */
-  listItemSelected(event: MatAutocompleteSelectedEvent): void {
+  manageSourceRecords(childFormData: any) {
 
-    this.selectedValue = this.dropdownSetOptions.find((option: DropdownOption) => {
-
-      return (option.label === event.option.value);
-    });
-
-    this.autocompleteText = this.selectedValue?.label ?? "";
-
-    this.valueChanged();
+    //implement new method for add new row in source table
+    let data = {
+      childFormData: childFormData,
+      values: null,
+      title: "Add Source-Table-Name",
+      type: "Add",
+      multiFieldValues: childFormData
+    };
+    this.field.cinchyColumn.hasChanged = true;
+    this.openChildDialog();
   }
 
 
@@ -452,13 +454,12 @@ export class LinkComponent implements OnChanges, OnInit {
 
   openChildDialog() {
 
-    const newOptionDialogRef = this._dialogService.openDialog(
-      AddNewEntityDialogComponent,
-      {
-        formId: this.field.cinchyColumn.createlinkOptionFormId,
-        title: this.field.cinchyColumn.createlinkOptionName
-      }
-    );
+    const newOptionDialogRef = this._dialogService.openDialog(AddNewEntityDialogComponent, {
+      createLinkOptionFormId: this.field.cinchyColumn.createlinkOptionFormId,
+      createLinkOptionName: this.field.cinchyColumn.createlinkOptionName
+    });
+
+    this._spinner.hide();
 
     newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
 
@@ -486,55 +487,39 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  removeTooltipElement(): void {
+  removeTooltipElement() {
 
     this.isCursorIn = false;
     this.tooltip.close();
   }
 
 
-  setToLastValueSelected(): void {
+  setToLastValueSelected() {
 
-    // Prevents the blur event from resolving if the user clicked one of the options
-    if (!this.autocompleteOptions.isOpen) {
-      setTimeout(() => {
+    setTimeout(() => {
 
-        if (!this.selectedValue) {
-          this.selectedValue = this.field.dropdownDataset?.options.find(item => item.id === "DELETE");
-          this.autocompleteText = "";
+      if (!this.selectedValue) {
+        this.selectedValue = this.field.dropdownDataset?.options.find(item => item.id === "DELETE");
 
-          this.valueChanged();
-        }
-      }, 300);
-    }
+        this.valueChanged();
+      }
+    }, 300);
   }
 
 
-  setTooltipCursor(): void {
+  setTooltipCursor() {
 
     this.isCursorIn = true;
   }
 
 
-  setWhenNewRowAddedForParent(): void {
+  setWhenNewRowAddedForParent() {
 
-    this.form.updateFieldValue(
-      this.sectionIndex,
-      this.fieldIndex,
-      this.form.rowId,
-      [
-        {
-          propertyName: "noPreselect",
-          propertyValue: false
-        },
-        {
-          propertyName: "hasChanged",
-          propertyValue: true
-        }
-      ]
-    );
-
+    this.field.value = typeof this.form.rowId === "string" ? +this.form.rowId : this.form.rowId;
+    this.getListItems(false, true);
+    this.field.noPreselect = false;
     this.isDisabled = true;
+    this.field.cinchyColumn.hasChanged = true;
   }
 
 
@@ -551,29 +536,26 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  /**
-   * Filters the option set such that the results are only those that contain the given string in their label
-   */
-  private _filter(value: string): Array<DropdownOption> {
+  private _filter(value: any): DropdownOption[] {
 
-    if (value && this.dropdownSetOptions?.length) {
-      const filterValue = value.toLowerCase();
+    if (value && this.dropdownSetOptions) {
+      const filterValue = this.getFilterValue(value);
 
-      return this.dropdownSetOptions.filter((option: DropdownOption) => {
+      // Filtering out addNewItem because multiple inputs can cause race condition
+      return this.dropdownSetOptions.filter((option) => {
 
-        return ((option.label?.toLowerCase) ? option.label.toLowerCase().includes(filterValue) : null);
+        return ((option?.label?.toLowerCase) ? option.label.toLowerCase().includes(filterValue) : null);
       });
     }
 
-    return this.dropdownSetOptions ?? [];
+    return [];
   }
 
 
-  private _setValue(force?: boolean): void {
+  private _setValue(): void {
 
-    if (this.field.noPreselect && !force) {
+    if (this.field.noPreselect) {
       this.selectedValue = null;
-      this.autocompleteText = "";
     }
     else {
       const preselectedValArr = this.field.dropdownDataset?.options || null;
@@ -583,8 +565,6 @@ export class LinkComponent implements OnChanges, OnInit {
       } else {
         this.selectedValue = preselectedValArr && preselectedValArr[0] ? { ...preselectedValArr[0] } : null;
       }
-
-      this.autocompleteText = this.selectedValue?.label ?? "";
 
       this.valueChanged();
 
