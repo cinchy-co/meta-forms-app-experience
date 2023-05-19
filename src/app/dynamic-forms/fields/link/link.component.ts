@@ -155,6 +155,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   ngOnInit(): void {
+    console.log("Attempt 1")
 
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
@@ -592,4 +593,3 @@ export class LinkComponent implements OnChanges, OnInit {
     }
   }
 }
-
