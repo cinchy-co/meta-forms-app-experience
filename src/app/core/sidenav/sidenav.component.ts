@@ -64,7 +64,7 @@ export class SidenavComponent implements OnInit {
    */
   get createNewEntityLabel(): string {
 
-    return (this.formMetadata?.createNewOptionName ?? "New");
+    return (this.formMetadata?.createNewOptionName ?? "");
   }
 
 

@@ -5,18 +5,18 @@
         <fa-icon [icon]="field.cinchyColumn.tableId === field.cinchyColumn.linkTargetTableId ? faSitemap : faShareAlt"></fa-icon>
       </div>
       &nbsp;
-      <label class="cinchy-label" [title]="field.caption ?? ' '">
+      <label class="cinchy-label" [title]="field.caption ?? ''">
         {{field.label}}
-        {{(field.cinchyColumn.isMandatory && !field.value) ? "*" : ""}}
+        {{(field.cinchyColumn.isMandatory && !selectedValue) ? "*" : ""}}
       </label>
       <span *ngIf="createlinkOptionName">
-        <a (click)="manageSourceRecords(field)">
+        <a (click)="openChildDialog()">
           <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
         </a>
       </span>
       <mat-icon *ngIf="charactersAfterWhichToShowList"
                 class="info-icon"
-                [matTooltip]="toolTipMessage"
+                [matTooltip]="tooltipMessage"
                 matTooltipClass="tool-tip-body"
                 matTooltipPosition="above">
         error
@@ -104,7 +104,7 @@
     <ng-container *ngIf="canEdit && !downloadLink && showActualField">
       <div class="search-input-link">
         <input #searchInput type="text" class="form-control"
-               [(ngModel)]="selectedValue" [ngModelOptions]="{standalone: true}"
+               [(ngModel)]="autocompleteText" [ngModelOptions]="{standalone: true}"
                [matAutocomplete]="auto"
                (blur)="setToLastValueSelected()"
                (focus)="getListItems(false)"
@@ -115,8 +115,7 @@
         </mat-icon>
       </div>
       <mat-autocomplete #auto="matAutocomplete"
-                        (optionSelected)="valueChanged()"
-                        [displayWith]="displayFn">
+                        (optionSelected)="listItemSelected($event)">
         <ng-container>
           <mat-option *ngIf="isLoading" class="is-loading">
             <mat-spinner diameter="35"></mat-spinner>
@@ -125,13 +124,13 @@
                                        [itemSize]="48"
                                        [style.height.px]="192">
             <ng-container>
-              <mat-option [title]="option.label" *ngFor="let option of filteredOptions" [value]="option">
+              <mat-option [title]="option.label" *ngFor="let option of filteredOptions" [value]="option.label">
                 {{option.label}}
               </mat-option>
             </ng-container>
           </cdk-virtual-scroll-viewport>
           <ng-container *ngIf="!charactersAfterWhichToShowList">
-            <mat-option [title]="option.label" *ngFor="let option of filteredOptions" [value]="option">
+            <mat-option [title]="option.label" *ngFor="let option of filteredOptions" [value]="option.label">
               {{option.label}}
             </mat-option>
           </ng-container>

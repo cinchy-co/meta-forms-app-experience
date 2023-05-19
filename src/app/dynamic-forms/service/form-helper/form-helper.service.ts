@@ -220,8 +220,6 @@ export class FormHelperService {
           if (form.sections[j].id === formFields[i].formSectionId) {
             minSectionIter = j;
             form.sections[j].fields.push(formField);
-            form.sections[j].childFilter = formFields[i].childFormFilter;
-            form.sections[j].childSort = formFields[i].sortChildTable;
             break;
           }
         }

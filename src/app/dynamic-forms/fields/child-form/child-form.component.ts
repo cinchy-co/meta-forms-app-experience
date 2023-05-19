@@ -11,6 +11,7 @@ import { FormSection } from "../../models/cinchy-form-section.model";
 import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 
 import { isNullOrUndefined } from "util";
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 
 /**
@@ -254,6 +255,20 @@ export class ChildFormComponent {
   }
 
 
+  handleOnChange(event: IFieldChangedEvent): void {
+
+    this.childFormData.childForm.updateFieldValue(
+      event.sectionIndex,
+      event.fieldIndex,
+      event.newValue,
+      event.additionalPropertiesToUpdate
+    );
+
+    this.childFormData.presetValues = this.childFormData.presetValues || {};
+    this.childFormData.presetValues[this.childFormData.childForm.sections[event.sectionIndex].fields[event.fieldIndex].label] = event.newValue;
+  }
+
+
   /**
    * Closes the dialog and discards the form contents
    */
@@ -288,6 +303,8 @@ export class ChildFormComponent {
     if (formvalidation.status) {
       this.dialogRef.close(!this.childFormData.presetValues ? -1 : this.childFormData.presetValues["Cinchy ID"]);
     } else {
+      // TODO: this should be a toast, which means that we'd need to either dynamically inject the ToastrService or create a
+      //       NotificationService with static functions to display this sort of thing
       console.error("Child form was invalid:", formvalidation.message);
     }
   }

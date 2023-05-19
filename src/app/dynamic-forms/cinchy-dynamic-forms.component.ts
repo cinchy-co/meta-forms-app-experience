@@ -163,14 +163,16 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  afterChildFormEdit(childRowId: number, childForm: Form): void {
+  afterChildFormEdit(childRowId: number, targetChildForm: Form): void {
 
-    this._lastTouchedChildForm = childForm.clone();
+    const childFormData = this.form.findChildForm(targetChildForm.id);
 
-    const formvalidation = childForm.checkChildFormValidation();
+    this._lastTouchedChildForm = childFormData.childForm.clone();
+
+    const formvalidation = childFormData.childForm.checkChildFormValidation();
 
     if (formvalidation.status) {
-      childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
+      childFormData.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
 
         section.fields.forEach((field: FormField, fieldIndex: number) => {
 
@@ -282,15 +284,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
             }
           }
 
-          this.form.addOrModifyFlattenedChildRecord(sectionIndex, rowData);
+          childFormData.childForm.addOrModifyChildFormRowValue(sectionIndex, rowData);
         });
       });
 
-      const insertQuery: Query = childForm.generateSaveForChildQuery(childRowId < 0 ? null : childRowId, childForm.isClone);
+      const insertQuery: Query = childFormData.childForm.generateSaveForChildQuery(childRowId < 0 ? null : childRowId, childFormData.childForm.isClone);
 
       const existingQueryIndex = this._pendingChildFormQueries?.findIndex((query: IChildFormQuery) => {
 
-        return (query.childFormId === childForm.id);
+        return (query.childFormId === childFormData.childForm.id);
       });
 
       if (existingQueryIndex > -1) {
@@ -298,7 +300,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       }
       else {
         this._pendingChildFormQueries.push({
-          childFormId: childForm.id,
+          childFormId: childFormData.childForm.id,
           formId: this.formId,
           rowId: childRowId,
           query: insertQuery

@@ -5,7 +5,8 @@
   <app-fields-wrapper *ngIf="childFormData?.childForm"
     [form]="childFormData.childForm"
     [isChild]="true"
-    [formHasDataLoaded]="true">
+    [formHasDataLoaded]="true"
+    (onChange)="handleOnChange($event)">
   </app-fields-wrapper>
 </div>
 

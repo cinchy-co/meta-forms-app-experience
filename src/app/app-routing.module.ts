@@ -1,6 +1,6 @@
-import {NgModule} from '@angular/core';
-import {Routes, RouterModule} from '@angular/router';
-import {FormWrapperComponent} from './pages/form-wrapper/form-wrapper.component';
+import {NgModule} from "@angular/core";
+import {Routes, RouterModule} from "@angular/router";
+import {FormWrapperComponent} from "./pages/form-wrapper/form-wrapper.component";
 import {SaveSuccessComponent} from "./pages/save-success/save-success.component";
 
 
@@ -21,7 +21,16 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' })],
-  exports: [RouterModule]
+  imports: [
+    RouterModule.forRoot(
+      routes,
+      {
+        relativeLinkResolution: "legacy"
+      }
+    )
+  ],
+  exports: [
+    RouterModule
+  ]
 })
 export class AppRoutingModule {}

@@ -23,13 +23,12 @@ export class AddNewEntityDialogComponent implements OnInit {
   formMetadata: IFormMetadata;
   formSectionsMetadata: IFormSectionMetadata[];
   lookupRecords: ILookupRecord[];
-  formId: string;
 
   constructor(
     private cinchyQueryService: CinchyQueryService,
     @Inject(MAT_DIALOG_DATA) public data: {
       formId: string,
-      name: string
+      title: string
     },
     private spinner: NgxSpinnerService,
     private toastr: ToastrService,
@@ -38,10 +37,6 @@ export class AddNewEntityDialogComponent implements OnInit {
 
 
   ngOnInit(): void {
-
-    if (this.data.formId) {
-      this.formId = this.data.name;
-    }
 
     this.loadFormMetadata()
   }
@@ -52,7 +47,7 @@ export class AddNewEntityDialogComponent implements OnInit {
     try {
       this.spinner.show();
 
-      const formMetadata = await this.cinchyQueryService.getFormMetadata(this.formId).toPromise();
+      const formMetadata = await this.cinchyQueryService.getFormMetadata(this.data.formId).toPromise();
 
       this.loadLookupRecords(formMetadata);
 
@@ -61,9 +56,7 @@ export class AddNewEntityDialogComponent implements OnInit {
     } catch (e) {
       this.spinner.hide();
 
-      console.error("Get meta data Query failing,", e);
-
-      this.toastr.error("Operation aborted ! Access denied or temporary issue in execution getting Meta data.", "Error");
+      this.toastr.error("Operation aborted! Access denied or temporary issue in execution getting Meta data.", "Error");
     }
   }
 

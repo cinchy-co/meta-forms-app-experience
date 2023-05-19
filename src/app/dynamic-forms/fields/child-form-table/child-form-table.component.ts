@@ -50,7 +50,6 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   @Input() field: FormField;
   @Input() fieldIndex: number;
   @Input() form: Form;
-  @Input() hasChildTableAccess: any;
   @Input() sectionIndex: number;
 
   @Output() childformOpened = new EventEmitter<{
@@ -287,9 +286,12 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
   }
 
 
-  getSortedKeys(field: FormField): Array<string> {
+  /**
+   * Gets the sorted set of fields represented by a set of child row data
+   */
+  getSortedKeys(rowData: { [key: string]: any }): Array<string> {
 
-    return (field ? Object.keys(field).sort() : []);
+    return (rowData ? Object.keys(rowData).sort() : []);
   }
 
 
@@ -310,7 +312,8 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
     if (value && currentField?.cinchyColumn.dataType === "Date and Time") {
       let dateFormat = currentField.cinchyColumn.displayFormat;
 
-      // Can use String.replaceAll instead when app is upgraded to ES2021
+
+      // TODO: this can be done using String.replaceAll when ES2021 is available (typescript ^4.5, angular ^14.0.7)
       dateFormat = dateFormat.replace(new RegExp("Y", "g"), "y");
       dateFormat = dateFormat.replace(new RegExp("D", "g"), "d");
 
@@ -399,7 +402,7 @@ export class ChildFormTableComponent implements OnInit, OnDestroy {
    */
   private _getAllFieldsInChildForm(): Array<FormField> {
 
-    // TODO: this can be done using return flatMap when ES2019 is available (typescript ^4.5, angular ^14.0.7
+    // TODO: this can be done using return flatMap when ES2019 is available (typescript ^4.5, angular ^14.0.7)
     const output = new Array<FormField>();
 
     this.childForm.sections.forEach((section: FormSection) => {

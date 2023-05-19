@@ -34,8 +34,8 @@
       <app-fields-wrapper [form]="form"
                           [fieldsWithErrors]="fieldsWithErrors"
                           [formHasDataLoaded]="formHasDataLoaded"
-                          (childFormOpened)="openChildForm($event)"
                           (childRowDeleted)="onChildRowDeleted($event)"
+                          (childFormOpened)="openChildForm($event)"
                           (onChange)="handleFieldsEvent($event)">
       </app-fields-wrapper>
     </mat-accordion>

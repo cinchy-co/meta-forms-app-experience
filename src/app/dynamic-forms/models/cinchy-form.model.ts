@@ -5,6 +5,7 @@ import { FormField } from "./cinchy-form-field.model";
 import { IQuery, Query } from "./cinchy-query.model";
 
 import { IAdditionalProperty } from "../interface/additional-property";
+import { IFindChildFormResponse } from "../interface/find-child-form-response";
 
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { ILookupRecord } from "../../models/lookup-record.model";
@@ -15,21 +16,22 @@ import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdo
 import { isNullOrUndefined } from "util";
 
 import * as R from "ramda";
-import { IFindChildFormResponse } from "../interface/find-child-form-response";
 
 
 export class Form {
 
   childFieldsLinkedToColumnName: { [columnName: string]: FormField[] } = {};
-  errorFields = [];
   fieldsByColumnName: { [columnName: string]: FormField } = {};
-  linkedColumnElement;
+
+  errorFields = [];
+
   parentForm: Form;
   tableMetadata: Object;
 
 
   /**
-   * Represents whether or not any values on this form have been updated by the user
+   * Represents whether or not any values on this form have been updated by the user. If it is manually set
+   * to false, every field in the form is marked as untouched
    */
   get hasChanged(): boolean {
 
@@ -121,23 +123,23 @@ export class Form {
   /**
    * Modifies the flattened child form records by either updating an existing entry that matches the given rowId or adding a new entry if no match is present
    */
-  addOrModifyFlattenedChildRecord(sectionIndex: number, recordData: { [columnName: string]: any }): void {
+  addOrModifyChildFormRowValue(sectionIndex: number, rowData: { [columnName: string]: any }): void {
 
-    if (recordData["Cinchy ID"] && recordData["Cinchy ID"] > 0) {
-      const existingRecordIndex = this._sections[sectionIndex].childFormRowValues.findIndex((existingRecordData: { [columnName: string]: any }) => {
+    if (rowData["Cinchy ID"] && rowData["Cinchy ID"] > 0) {
+      const existingRowIndex = this._sections[sectionIndex].childFormRowValues.findIndex((existingRecordData: { [columnName: string]: any }) => {
 
-        return (existingRecordData.rowId === recordData["Cinchy ID"]);
+        return (existingRecordData.rowId === rowData["Cinchy ID"]);
       });
 
-      if (existingRecordIndex !== -1) {
-        this._sections[sectionIndex].childFormRowValues.splice(existingRecordIndex, 1, [recordData]);
+      if (existingRowIndex !== -1) {
+        this._sections[sectionIndex].childFormRowValues.splice(existingRowIndex, 1, [rowData]);
       }
       else {
-        this._sections[sectionIndex].childFormRowValues.push(recordData);
+        this._sections[sectionIndex].childFormRowValues.push(rowData);
       }
     }
     else {
-      this._sections[sectionIndex].childFormRowValues.push(recordData);
+      this._sections[sectionIndex].childFormRowValues.push(rowData);
     }
   }
 
@@ -250,23 +252,25 @@ export class Form {
     );
 
     clonedForm.rowId = null;
-    clonedForm.sections = this.sections?.slice();
+    clonedForm.sections = this.sections;
 
     clonedForm.sections?.forEach((section: FormSection, sectionIndex: number) => {
 
       section.fields?.forEach((field: FormField, fieldIndex: number) => {
 
-        // We want to save every field of the cloned record when the form is saved,
-        // so we'll manually mark them as dirty
-        clonedForm.updateFieldAdditionalProperty(
-          sectionIndex,
-          fieldIndex,
-          {
-            propertyName: "hasChanged",
-            propertyValue: true,
-            cinchyColumn: true
-          }
-        );
+        if (!markAsClean) {
+          // We want to save every field of the cloned record when the form is saved,
+          // so we'll manually mark them as dirty
+          clonedForm.updateFieldAdditionalProperty(
+            sectionIndex,
+            fieldIndex,
+            {
+              propertyName: "hasChanged",
+              propertyValue: true,
+              cinchyColumn: true
+            }
+          );
+        }
 
         if (field.childForm) {
           clonedForm.updateFieldAdditionalProperty(
@@ -295,15 +299,17 @@ export class Form {
 
                   childSection.fields?.forEach((childField: FormField, childFieldIndex: number) => {
 
-                    clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateFieldAdditionalProperty(
-                      childSectionIndex,
-                      childFieldIndex,
-                      {
-                        propertyName: "hasChanged",
-                        propertyValue: true,
-                        cinchyColumn: true
-                      }
-                    );
+                    if (!markAsClean) {
+                      clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateFieldAdditionalProperty(
+                        childSectionIndex,
+                        childFieldIndex,
+                        {
+                          propertyName: "hasChanged",
+                          propertyValue: true,
+                          cinchyColumn: true
+                        }
+                      );
+                    }
 
                     if (childField.cinchyColumn.dataType === "Link" && childRecord[childField.cinchyColumn.name] && childField.dropdownDataset) {
                       if (childField.cinchyColumn.isMultiple) {
@@ -404,61 +410,6 @@ export class Form {
         }
       }
     }
-  }
-
-
-  /**
-   * Reutrns a copy of this form with all of the sections merged into a single section
-   */
-  flattenForm(overrideSectionId?: number, overrideSectionLabel?: string): Form {
-
-    const newSection = new FormSection(
-      overrideSectionId ?? this.sections[0]?.id ?? -1,
-      overrideSectionLabel ?? this.sections[0]?.label ?? `Fields for ${this.name || "this form"}`,
-      this.isAccordion ? false : this.sections[0].autoExpand
-    );
-
-    this._sections?.forEach((section: FormSection) => {
-
-      section.fields?.forEach((field: FormField) => {
-
-        newSection.fields.push(
-          new FormField(
-            field.id,
-            field.label,
-            field.caption,
-            field.childForm,
-            field.cinchyColumn,
-            field.form,
-            field.dropdownDataset,
-            field.noPreselect
-          )
-        );
-      });
-    });
-
-    const outputForm = new Form(
-      this.id,
-      this.name,
-      this.targetTableId,
-      this.targetTableDomain,
-      this.targetTableName,
-      this.isAccordion,
-      this.hasAccess,
-      this.isChild,
-      true,
-      this.childFormParentId,
-      this.childFormLinkId,
-      this.childFormFilter,
-      this.childFormSort,
-      this.isClone
-    );
-
-    outputForm.sections = new Array<FormSection>(newSection);
-
-    outputForm.restoreFormReferenceOnAllFields();
-
-    return outputForm;
   }
 
 
@@ -693,7 +644,7 @@ export class Form {
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
               try {
-                params[paramName] = ((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString();
+                params[paramName] = ((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null;
               }
               catch (error) {
                 // Do nothing
@@ -1048,8 +999,6 @@ export class Form {
             field.dropdownDataset = new DropdownDataset(preselectedRecord ? [new DropdownOption(preselectedRecord.id.toString(), preselectedRecord.label)] : []);
           }
 
-          this.linkedColumnElement = this.linkedColumnElement ? this.linkedColumnElement : JSON.parse(JSON.stringify(field));
-
           section.linkedColumnDetails = {
             linkedElement: field,
             linkLabel: field.label
@@ -1138,12 +1087,14 @@ export class Form {
    */
   populateSectionsFromFormMetadata(metadata: Array<IFormSectionMetadata>): void {
 
-    this._sections = metadata.map(_ => {
+    this._sections = metadata.map((sectionMetadata: IFormSectionMetadata) => {
 
-      let result = new FormSection(_.id, _.name);
-
-      result.columnsInRow = _.columnsInRow;
-      result.autoExpand = _.autoExpand;
+      let result = new FormSection(
+        sectionMetadata.id,
+        sectionMetadata.name,
+        sectionMetadata.autoExpand,
+        sectionMetadata.columnsInRow
+      );
 
       return result;
     });

@@ -1,5 +1,3 @@
-import { Subscription } from "rxjs";
-
 import {
   Component,
   EventEmitter,
@@ -8,8 +6,6 @@ import {
   ViewEncapsulation
 } from "@angular/core";
 
-import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
-
 import { TextFormatType } from "../enums/text-format-type.enum";
 
 import { IFieldChangedEvent } from "../interface/field-changed-event";
@@ -17,7 +13,6 @@ import { IFieldChangedEvent } from "../interface/field-changed-event";
 import { Form } from "../models/cinchy-form.model";
 import { FormField } from "../models/cinchy-form-field.model";
 import { FormSection } from "../models/cinchy-form-section.model";
-import { SpinnerCondition } from "../models/cinchy-spinner.model";
 
 import { AppStateService } from "../../services/app-state.service";
 
@@ -44,7 +39,7 @@ export class FieldsWrapperComponent {
   set formHasDataLoaded(value: boolean) {
 
     if (value) {
-      this.determineSectionsToRender();
+      this._setDisplaySections();
     }
 
     this._formHasDataLoaded = value;
@@ -61,8 +56,7 @@ export class FieldsWrapperComponent {
   @Output() childFormOpened = new EventEmitter<any>();
 
 
-  subscription: Subscription;
-  sectionInfo: SpinnerCondition;
+  displaySections = new Array<FormSection>();
 
 
   constructor(
@@ -70,24 +64,9 @@ export class FieldsWrapperComponent {
   ) {}
 
 
-  determineSectionsToRender() {
+  handleOnChange(event: IFieldChangedEvent): void {
 
-    this.form?.sections?.forEach((section: FormSection, sectionIndex: number) => {
-
-      section.fields?.forEach((field: FormField, fieldIndex: number) => {
-
-        if (field.childForm?.flatten && field.childForm.sections) {
-          this.form.updateFieldAdditionalProperty(
-            sectionIndex,
-            fieldIndex,
-            {
-              propertyName: "childForm",
-              propertyValue: field.childForm.flattenForm()
-            }
-          );
-        }
-      });
-    });
+    this.onChange.emit(event);
   }
 
 
@@ -118,5 +97,36 @@ export class FieldsWrapperComponent {
   useTextarea(field: FormField): boolean {
 
     return (field.cinchyColumn.dataType === "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
+  }
+
+
+  /**
+   * Builds the set of sections to display in the view. If a field contains a child form which has been marked for flattening, its
+   * sections are injected at the root level immediately after the section in which that field appears
+   */
+  private _setDisplaySections(): void {
+
+    const displaySections = new Array<FormSection>();
+
+    this.form?.sections?.forEach((section: FormSection, sectionIndex: number) => {
+
+      displaySections.push(section.clone());
+
+      section.fields?.forEach((field: FormField, fieldIndex: number) => {
+
+        if (field.childForm?.flatten && field.childForm.sections?.length) {
+          this.form.sections[sectionIndex].fields[fieldIndex].childForm.sections.forEach((childSection: FormSection) => {
+
+            const childSectionClone = childSection.clone();
+
+            childSectionClone.isInFlattenedChildForm = true;
+
+            displaySections.push(childSectionClone);
+          });
+        }
+      });
+    });
+
+    this.displaySections = displaySections;
   }
 }
