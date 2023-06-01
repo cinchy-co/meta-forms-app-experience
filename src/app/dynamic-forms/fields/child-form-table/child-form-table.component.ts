@@ -26,14 +26,15 @@ import { DataFormatType } from "../../enums/data-format-type";
 
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
+import { FormSection } from "../../models/cinchy-form-section.model";
+
+import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 import { AppStateService } from "../../../services/app-state.service";
-import { FormSection } from "../../models/cinchy-form-section.model";
 
 import { NumeralPipe } from "ngx-numeral";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
-import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 
 /**
@@ -540,7 +541,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
     const domainAndTable = `[${this.childForm.targetTableDomain}].[${this.childForm.targetTableName}]`;
 
-    const columnNames: Array<string> = Object.keys(this.sortedKeys).filter((key: string) => {
+    const columnNames: Array<string> = this.sortedKeys.filter((key: string) => {
 
       // Ensure we're only using the fields that are actually present on in the table
       return (key !== "Cinchy ID" && coerceBooleanProperty(this.fieldSet.find((field: FormField) => {

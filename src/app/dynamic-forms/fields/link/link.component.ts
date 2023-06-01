@@ -2,6 +2,7 @@ import { Subject } from "rxjs";
 import { debounceTime, distinctUntilChanged, startWith } from "rxjs/operators";
 
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   EventEmitter,
@@ -148,13 +149,14 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   constructor(
-    private _dropdownDatasetService: DropdownDatasetService,
-    private _spinner: NgxSpinnerService,
-    private _cinchyService: CinchyService,
-    private _dialogService: DialogService,
     private _appStateService: AppStateService,
     private _cinchyQueryService: CinchyQueryService,
+    private _cinchyService: CinchyService,
     private _configService: ConfigService,
+    private _dialogService: DialogService,
+    private _dropdownDatasetService: DropdownDatasetService,
+    private _changeDetectorRef: ChangeDetectorRef,
+    private _spinner: NgxSpinnerService,
     private _toastr: ToastrService
   ) {}
 
@@ -237,6 +239,10 @@ export class LinkComponent implements OnChanges, OnInit {
   clearSelectedValue(event: KeyboardEvent): void {
 
     const key = event.key;
+
+    // At this point in the lifecycle, NgModel has not resolved, so we force it to detect changes so that we can accurately
+    // read the current state of this.autocompleteText
+    this._changeDetectorRef.detectChanges();
 
     if ((key === "Delete" || key === "Backspace") && !this.autocompleteText?.length) {
       this.selectedValue = this.clearOption;
