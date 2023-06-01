@@ -75,7 +75,7 @@ export class AddNewEntityDialogComponent implements OnInit {
 
   async loadFormSections() {
 
-    this.formSectionsMetadata = await this.cinchyQueryService.getFormSections(this.data.formId).toPromise();
+    this.formSectionsMetadata = await this.cinchyQueryService.getFormSectionsMetadata(this.data.formId).toPromise();
   }
 
 

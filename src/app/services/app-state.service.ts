@@ -24,7 +24,7 @@ export class AppStateService {
   selectedOpportunityId: number;
 
   addNewEntityDialogClosed$ = new Subject<INewEntityDialogResponse>();
-  childRecordUpdated$ = new Subject<boolean>();
+  childRecordUpdated$ = new Subject<void>();
   currentSection$ = new BehaviorSubject<string>(null);
   latestRenderedSections$ = new BehaviorSubject<IFormSectionMetadata[]>(null);
 
@@ -66,18 +66,6 @@ export class AppStateService {
     return this._rowId;
   }
   private _rowId: number;
-
-
-  getChildRecordUpdateState(): Observable<boolean> {
-
-    return this.childRecordUpdated$.asObservable();
-  }
-
-
-  setChildRecordUpdateState(isUpdated) {
-
-    this.childRecordUpdated$.next(isUpdated);
-  }
 
 
   setRootFormId(id: string): void {

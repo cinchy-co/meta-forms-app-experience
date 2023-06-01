@@ -75,7 +75,7 @@ export class FormHelperService {
 
   async fillWithFields(
       form: Form,
-      cinchyId: number,
+      rowId: number,
       formMetadata: IFormMetadata,
       formFieldsMetadata: IFormFieldMetadata[],
       selectedLookupRecord: ILookupRecord,
@@ -87,7 +87,7 @@ export class FormHelperService {
       let formFields: IFormFieldMetadata[] = formFieldsMetadata.filter(_ => _.formId === form.id);
 
      // const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
-      const cellEntitlements = await this._getCellEntitlements(formMetadata.domainName, formMetadata.tableName, cinchyId, formFields);
+      const cellEntitlements = await this._getCellEntitlements(formMetadata.domainName, formMetadata.tableName, rowId, formFields);
 
       let parentChildLinkedColumns: {[columnName: string]: FormField[]} = {};
       let parentFieldsByColumn: {[columnName: string]: FormField} = {};
@@ -99,7 +99,7 @@ export class FormHelperService {
         const columnMetadata = tableJson.Columns.find(_ => _.columnId === formFields[i].columnId);
         const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
         const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
-        const attachedFileName = await this._getFileName(cinchyId, formFields[i].fileNameColumn);
+        const attachedFileName = await this._getFileName(rowId, formFields[i].fileNameColumn);
       
         if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
           const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
@@ -157,7 +157,7 @@ export class FormHelperService {
           displayColumnId.push(formFields[i].linkFieldId);
         
           const childFormMetadata = await this._cinchyQueryService.getFormMetadata(childFormId).toPromise();
-          const childFormSectionsMetadata = await this._cinchyQueryService.getFormSections(childFormId).toPromise();
+          const childFormSectionsMetadata = await this._cinchyQueryService.getFormSectionsMetadata(childFormId).toPromise();
 
           let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
 
@@ -169,16 +169,16 @@ export class FormHelperService {
 
           childForm.populateSectionsFromFormMetadata(childFormSectionsMetadata);
 
-          await this.fillWithFields(childForm, cinchyId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
-          await this.fillWithData(childForm, cinchyId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
+          await this.fillWithFields(childForm, rowId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
+          await this.fillWithData(childForm, rowId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
 
           // Override these, they will be checked later when opening up the child form
           cinchyColumn.canEdit = true;
           cinchyColumn.canView = true;
 
           // If flatten, we have to check the entitlements for the last record and readjust the entitlements
-          if (childForm.flatten && childForm.sections?.length && childForm.sections[0].childFormRowValues?.length) {
-            let childFormData = childForm.sections[0].childFormRowValues;
+          if (childForm.flatten && childForm.sections?.length && childForm.childFormRowValues?.length) {
+            let childFormData = childForm.childFormRowValues;
             let lastRecordId = childFormData[childFormData.length - 1]["Cinchy ID"];
             if (lastRecordId) {
             //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
@@ -271,7 +271,7 @@ export class FormHelperService {
       if (form.isChild && form.childFormParentId && form.childFormLinkId && parentDomainName && parentTableName) {
         const queryToGetMatchIdFromParent = `SELECT ${form.childFormParentId} AS 'idParent'
                                             FROM [${parentDomainName}].[${parentTableName}]
-                                            WHERE [Cinchy Id] = ${targetRowId}`;
+                                            WHERE [Cinchy ID] = ${targetRowId}`;
 
         let cinchyIdForMatchFromParentResp = (
           await this._cinchyService.executeCsql(
@@ -282,7 +282,7 @@ export class FormHelperService {
           ).toPromise()
         ).queryResult.toObjectArray();
 
-        let idForParentMatch = cinchyIdForMatchFromParentResp?.length ? cinchyIdForMatchFromParentResp[0]['idParent'] : null;
+        let idForParentMatch = cinchyIdForMatchFromParentResp?.length ? cinchyIdForMatchFromParentResp[0]["idParent"] : null;
 
         if (idForParentMatch) {
           if (isNullOrUndefined(selectQuery.params)) {
@@ -303,7 +303,7 @@ export class FormHelperService {
       ).queryResult.toObjectArray();
 
       if (form.isChild) {
-        form.populateChildRecordData(targetRowId, selectQueryResult, selectedLookupRecord);
+        form.populateChildRecordData(selectQueryResult, selectedLookupRecord);
       }
       else {
         form.loadRecordData(targetRowId, selectQueryResult);
@@ -338,7 +338,7 @@ export class FormHelperService {
       SELECT ${selectClause.toString()}
       FROM [${domainName}].[${tableName}] t
       WHERE t.[Deleted] IS NULL
-        AND t.[Cinchy Id]=${cinchyId};`;
+        AND t.[Cinchy ID]=${cinchyId};`;
 
     try {
       let response = await this._cinchyService.executeCsql(query, null).toPromise();
@@ -355,11 +355,11 @@ export class FormHelperService {
   private async _getFileName(cinchyId: number, fileNameColumn: string): Promise<string> {
 
     const [domain, table, column] = fileNameColumn?.split(".") || [];
-    const whereCondition = `WHERE [Cinchy Id] = ${cinchyId} AND [Deleted] IS NULL `;
+    const whereCondition = `WHERE [Cinchy ID] = ${cinchyId} AND [Deleted] IS NULL `;
 
     if (domain) {
       const query = `SELECT [${column}] as 'fullName',
-                       [Cinchy Id] as 'id'
+                       [Cinchy ID] as 'id'
                      FROM
                        [${domain}].[${table}]
                        ${whereCondition}`;

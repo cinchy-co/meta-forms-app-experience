@@ -92,6 +92,7 @@
       <mat-select class="form-control" multiple #multiSelect
                   *ngIf="!isLoading && !downloadLink"
                   [(ngModel)]="selectedValues"  [ngModelOptions]="{standalone: true}"
+                  [compareWith]="compareWith"
                   [disabled]="!canEdit"
                   (selectionChange)="valueChanged()"
                   disableOptionCentering>

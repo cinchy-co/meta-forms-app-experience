@@ -20,7 +20,7 @@ export class DropdownDatasetService {
   /**
    * Bind dropdownList (Link Type) from database
    *
-   * @param linkTargetColumnId (parameter of the link type column Cinchy Id)
+   * @param linkTargetColumnId (parameter of the link type column Cinchy ID)
    * @param fieldName: string
    * @param currentFieldJson: any
    * @param dropdownFilter?:string -- Manual filter coming from Form fields table
@@ -47,7 +47,7 @@ export class DropdownDatasetService {
     // Get meta data for the cinchy link
     let tableColumnQuery: string = `select tc.[Table].[Domain].[Name] as 'Domain', tc.[Table].[Name] as 'Table', tc.[Name] as 'Column'
       from [Cinchy].[Cinchy].[Table Columns] tc
-      where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy Id] = ${linkTargetColumnId}`;
+      where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy ID] = ${linkTargetColumnId}`;
 
     let metadataQueryResult: Object[] = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
@@ -58,7 +58,7 @@ export class DropdownDatasetService {
     let dataSetQuery: string = "";
 
     if (metadataQueryResult[0]["Domain"] === "Reference Data" && metadataQueryResult[0]["Table"] === "Employees") {
-      dataSetQuery = `select t.[Cinchy Id] as 'Id', t.[${metadataQueryResult[0]["Column"]}] + ' (\' + [Role].[Name] +\')' as 'Label'
+      dataSetQuery = `select t.[Cinchy ID] as 'Id', t.[${metadataQueryResult[0]["Column"]}] + ' (\' + [Role].[Name] +\')' as 'Label'
         from [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] t
         where t.[Deleted] is null`;
     }
@@ -73,10 +73,10 @@ export class DropdownDatasetService {
       }
 
       if (setDisplayColumnQuery) {
-        dataSetQuery = `select ${setDisplayColumnQuery},[Cinchy Id] as 'Id', [${metadataQueryResult[0]["Column"]}] as 'Label'
+        dataSetQuery = `select ${setDisplayColumnQuery},[Cinchy ID] as 'Id', [${metadataQueryResult[0]["Column"]}] as 'Label'
           from [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] ` + whereCondition;
       }else{
-        dataSetQuery = `select [Cinchy Id] as 'Id', [${metadataQueryResult[0]["Column"]}] as 'Label'
+        dataSetQuery = `select [Cinchy ID] as 'Id', [${metadataQueryResult[0]["Column"]}] as 'Label'
           from [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] ` + whereCondition;
       }
     }

@@ -1,5 +1,5 @@
 import { BehaviorSubject, Subject } from "rxjs";
-import { take, takeUntil } from "rxjs/operators";
+import { debounceTime, take, takeUntil } from "rxjs/operators";
 
 import {
   Component,
@@ -23,8 +23,6 @@ import { faShareAlt } from "@fortawesome/free-solid-svg-icons";
 import { faSitemap } from "@fortawesome/free-solid-svg-icons";
 import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
-import { isNullOrUndefined } from "util";
-
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 import { Form } from "../../models/cinchy-form.model";
@@ -40,6 +38,7 @@ import { ConfigService } from "../../../services/config.service";
 import { ToastrService } from "ngx-toastr";
 
 import * as R from "ramda";
+import { MatOption } from "@angular/material/core";
 
 
 @Component({
@@ -152,7 +151,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
       let tableColumnQuery: string = `select tc.[Table].[Domain].[Name] as 'Domain', tc.[Table].[Name] as 'Table', tc.[Name] as 'Column'
         from [Cinchy].[Cinchy].[Table Columns] tc
-        where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy Id] = ${this.field.cinchyColumn.linkTargetColumnId}`;
+        where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy ID] = ${this.field.cinchyColumn.linkTargetColumnId}`;
 
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
@@ -215,6 +214,12 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   }
 
 
+  compareWith(a: MatOption, b: MatOption): boolean {
+
+    return (a?.id && b?.id && a.id === b.id);
+  };
+
+
   closeTooltip(tooltip: NgbTooltip): void {
 
     setTimeout(() => {
@@ -269,10 +274,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   generateMultipleOptionsFromSingle(): Array<DropdownOption> {
-
-    if (this.field.noPreselect) {
-      return [];
-    }
 
     if (this.field.dropdownDataset?.options?.length) {
       let selectedIds: Array<string>;
@@ -411,7 +412,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   onFileSelected(event: any): void {
 
-    if (!event?.target?.files?.length) {
+    if (event?.target?.files?.length) {
       const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.form.rowId?.toString());
 
       this._cinchyQueryService.uploadFiles(event?.target?.files, uploadUrl)?.subscribe(
@@ -427,7 +428,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         }
       );
     }
-
   }
 
 
@@ -455,23 +455,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       .subscribe(() => {
 
         this.filterMulti();
-      });
-  }
-
-
-  /**
-   * Sets the initial value after the fileteredItems are loaded initially
-   */
-  protected setInitialValue(): void {
-
-    this.filteredListMulti
-      .pipe(take(1), takeUntil(this.onDestroy))
-      .subscribe(() => {
-
-        this.multiSelect.compareWith = (a, b) => {
-
-          return (a?.id && b?.id && a.id === b.id);
-        };
       });
   }
 
@@ -513,9 +496,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   private _setValue(): void {
 
-    const preselectedValArr = this.field.dropdownDataset?.options || null;
-
-    if (preselectedValArr || this.isInChildForm) {
+    if (this.field.dropdownDataset?.options?.length || this.isInChildForm) {
       this.selectedValues = this.generateMultipleOptionsFromSingle();
     }
   }

@@ -42,7 +42,7 @@
                     [fieldIndex]="fieldIndex"
                     [sectionIndex]="sectionIndex"
                     [fieldsWithErrors]="fieldsWithErrors"
-                    [isDisabled]="section['LinkedColumnDetails'] && (section['LinkedColumnDetails'].linkLabel === field.label)"
+                    [isDisabled]="field.linkedColumn && (field.linkedColumn.linkLabel === field.label)"
                     [isInChildForm]="isChild"
                     (onChange)="handleOnChange($event)">
       </cinchy-link>
@@ -146,7 +146,7 @@
                               [fieldIndex]="fieldIndex"
                               [sectionIndex]="sectionIndex"
                               (childRowDeleted)="childRowDeleted.emit($event)"
-                              (childformOpened)="childFormOpened.emit($event)">
+                              (childFormOpened)="childFormOpened.emit($event)">
       </cinchy-childform-table>
     </div>
   </div>

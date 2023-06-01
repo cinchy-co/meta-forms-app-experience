@@ -1,5 +1,5 @@
 {
-  "authority": "cinchy-domain>/idp",
+  "authority": "<cinchy-domain>/idp",
   "cinchyRootUrl": "<cinchy-domain>",
   "clientId": "cinchy_meta_forms",
   "redirectUri": "<cinchy-domain>/metaforms"

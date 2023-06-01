@@ -9,14 +9,14 @@
         {{field.label}}
         {{(field.cinchyColumn.isMandatory && !field.value) ? "*" : ""}}
       </label>
-      <span *ngIf="createlinkOptionName">
-        <a (click)="manageSourceRecords(field)">
+      <span *ngIf="canAdd">
+        <a (click)="openNewOptionDialog()">
           <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
         </a>
       </span>
       <mat-icon *ngIf="charactersAfterWhichToShowList"
                 class="info-icon"
-                [matTooltip]="toolTipMessage"
+                [matTooltip]="tooltipText"
                 matTooltipClass="tool-tip-body"
                 matTooltipPosition="above">
         error
@@ -104,35 +104,39 @@
     <ng-container *ngIf="canEdit && !downloadLink && showActualField">
       <div class="search-input-link">
         <input #searchInput type="text" class="form-control"
-               [(ngModel)]="selectedValue" [ngModelOptions]="{standalone: true}"
+               [(ngModel)]="autocompleteText" [ngModelOptions]="{ standalone: true }"
                [matAutocomplete]="auto"
                (blur)="setToLastValueSelected()"
                (focus)="getListItems(false)"
-               (keydown)="deleteDropdownVal($event)"
+               (keydown)="clearSelectedValue($event)"
                (ngModelChange)="filterChanged()" />
         <mat-icon>
           search
         </mat-icon>
       </div>
-      <mat-autocomplete #auto="matAutocomplete"
-                        (optionSelected)="valueChanged()"
-                        [displayWith]="displayFn">
+      <mat-autocomplete #auto="matAutocomplete">
         <ng-container>
           <mat-option *ngIf="isLoading" class="is-loading">
             <mat-spinner diameter="35"></mat-spinner>
           </mat-option>
-          <cdk-virtual-scroll-viewport *ngIf="optionViewportScrolls"
+          <cdk-virtual-scroll-viewport *ngIf="searchCharacterLimitMet && !isLoading"
                                        [itemSize]="48"
                                        [style.height.px]="192">
             <ng-container>
-              <mat-option [title]="option.label" *ngFor="let option of filteredOptions" [value]="option">
-                {{option.label}}
+              <mat-option *ngFor="let option of filteredOptions"
+                          [title]="option.label"
+                          [value]="option.label"
+                          (click)="onOptionSelected(option)">
+                {{ option.label ?? "" }}
               </mat-option>
             </ng-container>
           </cdk-virtual-scroll-viewport>
-          <ng-container *ngIf="!charactersAfterWhichToShowList">
-            <mat-option [title]="option.label" *ngFor="let option of filteredOptions" [value]="option">
-              {{option.label}}
+          <ng-container *ngIf="!searchCharacterLimitMet && !isLoading">
+            <mat-option *ngFor="let option of filteredOptions"
+                        [title]="option.label"
+                        [value]="option.label"
+                        (click)="onOptionSelected(option)">
+              {{ option.label ?? "" }}
             </mat-option>
           </ng-container>
         </ng-container>
@@ -140,7 +144,7 @@
     </ng-container>
     <ng-container *ngIf="!canEdit">
       <label class="pre-formatted" *ngIf="showActualField">
-        {{ selectedValue?.label || '-' }}
+        {{ selectedValue?.label || "-" }}
       </label>
     </ng-container>
     <ng-container *ngIf="showImage && selectedValue">
@@ -161,7 +165,7 @@
 
   <ng-container *ngIf="downloadLink && form.rowId">
     <div *ngFor="let item of downloadableLinks" style="margin-top: -12px">
-      <a *ngIf="downloadLink" [href]="item.fileUrl" [title]="' Download ' + item.fileName">
+      <a *ngIf="downloadLink" [href]="item.fileUrl" [title]="'Download ' + item.fileName">
         <img *ngIf="renderImageFiles && fileNameIsImage(item.fileName)" style="height: 100px" [src]="item.fileUrl" />
         <span [style.marginLeft.px]="renderImageFiles && fileNameIsImage(item.fileName) ? 12 : 0">{{item.fileName}}</span>
       </a>

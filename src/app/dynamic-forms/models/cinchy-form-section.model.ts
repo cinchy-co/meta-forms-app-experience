@@ -38,40 +38,20 @@ export class FormSection {
    */
   label: string;
 
-  linkedColumnDetails: {
-    linkedElement: FormField,
-    linkLabel: string,
-    linkValue?: ILookupRecord
-  };
-
-  /**
-   * If an unflattened child form is present in this section's fields, this will contain the set of key:value pairs that
-   * correspond to each of the rows in that child form's table
-   */
-  childFormRowValues: Array<{ [key: string]: any }>;
-
 
   constructor(
     id: number,
     label: string,
     autoExpand?: boolean,
     columnsInRow?: string,
-    fields?: Array<FormField>,
-    linkedColumnDetails?: {
-      linkedElement: FormField,
-      linkLabel: string,
-      linkValue?: ILookupRecord
-    },
-    childFormRowValues?: Array<{ [key: string]: any }>
+    fields?: Array<FormField>
   ) {
 
     this.autoExpand = autoExpand ?? false;
-    this.childFormRowValues = childFormRowValues;
     this.columnsInRow = columnsInRow;
     this.fields = fields ?? new Array<FormField>();
     this.id = id;
     this.label = label;
-    this.linkedColumnDetails = linkedColumnDetails;
   }
 
 
@@ -80,14 +60,16 @@ export class FormSection {
    */
   clone(overrideId?: number): FormSection {
 
-    return new FormSection(
+    const clonedSection = new FormSection(
       overrideId ?? this.id,
       this.label,
       this.autoExpand,
       this.columnsInRow,
-      this.fields?.slice(),
-      this.linkedColumnDetails,
-      this.childFormRowValues?.slice()
+      this.fields?.slice()
     );
+
+    clonedSection.isInFlattenedChildForm = this.isInFlattenedChildForm;
+
+    return clonedSection;
   }
 }

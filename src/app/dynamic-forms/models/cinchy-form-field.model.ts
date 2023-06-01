@@ -6,17 +6,24 @@ import { FormControl } from "@angular/forms";
 import { CinchyColumn } from "./cinchy-column.model";
 import { Form } from "./cinchy-form.model";
 
+import { ILinkedColumnDetails } from "../interface/linked-column-details";
+
 import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 import { isNullOrUndefined } from "util";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
 export class FormField {
 
+  // TODO: are these fields necessary?
   formControl: FormControl;
   filteredValues: Observable<DropdownOption[]>;
+
   hide: boolean = false;
+
+  linkedColumn: ILinkedColumnDetails;
 
   value: any;
 
@@ -28,13 +35,15 @@ export class FormField {
       public cinchyColumn: CinchyColumn,
       public form: Form,
       public dropdownDataset?: DropdownDataset,
-      public noPreselect?: boolean
+      linkedColumnDetails?: ILinkedColumnDetails
   ) {
 
     if (cinchyColumn.dataType === "Link" && dropdownDataset) {
       this.formControl = new FormControl();
       this.filteredValues = this.formControl.valueChanges.pipe(startWith(""), map(value => this._filter(value)));
     }
+
+    this.linkedColumn = linkedColumnDetails;
   }
 
 
@@ -45,6 +54,35 @@ export class FormField {
     if (selection)
       return selection.label;
   };
+
+
+  clone(): FormField {
+
+    const clonedField = new FormField(
+      this.id,
+      this.label,
+      this.caption,
+      this.childForm,
+      this.cinchyColumn,
+      this.form,
+      this.dropdownDataset,
+      this.linkedColumn
+    );
+
+    clonedField.hide = this.hide;
+    clonedField.value = this.value;
+
+    clonedField.formControl = this.formControl;
+    clonedField.filteredValues = this.filteredValues;
+
+    return clonedField;
+  }
+
+
+  isLinkedColumn(key: string): boolean {
+
+    return coerceBooleanProperty(this.linkedColumn?.linkLabel === key);
+  }
 
 
   setInitialValue(value: any) {
@@ -71,9 +109,7 @@ export class FormField {
       this.value = value ?? [];
     }
 
-    if (!isNullOrUndefined(this.formControl)) {
-      this.formControl.setValue(this.value);
-    }
+    this.formControl?.setValue(this.value);
   }
 
 

@@ -1,3 +1,5 @@
+import { debounceTime } from "rxjs/operators";
+
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
@@ -14,6 +16,7 @@ import { DialogService } from "../../services/dialog.service";
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
 import { NgxSpinnerService } from "ngx-spinner";
+import { debounce } from "rxjs/operators";
 
 
 @Component({
@@ -89,13 +92,18 @@ export class SidenavComponent implements OnInit {
     });
 
 
-    this._appStateService.currentSection$.subscribe((sectionLabel: string) => {
+    // This has the potential to fire multiple times when the form first loads
+    this._appStateService.currentSection$.pipe(
+      debounceTime(300)
+    ).subscribe((sectionLabel: string) => {
 
       this.selectedSection = sectionLabel ?? this.selectedSection;
     });
 
 
-    this._appStateService.latestRenderedSections$.subscribe((sectionMetadata: Array<IFormSectionMetadata>) => {
+    this._appStateService.latestRenderedSections$.pipe(
+      debounceTime(300)
+    ).subscribe((sectionMetadata: Array<IFormSectionMetadata>) => {
 
       this.formSectionsMetadata = sectionMetadata;
 

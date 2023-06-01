@@ -28,6 +28,12 @@ export class Form {
   parentForm: Form;
   tableMetadata: Object;
 
+  /**
+   * If this is an unflattened child form, this will contain the set of key:value pairs that correspond to each
+   * of the rows in that child form's table
+   */
+  childFormRowValues: Array<{ [key: string]: any }> = [];
+
 
   /**
    * Represents whether or not any values on this form have been updated by the user. If it is manually set
@@ -116,8 +122,12 @@ export class Form {
     public readonly childFormLinkId?: string,
     public readonly childFormFilter?: string,
     public readonly childFormSort?: string,
-    public readonly isClone?: boolean
-  ) {}
+    public readonly isClone?: boolean,
+    private _childFormRowValues?: Array<{ [key: string]: any }>
+  ) {
+
+    this.childFormRowValues = _childFormRowValues?.slice();
+  }
 
 
   /**
@@ -126,20 +136,20 @@ export class Form {
   addOrModifyChildFormRowValue(sectionIndex: number, rowData: { [columnName: string]: any }): void {
 
     if (rowData["Cinchy ID"] && rowData["Cinchy ID"] > 0) {
-      const existingRowIndex = this._sections[sectionIndex].childFormRowValues.findIndex((existingRecordData: { [columnName: string]: any }) => {
+      const existingRowIndex = this.childFormRowValues.findIndex((existingRecordData: { [columnName: string]: any }) => {
 
         return (existingRecordData.rowId === rowData["Cinchy ID"]);
       });
 
       if (existingRowIndex !== -1) {
-        this._sections[sectionIndex].childFormRowValues.splice(existingRowIndex, 1, [rowData]);
+        this.childFormRowValues.splice(existingRowIndex, 1, [rowData]);
       }
       else {
-        this._sections[sectionIndex].childFormRowValues.push(rowData);
+        this.childFormRowValues.push(rowData);
       }
     }
     else {
-      this._sections[sectionIndex].childFormRowValues.push(rowData);
+      this.childFormRowValues.push(rowData);
     }
   }
 
@@ -248,15 +258,20 @@ export class Form {
       this.childFormLinkId,
       this.childFormFilter,
       this.childFormSort,
-      !markAsClean
+      !markAsClean,
+      this.childFormRowValues
     );
 
     clonedForm.rowId = null;
     clonedForm.sections = this.sections;
 
+    clonedForm.fieldsByColumnName = {};
+
     clonedForm.sections?.forEach((section: FormSection, sectionIndex: number) => {
 
       section.fields?.forEach((field: FormField, fieldIndex: number) => {
+
+        clonedForm.fieldsByColumnName[field.cinchyColumn.name] = field;
 
         if (!markAsClean) {
           // We want to save every field of the cloned record when the form is saved,
@@ -281,110 +296,11 @@ export class Form {
               propertyValue: field.childForm.clone("-1", markAsClean)
             }
           );
-
-          if (field.childForm.sections[0].childFormRowValues) {
-            if (field.childForm.childFormLinkId && field.childForm.childFormParentId) {
-              let childRecordsToClone = field.childForm.flatten ?
-                [field.childForm.sections[0].childFormRowValues[field.childForm.sections[0].childFormRowValues.length - 1]] :
-                field.childForm.sections[0].childFormRowValues;
-
-              let startingCloneRecordIdx = field.childForm.flatten ? childRecordsToClone.length - 1 : 0;
-              let numOfRecordsToClone = field.childForm.flatten ? 1 : childRecordsToClone.length;
-
-              childRecordsToClone.forEach((childRecord: any) => {
-
-                childRecord["Cinchy ID"] = Math.random();
-
-                field.childForm.sections?.forEach((childSection: FormSection, childSectionIndex: number) => {
-
-                  childSection.fields?.forEach((childField: FormField, childFieldIndex: number) => {
-
-                    if (!markAsClean) {
-                      clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateFieldAdditionalProperty(
-                        childSectionIndex,
-                        childFieldIndex,
-                        {
-                          propertyName: "hasChanged",
-                          propertyValue: true,
-                          cinchyColumn: true
-                        }
-                      );
-                    }
-
-                    if (childField.cinchyColumn.dataType === "Link" && childRecord[childField.cinchyColumn.name] && childField.dropdownDataset) {
-                      if (childField.cinchyColumn.isMultiple) {
-                        const fieldValueLabels = childRecord[childField.cinchyColumn.name].split(",").map((label: string) => {
-
-                          return label?.trim();
-                        });
-
-                        let multiDropdownResult = childField.dropdownDataset.options?.filter(e => fieldValueLabels.indexOf(e.label) > -1);
-
-                        // Hack for non-flattened child forms, for whatever reason, the dropdownDataset ends up being populated with the values of the child form records
-                        if (!field.childForm.flatten && !multiDropdownResult?.length) {
-                          let unflattenedMultiDropdownResult = childField.dropdownDataset.options.find(e => e.label === childRecord[childField.cinchyColumn.name]);
-
-                          multiDropdownResult = unflattenedMultiDropdownResult ? [unflattenedMultiDropdownResult] : multiDropdownResult;
-                        }
-
-                        clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateFieldValue(
-                          childSectionIndex,
-                          childFieldIndex,
-                          multiDropdownResult?.length ? multiDropdownResult.map(item => item.id).join(", ") : childRecord[childField.cinchyColumn.name]
-                        );
-                      }
-                      else {
-                        const linkedRecord = childField.dropdownDataset?.options.find((option: DropdownOption) => {
-
-                          return (option.label === childRecord[childField.cinchyColumn.name]);
-                        });
-
-                        clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateFieldValue(
-                          childSectionIndex,
-                          childFieldIndex,
-                          linkedRecord?.id || childRecord[childField.cinchyColumn.name]
-                        );
-                      }
-                    }
-                    else if (childField.cinchyColumn.dataType === "Choice" && childField.cinchyColumn.isMultiple && childRecord[childField.cinchyColumn.name]) {
-                      let fieldValueLabels: Array<string>;
-
-                      if (typeof childRecord[childField.cinchyColumn.name] === "string") {
-                        fieldValueLabels = childRecord[childField.cinchyColumn.name].split(",").map((label: string) => {
-
-                          return label?.trim();
-                        });
-                      }
-                      else {
-                        fieldValueLabels = childRecord[childField.cinchyColumn.name];
-                      }
-
-                      clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateFieldValue(
-                        childSectionIndex,
-                        childFieldIndex,
-                        fieldValueLabels?.length ? fieldValueLabels : childRecord[childField.cinchyColumn.name]
-                      );
-                    }
-                    else {
-                      clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.updateFieldValue(
-                        childSectionIndex,
-                        childFieldIndex,
-                        childRecord[childField.cinchyColumn.name] ?? null
-                      );
-                    }
-                  });
-                });
-              });
-
-              clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].childFormRowValues.splice(startingCloneRecordIdx, numOfRecordsToClone);
-            }
-          }
-          else {
-            clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].childFormRowValues.splice(0, clonedForm.sections[sectionIndex].fields[fieldIndex].childForm.sections[0].childFormRowValues.length);
-          }
         }
       });
     });
+
+    clonedForm.restoreFormReferenceOnAllFields();
 
     return clonedForm;
   }
@@ -410,6 +326,8 @@ export class Form {
         }
       }
     }
+
+    return null;
   }
 
 
@@ -418,7 +336,7 @@ export class Form {
     let query: IQuery = new Query(
       `DELETE
         FROM [${this.targetTableDomain}].[${this.targetTableName}]
-        WHERE [Cinchy Id] = ${this.rowId}
+        WHERE [Cinchy ID] = ${this.rowId}
           AND [Deleted] IS NULL`,
       null
     );
@@ -546,7 +464,7 @@ export class Form {
               }
               else {
                 if (field.cinchyColumn.dataType === "Link") {
-                  assignmentValues.push(`ResolveLink(${isNullOrUndefined(this.rowId) ? params[paramName] : paramName},'Cinchy Id')`);
+                  assignmentValues.push(`ResolveLink(${isNullOrUndefined(this.rowId) ? params[paramName] : paramName},'Cinchy ID')`);
                 }
                 else if (isNullOrUndefined(field.childForm)) {
                   assignmentValues.push(paramName);
@@ -574,7 +492,7 @@ export class Form {
           queryString = `
             CREATE TABLE #tmp([id] int) 
               INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(",")})
-              OUTPUT INSERTED.[Cinchy Id] INTO #tmp ([id])
+              OUTPUT INSERTED.[Cinchy ID] INTO #tmp ([id])
               VALUES (${assignmentValues.join(",")})
               SELECT x.[id] as 'id' FROM #tmp x`;
         }
@@ -591,7 +509,7 @@ export class Form {
           `UPDATE t
             SET ${assignmentSetClauses.join(",")}
             FROM [${this.targetTableDomain}].[${this.targetTableName}] t
-            WHERE t.[Cinchy Id] = ${this.rowId}
+            WHERE t.[Cinchy ID] = ${this.rowId}
               AND t.[Deleted] IS NULL
             SELECT ${this.rowId}`,
           params,
@@ -627,11 +545,7 @@ export class Form {
 
       section.fields.forEach((field: FormField) => {
 
-        if (isNullOrUndefined(field.value) && field.cinchyColumn.linkTargetColumnName) {
-          throw new Error("Link type cannot be null");
-        }
-
-        const isLinkedColumnForInsert = !this.rowId && this.isLinkedColumn(field, section);
+        const isLinkedColumnForInsert = coerceBooleanProperty(!this.rowId && field.isLinkedColumn(field.cinchyColumn.name));
 
         if (
             field.cinchyColumn.canEdit &&
@@ -669,7 +583,7 @@ export class Form {
 
               break;
             case "Link":
-              if (field.value instanceof Array || field.cinchyColumn.isMultiple) {
+              if (field.value && field.cinchyColumn.isMultiple) {
                 let stringLinkArray = [];
 
                 field.value.forEach(itemVal => {
@@ -712,7 +626,7 @@ export class Form {
               }
             }
             else {
-              if (field.value instanceof Array || field.cinchyColumn.isMultiple) {
+              if (field.value && field.cinchyColumn.isMultiple) {
                 if (isNullOrUndefined(this.rowId)) {
                   let stringLinkArray = [];
 
@@ -734,7 +648,7 @@ export class Form {
                 if (field.cinchyColumn.dataType === "Link") {
                   if (isNullOrUndefined(this.rowId)) {
                     if (field.form.isChild && field.form.flatten && field.form.childFormParentId) {
-                      let childFormAssignmentValue = `ResolveLink(${params[paramName]},'Cinchy Id')`;
+                      let childFormAssignmentValue = `ResolveLink(${params[paramName]},'Cinchy ID')`;
 
                       const columnMetadata = field.form.tableMetadata["Columns"]?.find((column: { columnId: number }) => {
 
@@ -755,11 +669,11 @@ export class Form {
                       assignmentValues.push(childFormAssignmentValue);
                     }
                     else {
-                      assignmentValues.push(`ResolveLink(${params[paramName]},'Cinchy Id')`);
+                      assignmentValues.push(`ResolveLink(${params[paramName]},'Cinchy ID')`);
                     }
                   }
                   else {
-                    assignmentValues.push(`ResolveLink(${paramName},'Cinchy Id')`);
+                    assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
                   }
                 }
                 else {
@@ -793,7 +707,7 @@ export class Form {
           `UPDATE t
             SET ${assignmentSetClauses.join(",")}
             FROM [${this.targetTableDomain}].[${this.targetTableName}] t
-            WHERE t.[Cinchy Id] = ${this.rowId}
+            WHERE t.[Cinchy ID] = ${this.rowId}
               AND t.[Deleted] IS NULL`,
           params,
           attachedFilesInfo
@@ -833,10 +747,10 @@ export class Form {
           const labelForColumn = element.cinchyColumn.isDisplayColumn ? element.cinchyColumn.linkTargetColumnName : element.cinchyColumn.name;
           // Having sep conditions just for clarity
           if (!element.cinchyColumn.isDisplayColumn && this.isChild) {
-            const col = `[${element.cinchyColumn.name}].[Cinchy Id]`
+            const col = `[${element.cinchyColumn.name}].[Cinchy ID]`
             element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${element.cinchyColumn.name}'`);
           } else if (!this.isChild) {
-            const col = `[${element.cinchyColumn.name}].[Cinchy Id]`
+            const col = `[${element.cinchyColumn.name}].[Cinchy ID]`
             element.cinchyColumn.canView && fields.push(`CASE WHEN CHANGE([${element.cinchyColumn.name}])=1 THEN DRAFT(${col}) ELSE ${col} END as '${element.cinchyColumn.name}'`);
           }
           const col = `[${element.cinchyColumn.name}].${targetColumnForQuery}`
@@ -855,13 +769,13 @@ export class Form {
     if (this.isChild && (!isNullOrUndefined(columnName) || (this.childFormParentId && this.childFormLinkId))) {
       let defaultWhere;
       if (!isNullOrUndefined(columnName)) {
-        defaultWhere = `where t.[${columnName}].[Cinchy Id] = ${rowId} and t.[Deleted] is null`
+        defaultWhere = `where t.[${columnName}].[Cinchy ID] = ${rowId} and t.[Deleted] is null`
       } else {
         defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] is null`
       }
       const whereConditionWithFilter = this.childFormFilter ? 
       `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
-      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy Id]`
+      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`
       let query: IQuery = new Query(
         `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
         null,
@@ -870,7 +784,7 @@ export class Form {
       return query;
     } else {
       let query: IQuery = new Query(
-        `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy Id] = ${rowId} and t.[Deleted] is null Order by t.[Cinchy Id]`,
+        `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] is null Order by t.[Cinchy ID]`,
         null
       );
 
@@ -890,7 +804,7 @@ export class Form {
   } {
 
     const [domain, table, column]: [string, string, string] = field.cinchyColumn.fileNameColumn?.split(".") ?? [];
-    const query = this.rowId ? `Insert into [${domain}].[${table}] ([Cinchy Id], [${field.cinchyColumn.name}]) values(@rowId, @fieldValue)` : null;
+    const query = this.rowId ? `Insert into [${domain}].[${table}] ([Cinchy ID], [${field.cinchyColumn.name}]) values(@rowId, @fieldValue)` : null;
 
     return {
       domain,
@@ -904,13 +818,7 @@ export class Form {
   }
 
 
-  isLinkedColumn(field: FormField, section: FormSection): boolean {
-
-    return coerceBooleanProperty(section.linkedColumnDetails && (field.cinchyColumn.name === section.linkedColumnDetails.linkLabel));
-  }
-
-
-  loadRecordData(rowId: number, rowData: any): void {
+  loadRecordData(rowId: number, allRowData: Array<{ [key: string]: any }>): void {
 
     const duplicateLabelColumns = {};
 
@@ -919,11 +827,11 @@ export class Form {
       section.fields.forEach((field: FormField) => {
 
         if (field.cinchyColumn.name) {
-          rowData.forEach((Rowelement) => {
+          allRowData.forEach((rowData: { [key: string]: any }) => {
 
           //TODO: Passing array value in case of multiselect
           if (field.cinchyColumn.dataType === "Choice" && field.cinchyColumn.isMultiple === true) {
-            const valueArray = Rowelement[field.cinchyColumn.name]?.split(",") ?? [];
+            const valueArray = rowData[field.cinchyColumn.name]?.split(",") ?? [];
 
             let optionArray = [];
 
@@ -942,14 +850,15 @@ export class Form {
 
             field.setInitialValue(optionArray);
           } else {
-            field.setInitialValue(Rowelement[field.cinchyColumn.name]);
+            field.setInitialValue(rowData[field.cinchyColumn.name]);
           }
 
           if (field.cinchyColumn.dataType === "Link") {
-            let optionArray: DropdownOption[] = [];
+            let optionArray: Array<DropdownOption> = new Array<DropdownOption>();
 
-            if (Rowelement[field.cinchyColumn.name]) {
+            if (rowData[field.cinchyColumn.name]) {
               const labelForColumn = field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name;
+
               let properLabelForColumn = " label";
 
               if (field.cinchyColumn.isDisplayColumn) {
@@ -961,11 +870,11 @@ export class Form {
                 }
               }
 
-              optionArray.push(new DropdownOption(Rowelement[field.cinchyColumn.name], Rowelement[labelForColumn + properLabelForColumn]));
+              optionArray.push(new DropdownOption(rowData[field.cinchyColumn.name], rowData[labelForColumn + properLabelForColumn]));
 
-              let result = new DropdownDataset(optionArray);
+              let result = new DropdownDataset(optionArray, true);
 
-              Rowelement[field.cinchyColumn.name] = field.value;
+              rowData[field.cinchyColumn.name] = field.value;
 
               if (isNullOrUndefined(field.dropdownDataset)) {
                 field.dropdownDataset = result;
@@ -982,7 +891,16 @@ export class Form {
   }
 
 
-  populateChildRecordData(rowId: number, rowData: any, preselectedRecord?: ILookupRecord): void {
+  /**
+   * After retrieving the records from a child form's table, process the row data into a form
+   * that the application can digest.
+   */
+  populateChildRecordData(
+      selectQueryResult: Array<{ [key: string]: any }>,
+      preselectedRecord?: ILookupRecord
+  ): void {
+
+    this.childFormRowValues = selectQueryResult.slice();
 
     this.sections.forEach((section: FormSection) => {
 
@@ -990,95 +908,69 @@ export class Form {
 
       section.fields.forEach((field: FormField) => {
 
-        childFormLinkIdValue = field.cinchyColumn.childFormLinkId ? field.cinchyColumn.childFormLinkId : "";
-        childFormLinkIdValue = childFormLinkIdValue.replaceAll("[", "");
-        childFormLinkIdValue = childFormLinkIdValue.replaceAll("]", "");
+        if (field.cinchyColumn.name) {
+          childFormLinkIdValue = field.cinchyColumn.childFormLinkId ? field.cinchyColumn.childFormLinkId : "";
+          childFormLinkIdValue = childFormLinkIdValue.replaceAll("[", "");
+          childFormLinkIdValue = childFormLinkIdValue.replaceAll("]", "");
 
-        if (field.cinchyColumn.linkedFieldId === field.id || childFormLinkIdValue === field.cinchyColumn.name) {
-          if (!rowData.length && !field.dropdownDataset) {
-            field.dropdownDataset = new DropdownDataset(preselectedRecord ? [new DropdownOption(preselectedRecord.id.toString(), preselectedRecord.label)] : []);
+          if (field.cinchyColumn.linkedFieldId === field.id || childFormLinkIdValue === field.cinchyColumn.name) {
+            if (!this.childFormRowValues.length && !field.dropdownDataset) {
+              field.dropdownDataset = new DropdownDataset(preselectedRecord ? [new DropdownOption(preselectedRecord.id.toString(), preselectedRecord.label)] : []);
+            }
+
+            field.linkedColumn = {
+              linkedField: field,
+              linkLabel: field.label
+            };
           }
 
-          section.linkedColumnDetails = {
-            linkedElement: field,
-            linkLabel: field.label
-          };
-        }
+          this.childFormRowValues.forEach((rowData: { [key: string]: any }) => {
 
-        if (isNullOrUndefined(section.childFormRowValues)) {
-          section.childFormRowValues = [];
-        }
+            if (field.cinchyColumn.dataType === "Choice" && field.cinchyColumn.isMultiple === true) {
+              const valueArray: Array<string> = (isNullOrUndefined(rowData[field.cinchyColumn.name]) ?
+                [] :
+                rowData[field.cinchyColumn.name].split(","));
 
-        if (isNullOrUndefined(field.cinchyColumn.name) || field.cinchyColumn.name === "") {
-          return;
-        }
+              let optionArray = [];
 
-        rowData.forEach(Rowelement => {
-          //TODO: Passing array value in case of multiselect
-          if (field.cinchyColumn.dataType === "Choice" && field.cinchyColumn.isMultiple === true) {
-            const valueArray = (isNullOrUndefined(Rowelement[field.cinchyColumn.name]) ?
-              [] :
-              Rowelement[field.cinchyColumn.name].split(","));
+              valueArray.forEach((value: string) => {
+                                                     
+                if (value) {
+                  optionArray.push({
+                    id: value.trim(),
+                    itemName: value.trim()
+                  });
+                }
+              });
 
-            let optionArray = [];
+              field.setInitialValue(optionArray);
+            } else {
+              field.setInitialValue(rowData[field.cinchyColumn.name]);
+            }
 
-            valueArray.forEach((element: any) => {
+            if (field.cinchyColumn.dataType === "Link") {
+              if (rowData[field.cinchyColumn.name]) {
+                let optionArray: DropdownOption[] = [];
+                const labelForColumn = field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name;
 
-              if (element !== "" && !isNullOrUndefined(element)) {
-                const value = element.trim();
-                const objValues = {
-                  id: value,
-                  itemName: value
-                };
-                optionArray.push(objValues);
-              }
-            });
+                optionArray.push(new DropdownOption(rowData[field.cinchyColumn.name], rowData[`${labelForColumn} label`]));
 
-            field.setInitialValue(optionArray);
-          } else {
-            field.setInitialValue(Rowelement[field.cinchyColumn.name]);
-          }
-
-          if (field.cinchyColumn.dataType === "Link") {
-            if (!isNullOrUndefined(Rowelement[field.cinchyColumn.name]) && Rowelement[field.cinchyColumn.name] !== "") {
-              let optionArray: DropdownOption[] = [];
-              const labelForColumn = field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name;
-
-              optionArray.push(new DropdownOption(Rowelement[field.cinchyColumn.name], Rowelement[labelForColumn + " label"]));
-
-              let result = new DropdownDataset(optionArray);
-
-              if (isNullOrUndefined(field.dropdownDataset)) {
-                field.dropdownDataset = result;
-              } else {
-                if (!isNullOrUndefined(field.dropdownDataset.options)) {
-                  field.dropdownDataset.options.push(result.options[0]);
+                if (isNullOrUndefined(field.dropdownDataset)) {
+                  field.dropdownDataset = new DropdownDataset(optionArray);
+                }
+                else {
+                  field.dropdownDataset.options.push(optionArray[0]);
                 }
               }
 
-              if (!isNullOrUndefined(field.dropdownDataset)) {
-                let dropdownResult = field.dropdownDataset.options.find(e => e.id === Rowelement[field.cinchyColumn.name]);
-                if (!isNullOrUndefined(dropdownResult)) {
-                  if (!field.cinchyColumn.isDisplayColumn) {
-                    Rowelement[field.cinchyColumn.name] = dropdownResult["label"];
-                  }
-                }
-
+              if (!field.cinchyColumn.isDisplayColumn) {
+                delete rowData[`${field.cinchyColumn.name} label`];
               }
             }
-
-            if (!field.cinchyColumn.isDisplayColumn) {
-              delete Rowelement[field.cinchyColumn.name + " label"];
-            }
-          }
-        });
+          });
+        }
       });
-
-      section.childFormRowValues = rowData;
     });
-
-    // TODO: determine if this is relevant or necessary
-    this.rowId = rowId;
   }
 
 
@@ -1119,11 +1011,11 @@ export class Form {
   /**
    * Updates a specific property on the root of the given field's child form
    */
-  updateChildformProperty(sectionIndex: number, fieldIndex: number, property: IAdditionalProperty): void {
+  updateChildFormProperty(sectionIndex: number, fieldIndex: number, property: IAdditionalProperty): void {
 
     if (
         this._sections?.length > sectionIndex &&
-        this._sections[sectionIndex].fields?.length < fieldIndex &&
+        this._sections[sectionIndex].fields?.length > fieldIndex &&
         this._sections[sectionIndex].fields[fieldIndex].childForm
     ) {
       this._sections[sectionIndex].fields[fieldIndex].childForm.updateRootProperty(property);
@@ -1136,7 +1028,7 @@ export class Form {
    */
   updateFieldAdditionalProperty(sectionIndex: number, fieldIndex: number, property: IAdditionalProperty): void {
 
-    if (this._sections?.length > sectionIndex && this._sections[sectionIndex].fields?.length < fieldIndex) {
+    if (this._sections?.length > sectionIndex && this._sections[sectionIndex].fields?.length > fieldIndex) {
       if (property.cinchyColumn) {
         this._sections[sectionIndex].fields[fieldIndex].cinchyColumn[property.propertyName] = property.propertyValue;
       }

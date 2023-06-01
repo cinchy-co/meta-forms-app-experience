@@ -17,9 +17,8 @@ import { AppStateService } from "../../services/app-state.service";
 import { IFormMetadata } from "../../models/form-metadata-model";
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { ILookupRecord } from "../../models/lookup-record.model";
-import { IframeUtil } from "../../util/iframe-util";
 
-import { isNullOrUndefined } from "util";
+import { IframeUtil } from "../../util/iframe-util";
 
 
 @Component({
@@ -115,7 +114,7 @@ export class FormWrapperComponent implements OnInit {
   async loadFormSections() {
 
     try {
-      const formSections = await this._cinchyQueryService.getFormSections().toPromise();
+      const formSections = await this._cinchyQueryService.getFormSectionsMetadata().toPromise();
 
       this.formSectionsMetadata = formSections;
 
