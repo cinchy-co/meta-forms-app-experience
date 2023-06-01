@@ -266,6 +266,12 @@ export class Form {
     clonedForm.sections = this.sections;
 
     clonedForm.fieldsByColumnName = {};
+    clonedForm.childFieldsLinkedToColumnName = this.childFieldsLinkedToColumnName;
+
+    clonedForm.errorFields = this.errorFields;
+
+    clonedForm.parentForm = this.parentForm;
+    clonedForm.tableMetadata = JSON.parse(JSON.stringify(this.tableMetadata));
 
     clonedForm.sections?.forEach((section: FormSection, sectionIndex: number) => {
 
@@ -484,16 +490,16 @@ export class Form {
 
         if (isNullOrUndefined(cinchyVersion) || cinchyVersion.startsWith("4.")) {
           queryString = `
-            INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(",")})
-              VALUES (${assignmentValues.join(",")})
+            INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(", ")})
+              VALUES (${assignmentValues.join(", ")})
               SELECT @cinchy_row_id`;
         }
         else {
           queryString = `
             CREATE TABLE #tmp([id] int) 
-              INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(",")})
+              INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(", ")})
               OUTPUT INSERTED.[Cinchy ID] INTO #tmp ([id])
-              VALUES (${assignmentValues.join(",")})
+              VALUES (${assignmentValues.join(", ")})
               SELECT x.[id] as 'id' FROM #tmp x`;
         }
 
@@ -507,7 +513,7 @@ export class Form {
 
         query = new Query(
           `UPDATE t
-            SET ${assignmentSetClauses.join(",")}
+            SET ${assignmentSetClauses.join(", ")}
             FROM [${this.targetTableDomain}].[${this.targetTableName}] t
             WHERE t.[Cinchy ID] = ${this.rowId}
               AND t.[Deleted] IS NULL
@@ -689,10 +695,12 @@ export class Form {
     const ifUpdateAttachedFilePresent = attachedFilesInfo.find(fileInfo => fileInfo.query);
 
     if (assignmentValues?.length) {
+      // TODO: Due to CIN-02087, if the user has not explicitly included the linked field in the form and populated it as part of filling out the data,
+      //       this query will resolve and create the record in the child table, but it will not link that record back to the parent form
       if (!this.rowId) {
         query = new Query(
-          `INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(",")})
-            VALUES (${assignmentValues.join(",")})`,
+          `INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(", ")})
+            VALUES (${assignmentValues.join(", ")})`,
           params,
           attachedFilesInfo
         );
@@ -705,7 +713,7 @@ export class Form {
 
         query = new Query(
           `UPDATE t
-            SET ${assignmentSetClauses.join(",")}
+            SET ${assignmentSetClauses.join(", ")}
             FROM [${this.targetTableDomain}].[${this.targetTableName}] t
             WHERE t.[Cinchy ID] = ${this.rowId}
               AND t.[Deleted] IS NULL`,
@@ -904,18 +912,18 @@ export class Form {
 
     this.sections.forEach((section: FormSection) => {
 
-      let childFormLinkIdValue;
+      let childFormLinkIdValue: string;
 
       section.fields.forEach((field: FormField) => {
 
         if (field.cinchyColumn.name) {
-          childFormLinkIdValue = field.cinchyColumn.childFormLinkId ? field.cinchyColumn.childFormLinkId : "";
-          childFormLinkIdValue = childFormLinkIdValue.replaceAll("[", "");
-          childFormLinkIdValue = childFormLinkIdValue.replaceAll("]", "");
+          childFormLinkIdValue = field.cinchyColumn.childFormLinkId || "";
+          childFormLinkIdValue = childFormLinkIdValue.replace(new RegExp("[\[]", "g"), "");
+          childFormLinkIdValue = childFormLinkIdValue.replace(new RegExp("[\]]", "g"), "");
 
           if (field.cinchyColumn.linkedFieldId === field.id || childFormLinkIdValue === field.cinchyColumn.name) {
             if (!this.childFormRowValues.length && !field.dropdownDataset) {
-              field.dropdownDataset = new DropdownDataset(preselectedRecord ? [new DropdownOption(preselectedRecord.id.toString(), preselectedRecord.label)] : []);
+              field.dropdownDataset = new DropdownDataset(preselectedRecord ? [new DropdownOption(preselectedRecord.id.toString(), preselectedRecord.label)] : [], true);
             }
 
             field.linkedColumn = {

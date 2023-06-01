@@ -227,6 +227,7 @@ export class FormHelperService {
 
       form.fieldsByColumnName = parentFieldsByColumn;
 
+      // TODO: this should be a forEach
       for (let i = 0; i < allChildForms.length; i++) {
         if (allChildForms[i].childFormParentId && allChildForms[i].childFormLinkId) {
           let parentColName = this._parseColumnNameByChildFormLinkId(allChildForms[i].childFormParentId);

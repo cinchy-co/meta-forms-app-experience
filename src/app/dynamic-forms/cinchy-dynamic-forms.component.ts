@@ -176,7 +176,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       const existingQueryIndex = this._pendingChildFormQueries?.findIndex((query: IChildFormQuery) => {
 
-        return (query.childFormId === childFormData.childForm.id);
+        return (query.rowId === childRowId);
       });
 
       if (existingQueryIndex > -1) {
@@ -674,6 +674,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         });
 
         if (data.presetValues) {
+          newValues["Cinchy ID"] = resultId;
+
           const rowDataIndex = childFormRowValues.findIndex((rowData: { [key: string]: any }) => {
 
             return (rowData["Cinchy ID"] === resultId);
@@ -683,7 +685,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         }
         else {
           childFormRowValues.push(
-            Object.assign(newValues, { "Cinchy ID": -1 })
+            Object.assign(newValues, { "Cinchy ID": this._lastTemporaryCinchyId-- })
           );
         }
 

@@ -137,9 +137,6 @@ export class ChildFormComponent {
                       }
                     ]
                   );
-
-                  // DEBUG
-                  console.log(this.childFormData.childForm.sections[sectionIndex].fields[fieldIndex].dropdownDataset);
                 }
               }
             }

@@ -1,5 +1,5 @@
 import { BehaviorSubject, Subject } from "rxjs";
-import { debounceTime, take, takeUntil } from "rxjs/operators";
+import { takeUntil } from "rxjs/operators";
 
 import {
   Component,
@@ -15,6 +15,7 @@ import {
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { FormControl } from "@angular/forms";
+import { MatOption } from "@angular/material/core";
 import { MatSelect } from "@angular/material/select";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
@@ -38,7 +39,6 @@ import { ConfigService } from "../../../services/config.service";
 import { ToastrService } from "ngx-toastr";
 
 import * as R from "ramda";
-import { MatOption } from "@angular/material/core";
 
 
 @Component({
@@ -85,7 +85,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   dropdownListFromLinkedTable;
   dropdownSettings;
   dropdownSetOptions: Array<DropdownOption>;
-  filteredOptions;
   isCursorIn: boolean = false;
   isLoading: boolean;
   maxLimitForMaterialSelect = 4000;
@@ -263,13 +262,12 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       } else {
         search = search.toLowerCase();
 
-        // filter the lis
+        // filter the list
         this.filteredListMulti.next(
           this.dropdownSetOptions.filter(item => item.label.toLowerCase().indexOf(search) > -1)
         );
       }
     }
-
   }
 
 
@@ -438,13 +436,12 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   }
 
 
-  setFilteredOptions(dropdownOptions?: Array<DropdownOption>): void {
+  setFilteredOptions(): void {
 
-    this.filteredOptions = dropdownOptions ? dropdownOptions : this.dropdownSetOptions;
     this.selectedValues = [];
 
     // load the initial list
-    this.filteredListMulti.next(this.dropdownSetOptions.slice());
+    this.filteredListMulti.next(this.dropdownSetOptions);
 
     if (this.dropdownSetOptions.length > this.maxLimitForMaterialSelect) {
       this.charactersAfterWhichToShowList = 2;
@@ -479,6 +476,9 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   valueChanged(): void {
+
+    // DEBUG
+    console.log(this.selectedValues);
 
     this.onChange.emit({
       form: this.form,
