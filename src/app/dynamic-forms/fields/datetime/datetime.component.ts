@@ -80,8 +80,6 @@ export class DatetimeComponent implements OnChanges, OnInit {
 
 
   private _setValue(): void {
-    console.log('_setValue', this.field?.value);
-    console.log('_setValue', this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : "");
     this.value = this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : "";
   }
 }
