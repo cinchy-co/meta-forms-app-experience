@@ -564,7 +564,9 @@ export class Form {
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
               try {
-                params[paramName] = ((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null;
+                params[paramName] = field.value ? 
+                  ( ((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null ) :
+                  null;
               }
               catch (error) {
                 // Do nothing
@@ -622,7 +624,7 @@ export class Form {
 
             if (isNullOrUndefined(field.cinchyColumn.linkTargetColumnName)) {
               if (isNullOrUndefined(this.rowId)) {
-                assignmentValues.push(`'${params[paramName]}'`);
+                assignmentValues.push(`${paramName}`);
               }
               else if ((field.cinchyColumn.dataType === "Text") && !field.value) {
                 assignmentValues.push((params[paramName] !== "") ? `cast(${paramName} as nvarchar(100))` : paramName);
@@ -654,7 +656,7 @@ export class Form {
                 if (field.cinchyColumn.dataType === "Link") {
                   if (isNullOrUndefined(this.rowId)) {
                     if (field.form.isChild && field.form.flatten && field.form.childFormParentId) {
-                      let childFormAssignmentValue = `ResolveLink(${params[paramName]},'Cinchy ID')`;
+                      let childFormAssignmentValue = `ResolveLink(${paramName},'Cinchy ID')`;
 
                       const columnMetadata = field.form.tableMetadata["Columns"]?.find((column: { columnId: number }) => {
 
@@ -668,14 +670,14 @@ export class Form {
                         });
 
                         if (primaryLinkedColumn) {
-                          childFormAssignmentValue = `ResolveLink('${params[paramName]}','${primaryLinkedColumn.name}')`;
+                          childFormAssignmentValue = `ResolveLink(${paramName},'${primaryLinkedColumn.name}')`;
                         }
                       }
 
                       assignmentValues.push(childFormAssignmentValue);
                     }
                     else {
-                      assignmentValues.push(`ResolveLink(${params[paramName]},'Cinchy ID')`);
+                      assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
                     }
                   }
                   else {
