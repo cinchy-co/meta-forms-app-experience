@@ -25,7 +25,7 @@
 
 <ng-template #formFields let-section="section" let-sectionIndex="sectionIndex">
   <div *ngFor="let field of section.fields; let fieldIndex = index" style="display: flex;">
-    <div class="formField" *ngIf="!field.hide">
+    <div class="form-field" *ngIf="!field.hide">
       <cinchy-checkbox *ngIf="(field.cinchyColumn.dataType === 'Yes/No')"
                         [targetTableName]="field.cinchyColumn.tableName"
                         [field]="field"

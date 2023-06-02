@@ -23,14 +23,15 @@
       <input matInput readonly type="text"
              [(ngModel)]="value"
              (blur)="valueChanged()">
-      <mat-datepicker-toggle matSuffix [for]="picker3"></mat-datepicker-toggle>
-      <mat-datepicker #picker3></mat-datepicker>
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
     </mat-form-field>
     <mat-form-field class="form-control hide-date">
       <input matInput
              [disabled]="!canEdit"
+             [(ngModel)]="datePickerValue"
              (dateChange)="valueChanged()"
-             [matDatepicker]="picker3" [value]="value">
+             [matDatepicker]="picker">
     </mat-form-field>
     <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !value">
       *{{field.label}} is Required.

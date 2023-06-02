@@ -41,10 +41,9 @@ export class DatetimeComponent implements OnChanges, OnInit {
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
   showError: boolean;
-  value: string;
-
+  value: string;            // Stores the value for the actual form field with the correctly formatted date
+  datePickerValue: string;  // Stores the raw unformatted value from the date picker
   faCalendar = faCalendar;
-
 
   get canEdit(): boolean {
 
@@ -67,11 +66,12 @@ export class DatetimeComponent implements OnChanges, OnInit {
 
 
   valueChanged(): void {
+    this.value = this.datePickerValue ? moment(this.datePickerValue).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : null;
 
     this.onChange.emit({
       form: this.form,
       fieldIndex: this.fieldIndex,
-      newValue: this.value ? moment(this.value).format("MM/DD/yyyy") : null,
+      newValue: this.value,
       sectionIndex: this.sectionIndex,
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
@@ -80,7 +80,8 @@ export class DatetimeComponent implements OnChanges, OnInit {
 
 
   private _setValue(): void {
-
-    this.value = this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "") : "";
+    console.log('_setValue', this.field?.value);
+    console.log('_setValue', this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : "");
+    this.value = this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : "";
   }
 }
