@@ -965,10 +965,10 @@ export class Form {
 
                 optionArray.push(new DropdownOption(rowData[field.cinchyColumn.name], rowData[`${labelForColumn} label`]));
 
-                if (isNullOrUndefined(field.dropdownDataset)) {
-                  field.dropdownDataset = new DropdownDataset(optionArray);
+                if (isNullOrUndefined(field.dropdownDataset?.options) || field.dropdownDataset.options.length === 0) {
+                  field.dropdownDataset = new DropdownDataset(optionArray, true);
                 }
-                else {
+                else if (field.dropdownDataset.options.filter(x => x.id == rowData[field.cinchyColumn.name]).length === 0) {
                   field.dropdownDataset.options.push(optionArray[0]);
                 }
               }
