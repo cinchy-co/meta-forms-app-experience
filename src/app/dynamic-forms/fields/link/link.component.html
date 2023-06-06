@@ -108,7 +108,7 @@
                [matAutocomplete]="auto"
                (blur)="setToLastValueSelected()"
                (focus)="getListItems(false)"
-               (keydown)="clearSelectedValue($event)"
+               (keyup)="clearSelectedValue($event)"
                (ngModelChange)="filterChanged()" />
         <mat-icon>
           search

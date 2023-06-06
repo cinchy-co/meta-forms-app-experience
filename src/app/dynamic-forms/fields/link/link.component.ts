@@ -107,7 +107,7 @@ export class LinkComponent implements OnChanges, OnInit {
   autocompleteText: string;
   selectedValue: DropdownOption;
 
-  clearOption = new DropdownOption("DELETE", "");
+  clearOption = new DropdownOption("", "");
 
   renderImageFiles = true;
 
@@ -244,12 +244,12 @@ export class LinkComponent implements OnChanges, OnInit {
     // read the current state of this.autocompleteText
     this._changeDetectorRef.detectChanges();
 
-    if ((key === "Delete" || key === "Backspace") && !this.autocompleteText?.length) {
+    if (key === "Delete" || (key === "Backspace" && this.autocompleteText?.length === 0)) {
+      this.autocompleteText = '';
       this.selectedValue = this.clearOption;
 
-      this.filteredOptions = new Array<DropdownOption>();
-
       this.valueChanged();
+      this.filterChanged();
     }
   }
 

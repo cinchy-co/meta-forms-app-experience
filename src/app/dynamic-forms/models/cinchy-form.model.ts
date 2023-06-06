@@ -677,11 +677,19 @@ export class Form {
                       assignmentValues.push(childFormAssignmentValue);
                     }
                     else {
-                      assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
+                      if (params[paramName]) {
+                        assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
+                      } else {
+                        assignmentValues.push("NULL");
+                      }
                     }
                   }
                   else {
-                    assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
+                    if (params[paramName]) {
+                      assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
+                    } else {
+                      assignmentValues.push("NULL");
+                    }
                   }
                 }
                 else {
