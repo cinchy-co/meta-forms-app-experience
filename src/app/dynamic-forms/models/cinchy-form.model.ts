@@ -935,22 +935,36 @@ export class Form {
           }
 
           this.childFormRowValues.forEach((rowData: { [key: string]: any }) => {
+            let linkColumnLabelKey = `${(field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name)} label`;
+
+            if (field.cinchyColumn.dataType === "Link" && field.cinchyColumn.isMultiple) {
+              
+              let linkIds: Array<string> = !isNullOrUndefined(rowData[field.cinchyColumn.name]) ?
+                rowData[field.cinchyColumn.name].split(",").map(x => x.trim()) :
+                [];
+
+              let linkLabels: Array<string> = !isNullOrUndefined(rowData[linkColumnLabelKey]) ?
+                rowData[linkColumnLabelKey].split(",").map(x => x.trim()) :
+                [];
+
+              rowData[field.cinchyColumn.name] = linkIds;
+              rowData[linkColumnLabelKey] = linkLabels;
+            }
 
             if (field.cinchyColumn.dataType === "Choice" && field.cinchyColumn.isMultiple === true) {
-              const valueArray: Array<string> = (isNullOrUndefined(rowData[field.cinchyColumn.name]) ?
-                [] :
-                rowData[field.cinchyColumn.name].split(","));
+              let choiceValues: Array<string> = !isNullOrUndefined(rowData[field.cinchyColumn.name]) ?
+                rowData[field.cinchyColumn.name].split(",") :
+                [];
 
               let optionArray = [];
+              choiceValues.forEach((value: string) => {         
+                if (isNullOrUndefined(value))
+                  return;
 
-              valueArray.forEach((value: string) => {
-                                                     
-                if (value) {
-                  optionArray.push({
-                    id: value.trim(),
-                    itemName: value.trim()
-                  });
-                }
+                optionArray.push({
+                  id: value.trim(),
+                  itemName: value.trim()
+                });
               });
 
               field.setInitialValue(optionArray);
@@ -959,22 +973,34 @@ export class Form {
             }
 
             if (field.cinchyColumn.dataType === "Link") {
-              if (rowData[field.cinchyColumn.name]) {
-                let optionArray: DropdownOption[] = [];
-                const labelForColumn = field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name;
 
-                optionArray.push(new DropdownOption(rowData[field.cinchyColumn.name], rowData[`${labelForColumn} label`]));
+              if (rowData[field.cinchyColumn.name]) {
+                let linkIds = Array.isArray(rowData[field.cinchyColumn.name]) ?
+                  rowData[field.cinchyColumn.name] :
+                  [rowData[field.cinchyColumn.name]];
+
+                let linkLabels = Array.isArray(rowData[linkColumnLabelKey]) ?
+                  rowData[linkColumnLabelKey] :
+                  [rowData[linkColumnLabelKey]];
+
+                let optionArray: DropdownOption[] = [];
+                for (let i = 0; i < linkIds.length; i++) {
+                  optionArray.push(new DropdownOption(linkIds[i], linkLabels[i]));
+                }
 
                 if (isNullOrUndefined(field.dropdownDataset?.options) || field.dropdownDataset.options.length === 0) {
                   field.dropdownDataset = new DropdownDataset(optionArray, true);
-                }
-                else if (field.dropdownDataset.options.filter(x => x.id == rowData[field.cinchyColumn.name]).length === 0) {
-                  field.dropdownDataset.options.push(optionArray[0]);
+                } else {
+                  optionArray.forEach(opt => {
+                    if (field.dropdownDataset.options.filter(x => x.id == opt.id).length === 0) {
+                      field.dropdownDataset.options.push(opt);
+                    }
+                  });
                 }
               }
 
               if (!field.cinchyColumn.isDisplayColumn) {
-                delete rowData[`${field.cinchyColumn.name} label`];
+                delete rowData[linkColumnLabelKey];
               }
             }
           });

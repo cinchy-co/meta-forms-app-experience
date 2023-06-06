@@ -277,14 +277,12 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       let selectedIds: Array<string>;
 
       // Fallback for legacy logic
-      if (this.field.dropdownDataset.options.length === 1 && this.field.dropdownDataset.options[0].id.includes(",")) {
-        selectedIds = this.field.dropdownDataset.options[0].id?.split(",").map((id: string) => {
-
-          return id.trim();
-        });
+      if (this.field.dropdownDataset.options.length === 1 && 
+          this.field.dropdownDataset.options[0].id.includes(",")) {
+            
+        selectedIds = this.field.dropdownDataset.options[0].id?.split(",").map((id: string) => id.trim());
 
         this.field.dropdownDataset.options = this.field.dropdownDataset.options[0].label.split(",").map((label: string, index: number) => {
-
           return new DropdownOption(
             selectedIds[index],
             label.trim()
@@ -292,34 +290,18 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         });
       }
 
-      let fieldIds = new Array<string>();
-
       if (this.field.value) {
         // Fallback for legacy logic
         if (typeof this.field.value === "string") {
-          fieldIds = this.field.value.split(",").map((id: string) => {
-
-            return id.trim();
-          });
+          selectedIds = this.field.value.split(",").map((id: string) => id.trim() );
         }
         else if (Array.isArray(this.field.value)) {
-          fieldIds = this.field.value;
+          selectedIds = this.field.value;
         }
       }
 
-      selectedIds = fieldIds.filter((id: string) => {
-
-        return fieldIds.includes(id);
-      });
-
       if (selectedIds?.length) {
-        return selectedIds.map((id: string) => {
-
-          return this.field.dropdownDataset.options.find((option: DropdownOption) => {
-
-            return (option.id === id);
-          });
-        });
+        return selectedIds.map((id: string) => this.field.dropdownDataset.options.find((option: DropdownOption) => option.id === id ));
       }
     }
 
@@ -495,7 +477,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   private _setValue(): void {
-
     if (this.field.dropdownDataset?.options?.length || this.isInChildForm) {
       this.selectedValues = this.generateMultipleOptionsFromSingle();
     }

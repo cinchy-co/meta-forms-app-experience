@@ -66,21 +66,19 @@ export class ChildFormComponent {
               }
               else if (field.dropdownDataset?.options?.length) {
                 if (field.cinchyColumn.isMultiple) {
-                  const allFieldValues = this.childFormData.presetValues[field.cinchyColumn.name]?.split(",").map((value: string) => {
 
-                    return value.trim();
-                  });
+                  const linkIds = this.childFormData.presetValues[field.cinchyColumn.name];
 
                   // Search by ID, then label
                   let result = field.dropdownDataset.options.filter((option: DropdownOption) => {
 
-                    return (allFieldValues.indexOf(option.id) > -1 || allFieldValues.indexOf(option.label) > -1);
+                    return (linkIds.indexOf(option.id) > -1 || linkIds.indexOf(option.label) > -1);
                   });
 
                   this.childFormData.childForm.updateFieldValue(
                     sectionIndex,
                     fieldIndex,
-                    result?.length ? result.map(item => item.id).join(",") : []
+                    result?.length ? result.map(item => item.id) : []
                   );
                 }
                 else {
