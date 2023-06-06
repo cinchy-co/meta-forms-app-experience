@@ -515,7 +515,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
               });
             });
 
-            displayValueSet[rowIndex][sortedKey] = linkDisplayValues.join(", ");
+            displayValueSet[rowIndex][sortedKey] = linkDisplayValues.length ? linkDisplayValues.join(", ") : null;
           }
           else {
             displayValueSet[rowIndex][sortedKey] = rowData[`${sortedKey} label`]?.toString() || rowData[sortedKey]?.toString();
