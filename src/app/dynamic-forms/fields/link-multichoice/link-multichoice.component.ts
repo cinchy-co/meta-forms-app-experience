@@ -459,9 +459,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   valueChanged(): void {
 
-    // DEBUG
-    console.log(this.selectedValues);
-
     this.onChange.emit({
       form: this.form,
       fieldIndex: this.fieldIndex,

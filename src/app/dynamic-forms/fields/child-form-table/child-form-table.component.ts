@@ -1,5 +1,5 @@
 import { takeUntil } from "rxjs/operators";
-import { Subject, Subscription } from "rxjs";
+import { Subject } from "rxjs";
 
 import {
   Component,
@@ -165,10 +165,20 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   addChildRecord(dialogTitle: string): void {
 
     this._updateEntitlements();
+  
+    // Find lowest negative Cinchy ID (these are all new records) so that we can generate a new one
+    let lowestCinchyId = 0;
+    this.childForm.childFormRowValues?.forEach(rowVal => {
+      if (rowVal['Cinchy ID'] < lowestCinchyId) {
+        lowestCinchyId = rowVal['Cinchy ID'];
+      }
+    });
+    lowestCinchyId--;
 
     this.childFormOpened.emit(
       {
         childForm: this.childForm,
+        presetValues: { "Cinchy ID": lowestCinchyId },
         title: dialogTitle
       }
     );
@@ -257,7 +267,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     this._updateEntitlements(rowData);
 
     this.childForm.rowId = rowData["Cinchy ID"];
-
+    
     this.childFormOpened.emit(
       {
         childForm: this.childForm,
