@@ -86,9 +86,8 @@ export class NumberComponent implements OnChanges, OnInit {
 
 
   transformAmount() {
-
     if (this.formattedAmount) {
-      this.numeralValue = new NumeralPipe(this.field.value);
+      this.numeralValue = new NumeralPipe(this.formattedAmount);
       this.formattedAmount = this.field.cinchyColumn.numberFormatter ? this.numeralValue.format(this.field.cinchyColumn.numberFormatter) : this.numeralValue.value().toString();
     }
     else {
@@ -110,7 +109,6 @@ export class NumberComponent implements OnChanges, OnInit {
 
 
   valueChanged(): void {
-
     this.onChange.emit({
       form: this.form,
       fieldIndex: this.fieldIndex,
@@ -123,7 +121,6 @@ export class NumberComponent implements OnChanges, OnInit {
 
 
   private _setValue(): void {
-
     if (this.field?.cinchyColumn?.numberFormatter && this.field?.value) {
       this.numeralValue = new NumeralPipe(this.field.value);
       this.formattedAmount = this.numeralValue.format(this.field.cinchyColumn.numberFormatter);

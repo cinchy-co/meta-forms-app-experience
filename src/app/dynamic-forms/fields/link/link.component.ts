@@ -382,7 +382,9 @@ export class LinkComponent implements OnChanges, OnInit {
           return coerceBooleanProperty(option.label);
         }).sort((a: DropdownOption, b: DropdownOption) => {
 
-          return (a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+          var lblA = a.label?.toString()?.toLocaleLowerCase() ?? '';
+          var lblB = b.label?.toString()?.toLocaleLowerCase() ?? '';
+          return (lblA.localeCompare(lblB));
         }),
         dropdownDataset.isDummy
       );

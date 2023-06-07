@@ -14,11 +14,7 @@ import { IFieldChangedEvent } from "../../interface/field-changed-event";
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 
-import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
-import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
-
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
-
 
 //#region Cinchy Dynamic Choice Field
 /**
@@ -53,7 +49,7 @@ export class ChoiceComponent implements OnChanges, OnInit {
 
   showError: boolean;
   value: string;
-  options: Array<DropdownOption>;
+  options: Array<string>;
 
   faListUl = faListUl;
 
@@ -97,24 +93,7 @@ export class ChoiceComponent implements OnChanges, OnInit {
         }
       })
     }
-
-    allOptions = allOptions.filter(n => n);
-
     this.options = allOptions.slice();
-
-    this.onChange.emit({
-      additionalPropertiesToUpdate: [
-        {
-          propertyName: "dropdownDataset",
-          propertyValue: new DropdownDataset(allOptions)
-        }
-      ],
-      form: this.form,
-      fieldIndex: this.fieldIndex,
-      newValue: this.value,
-      sectionIndex: this.sectionIndex,
-      targetTableName: this.targetTableName
-    });
   }
 
 

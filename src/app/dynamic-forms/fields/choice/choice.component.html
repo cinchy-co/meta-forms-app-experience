@@ -1,4 +1,4 @@
-<div *ngIf="field.dropdownDataset">
+<div *ngIf="options">
   <div class="full-width-element divMarginBottom">
     <div class="link-labels">
       <div>
@@ -24,8 +24,8 @@
                   (selectionChange)="valueChanged()"
                   [ngModelOptions]="{ standalone: true }">
         <mat-option [value]="">-</mat-option>
-        <mat-option *ngFor="let dropdownOption of options" [value]="dropdownOption">
-          {{ dropdownOption }}
+        <mat-option *ngFor="let opt of options" [value]="opt">
+          {{ opt }}
         </mat-option>
       </mat-select>
     </div>

@@ -445,14 +445,10 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   toggleSelectAll(selectAll: boolean): void {
-
-    if (selectAll) {
-      this.selectedValues = this.filteredListMulti.value;
-    }
-    else {
-      this.selectedValues = [];
-    }
-
+    
+    this.selectedValues = selectAll ?
+      this.filteredListMulti.value:
+      [];
     this.valueChanged();
   }
 

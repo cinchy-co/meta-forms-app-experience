@@ -14,9 +14,6 @@ import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
-import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
-import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
-
 
 /**
  * This section is used to create Multi choice driopdownList
@@ -50,6 +47,7 @@ export class MultichoiceComponent implements OnChanges {
   choiceFilter: string;
   showError: boolean;
   value: Array<string>;
+  options: Array<string>;
 
   faListUl = faListUl;
 
@@ -70,34 +68,44 @@ export class MultichoiceComponent implements OnChanges {
 
   ngOnInit(): void {
 
-    this._setValue()
+    this._setValue();
 
-    if (this.field.cinchyColumn.choiceOptions) {
-      const allOptions = this.field.cinchyColumn.choiceOptions.split(",").map((option: string) => {
+    const choices = this.field.cinchyColumn.choiceOptions;
+    const splitFromInvertedCommas = choices?.split(`"`) ?? [];
 
-        return new DropdownOption(option, option);
-      });
+    let allOptions = [];
+    let optionsInSubString = [];
 
-      this.onChange.emit({
-        additionalPropertiesToUpdate: [
-          {
-            propertyName: "dropdownDataset",
-            propertyValue: new DropdownDataset(allOptions)
-          }
-        ],
-        form: this.form,
-        fieldIndex: this.fieldIndex,
-        newValue: this.value,
-        sectionIndex: this.sectionIndex,
-        targetTableName: this.targetTableName
-      });
+    if (splitFromInvertedCommas.length === 1) {
+      allOptions = choices?.split(",") ?? [];
     }
+    else {
+      splitFromInvertedCommas.forEach(option => {
+
+        if (option && (option[0] === "," || option[option.length - 1] === ",")) {
+          optionsInSubString = option.split(",");
+          allOptions = [...allOptions, ...optionsInSubString];
+        }
+        else if (option) {
+          allOptions.push(option);
+        }
+      })
+    }
+    this.options = allOptions.slice();
   }
 
 
   resetFilter() {
 
     this.choiceFilter = "";
+  }
+
+  toggleSelectAll(selectAll: boolean): void {
+
+    this.value = selectAll ?
+      this.options.slice():
+      [];
+    this.valueChanged();
   }
 
 

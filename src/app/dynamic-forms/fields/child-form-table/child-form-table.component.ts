@@ -35,6 +35,7 @@ import { AppStateService } from "../../../services/app-state.service";
 import { NumeralPipe } from "ngx-numeral";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
+import { ConfigService } from "src/app/services/config.service";
 
 
 /**
@@ -102,7 +103,8 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     private _cinchyService: CinchyService,
     private _datePipe: DatePipe,
     private _dialog: MatDialog,
-    private _toastr: ToastrService
+    private _toastr: ToastrService,
+    private _configService: ConfigService
   ) {}
 
 
@@ -500,9 +502,9 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
           }
           else if (currentField?.cinchyColumn.dataType === "Link" && rowData[sortedKey]) {
             let linkDisplayValues = new Array<string>();
+            let isFile = coerceBooleanProperty(currentField.cinchyColumn.attachmentUrl);
 
             const ids: Array<string> = currentField.cinchyColumn.isMultiple ? rowData[sortedKey] : [rowData[sortedKey]];
-
             ids?.forEach((id: string) => {
 
               currentField.dropdownDataset.options.forEach((option: DropdownOption) => {
@@ -510,12 +512,29 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
                 // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
                 //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
                 if (option.id == id) {
-                  linkDisplayValues.push(option.label);
+
+                  if (isFile) {
+                    let replacedCinchyIdUrl = currentField.cinchyColumn.attachmentUrl.replace("@cinchyid", rowData["Cinchy ID"]);
+                    let fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", option.id);
+                    let lowercaseFileName = option.label.toLowerCase();
+                    let isImage = lowercaseFileName.endsWith(".png") ||
+                      lowercaseFileName.endsWith(".jpg") ||
+                      lowercaseFileName.endsWith(".jpeg") ||
+                      lowercaseFileName.endsWith(".gif") ||
+                      lowercaseFileName.endsWith(".svg");
+                    let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="https://upload.wikimedia.org/wikipedia/en/3/33/Patrick_Star.svg"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
+                    linkDisplayValues.push(displayValue);
+                  } else {
+                    linkDisplayValues.push(option.label);
+                  }
                 }
               });
             });
 
             displayValueSet[rowIndex][sortedKey] = linkDisplayValues.length ? linkDisplayValues.join(", ") : null;
+          }
+          else if (Array.isArray(rowData[sortedKey])) {
+            displayValueSet[rowIndex][sortedKey] = rowData[sortedKey].join(', ');
           }
           else {
             displayValueSet[rowIndex][sortedKey] = rowData[`${sortedKey} label`]?.toString() || rowData[sortedKey]?.toString();

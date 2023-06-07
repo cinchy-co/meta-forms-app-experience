@@ -976,6 +976,7 @@ export class Form {
               });
 
               field.setInitialValue(optionArray);
+              rowData[field.cinchyColumn.name] = choiceValues;
             } else {
               field.setInitialValue(rowData[field.cinchyColumn.name]);
             }

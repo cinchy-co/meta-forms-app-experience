@@ -1,4 +1,4 @@
-<div *ngIf="field.dropdownDataset">
+<div *ngIf="options">
   <div class="full-width-element divMarginBottom">
     <div class="link-labels">
       <div>
@@ -9,27 +9,39 @@
         {{ field.label }}
         {{ (field.cinchyColumn.isMandatory && !value) ? '*' :'' }}
       </label>
-      <mat-icon *ngIf="field.caption" class="info-icon"
-                ngbTooltip="{{field.caption}}"
-                placement="auto"
-                container="body"
-                matTooltipClass="tool-tip-body"
-                matTooltipPosition="above">
+      <mat-icon *ngIf="field.caption" 
+        class="info-icon"
+        ngbTooltip="{{field.caption}}"
+        placement="auto"
+        container="body"
+        matTooltipClass="tool-tip-body"
+        matTooltipPosition="above">
         info
       </mat-icon>
     </div>
     <div class="full-width-element divMarginBottom" *ngIf="canEdit">
-      <mat-select class="form-control"
-                  [(ngModel)]="value"
-                  [ngModelOptions]="{ standalone: true }"
-                  (openedChange)="resetFilter()"
-                  (selectionChange)="valueChanged()">
-        <input matInput type="search" placeholder="Search {{ field.label }}" class="form-control"
-               [(ngModel)]="choiceFilter" [ngModelOptions]="{ standalone: true }">
+      <mat-select multiple 
+          class="form-control"
+          [(ngModel)]="value"
+          [ngModelOptions]="{ standalone: true }"
+          (openedChange)="resetFilter()"
+          (selectionChange)="valueChanged()">
+        <mat-option>
+          <ngx-mat-select-search 
+            class="multi-search"
+            [(ngModel)]="choiceFilter"
+            [ngModelOptions]="{ standalone: true }"
+            [showToggleAllCheckbox]="true" 
+            (toggleAll)="toggleSelectAll($event)"
+            placeholderLabel="Search {{ field.label }}"
+            noEntriesFoundLabel="No entries matched your search">
+          </ngx-mat-select-search>
+        </mat-option>
 
-        <mat-option *ngFor="let dropdownOption of field.dropdownDataset?.options | filterBy: choiceFilter"
-                    [value]="dropdownOption.id">
-          {{ dropdownOption }}
+        <mat-option 
+          *ngFor="let opt of options | filterBy: choiceFilter"
+          [value]="opt">
+          {{ opt }}
         </mat-option>
       </mat-select>
     </div>
