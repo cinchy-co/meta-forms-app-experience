@@ -522,7 +522,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
                       lowercaseFileName.endsWith(".jpeg") ||
                       lowercaseFileName.endsWith(".gif") ||
                       lowercaseFileName.endsWith(".svg");
-                    let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="https://upload.wikimedia.org/wikipedia/en/3/33/Patrick_Star.svg"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
+                    let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="${fileUrl}"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
                     linkDisplayValues.push(displayValue);
                   } else {
                     linkDisplayValues.push(option.label);
