@@ -106,7 +106,7 @@ export class FormField {
       });
     }
     else {
-      this.value = value ?? [];
+      this.value = value;
     }
 
     this.formControl?.setValue(this.value);
