@@ -710,7 +710,7 @@ export class Form {
       if (!this.rowId) {
         query = new Query(
           `INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(", ")})
-            VALUES (${assignmentValues.join(", ")})`,
+            VALUES (${assignmentValues.join(", ")}); SELECT 1;`,
           params,
           attachedFilesInfo
         );
@@ -726,7 +726,7 @@ export class Form {
             SET ${assignmentSetClauses.join(", ")}
             FROM [${this.targetTableDomain}].[${this.targetTableName}] t
             WHERE t.[Cinchy ID] = ${this.rowId}
-              AND t.[Deleted] IS NULL`,
+              AND t.[Deleted] IS NULL; SELECT 1;`,
           params,
           attachedFilesInfo
         );

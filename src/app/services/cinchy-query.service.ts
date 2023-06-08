@@ -169,14 +169,15 @@ export class CinchyQueryService {
 
     // If more than LOOKUP_RECORD_LABEL_COUNT records are retrieved, we know to indicate that additional records are available for the given filter.
     const selectStatement = limitResults ? `SELECT TOP ${CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT + 1}` : `SELECT`;
+    const subCol = subtitleColumn ?? "Cinchy ID";
 
     const query = `
       ${selectStatement}
         [Cinchy ID] as 'id',
-        [${subtitleColumn}] as 'label'
+        [${subCol}] as 'label'
       FROM [${domain}].[${table}]
-      WHERE [Deleted] IS NULL AND [${subtitleColumn}] IS NOT NULL ${lookupFilter ? `AND ${lookupFilter}` : ''}
-      ORDER BY [${subtitleColumn}];`;
+      WHERE [Deleted] IS NULL AND [${subCol}] IS NOT NULL ${lookupFilter ? `AND ${lookupFilter}` : ''}
+      ORDER BY [${subCol}];`;
 
     return this._cinchyService.executeCsql(query, null).pipe(
       takeUntil(this.resetLookupRecords),
