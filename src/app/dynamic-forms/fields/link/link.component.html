@@ -142,7 +142,7 @@
         </ng-container>
       </mat-autocomplete>
     </ng-container>
-    <ng-container *ngIf="!canEdit">
+    <ng-container *ngIf="!canEdit && !downloadLink">
       <label class="pre-formatted" *ngIf="showActualField">
         {{ selectedValue?.label || "-" }}
       </label>
@@ -169,7 +169,7 @@
         <img *ngIf="renderImageFiles && fileNameIsImage(item.fileName)" style="height: 100px" [src]="item.fileUrl" />
         <span [style.marginLeft.px]="renderImageFiles && fileNameIsImage(item.fileName) ? 12 : 0">{{item.fileName}}</span>
       </a>
-      <mat-icon class="file-delete-icon" (click)="onDeleteFile()" title="Delete">close</mat-icon>
+      <mat-icon *ngIf="canEdit" class="file-delete-icon" (click)="onDeleteFile()" title="Delete">close</mat-icon>
     </div>
     <input #fileInput class="form-control"
            *ngIf="canEdit && !(downloadableLinks?.length)"

@@ -343,7 +343,8 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
     const childFormRowValues = this.childForm?.childFormRowValues;
 
-    this.sortedKeys = (childFormRowValues?.length ? Object.keys(childFormRowValues[0]).sort() : []);
+    //this.sortedKeys = (childFormRowValues?.length ? Object.keys(childFormRowValues[0]).sort() : []);
+    this.sortedKeys = (childFormRowValues?.length ? Object.keys(childFormRowValues[0]) : []);
 
     this._populateDisplayValueMap();
   }
@@ -607,7 +608,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
           {
             cinchyColumn: true,
             propertyName: "canEdit",
-            propertyValue: entitlements ? coerceBooleanProperty(entitlements[0][`entitlement-${field.cinchyColumn.name}`]) : 1
+            propertyValue: entitlements?.length ? entitlements[0][`entitlement-${field.cinchyColumn.name}`] : 1
           }
         );
       });
