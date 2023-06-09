@@ -742,17 +742,12 @@ export class Form {
   }
 
 
-  generateSelectQuery(rowId: number, parentTableId: number = -1): IQuery {
+  generateSelectQuery(rowId: number): IQuery {
 
-    let columnName = null;
     let fields: Array<string> = [];
 
     this.sections.forEach(section => {
       section.fields.forEach(element => {
-        //TODO: GET The values Dynamically
-        if (parentTableId === element.cinchyColumn.linkTargetTableId) {
-          columnName = element.cinchyColumn.name;
-        }
 
         if (isNullOrUndefined(element.cinchyColumn.name) || element.cinchyColumn.name === "") {
           return;
@@ -784,21 +779,21 @@ export class Form {
     });
     fields.push("[Cinchy ID]");
 
-    if (this.isChild && (!isNullOrUndefined(columnName) || (this.childFormParentId && this.childFormLinkId))) {
-      let defaultWhere;
-      if (!isNullOrUndefined(columnName)) {
-        defaultWhere = `where t.[${columnName}].[Cinchy ID] = ${rowId} and t.[Deleted] is null`
-      } else {
-        defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] is null`
-      }
+    if (this.isChild) {
+      
+      const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] is null`;
+
       const whereConditionWithFilter = this.childFormFilter ? 
       `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
-      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`
+
+      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
+
       let query: IQuery = new Query(
         `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
         null,
         null
       );
+
       return query;
     } else {
       let query: IQuery = new Query(

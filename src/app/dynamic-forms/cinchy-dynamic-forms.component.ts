@@ -302,7 +302,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   this._appStateService.setRecordSelected(null);
                 }
                 else {
-                  const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null, null);
+                  const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
 
                   if (success && form.childFieldsLinkedToColumnName?.length) {
                     // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
