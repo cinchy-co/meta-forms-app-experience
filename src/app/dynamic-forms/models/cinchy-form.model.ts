@@ -540,6 +540,7 @@ export class Form {
     let assignmentColumns = new Array<string>();
     let assignmentValues = new Array<string>();
     let attachedFilesInfo = [];
+    let foundLinkedColumn = false;
 
     let paramName: string;
     let paramNumber: number = 0;
@@ -551,7 +552,7 @@ export class Form {
 
       section.fields.forEach((field: FormField) => {
 
-        const isLinkedColumnForInsert = coerceBooleanProperty(!this.rowId && field.isLinkedColumn(field.cinchyColumn.name));
+        const isLinkedColumnForInsert = coerceBooleanProperty(!this.rowId && field.cinchyColumn.dataType === 'Link');
 
         if (
             field.cinchyColumn.canEdit &&
@@ -564,7 +565,7 @@ export class Form {
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
               try {
-                params[paramName] = field.value ? 
+                params[paramName] = field.value ?
                   ( ((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null ) :
                   null;
               }
@@ -654,6 +655,7 @@ export class Form {
               }
               else {
                 if (field.cinchyColumn.dataType === "Link") {
+                  foundLinkedColumn ||= field.cinchyColumn.linkTargetTableId === this.parentForm.targetTableId;
                   if (isNullOrUndefined(this.rowId)) {
                     if (field.form.isChild && field.form.flatten && field.form.childFormParentId) {
                       let childFormAssignmentValue = `ResolveLink(${paramName},'Cinchy ID')`;
@@ -701,6 +703,21 @@ export class Form {
         }
       });
     });
+
+    // Link child record to parent table if linked field is not displayed in the form
+    if (!foundLinkedColumn) {
+      this.tableMetadata["Columns"]?.forEach((column) => {
+        if (
+          column.columnType === "Link" &&
+          column.linkedTableId === this.parentForm.targetTableId
+        ) {
+          paramName = `@p${paramNumber++}`;
+          assignmentColumns.push(`[${column.name}]`);
+          assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
+          params[paramName] = this.parentForm.rowId.toString();
+        }
+      });
+    }
 
     const ifUpdateAttachedFilePresent = attachedFilesInfo.find(fileInfo => fileInfo.query);
 
