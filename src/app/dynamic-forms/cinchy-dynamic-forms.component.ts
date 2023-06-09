@@ -422,39 +422,41 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
         async (formFieldsMetadata) => {
+            let selectedLookupRecord;
+            if (this.lookupRecordsList) {
+                selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
 
-          let selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
-
-            return (record.id === this.rowId);
-          });
-
-          await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
-
-          // This may occur if the rowId is not provided in the queryParams, but one is
-          if (this.rowId !== null) {
-            if (!selectedLookupRecord) {
-              this.appStateService.setRecordSelected(null);
+                return (record.id === this.rowId);
+              });
             }
-            else {
-              await this._formHelperService.fillWithData(this.form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+            await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
+  
+            // This may occur if the rowId is not provided in the queryParams, but one is
+            if (this.rowId !== null) {
+              if (!selectedLookupRecord) {
+                this.appStateService.setRecordSelected(null);
+              }
+              else {
+                await this._formHelperService.fillWithData(this.form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+              }
             }
-          }
+  
+            this.enableSaveBtn = true;
+  
+            this.isLoadingForm = false;
+            this.formHasDataLoaded = true;
+           
+            this.spinner.hide();
+  
+            if (childData) {
+              setTimeout(() => {
+  
+                childData.rowId = this.rowId;
+  
+                this.appStateService.setOpenOfChildFormAfterParentSave(childData);
+              }, 500);
+            }
 
-          this.enableSaveBtn = true;
-
-          this.isLoadingForm = false;
-          this.formHasDataLoaded = true;
-         
-          this.spinner.hide();
-
-          if (childData) {
-            setTimeout(() => {
-
-              childData.rowId = this.rowId;
-
-              this.appStateService.setOpenOfChildFormAfterParentSave(childData);
-            }, 500);
-          }
         },
         error => {
 
