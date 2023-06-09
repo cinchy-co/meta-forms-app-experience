@@ -18,7 +18,7 @@
       <thead>
         <tr>
           <th class="mat-row-child">Action</th>
-          <ng-container *ngFor="let key of sortedKeys">
+          <ng-container *ngFor="let key of fieldKeys">
             <!-- Child form dynamic table Row header -->
             <th *ngIf="cellShouldBeDisplayed(key)">
               {{ getTableHeader(key) }}
@@ -39,7 +39,7 @@
               <fa-icon [icon]="faTrash"></fa-icon>
             </a>
           </td>
-          <ng-container *ngFor="let key of sortedKeys">
+          <ng-container *ngFor="let key of fieldKeys">
             <td *ngIf="cellShouldBeDisplayed(key)"
                 [ngStyle]="childFieldDictionary[key]?.cinchyColumn?.doNotWrap ? { 'white-space': 'nowrap' } : ''"
                 [innerHTML]="getDisplayValue(rowIndex, key)">

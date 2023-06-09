@@ -1,4 +1,4 @@
-<mat-spinner *ngIf="!formHasDataLoaded && !form?.sections?.length" diameter="50" class="inside"></mat-spinner>
+<mat-spinner *ngIf="!formHasDataLoaded" diameter="50" class="inside"></mat-spinner>
 
 <ng-container *ngIf="formHasDataLoaded && form?.sections?.length">
   <ng-container *ngIf="!isChild">
