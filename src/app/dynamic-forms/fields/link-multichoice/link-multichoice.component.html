@@ -110,7 +110,7 @@
               <mat-option class="all-options" *ngFor="let dropdownOption of list"
                           [value]="dropdownOption"
                           [title]="dropdownOption.label">
-                {{dropdownOption.label}}
+                {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
               </mat-option>
             </ng-container>
 
@@ -120,7 +120,7 @@
                 <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
                             [value]="dropdownOption"
                             [title]="dropdownOption.label">
-                  {{dropdownOption.label}}
+                  {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
                 </mat-option>
               </cdk-virtual-scroll-viewport>
             </ng-template>

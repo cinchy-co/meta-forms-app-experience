@@ -127,7 +127,7 @@
                           [title]="option.label"
                           [value]="option.label"
                           (click)="onOptionSelected(option)">
-                {{ option.label ?? "" }}
+                {{ option.displayOnlyLabel ?? option.label ?? "" }}
               </mat-option>
             </ng-container>
           </cdk-virtual-scroll-viewport>
@@ -136,7 +136,7 @@
                         [title]="option.label"
                         [value]="option.label"
                         (click)="onOptionSelected(option)">
-              {{ option.label ?? "" }}
+              {{ option.displayOnlyLabel ?? option.label ?? "" }}
             </mat-option>
           </ng-container>
         </ng-container>
