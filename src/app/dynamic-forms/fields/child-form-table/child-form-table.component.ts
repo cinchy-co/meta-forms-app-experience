@@ -357,27 +357,23 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
 
   getTableHeader(key: string): string {
+    let currentField: FormField = this.getFieldByKey(key);
+    return currentField?.label || key;
+  }
 
-    const notDisplayColumnFields: Array<FormField> = this.fieldSet.filter((field: FormField) => {
-
-      return !field.cinchyColumn.isDisplayColumn;
-    });
-
+  private getFieldByKey(key: string): FormField {
     // So that the one which is display column doesn"t match and show the name, as for display column one also
     // field.cinchyColumn.name is same
-    let currentField: FormField = notDisplayColumnFields.find(field => {
-
-      return (`${field.cinchyColumn.linkTargetColumnName} label` === key);
-    });
+    let currentField: FormField = this.fieldSet.find(field => `${field.cinchyColumn.linkTargetColumnName} label` === key);
 
     if (!currentField) {
-      currentField = notDisplayColumnFields.find((field: FormField) => {
-
-        return (field.cinchyColumn.name === key);
-      });
+      currentField = this.fieldSet.find((field: FormField) => field.label === key);
+      if (!currentField) {
+        currentField = this.fieldSet.find((field: FormField) => field.cinchyColumn.name === key);
+      }
     }
 
-    return currentField?.label || key;
+    return currentField;
   }
 
 
@@ -452,30 +448,13 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
     const displayValueSet = new Array<{ [key: string]: string }>();
 
-    const notDisplayColumnFields: Array<FormField> = this.fieldSet.filter((field: FormField) => {
-
-      return !field.cinchyColumn.isDisplayColumn;
-    });
-
     this.childForm.childFormRowValues?.forEach((rowData: { [key: string]: any }, rowIndex: number) => {
 
       displayValueSet[rowIndex] = {};
 
       this.sortedKeys.forEach((sortedKey: string) => {
 
-        // So that the one which is display column doesn"t match and show the name, as for display column one also
-        // field.cinchyColumn.name is same
-        let currentField = notDisplayColumnFields.find((field: FormField) => {
-
-          return (field.cinchyColumn.name === sortedKey);
-        });
-
-        if (!currentField) {
-          currentField = notDisplayColumnFields.find((field: FormField) => {
-
-            return (field.cinchyColumn.linkTargetColumnName + " label" === sortedKey);
-          });
-        }
+        let currentField: FormField = this.getFieldByKey(sortedKey);
 
         if (!isNullOrUndefined(rowData[sortedKey])) {
           if (currentField?.cinchyColumn.dataType === "Date and Time") {
@@ -508,7 +487,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
             const ids: Array<string> = currentField.cinchyColumn.isMultiple ? rowData[sortedKey] : [rowData[sortedKey]];
             ids?.forEach((id: string) => {
 
-              currentField.dropdownDataset.options.forEach((option: DropdownOption) => {
+              currentField.dropdownDataset?.options?.forEach((option: DropdownOption) => {
 
                 // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
                 //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
@@ -531,6 +510,10 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
                 }
               });
             });
+
+            if (!linkDisplayValues.length) {
+              linkDisplayValues = ids;
+            }
 
             displayValueSet[rowIndex][sortedKey] = linkDisplayValues.length ? linkDisplayValues.join(", ") : null;
           }
