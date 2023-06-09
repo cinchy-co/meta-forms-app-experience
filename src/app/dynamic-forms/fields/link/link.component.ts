@@ -533,7 +533,33 @@ export class LinkComponent implements OnChanges, OnInit {
     });
   }
 
+  /**
+  * If the field is displaying an imaged, returns the class name associated with the configured format
+  */
+  get imageSize(): string {
 
+    if (this.showImage) {
+      switch (this.field.cinchyColumn.dataFormatType) {
+        case DataFormatType.ImageUrlSmall:
+
+          return "cinchy-images-small";
+        case DataFormatType.ImageUrlLarge:
+
+          return "cinchy-images-large";
+        case DataFormatType.ImageUrlSmall:
+          // falls through
+        case DataFormatType.ImageUrl:
+
+          return "cinchy-images";
+        default:
+          return "";
+      }
+    }
+
+    return "";
+  }
+
+  
   private _filter(value: string): DropdownOption[] {
 
     if (this.field.dropdownDataset?.options?.length && this.searchCharacterLimitMet) {

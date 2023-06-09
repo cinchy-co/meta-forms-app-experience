@@ -51,7 +51,7 @@ export class TextboxComponent implements OnChanges, OnInit {
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
 
-  iframeHeightStyle: string = "300px;";
+  iframeHeightStyle: number = 300;
   showActualField: boolean;
   showError: boolean;
   showImage: boolean;
@@ -125,8 +125,8 @@ export class TextboxComponent implements OnChanges, OnInit {
     if ((this.showIframe || this.showIframeSandbox || this.showIframeSandboxStrict) && this.isValidHttpUrl(this.value) && !this.isInChildForm) {
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.value);
 
-      this.iframeHeightStyle = (this.field.cinchyColumn?.totalTextAreaRows > 0) ? (100 * this.field.cinchyColumn.totalTextAreaRows).toString() : "300";      
-    }else{
+      this.iframeHeightStyle = (this.field.cinchyColumn?.totalTextAreaRows > 0) ? (100 * this.field.cinchyColumn.totalTextAreaRows) : 300;      
+    } else {
       this.showIframe = false;
       this.showIframeSandbox = false;
       this.showIframeSandboxStrict = false;

@@ -54,7 +54,7 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
-  iframeHeightStyle: string = "300px;";
+  iframeHeightStyle: number = 300;
   isFormatted: boolean;
   showActualField: boolean;
   showError: boolean;
@@ -104,10 +104,10 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
       !this.showIframeSandbox &&
       !this.showIframeSandboxStrict
     );
-    
+
     if ((this.showIframe || this.showIframeSandbox || this.showIframeSandboxStrict) && this.isValidHttpUrl(this.value) && !this.isInChildForm){
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
-      this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows ? `${(100 * this.field.cinchyColumn.totalTextAreaRows)}px` : "300px";
+      this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows ? 100 * this.field.cinchyColumn.totalTextAreaRows : 300;
     }
     else {
       this.showIframe = false;
@@ -187,6 +187,31 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
     });
   }
 
+  /**
+  * If the field is displaying an imaged, returns the class name associated with the configured format
+  */
+  get imageSize(): string {
+
+    if (this.showImage) {
+      switch (this.field.cinchyColumn.dataFormatType) {
+        case DataFormatType.ImageUrlSmall:
+
+          return "cinchy-images-small";
+        case DataFormatType.ImageUrlLarge:
+
+          return "cinchy-images-large";
+        case DataFormatType.ImageUrlSmall:
+          // falls through
+        case DataFormatType.ImageUrl:
+
+          return "cinchy-images";
+        default:
+          return "";
+      }
+    }
+
+    return "";
+  }
 
   private _setValue(): void {
 

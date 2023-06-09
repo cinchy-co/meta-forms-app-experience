@@ -148,7 +148,7 @@
       </label>
     </ng-container>
     <ng-container *ngIf="showImage && selectedValue">
-      <img class="cinchy-images" *ngIf="selectedValue.label" [src]="selectedValue.label">
+      <img [ngClass]="imageSize" *ngIf="selectedValue.label" [src]="selectedValue.label">
       <p *ngIf="!selectedValue.label">-</p>
     </ng-container>
     <ng-container *ngIf="showLinkUrl && selectedValue">
