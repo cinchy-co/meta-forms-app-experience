@@ -56,7 +56,7 @@ export class FormHelperService {
       formMetadata.domainName,
       formMetadata.tableName,
       formMetadata.isAccordion,
-      tableEntitlements.accessIsDefinedForCurrentUser,
+      tableEntitlements,
       isChild,
       flatten,
       childFormParentId,
