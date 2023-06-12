@@ -8,17 +8,17 @@
       {{field.label}}
       {{(field.cinchyColumn.isMandatory && !field.value) ? '*' : ''}}
     </label>
-    <mat-icon *ngIf="field.caption" class="info-icon"
-              ngbTooltip="{{field.caption}}"
-              placement="auto"
-              container="body"
-              matTooltipClass="tool-tip-body"
-              matTooltipPosition="above">
+    <mat-icon *ngIf="field.caption" class="info-icon" ngbTooltip="{{field.caption}}" placement="auto" container="body"
+      matTooltipClass="tool-tip-body" matTooltipPosition="above">
       info
     </mat-icon>
   </div>
   <ng-container *ngIf="canEdit">
-    <input type="text" class="form-control" digitOnly decimal="true" inputmode="numeric"
+    <input digitOnly
+           type="text"
+           class="form-control"
+           decimal="true"
+           inputmode="numeric"
            [(ngModel)]="formattedAmount" [ngModelOptions]="{standalone: true}"
            (blur)="transformAmount()"
            (focus)="reverseTransform()" />

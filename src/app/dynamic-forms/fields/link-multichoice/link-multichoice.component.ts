@@ -152,6 +152,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         from [Cinchy].[Cinchy].[Table Columns] tc
         where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy ID] = ${this.field.cinchyColumn.linkTargetColumnId}`;
 
+
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
       const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
@@ -210,6 +211,17 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         this.downloadableLinks.push(selectedValuesWithUrl);
       })
     }
+  }
+
+
+  closeTooltip(tooltip) {
+
+    setTimeout(() => {
+
+      if (tooltip.isOpen() && !this.isCursorIn) {
+        tooltip.close();
+      }
+    }, 100);
   }
 
 

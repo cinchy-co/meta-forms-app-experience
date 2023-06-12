@@ -60,6 +60,7 @@ export class SidenavComponent implements OnInit {
     // is already in create mode
     return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
   }
+  private _tableUrl: string;
 
 
   /**
