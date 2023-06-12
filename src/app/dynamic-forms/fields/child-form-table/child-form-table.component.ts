@@ -280,6 +280,32 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
+  getDisplayValue(rowIndex: number, key: string): string {
+
+    return this.displayValueSet[rowIndex][key] ?? "--";
+  }
+
+
+  async getFileName(fileNameColumn: string, rowId: number): Promise<string> {
+
+    const [domain, table, column] = fileNameColumn?.split(".") ?? [];
+
+    if (domain) {
+      const query = `
+        SELECT
+            [${column}] as 'fullName',
+            [Cinchy ID] as 'id'
+          FROM [${domain}].[${table}]
+          WHERE [Cinchy ID] = ${rowId}
+            AND [Deleted] IS NULL`;
+
+      const fileNameResp = await this._cinchyService.executeCsql(query, null).toPromise();
+
+      return fileNameResp?.queryResult?.toObjectArray()[0] ? fileNameResp.queryResult.toObjectArray()[0]["fullName"] : null;
+    }
+  }
+
+
   async getFileNames(): Promise<void> {
 
     const binaryFields = this.fieldSet.filter((field: FormField) => {
@@ -316,23 +342,11 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
-  async getFileName(fileNameColumn: string, rowId: number): Promise<string> {
+  getTableHeader(key: string): string {
 
-    const [domain, table, column] = fileNameColumn?.split(".") ?? [];
+    let currentField: FormField = this._getFieldByKey(key);
 
-    if (domain) {
-      const query = `
-        SELECT
-            [${column}] as 'fullName',
-            [Cinchy ID] as 'id'
-          FROM [${domain}].[${table}]
-          WHERE [Cinchy ID] = ${rowId}
-            AND [Deleted] IS NULL`;
-
-      const fileNameResp = await this._cinchyService.executeCsql(query, null).toPromise();
-
-      return fileNameResp?.queryResult?.toObjectArray()[0] ? fileNameResp.queryResult.toObjectArray()[0]["fullName"] : null;
-    }
+    return currentField?.label || key;
   }
 
 
@@ -346,33 +360,6 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     this.fieldKeys = (childFormRowValues?.length ? Object.keys(childFormRowValues[0]) : []);
 
     this._populateDisplayValueMap();
-  }
-
-
-  getDisplayValue(rowIndex: number, key: string): string {
-
-    return this.displayValueSet[rowIndex][key] ?? "--";
-  }
-
-
-  getTableHeader(key: string): string {
-    let currentField: FormField = this.getFieldByKey(key);
-    return currentField?.label || key;
-  }
-
-  private getFieldByKey(key: string): FormField {
-    // So that the one which is display column doesn"t match and show the name, as for display column one also
-    // field.cinchyColumn.name is same
-    let currentField: FormField = this.fieldSet.find(field => `${field.cinchyColumn.linkTargetColumnName} label` === key);
-
-    if (!currentField) {
-      currentField = this.fieldSet.find((field: FormField) => field.label === key);
-      if (!currentField) {
-        currentField = this.fieldSet.find((field: FormField) => field.cinchyColumn.name === key);
-      }
-    }
-
-    return currentField;
   }
 
 
@@ -443,6 +430,34 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
+  private _getFieldByKey(key: string): FormField {
+
+    // If there is a specific display column, use that field
+    let currentField: FormField = this.fieldSet.find((field: FormField) => {
+
+      return (`${field.cinchyColumn.linkTargetColumnName} label` === key);
+    });
+
+    // Otherwise, try to find the base field
+    if (!currentField) {
+      currentField = this.fieldSet.find((field: FormField) => {
+
+        return (field.label === key);
+      });
+    }
+
+    // If the field name doesn't match the target, then fall back to the cinchy column
+    if (!currentField) {
+      currentField = this.fieldSet.find((field: FormField) => {
+
+        return (field.cinchyColumn.name === key);
+      });
+    }
+
+    return currentField;
+  }
+
+
   private _populateDisplayValueMap(): void {
 
     const displayValueSet = new Array<{ [key: string]: string }>();
@@ -453,7 +468,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
       this.fieldKeys.forEach((key: string) => {
 
-        let currentField: FormField = this.getFieldByKey(key);
+        let currentField: FormField = this._getFieldByKey(key);
 
         if (!isNullOrUndefined(rowData[key])) {
           if (currentField?.cinchyColumn.dataType === "Date and Time") {

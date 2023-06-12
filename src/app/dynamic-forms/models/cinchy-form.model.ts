@@ -9,6 +9,7 @@ import { IFindChildFormResponse } from "../interface/find-child-form-response";
 
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { ILookupRecord } from "../../models/lookup-record.model";
+import { ITableEntitlements } from "../interface/table-entitlements";
 
 import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
@@ -115,7 +116,7 @@ export class Form {
     public readonly targetTableDomain: string,
     public readonly targetTableName: string,
     public readonly isAccordion: boolean,
-    public readonly tableEntitlements: any,
+    public readonly tableEntitlements: ITableEntitlements,
     public readonly isChild: boolean = false,
     public readonly flatten: boolean = false,
     public readonly childFormParentId?: string,

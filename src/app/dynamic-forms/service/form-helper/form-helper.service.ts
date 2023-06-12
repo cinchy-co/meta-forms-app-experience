@@ -13,6 +13,7 @@ import { IQuery } from "../../models/cinchy-query.model";
 import { IFormFieldMetadata } from "../../../models/form-field-metadata.model";
 import { IFormMetadata } from "../../../models/form-metadata-model";
 import { ILookupRecord } from "../../../models/lookup-record.model";
+import { ITableEntitlements } from "../../interface/table-entitlements";
 
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
 
@@ -35,7 +36,7 @@ export class FormHelperService {
   async generateForm(
       formMetadata: IFormMetadata,
       rowId: number,
-      tableEntitlements: any,
+      tableEntitlements: ITableEntitlements,
       isChild: boolean = false,
       flatten: boolean = false,
       childFormParentId?: string,
@@ -79,7 +80,7 @@ export class FormHelperService {
       formMetadata: IFormMetadata,
       formFieldsMetadata: IFormFieldMetadata[],
       selectedLookupRecord: ILookupRecord,
-      tableEntitlements: any
+      tableEntitlements: ITableEntitlements
   ): Promise<void> {
 
     if (formFieldsMetadata?.length) {
@@ -103,6 +104,7 @@ export class FormHelperService {
       
         if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
           const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
+
           columnMetadata.displayFormat = parentMetadata?.displayFormat;
         }
 
