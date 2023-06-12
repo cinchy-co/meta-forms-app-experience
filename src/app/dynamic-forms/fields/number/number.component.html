@@ -8,8 +8,13 @@
       {{field.label}}
       {{(field.cinchyColumn.isMandatory && !field.value) ? '*' : ''}}
     </label>
-    <mat-icon *ngIf="field.caption" class="info-icon" ngbTooltip="{{field.caption}}" placement="auto" container="body"
-      matTooltipClass="tool-tip-body" matTooltipPosition="above">
+    <mat-icon *ngIf="field.caption"
+              class="info-icon"
+              container="body"
+              ngbTooltip="{{field.caption}}"
+              placement="auto"
+              matTooltipClass="tool-tip-body" matTooltipPosition="above"
+    >
       info
     </mat-icon>
   </div>

@@ -91,9 +91,9 @@ export class ConfigService {
   receiveMessage(event): void {
 
     if (event.data.toString().startsWith("[Cinchy][innerHeight]")) {
-          const fullScreenHeight = parseInt(event.data.toString().substring(21), 10) + 4;
+      const fullScreenHeight = parseInt(event.data.toString().substring(21), 10) + 4;
 
-          IframeUtil.setFrameHeight(fullScreenHeight.toString());
+      IframeUtil.setFrameHeight(fullScreenHeight.toString());
     }
   }
 }

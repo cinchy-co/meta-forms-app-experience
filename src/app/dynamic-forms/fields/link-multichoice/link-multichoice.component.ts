@@ -231,17 +231,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   };
 
 
-  closeTooltip(tooltip: NgbTooltip): void {
-
-    setTimeout(() => {
-
-      if (tooltip.isOpen() && !this.isCursorIn) {
-        tooltip.close();
-      }
-    }, 100);
-  }
-
-
   /**
    * Generates a tooltip for the given link
    */

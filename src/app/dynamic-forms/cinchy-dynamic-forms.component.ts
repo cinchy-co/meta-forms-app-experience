@@ -40,7 +40,6 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
-import { IFormFieldMetadata } from "../models/form-field-metadata.model";
 
 
 const INITIAL_TEMPORARY_CINCHY_ID = -2;
