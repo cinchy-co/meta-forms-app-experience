@@ -163,7 +163,8 @@ export class ChildFormComponent {
                   fieldIndex,
                   null
                 );
-              } else {
+              // Don't override child form link field with presetValues so we can prefill the value with parent ID
+              } else if (`[${field.label}]` !== this.childFormData.childForm.childFormLinkId) {
                 this.childFormData.childForm.updateFieldValue(
                   sectionIndex,
                   fieldIndex,

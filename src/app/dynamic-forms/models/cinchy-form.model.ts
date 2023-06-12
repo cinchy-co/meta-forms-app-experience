@@ -552,7 +552,11 @@ export class Form {
 
       section.fields.forEach((field: FormField) => {
 
-        const isLinkedColumnForInsert = coerceBooleanProperty(!this.rowId && field.cinchyColumn.dataType === 'Link');
+        const isLinkedColumnForInsert = coerceBooleanProperty(
+          !this.rowId &&
+            (field.cinchyColumn.dataType === "Link" ||
+              `[${field.label}]` === this.childFormLinkId)
+        );
 
         if (
             field.cinchyColumn.canEdit &&
@@ -706,7 +710,7 @@ export class Form {
 
     // Link child record to parent table if linked field is not displayed in the form
     if (!foundLinkedColumn) {
-      this.tableMetadata["Columns"]?.forEach((column) => {
+      this.tableMetadata["Columns"]?.forEach((column: { columnType: string, linkedTableId: number, name: string }) => {
         if (
           column.columnType === "Link" &&
           column.linkedTableId === this.parentForm.targetTableId
