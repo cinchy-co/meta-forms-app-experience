@@ -254,7 +254,7 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  closeTooltip(tooltip): void {
+  closeTooltip(tooltip: NgbTooltip): void {
 
     setTimeout(() => {
 
