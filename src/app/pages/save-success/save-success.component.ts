@@ -61,7 +61,6 @@ export class SaveSuccessComponent implements OnInit {
         }
       ).toPromise();
 
-      console.log("this.assignedSeat", this.seatDetails);
     } catch (e) {
 
     }

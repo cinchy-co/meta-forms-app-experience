@@ -13,6 +13,7 @@ import { IQuery } from "../../models/cinchy-query.model";
 import { IFormFieldMetadata } from "../../../models/form-field-metadata.model";
 import { IFormMetadata } from "../../../models/form-metadata-model";
 import { ILookupRecord } from "../../../models/lookup-record.model";
+import { ITableEntitlements } from "../../interface/table-entitlements";
 
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
 
@@ -35,7 +36,7 @@ export class FormHelperService {
   async generateForm(
       formMetadata: IFormMetadata,
       rowId: number,
-      tableEntitlements: any,
+      tableEntitlements: ITableEntitlements,
       isChild: boolean = false,
       flatten: boolean = false,
       childFormParentId?: string,
@@ -56,7 +57,7 @@ export class FormHelperService {
       formMetadata.domainName,
       formMetadata.tableName,
       formMetadata.isAccordion,
-      tableEntitlements.accessIsDefinedForCurrentUser,
+      tableEntitlements,
       isChild,
       flatten,
       childFormParentId,
@@ -79,7 +80,7 @@ export class FormHelperService {
       formMetadata: IFormMetadata,
       formFieldsMetadata: IFormFieldMetadata[],
       selectedLookupRecord: ILookupRecord,
-      tableEntitlements: any
+      tableEntitlements: ITableEntitlements
   ): Promise<void> {
 
     if (formFieldsMetadata?.length) {
@@ -103,6 +104,7 @@ export class FormHelperService {
       
         if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
           const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
+
           columnMetadata.displayFormat = parentMetadata?.displayFormat;
         }
 
@@ -161,16 +163,28 @@ export class FormHelperService {
 
           let childFormFieldsMetadata = await this._cinchyQueryService.getFormFieldsMetadata(childFormId).toPromise();
 
+          let parentColumnNameForLinkingToChild = formFields[i].childFormParentId;
+          let childFormColumnNameForLinkingToParent = formFields[i].childFormLinkId;
+
+          // If linkFieldId is present, then override and use that link to join the child to the parent
+          if (!isNullOrUndefined(formFields[i].linkFieldId)) {
+            let linkField = childFormFieldsMetadata.find(field => field.formFieldId == formFields[i].linkFieldId);
+            if (linkField) {
+              parentColumnNameForLinkingToChild = "[Cinchy Id]";
+              childFormColumnNameForLinkingToParent = `[${linkField.columnName}].[Cinchy Id]`;
+            }
+          }
+
           childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => !isNullOrUndefined(displayColumnId.find(id => id === _.formFieldId)));
 
           const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
 
-          childForm = await this.generateForm(childFormMetadata, null, childTableEntitlements, true, formFields[i].flattenChildForm, formFields[i].childFormParentId, formFields[i].childFormLinkId, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
+          childForm = await this.generateForm(childFormMetadata, null, childTableEntitlements, true, formFields[i].flattenChildForm, parentColumnNameForLinkingToChild, childFormColumnNameForLinkingToParent, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
 
           childForm.populateSectionsFromFormMetadata(childFormSectionsMetadata);
 
           await this.fillWithFields(childForm, rowId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
-          await this.fillWithData(childForm, rowId, selectedLookupRecord, formMetadata.tableId, formMetadata.tableName, formMetadata.domainName);
+          await this.fillWithData(childForm, rowId, selectedLookupRecord, formMetadata.tableName, formMetadata.domainName);
 
           // Override these, they will be checked later when opening up the child form
           cinchyColumn.canEdit = true;
@@ -257,7 +271,6 @@ export class FormHelperService {
       form: Form,
       targetRowId: number,
       selectedLookupRecord: ILookupRecord,
-      parentTableId?: number,
       parentTableName?: string,
       parentDomainName?: string
   ): Promise<boolean> {
@@ -266,7 +279,7 @@ export class FormHelperService {
       return false;
     }
 
-    const selectQuery: IQuery = form.generateSelectQuery(targetRowId, parentTableId);
+    const selectQuery: IQuery = form.generateSelectQuery(targetRowId);
 
     try {
       if (form.isChild && form.childFormParentId && form.childFormLinkId && parentDomainName && parentTableName) {

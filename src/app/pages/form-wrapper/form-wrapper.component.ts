@@ -84,7 +84,7 @@ export class FormWrapperComponent implements OnInit {
 
   handleOnLookupRecordFilter(filter: string): void {
 
-    let resolvedFilter = (filter ? `LOWER(CAST([${this.formMetadata.subTitleColumn}] as nvarchar)) LIKE LOWER('%${filter}%')` : null);
+    let resolvedFilter = (filter ? `LOWER(CAST([${this.formMetadata.subTitleColumn ?? "Cinchy ID"}] as nvarchar)) LIKE LOWER('%${filter}%')` : null);
 
     // Ensure that if there is a default filter on the field, it is not lost
     if (resolvedFilter && this.formMetadata.lookupFilter) {
@@ -130,30 +130,28 @@ export class FormWrapperComponent implements OnInit {
 
   async loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): Promise<void> {
 
-    if (formMetadata?.subTitleColumn) {
-      this._cinchyQueryService.resetLookupRecords.next();
+    this._cinchyQueryService.resetLookupRecords.next();
 
-      await this._cinchyQueryService.getLookupRecords(
-        formMetadata.subTitleColumn,
-        formMetadata.domainName,
-        formMetadata.tableName,
-        filter ?? formMetadata.lookupFilter,
-        limitResults
-      ).pipe(
-        takeUntil(this._cinchyQueryService.resetLookupRecords)
-      ).subscribe(
-        {
-          next: (response: Array<ILookupRecord>) => {
+    await this._cinchyQueryService.getLookupRecords(
+      formMetadata.subTitleColumn,
+      formMetadata.domainName,
+      formMetadata.tableName,
+      filter ?? formMetadata.lookupFilter,
+      limitResults
+    ).pipe(
+      takeUntil(this._cinchyQueryService.resetLookupRecords)
+    ).subscribe(
+      {
+        next: (response: Array<ILookupRecord>) => {
 
-            this.lookupRecords = response;
-          },
-          error: (e) => {
+          this.lookupRecords = response;
+        },
+        error: (e) => {
 
-            this.showError("Error getting lookup records", e);
-          }
+          this.showError("Error getting lookup records", e);
         }
-      );
-    }
+      }
+    );
   }
 
 

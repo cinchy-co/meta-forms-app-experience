@@ -1,12 +1,12 @@
 <div *ngIf="field?.childForm" class="full-width-element">
   <!-- Child form table header -->
-  <span class="error-message" *ngIf="!childForm.hasAccess">
+  <span class="error-message" *ngIf="!childForm.tableEntitlements.accessIsDefinedForCurrentUser">
     You don't have access to this table
   </span>
   <div class="mat-header-child">
     {{ childForm.sections[0].label }}
 
-    <span class="text-left" *ngIf="childForm.hasAccess">
+    <span class="text-left" *ngIf="childForm.tableEntitlements.canAddRows">
       <a (click)="addChildRecord(childForm.sections[0].label)">
         <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
       </a>
@@ -18,7 +18,7 @@
       <thead>
         <tr>
           <th class="mat-row-child">Action</th>
-          <ng-container *ngFor="let key of sortedKeys">
+          <ng-container *ngFor="let key of fieldKeys">
             <!-- Child form dynamic table Row header -->
             <th *ngIf="cellShouldBeDisplayed(key)">
               {{ getTableHeader(key) }}
@@ -31,15 +31,15 @@
         <tr *ngFor="let rowData of childForm.childFormRowValues; let rowIndex = index" class="pre-formatted">
           <!-- Edit Child form  -->
           <td class="action-width">
-            <a class="btn-dynamic-child primary btnForm" *ngIf="childForm.hasAccess" (click)="editChildRecord(childForm.sections[0].label, rowData)">
+            <a class="btn-dynamic-child primary btnForm" *ngIf="childForm.tableEntitlements.accessIsDefinedForCurrentUser" (click)="editChildRecord(childForm.sections[0].label, rowData)">
               <fa-icon [icon]="faEdit"></fa-icon>
             </a>
-            <a class="btn-dynamic-child warn btnForm" *ngIf="childForm.hasAccess"
+            <a class="btn-dynamic-child warn btnForm" *ngIf="childForm.tableEntitlements.canDeleteRows"
                 (click)="deleteRow(rowData)">
               <fa-icon [icon]="faTrash"></fa-icon>
             </a>
           </td>
-          <ng-container *ngFor="let key of sortedKeys">
+          <ng-container *ngFor="let key of fieldKeys">
             <td *ngIf="cellShouldBeDisplayed(key)"
                 [ngStyle]="childFieldDictionary[key]?.cinchyColumn?.doNotWrap ? { 'white-space': 'nowrap' } : ''"
                 [innerHTML]="getDisplayValue(rowIndex, key)">

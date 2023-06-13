@@ -11,7 +11,7 @@ import {
 } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 
-import { Cinchy, CinchyService, QueryType } from "@cinchy-co/angular-sdk";
+import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
 import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
@@ -224,25 +224,28 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         -1;
 
       this.afterChildFormEdit(targetCinchyId, event.form);
+    }
 
-      if (event.targetColumnName && event.form.childFieldsLinkedToColumnName && event.form.childFieldsLinkedToColumnName[event.targetColumnName]) {
-        event.form.childFieldsLinkedToColumnName[event.targetColumnName].forEach((field: FormField, fieldIndex: number) => {
+    if (event.targetColumnName && event.form.childFieldsLinkedToColumnName && event.form.childFieldsLinkedToColumnName[event.targetColumnName]) {
+      event.form.childFieldsLinkedToColumnName[event.targetColumnName].forEach((field: FormField, fieldIndex: number) => {
 
-          field.form.updateFieldValue(
-            0,
-            fieldIndex,
-            event.newValue
-          );
+        let childFormSectionIdx = 0;
+        for (let i = 0; i < field.form.sections.length; i++) {
+          let innerFieldIdx = field.form.sections[i].fields.findIndex(f => f.id == field.id);
+          if (innerFieldIdx > -1) {
+            childFormSectionIdx = i;
+            break;
+          }
+        }
+        field.form.updateFieldValue(childFormSectionIdx, fieldIndex, event.newValue);
 
-          this.afterChildFormEdit(
-            targetCinchyId,
-            field.form
-          );
-        });
-      }
+        this.afterChildFormEdit(
+          field.form.rowId ?? -1,
+          field.form
+        );
+      });
     }
   }
-
 
   handleOnFilter(filterText: string): void {
 
@@ -272,7 +275,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       }
 
       this._pendingChildFormQueries = new Array<IChildFormQuery>();
-      this.formHasDataLoaded = this.formHasDataLoaded || false;
+      this.formHasDataLoaded = false;
       this.enableSaveBtn = false;
 
       try {
@@ -299,7 +302,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   this._appStateService.setRecordSelected(null);
                 }
                 else {
-                  const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null, null);
+                  const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
 
                   if (success && form.childFieldsLinkedToColumnName?.length) {
                     // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
@@ -343,9 +346,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
               if (childData) {
                 setTimeout(() => {
-
-                  // childData.childForm.rowId = this.rowId;
-
                   this._appStateService.parentFormSavedFromChild$.next(childData);
                 }, 500);
               }
@@ -414,6 +414,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   rowSelected(row: ILookupRecord): void {
 
     this.currentRow = row ?? this.currentRow;
+
     this._appStateService.setRecordSelected(row?.id ?? this.rowId);
   }
 

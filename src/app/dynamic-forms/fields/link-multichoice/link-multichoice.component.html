@@ -110,7 +110,7 @@
               <mat-option class="all-options" *ngFor="let dropdownOption of list"
                           [value]="dropdownOption"
                           [title]="dropdownOption.label">
-                {{dropdownOption.label}}
+                {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
               </mat-option>
             </ng-container>
 
@@ -120,7 +120,7 @@
                 <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
                             [value]="dropdownOption"
                             [title]="dropdownOption.label">
-                  {{dropdownOption.label}}
+                  {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
                 </mat-option>
               </cdk-virtual-scroll-viewport>
             </ng-template>
@@ -144,13 +144,14 @@
             <img *ngIf="renderImageFiles && fileNameIsImage(item.fileName)" style="height: 100px" [src]="item.fileUrl" />
             <span [style.marginLeft.px]="renderImageFiles && fileNameIsImage(item.fileName) ? 12 : 0">{{item.fileName}}</span>
           </a>
-          <mat-icon class="file-delete-icon" (click)="onDeleteFile(item)" title="Delete">close</mat-icon>
+          <mat-icon *ngIf="canEdit" class="file-delete-icon" (click)="onDeleteFile(item)" title="Delete">close</mat-icon>
         </div>
-        <input #fileInput multiple class="form-control"
-               *ngIf="!(field.cinchyColumn.canEdit=== false)"
-               type="file"
-               (change)="onFileSelected($event)"
-               [style.marginTop.px]="downloadableLinks ? 14 : 0">
+        <input #fileInput multiple 
+              class="form-control"
+              *ngIf="field.cinchyColumn.canEdit"
+              type="file"
+              (change)="onFileSelected($event)"
+              [style.marginTop.px]="downloadableLinks ? 14 : 0">
       </ng-container>
     </div>
   </div>

@@ -62,14 +62,12 @@ export class AddNewEntityDialogComponent implements OnInit {
 
   async loadLookupRecords(formMetadata: IFormMetadata): Promise<void> {
 
-    if (formMetadata?.subTitleColumn) {
-      this.lookupRecords = await this.cinchyQueryService.getLookupRecords(
-        formMetadata.subTitleColumn,
-        formMetadata.domainName,
-        formMetadata.tableName,
-        formMetadata.lookupFilter
-      ).toPromise();
-    }
+    this.lookupRecords = await this.cinchyQueryService.getLookupRecords(
+      formMetadata.subTitleColumn,
+      formMetadata.domainName,
+      formMetadata.tableName,
+      formMetadata.lookupFilter
+    ).toPromise();
   }
 
 

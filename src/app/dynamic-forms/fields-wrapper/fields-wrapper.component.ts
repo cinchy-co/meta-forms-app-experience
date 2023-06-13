@@ -56,7 +56,7 @@ export class FieldsWrapperComponent {
   @Output() childFormOpened = new EventEmitter<any>();
 
 
-  displaySections = new Array<FormSection>();
+  displaySections = new Array<{ section: FormSection, sectionIndex: number }>();
 
 
   constructor(
@@ -106,25 +106,42 @@ export class FieldsWrapperComponent {
    */
   private _setDisplaySections(): void {
 
-    const displaySections = new Array<FormSection>();
+    const displaySections = new Array<{ section: FormSection, sectionIndex: number }>();
+
+    let parentSectionIdx = 0;
+    let flattenedChildFormSectionIdxMap = {};
 
     this.form?.sections?.forEach((section: FormSection, sectionIndex: number) => {
 
-      displaySections.push(section.clone());
+      displaySections.push({ 
+        section: section.clone(), 
+        sectionIndex: parentSectionIdx 
+      });
 
       section.fields?.forEach((field: FormField, fieldIndex: number) => {
 
         if (field.childForm?.flatten && field.childForm.sections?.length) {
+          if (flattenedChildFormSectionIdxMap[field.childForm.id] == null) {
+            flattenedChildFormSectionIdxMap[field.childForm.id] = 0;
+          }
+
           this.form.sections[sectionIndex].fields[fieldIndex].childForm.sections.forEach((childSection: FormSection) => {
 
             const childSectionClone = childSection.clone();
 
             childSectionClone.isInFlattenedChildForm = true;
 
-            displaySections.push(childSectionClone);
+            displaySections.push({ 
+              section: childSectionClone, 
+              sectionIndex: flattenedChildFormSectionIdxMap[field.childForm.id]
+            });
+
+            flattenedChildFormSectionIdxMap[field.childForm.id]++;
           });
         }
       });
+
+      parentSectionIdx++;
     });
 
     this.displaySections = displaySections;

@@ -45,14 +45,26 @@
   </ng-container>
 
   <ng-container *ngIf="showIframe && isValidHttpUrl(value)">
-    <iframe class="iframe-control" [src]="urlSafe" [ngStyle] ="{ 'height.px' : iframeHeightStyle }"></iframe>
+    <iframe class="iframe-control" [src]="urlSafe" [style.height.px]="iframeHeightStyle"></iframe>
   </ng-container>
   
   <ng-container *ngIf="showIframeSandbox && isValidHttpUrl(value)">
-    <iframe class="iframe-control" sandbox = "allow-forms allow-scripts allow-modals allow-popups allow-same-origin" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+    <iframe class="iframe-control" sandbox="allow-forms allow-scripts allow-modals allow-popups allow-same-origin" [src]="urlSafe" [style.height.px]="iframeHeightStyle"></iframe>
   </ng-container>
    
   <ng-container *ngIf="showIframeSandboxStrict && isValidHttpUrl(value)">
-    <iframe class="iframe-control" sandbox="allow-forms allow-scripts allow-modals allow-popups" [src]="urlSafe" [ngStyle]="{'height.px' : iframeHeightStyle}"></iframe>
+    <iframe class="iframe-control" sandbox="allow-forms allow-scripts allow-modals allow-popups" [src]="urlSafe" [style.height.px]="iframeHeightStyle"></iframe>
   </ng-container>
+
+  <ng-container *ngIf="showIframe && isValidHttpUrl(field.value)">
+    <iframe class="iframe-control" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+   </ng-container>
+  
+   <ng-container *ngIf="showIframeSandbox && isValidHttpUrl(field.value)">
+    <iframe class="iframe-control" sandbox="allow-forms allow-scripts allow-modals allow-popups allow-same-origin" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+   </ng-container>
+   
+   <ng-container *ngIf="showIframeSandboxStrict && isValidHttpUrl(field.value)">
+    <iframe class="iframe-control" sandbox="allow-forms allow-scripts allow-modals allow-popups" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+   </ng-container>
 </div>

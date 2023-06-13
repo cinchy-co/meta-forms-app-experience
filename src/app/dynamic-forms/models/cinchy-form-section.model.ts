@@ -1,8 +1,5 @@
 import { FormField } from "./cinchy-form-field.model";
 
-import { ILookupRecord } from "../../models/lookup-record.model";
-
-
 export class FormSection {
 
   /**

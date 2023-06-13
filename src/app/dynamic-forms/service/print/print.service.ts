@@ -397,7 +397,7 @@ export class PrintService {
 
       return {
         label: field.label,
-        value: selectedOption.label
+        value: selectedOption?.label
       };
     }
     return {

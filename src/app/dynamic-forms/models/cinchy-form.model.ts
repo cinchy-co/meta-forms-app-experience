@@ -9,6 +9,7 @@ import { IFindChildFormResponse } from "../interface/find-child-form-response";
 
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { ILookupRecord } from "../../models/lookup-record.model";
+import { ITableEntitlements } from "../interface/table-entitlements";
 
 import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
@@ -115,7 +116,7 @@ export class Form {
     public readonly targetTableDomain: string,
     public readonly targetTableName: string,
     public readonly isAccordion: boolean,
-    public readonly hasAccess: boolean,
+    public readonly tableEntitlements: ITableEntitlements,
     public readonly isChild: boolean = false,
     public readonly flatten: boolean = false,
     public readonly childFormParentId?: string,
@@ -251,7 +252,7 @@ export class Form {
       this.targetTableDomain,
       this.targetTableName,
       this.isAccordion,
-      this.hasAccess,
+      this.tableEntitlements,
       this.isChild,
       this.flatten,
       this.childFormParentId,
@@ -731,7 +732,7 @@ export class Form {
       if (!this.rowId) {
         query = new Query(
           `INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(", ")})
-            VALUES (${assignmentValues.join(", ")})`,
+            VALUES (${assignmentValues.join(", ")}); SELECT 1;`,
           params,
           attachedFilesInfo
         );
@@ -747,7 +748,7 @@ export class Form {
             SET ${assignmentSetClauses.join(", ")}
             FROM [${this.targetTableDomain}].[${this.targetTableName}] t
             WHERE t.[Cinchy ID] = ${this.rowId}
-              AND t.[Deleted] IS NULL`,
+              AND t.[Deleted] IS NULL; SELECT 1;`,
           params,
           attachedFilesInfo
         );
@@ -763,17 +764,12 @@ export class Form {
   }
 
 
-  generateSelectQuery(rowId: number, parentTableId: number = -1): IQuery {
+  generateSelectQuery(rowId: number): IQuery {
 
-    let columnName = null;
     let fields: Array<string> = [];
 
     this.sections.forEach(section => {
       section.fields.forEach(element => {
-        //TODO: GET The values Dynamically
-        if (parentTableId === element.cinchyColumn.linkTargetTableId) {
-          columnName = element.cinchyColumn.name;
-        }
 
         if (isNullOrUndefined(element.cinchyColumn.name) || element.cinchyColumn.name === "") {
           return;
@@ -805,21 +801,21 @@ export class Form {
     });
     fields.push("[Cinchy ID]");
 
-    if (this.isChild && (!isNullOrUndefined(columnName) || (this.childFormParentId && this.childFormLinkId))) {
-      let defaultWhere;
-      if (!isNullOrUndefined(columnName)) {
-        defaultWhere = `where t.[${columnName}].[Cinchy ID] = ${rowId} and t.[Deleted] is null`
-      } else {
-        defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] is null`
-      }
+    if (this.isChild) {
+      
+      const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] is null`;
+
       const whereConditionWithFilter = this.childFormFilter ? 
       `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
-      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`
+
+      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
+
       let query: IQuery = new Query(
         `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
         null,
         null
       );
+
       return query;
     } else {
       let query: IQuery = new Query(
