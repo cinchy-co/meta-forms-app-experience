@@ -347,11 +347,13 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
     if (dropdownDataset?.options) {
       filteredOutNullSets = dropdownDataset.options.filter(option => option.label);
 
-      return new DropdownDataset(filteredOutNullSets.sort((a, b) => {
-        var lblA = a.label?.toString()?.toLocaleLowerCase() ?? '';
-        var lblB = b.label?.toString()?.toLocaleLowerCase() ?? '';
-        return (lblA.localeCompare(lblB));
-      }));
+      return new DropdownDataset(
+        filteredOutNullSets.sort((a: DropdownOption, b: DropdownOption) => {
+          var lblA = a.label?.toString()?.toLocaleLowerCase() ?? "";
+          var lblB = b.label?.toString()?.toLocaleLowerCase() ?? "";
+          return lblA.localeCompare(lblB);
+        })
+      );
     }
 
     return null;
