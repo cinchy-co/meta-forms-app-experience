@@ -60,7 +60,7 @@ export class ChildFormComponent {
             if (field.cinchyColumn.dataType === "Link") {
               if (!this.childFormData.presetValues[field.cinchyColumn.name]) {
                 // Prefill child linked column value with parent id if the target table id matches parent form table id
-                const parentRowId = field.cinchyColumn.linkTargetTableId === this.childFormData.childForm.parentForm.targetTableId ? this.childFormData.childForm.parentForm.rowId : null;
+                const parentRowId = field.label === childFormLinkName ? this.childFormData.childForm.parentForm.rowId : null;
                 this.childFormData.childForm.updateFieldValue(
                   sectionIndex,
                   fieldIndex,
