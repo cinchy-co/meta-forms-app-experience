@@ -567,6 +567,7 @@ export class Form {
             (field.cinchyColumn.hasChanged || isLinkedColumnForInsert)
         ) {
           paramName = `@p${paramNumber++}`;
+          foundLinkedColumn ||= field.label === childFormLinkName;
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
@@ -661,7 +662,6 @@ export class Form {
               }
               else {
                 if (field.cinchyColumn.dataType === "Link") {
-                  foundLinkedColumn ||= field.label === childFormLinkName;
                   if (isNullOrUndefined(this.rowId)) {
                     if (field.form.isChild && field.form.flatten && field.form.childFormParentId) {
                       let childFormAssignmentValue = `ResolveLink(${paramName},'Cinchy ID')`;
@@ -710,18 +710,20 @@ export class Form {
       });
     });
 
-    // Link child record to parent table if linked field is not displayed in the form
+    // If linked field is NOT DISPLAYED, link child record to parent table by matching the childFormLinkName
     if (!foundLinkedColumn) {
       this.tableMetadata["Columns"]?.forEach((column: { columnType: string, linkedTableId: number, name: string }) => {
-        if (
-          column.columnType === "Link" &&
-          column.name === childFormLinkName &&
-          column.linkedTableId === this.parentForm.targetTableId
-        ) {
+        if (column.name === childFormLinkName) {
           paramName = `@p${paramNumber++}`;
           assignmentColumns.push(`[${column.name}]`);
           assignmentValues.push(`ResolveLink(${paramName}, 'Cinchy Id')`);
-          params[paramName] = this.parentForm.rowId.toString();
+
+          if (column.columnType === "Link") {
+            params[paramName] = this.parentForm.rowId.toString();
+          } else {
+            const parentFormLinkName = this.childFormParentId?.split("].[")[0]?.replace(/[\[\]]+/g, "");
+            params[paramName] = this.parentForm.fieldsByColumnName[parentFormLinkName].value
+          }
         }
       });
     }
