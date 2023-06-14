@@ -337,6 +337,11 @@ export class Form {
     return null;
   }
 
+  getChildFormLinkName(childFormLinkId: string): string {
+    // We only need the first segment since the linkFieldId can have a value like "[Field].[Cinchy Id]"
+    return childFormLinkId?.replace(/[\[\]]+/g, "").split(".")[0];
+  }
+
 
   generateDeleteQuery(): IQuery {
 
@@ -548,7 +553,7 @@ export class Form {
     let params: { [key: string]: any } = {};
 
     this.rowId = rowId;
-    const childFormLinkName = this.childFormLinkId?.split("].[")[0]?.replace(/[\[\]]+/g, "");
+    const childFormLinkName = this.getChildFormLinkName(this.childFormLinkId);
 
     this.sections.forEach((section: FormSection) => {
 

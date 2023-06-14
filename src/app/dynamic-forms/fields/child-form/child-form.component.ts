@@ -36,7 +36,7 @@ export class ChildFormComponent {
 
 
   ngOnInit(): void {
-    const childFormLinkName = this.childFormData.childForm?.childFormLinkId?.split("].[")[0]?.replace(/[\[\]]+/g, "");
+    const childFormLinkName = this.childFormData.childForm?.getChildFormLinkName(this.childFormData.childForm?.childFormLinkId);
 
     // TODO: atomize this function
     this.childFormData.childForm?.sections?.forEach((section: FormSection, sectionIndex: number) => {
