@@ -548,6 +548,7 @@ export class Form {
     let params: { [key: string]: any } = {};
 
     this.rowId = rowId;
+    const childFormLinkName = this.childFormLinkId?.split("].[")[0]?.replace(/[\[\]]+/g, "");
 
     this.sections.forEach((section: FormSection) => {
 
@@ -556,7 +557,7 @@ export class Form {
         const isLinkedColumnForInsert = coerceBooleanProperty(
           !this.rowId &&
             (field.cinchyColumn.dataType === "Link" ||
-              `[${field.label}]` === this.childFormLinkId)
+              field.label === childFormLinkName)
         );
 
         if (
@@ -660,7 +661,7 @@ export class Form {
               }
               else {
                 if (field.cinchyColumn.dataType === "Link") {
-                  foundLinkedColumn ||= field.cinchyColumn.linkTargetTableId === this.parentForm.targetTableId;
+                  foundLinkedColumn ||= field.label === childFormLinkName;
                   if (isNullOrUndefined(this.rowId)) {
                     if (field.form.isChild && field.form.flatten && field.form.childFormParentId) {
                       let childFormAssignmentValue = `ResolveLink(${paramName},'Cinchy ID')`;
@@ -714,11 +715,12 @@ export class Form {
       this.tableMetadata["Columns"]?.forEach((column: { columnType: string, linkedTableId: number, name: string }) => {
         if (
           column.columnType === "Link" &&
+          column.name === childFormLinkName &&
           column.linkedTableId === this.parentForm.targetTableId
         ) {
           paramName = `@p${paramNumber++}`;
           assignmentColumns.push(`[${column.name}]`);
-          assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
+          assignmentValues.push(`ResolveLink(${paramName}, 'Cinchy Id')`);
           params[paramName] = this.parentForm.rowId.toString();
         }
       });

@@ -36,6 +36,7 @@ export class ChildFormComponent {
 
 
   ngOnInit(): void {
+    const childFormLinkName = this.childFormData.childForm?.childFormLinkId?.split("].[")[0]?.replace(/[\[\]]+/g, "");
 
     // TODO: atomize this function
     this.childFormData.childForm?.sections?.forEach((section: FormSection, sectionIndex: number) => {
@@ -164,7 +165,7 @@ export class ChildFormComponent {
                   null
                 );
               // Don't override child form link field with presetValues so we can prefill the value with parent ID
-              } else if (`[${field.label}]` !== this.childFormData.childForm.childFormLinkId) {
+              } else if (field.label !== childFormLinkName) {
                 this.childFormData.childForm.updateFieldValue(
                   sectionIndex,
                   fieldIndex,
