@@ -16,6 +16,7 @@ import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
+import { Subscription } from "rxjs";
 
 import { MessageDialogComponent } from "./message-dialog/message-dialog.component";
 
@@ -37,13 +38,14 @@ import { PrintService } from "./service/print/print.service";
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
 
 
+
 @Component({
   selector: "cinchy-dynamic-forms",
   templateUrl: "./cinchy-dynamic-forms.component.html",
   styleUrls: ["./style/style.scss"],
   encapsulation: ViewEncapsulation.None
 })
-export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
+export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy {
 
   @ViewChild("recordDropdown") dropdownComponent: SearchDropdownComponent;
   
@@ -75,6 +77,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   private childFieldArray: Array<any> = [];
   private childForms: any;
 
+  private _onRecordSelectedSubscription: Subscription;
+  private _formFieldMetadataSubscription: Subscription;
   constructor(
     private _dialog: MatDialog,
     private _cinchyService: CinchyService,
@@ -86,6 +90,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     private _formHelperService: FormHelperService,
     private _configService: ConfigService
   ) {}
+  ngOnDestroy(): void {
+    this._onRecordSelectedSubscription.unsubscribe();
+    this._formFieldMetadataSubscription.unsubscribe();
+  }
 
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -97,13 +105,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   ngOnInit(): void {
-
-    this.appStateService.saveClicked$.subscribe(() => {
+   this.appStateService.saveClicked$.subscribe(() => {
 
       this.saveForm(this.form, this.rowId);
     });
 
-    this.appStateService.onRecordSelected().subscribe(
+    this._onRecordSelectedSubscription = this.appStateService.onRecordSelected().subscribe(
       (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
 
         this.rowId = record?.cinchyId;
@@ -420,7 +427,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       this.form = await this._formHelperService.generateForm(this.formMetadata, this.rowId,tableEntitlements);
       this._formHelperService.fillWithSections(this.form, this.formSectionsMetadata);
 
-      this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
+      this._formFieldMetadataSubscription = this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
+        
         async (formFieldsMetadata) => {
             let selectedLookupRecord;
             if (this.lookupRecordsList) {
