@@ -36,6 +36,7 @@ export class ChildFormComponent {
 
 
   ngOnInit(): void {
+    const childFormLinkName = this.childFormData.childForm?.getChildFormLinkName(this.childFormData.childForm?.childFormLinkId);
 
     // TODO: atomize this function
     this.childFormData.childForm?.sections?.forEach((section: FormSection, sectionIndex: number) => {
@@ -58,10 +59,12 @@ export class ChildFormComponent {
             // bind dropdown values
             if (field.cinchyColumn.dataType === "Link") {
               if (!this.childFormData.presetValues[field.cinchyColumn.name]) {
+                // Prefill child linked column value with parent id if the target table id matches parent form table id
+                const parentRowId = field.label === childFormLinkName ? this.childFormData.childForm.parentForm.rowId : null;
                 this.childFormData.childForm.updateFieldValue(
                   sectionIndex,
                   fieldIndex,
-                  null
+                  parentRowId ?? null
                 );
               }
               else if (field.dropdownDataset?.options?.length) {
@@ -161,7 +164,8 @@ export class ChildFormComponent {
                   fieldIndex,
                   null
                 );
-              } else {
+              // Don't override child form link field with presetValues so we can prefill the value with parent ID
+              } else if (field.label !== childFormLinkName) {
                 this.childFormData.childForm.updateFieldValue(
                   sectionIndex,
                   fieldIndex,

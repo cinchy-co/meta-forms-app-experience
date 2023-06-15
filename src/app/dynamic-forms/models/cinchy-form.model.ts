@@ -337,6 +337,11 @@ export class Form {
     return null;
   }
 
+  getChildFormLinkName(childFormLinkId: string): string {
+    // We only need the first segment since the linkFieldId can have a value like "[Field].[Cinchy Id]"
+    return childFormLinkId?.replace(/[\[\]]+/g, "").split(".")[0];
+  }
+
 
   generateDeleteQuery(): IQuery {
 
@@ -541,18 +546,24 @@ export class Form {
     let assignmentColumns = new Array<string>();
     let assignmentValues = new Array<string>();
     let attachedFilesInfo = [];
+    let foundLinkedColumn = false;
 
     let paramName: string;
     let paramNumber: number = 0;
     let params: { [key: string]: any } = {};
 
     this.rowId = rowId;
+    const childFormLinkName = this.getChildFormLinkName(this.childFormLinkId);
 
     this.sections.forEach((section: FormSection) => {
 
       section.fields.forEach((field: FormField) => {
 
-        const isLinkedColumnForInsert = coerceBooleanProperty(!this.rowId && field.isLinkedColumn(field.cinchyColumn.name));
+        const isLinkedColumnForInsert = coerceBooleanProperty(
+          !this.rowId &&
+            (field.cinchyColumn.dataType === "Link" ||
+              field.label === childFormLinkName)
+        );
 
         if (
             field.cinchyColumn.canEdit &&
@@ -561,11 +572,12 @@ export class Form {
             (field.cinchyColumn.hasChanged || isLinkedColumnForInsert)
         ) {
           paramName = `@p${paramNumber++}`;
+          foundLinkedColumn ||= field.label === childFormLinkName;
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
               try {
-                params[paramName] = field.value ? 
+                params[paramName] = field.value ?
                   ( ((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null ) :
                   null;
               }
@@ -702,6 +714,24 @@ export class Form {
         }
       });
     });
+
+    // If linked field is NOT DISPLAYED, link child record to parent table by matching the childFormLinkName
+    if (!foundLinkedColumn) {
+      this.tableMetadata["Columns"]?.forEach((column: { columnType: string, linkedTableId: number, name: string }) => {
+        if (column.name === childFormLinkName) {
+          paramName = `@p${paramNumber++}`;
+          assignmentColumns.push(`[${column.name}]`);
+          assignmentValues.push(`ResolveLink(${paramName}, 'Cinchy Id')`);
+
+          if (column.columnType === "Link") {
+            params[paramName] = this.parentForm.rowId.toString();
+          } else {
+            const parentFormLinkName = this.childFormParentId?.split("].[")[0]?.replace(/[\[\]]+/g, "");
+            params[paramName] = this.parentForm.fieldsByColumnName[parentFormLinkName].value
+          }
+        }
+      });
+    }
 
     const ifUpdateAttachedFilePresent = attachedFilesInfo.find(fileInfo => fileInfo.query);
 
