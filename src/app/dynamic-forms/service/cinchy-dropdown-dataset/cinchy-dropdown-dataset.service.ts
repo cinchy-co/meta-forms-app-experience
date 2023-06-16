@@ -92,7 +92,7 @@ export class DropdownDatasetService {
       // TODO For now only showing one display column (display-0)
       const label = row["display-0"] ? `${row["Label"]}, ${row["display-0"]}` : row["Label"];
 
-      optionArray.push(new DropdownOption(row["Id"].toString(), row["Label"].toString(), label));
+      optionArray.push(new DropdownOption(row["Id"].toString(), row["Label"]?.toString(), label));
     });
 
     const result = new DropdownDataset(optionArray);
