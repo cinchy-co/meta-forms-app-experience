@@ -1,41 +1,59 @@
-<div *ngIf=" field.dropdownDataset">
-  <mat-form-field class="full-width-element divMarginBottom">
+<div *ngIf="options">
+  <div class="full-width-element divMarginBottom">
     <div class="link-labels">
       <div>
         <fa-icon [icon]="faListUl"></fa-icon>
       </div>
       &nbsp;
-      <label class="cinchy-label" [title]="field.caption || ''">
+      <label class="cinchy-label" [title]="field.caption ?? ''">
         {{ field.label }}
-        {{ field.cinchyColumn.isMandatory && (field.value === '' || field.value === null) ? '*' :'' }}
+        {{ (field.cinchyColumn.isMandatory && !value) ? '*' :'' }}
       </label>
-      <mat-icon *ngIf="field.caption" class="info-icon"
-                ngbTooltip="{{field.caption}}"
-                placement="auto"
-                container="body"
-                matTooltipClass="tool-tip-body"
-                matTooltipPosition="above">
+      <mat-icon *ngIf="field.caption" 
+        class="info-icon"
+        ngbTooltip="{{field.caption}}"
+        placement="auto"
+        container="body"
+        matTooltipClass="tool-tip-body"
+        matTooltipPosition="above">
         info
       </mat-icon>
     </div>
-    <mat-select multiple [(ngModel)]="field.value"
-                class="form-control"
-                [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
-                [ngModelOptions]="{ standalone: true }"
-                (selectionChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
-                (openedChange)="changeFilter()"
-    >
-      <input matInput type="search" placeholder="Search {{ field.label }}" class="form-control"
-             [(ngModel)]="choiceFilter" [ngModelOptions]="{standalone: true}">
+    <div class="full-width-element divMarginBottom" *ngIf="canEdit">
+      <mat-select multiple 
+          class="form-control"
+          [(ngModel)]="value"
+          [ngModelOptions]="{ standalone: true }"
+          (openedChange)="resetFilter()"
+          (selectionChange)="valueChanged()">
+        <mat-option>
+          <ngx-mat-select-search 
+            class="multi-search"
+            [(ngModel)]="choiceFilter"
+            [ngModelOptions]="{ standalone: true }"
+            [showToggleAllCheckbox]="true" 
+            (toggleAll)="toggleSelectAll($event)"
+            placeholderLabel="Search {{ field.label }}"
+            noEntriesFoundLabel="No entries matched your search">
+          </ngx-mat-select-search>
+        </mat-option>
 
-      <mat-option *ngFor="let dropdownOption of field.dropdownDataset| filterBy: choiceFilter"
-                  [value]="dropdownOption">
-        {{ dropdownOption }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
+        <mat-option 
+          *ngFor="let opt of options | filterBy: choiceFilter"
+          [value]="opt">
+          {{ opt }}
+        </mat-option>
+      </mat-select>
+    </div>
+
+    <ng-container *ngIf="!canEdit">
+      <label class="font-14" [innerHTML]="value || '-'"></label>
+    </ng-container>
+  </div>
+
   <!-- isMandatory Validator-->
-  <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory && (field.value === '' || field.value === null))">
-    *{{ field.label }} is Required.
+  <mat-error class="mat-error-move-up-19"
+             *ngIf="showError && (field.cinchyColumn.isMandatory && !field.value)">
+    *{{field.label}} is Required.
   </mat-error>
 </div>

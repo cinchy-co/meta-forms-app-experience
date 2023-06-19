@@ -1,14 +1,13 @@
-<!-- Choice field For ShowCase Make it Multi-Select-->
-<div *ngIf=" field.dropdownDataset">
+<div *ngIf="options">
   <div class="full-width-element divMarginBottom">
     <div class="link-labels">
       <div>
         <fa-icon [icon]="faListUl"></fa-icon>
       </div>
       &nbsp;
-      <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
+      <label class="cinchy-label" [title]="field.caption ?? ''">
         {{field.label}}
-        {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+        {{field.cinchyColumn.isMandatory && !field.value ? '*' : ''}}
       </label>
       <mat-icon *ngIf="field.caption" class="info-icon"
                 ngbTooltip="{{field.caption}}"
@@ -19,26 +18,26 @@
         info
       </mat-icon>
     </div>
-    <div class="full-width-element divMarginBottom" *ngIf="field.cinchyColumn.canEdit && !field.cinchyColumn.isViewOnly && !isDisabled">
-      <mat-select class="single-select form-control" [(ngModel)]="field.value"
-                  [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
-                  (selectionChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
-                  [ngModelOptions]="{standalone: true}">
-        <mat-option [value]=""> </mat-option>
-        <mat-option *ngFor="let dropdownOption of field.dropdownDataset| filterBy: choiceFilter"
-                    [value]="dropdownOption">
-          {{dropdownOption}}
+    <div class="full-width-element divMarginBottom" *ngIf="canEdit">
+      <mat-select class="single-select form-control"
+                  [(ngModel)]="value"
+                  (selectionChange)="valueChanged()"
+                  [ngModelOptions]="{ standalone: true }">
+        <mat-option [value]="">-</mat-option>
+        <mat-option *ngFor="let opt of options" [value]="opt">
+          {{ opt }}
         </mat-option>
-
       </mat-select>
     </div>
-    <ng-container *ngIf="!field.cinchyColumn.canEdit || field.cinchyColumn.isViewOnly || isDisabled">
-      <label class="font-14" [innerHTML]="field.value ? field.value : '-'"></label>
+
+    <ng-container *ngIf="!canEdit">
+      <label class="font-14" [innerHTML]="value || '-'"></label>
     </ng-container>
   </div>
+
   <!-- isMandatory Validator-->
   <mat-error class="mat-error-move-up-19"
-             *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+             *ngIf="showError && (field.cinchyColumn.isMandatory && !value)">
     *{{field.label}} is Required.
   </mat-error>
 </div>

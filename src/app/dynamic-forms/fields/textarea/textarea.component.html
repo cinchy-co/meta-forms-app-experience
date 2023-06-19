@@ -1,13 +1,13 @@
-<div *ngIf="(field.cinchyColumn.dataType == 'Text' && field.cinchyColumn.textColumnMaxLength > 500 && field.cinchyColumn.canView)"
+<div *ngIf="(field.cinchyColumn.dataType === 'Text' && field.cinchyColumn.textColumnMaxLength > 500 && field.cinchyColumn.canView)"
      class="full-width-element divMarginBottom">
   <div class="link-labels">
     <div>
       <fa-icon [icon]="faAlignLeft"></fa-icon>
     </div>
     &nbsp;
-    <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
+    <label class="cinchy-label" [title]="field.caption || ''">
       {{field.label}}
-      {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+      {{(field.cinchyColumn.isMandatory && !value) ? '*' : ''}}
     </label>
     <mat-icon *ngIf="field.caption" class="info-icon"
               ngbTooltip="{{field.caption}}"
@@ -18,50 +18,48 @@
       info
     </mat-icon>
   </div>
-  <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
-    <textarea *ngIf="!isFormatted && showActualField"
+  <ng-container *ngIf="canEdit">
+    <textarea *ngIf="!isFormatted && showActualField" class="form-control" type="text"
+              [(ngModel)]="value" [ngModelOptions]="{standalone: true}"
               [rows]="field.cinchyColumn.totalTextAreaRows ? field.cinchyColumn.totalTextAreaRows : 4"
-              [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
-              class='form-control' type="text" [(ngModel)]="field.value"
-              (blur)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')"
-              [ngModelOptions]="{standalone: true}">
+              (blur)="valueChanged()">
          </textarea>
 
-    <ace-editor *ngIf="isFormatted" #editor style="height:450px;" [(text)]="field.value"
-                (textChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')">
+    <ace-editor *ngIf="isFormatted" #editor style="height:450px;" [(text)]="value"
+                (textChange)="valueChanged()">
     </ace-editor>
-    <mat-error *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+    <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !value">
       *{{field.label}} is Required.
     </mat-error>
   </ng-container>
 
-  <ng-container *ngIf="field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled">
-    <label class="pre-formatted" *ngIf="!isFormatted && showActualField" [innerHTML]="field.value || '-'"></label>
+  <ng-container *ngIf="!canEdit">
+    <label class="pre-formatted" *ngIf="!isFormatted && showActualField" [innerHTML]="value || '-'"></label>
 
-    <ace-editor *ngIf="isFormatted" #editor style="height:450px;" [(text)]="field.value"
-                (textChange)="callbackEvent(targetTableName, field.cinchyColumn.name, $event, 'value')">
+    <ace-editor *ngIf="isFormatted" #editor style="height:450px;" [(text)]="value"
+                (textChange)="valueChanged()">
     </ace-editor>
   </ng-container>
 
   <ng-container *ngIf="showImage">
-    <img class="cinchy-images" *ngIf="field.value" [src]="field.value">
-    <p *ngIf="!field.value">-</p>
+    <img [ngClass]="imageSize" *ngIf="value" [src]="value">
+    <p *ngIf="!value">-</p>
   </ng-container>
 
   <ng-container *ngIf="showLinkUrl">
-    <a *ngIf="field.value" [href]="field.value">Open</a>
-    <label *ngIf="!field.value">-</label>
+    <a *ngIf="value" [href]="value">Open</a>
+    <label *ngIf="!value">-</label>
   </ng-container>
 
-  <ng-container *ngIf="showIFrame && isValidHttpUrl(field.value)">
-    <iframe class="iframe-control" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+  <ng-container *ngIf="showIframe && isValidHttpUrl(value)">
+    <iframe class="iframe-control" [src]="urlSafe" [style.height.px]="iframeHeightStyle"></iframe>
   </ng-container>
   
-  <ng-container *ngIf="showIFrameSandbox && isValidHttpUrl(field.value)">
-    <iframe class="iframe-control" sandbox = "allow-forms allow-scripts allow-modals allow-popups allow-same-origin" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+  <ng-container *ngIf="showIframeSandbox && isValidHttpUrl(value)">
+    <iframe class="iframe-control" sandbox="allow-forms allow-scripts allow-modals allow-popups allow-same-origin" [src]="urlSafe" [style.height.px]="iframeHeightStyle"></iframe>
   </ng-container>
    
-  <ng-container *ngIf="showIFrameSandboxStrict && isValidHttpUrl(field.value)">
-    <iframe class="iframe-control" sandbox = "allow-forms allow-scripts allow-modals allow-popups" [src]="urlSafe" [ngStyle] ="{'height.px' : iframeHeightStyle}"></iframe>
+  <ng-container *ngIf="showIframeSandboxStrict && isValidHttpUrl(value)">
+    <iframe class="iframe-control" sandbox="allow-forms allow-scripts allow-modals allow-popups" [src]="urlSafe" [style.height.px]="iframeHeightStyle"></iframe>
   </ng-container>
 </div>

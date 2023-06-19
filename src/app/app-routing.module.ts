@@ -1,7 +1,8 @@
-import {NgModule} from '@angular/core';
-import {Routes, RouterModule} from '@angular/router';
-import {FormWrapperComponent} from './pages/form-wrapper/form-wrapper.component';
-import {SaveSuccessComponent} from "./pages/save-success/save-success.component";
+import { NgModule } from "@angular/core";
+import { Routes, RouterModule } from "@angular/router";
+
+import { FormWrapperComponent } from "./pages/form-wrapper/form-wrapper.component";
+import { SaveSuccessComponent } from "./pages/save-success/save-success.component";
 
 
 const routes: Routes = [
@@ -14,6 +15,7 @@ const routes: Routes = [
     path: "edit-form",
     component: FormWrapperComponent
   },
+  // TODO: this route should be removed, as it was only used for a demo in an earlier version of the application
   {
     path: "save-success",
     component: SaveSuccessComponent
@@ -21,7 +23,16 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' })],
-  exports: [RouterModule]
+  imports: [
+    RouterModule.forRoot(
+      routes,
+      {
+        relativeLinkResolution: "legacy"
+      }
+    )
+  ],
+  exports: [
+    RouterModule
+  ]
 })
 export class AppRoutingModule {}

@@ -1,32 +1,38 @@
-<div *ngIf="(field.cinchyColumn.dataType == 'Number' &&
-    field.cinchyColumn.canView)" class="full-width-element divMarginBottom">
+<div *ngIf="(field.cinchyColumn.dataType === 'Number' && field.cinchyColumn.canView)" class="full-width-element divMarginBottom">
   <div class="link-labels">
     <div>
       <fa-icon [icon]="faHashtag"></fa-icon>
     </div>
     &nbsp;
-    <label class="cinchy-label" [title]="field.caption ? field.caption : ''">
+    <label class="cinchy-label" [title]="field.caption || ''">
       {{field.label}}
-      {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+      {{(field.cinchyColumn.isMandatory && !field.value) ? '*' : ''}}
     </label>
-    <mat-icon *ngIf="field.caption" class="info-icon" ngbTooltip="{{field.caption}}" placement="auto" container="body"
-      matTooltipClass="tool-tip-body" matTooltipPosition="above">
+    <mat-icon *ngIf="field.caption"
+              class="info-icon"
+              container="body"
+              ngbTooltip="{{field.caption}}"
+              placement="auto"
+              matTooltipClass="tool-tip-body" matTooltipPosition="above"
+    >
       info
     </mat-icon>
   </div>
-  <ng-container *ngIf="!field.cinchyColumn.isViewOnly && !isDisabled && field.cinchyColumn.canEdit">
-    <input class='form-control' digitOnly decimal="true" inputmode="numeric" [allowNegatives]="true"
-      [disabled]="(field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled)"
-      (blur)="transformAmount(targetTableName, field.cinchyColumn.name, $event, 'value')" (focus)="reverseTransform()"
-      type="text" [value]='formattedAmount' [(ngModel)]="formattedAmount" [ngModelOptions]="{standalone: true}">
-    <mat-error
-      *ngIf="showError && (field.cinchyColumn.isMandatory == true &&(field.value =='' || field.value == null))">
+  <ng-container *ngIf="canEdit">
+    <input digitOnly
+           type="text"
+           class="form-control"
+           decimal="true"
+           inputmode="numeric"
+           [(ngModel)]="formattedAmount" [ngModelOptions]="{standalone: true}"
+           (blur)="transformAmount()"
+           (focus)="reverseTransform()" />
+
+    <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.value">
       *{{field.label}} is Required.
     </mat-error>
   </ng-container>
-  <ng-container *ngIf="field.cinchyColumn.canEdit=== false || field.cinchyColumn.isViewOnly || isDisabled">
-    <label class="pre-formatted" *ngIf="!field.cinchyColumn.numberFormatter" [innerHTML]="field.value || '-'"></label>
-    <label class="pre-formatted" *ngIf="field.cinchyColumn.numberFormatter && field.value"
-      [innerHTML]="formattedAmount || '-'"></label>
+  <ng-container *ngIf="!canEdit">
+    <label class="pre-formatted" [innerHTML]="formattedAmount || '-'"></label>
   </ng-container>
 </div>

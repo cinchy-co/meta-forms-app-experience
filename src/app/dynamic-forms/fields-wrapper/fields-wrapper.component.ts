@@ -1,7 +1,4 @@
-import { Subscription } from "rxjs";
-
 import {
-  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -9,14 +6,13 @@ import {
   ViewEncapsulation
 } from "@angular/core";
 
-import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
-
 import { TextFormatType } from "../enums/text-format-type.enum";
 
-import { IForm } from "../models/cinchy-form.model";
-import { IFormField } from "../models/cinchy-form-field.model";
-import { IFormSection } from "../models/cinchy-form-sections.model";
-import { SpinnerCondition } from "../models/cinchy-spinner.model";
+import { IFieldChangedEvent } from "../interface/field-changed-event";
+
+import { Form } from "../models/cinchy-form.model";
+import { FormField } from "../models/cinchy-form-field.model";
+import { FormSection } from "../models/cinchy-form-section.model";
 
 import { AppStateService } from "../../services/app-state.service";
 
@@ -31,113 +27,123 @@ import { isNullOrUndefined } from "util";
 })
 export class FieldsWrapperComponent {
 
-  @Input() form: IForm;
-  @Input() rowId;
+  @Input() form: Form;
   @Input() isChild: boolean;
   @Input() fieldsWithErrors;
-  @Input("formHasDataLoaded") set formHasDataLoaded(value: boolean) { this.setFormHasDataLoaded(value); }
 
-  @Output() eventOccurred = new EventEmitter<any>();
-  @Output() childFormOpened = new EventEmitter<any>();
-  @Output() deleteDialogOpened = new EventEmitter<any>();
+  @Input()
+  get formHasDataLoaded(): boolean {
 
-  _formSectionsToRenderMetadata: IFormSectionMetadata[] = [];
-
-  _formHasDataLoaded: boolean;
-
-  _sectionsToRender: IFormSection[];
-
-  subscription: Subscription;
-  sectionInfo: SpinnerCondition;
-
-  constructor(
-    private appStateService: AppStateService,
-    private cdr: ChangeDetectorRef) {
+    return this._formHasDataLoaded;
   }
+  set formHasDataLoaded(value: boolean) {
 
-
-  expansionClicked(section) {
-    this.appStateService.sectionClicked(section.label);
-  }
-
-  setFormHasDataLoaded(value: boolean) {
     if (value) {
-      this.determineSectionsToRender();
+      this._setDisplaySections();
     }
+
     this._formHasDataLoaded = value;
   }
+  private _formHasDataLoaded: boolean;
 
-  determineSectionsToRender() {
 
-    let _newSectionsToRenderMetadata = [];
-    let _newSectionsToRender = [];
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
+  @Output() childRowDeleted = new EventEmitter<{
+    childForm: Form,
+    rowId: number,
+    sectionIndex: number
+  }>();
+  @Output() childFormOpened = new EventEmitter<any>();
 
-    if (this.form?.sections) {
-      for (let i = 0; i < this.form.sections.length; i++) {
-        if (this.form.sections[i].fields) {
-          let numOfFlattenedChildForms = 0;
 
-          for (let j = 0; j < this.form.sections[i].fields.length; j++) {
-            if (this.form.sections[i].fields[j].childForm?.flatten && this.form.sections[i].fields[j].childForm.sections) {
-              numOfFlattenedChildForms++;
-              for (let k = 0; k < this.form.sections[i].fields[j].childForm.sections.length; k++) {
-                // Don't auto expand the child column if this is an accordion form
-                if (this.form.isAccordion) {
-                  this.form.sections[i].fields[j].childForm.sections[k].autoExpand = false;
-                }
+  displaySections = new Array<{ section: FormSection, sectionIndex: number }>();
 
-                _newSectionsToRender.push(this.form.sections[i].fields[j].childForm.sections[k]);
 
-                _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
-                  id: this.form.sections[i].fields[j].childForm.sections[k].id,
-                  name: this.form.sections[i].fields[j].childForm.sections[k].label,
-                  columnsInRow: this.form.sections[i].fields[j].childForm.sections[k].columnsInRow,
-                  autoExpand: this.form.sections[i].fields[j].childForm.sections[k].autoExpand
-                });
-              }
-            }
-          }
+  constructor(
+    private _appStateService: AppStateService,
+  ) {}
 
-          if (this.form.sections[i].fields.length > numOfFlattenedChildForms || numOfFlattenedChildForms == 0) {
-            _newSectionsToRender.push(this.form.sections[i]);
 
-            _newSectionsToRenderMetadata.push(<IFormSectionMetadata>{
-              id: this.form.sections[i].id,
-              name: this.form.sections[i].label,
-              columnsInRow: this.form.sections[i].columnsInRow,
-              autoExpand: this.form.sections[i].autoExpand
-            });
-          }
-        }
-      }
-    }
+  handleOnChange(event: IFieldChangedEvent): void {
 
-    this._formSectionsToRenderMetadata = _newSectionsToRenderMetadata;
-    this._sectionsToRender = _newSectionsToRender;
-    this.appStateService.setLatestRenderedSections(_newSectionsToRenderMetadata);
+    this.onChange.emit(event);
   }
 
 
-  richTextUseJson(field: IFormField): boolean {
+  onPanelExpanded(section: FormSection): void {
+
+    this._appStateService.currentSection$.next(section.label);
+  }
+
+
+  richTextUseJson(field: FormField): boolean {
 
     return (field.cinchyColumn.textFormat !== TextFormatType.HTML);
   }
 
 
-  usePlaintext(field: IFormField): boolean {
+  usePlaintext(field: FormField): boolean {
 
-    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
+    return (field.cinchyColumn.dataType === "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength <= 500)
   }
 
 
-  useRichText(field: IFormField): boolean {
+  useRichText(field: FormField): boolean {
 
     return (field.cinchyColumn.dataType === "Text" && !isNullOrUndefined(field.cinchyColumn.textFormat));
   }
 
 
-  useTextarea(field: IFormField): boolean {
+  useTextarea(field: FormField): boolean {
 
-    return (field.cinchyColumn.dataType == "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
+    return (field.cinchyColumn.dataType === "Text" && isNullOrUndefined(field.cinchyColumn.textFormat) && field.cinchyColumn.textColumnMaxLength > 500);
+  }
+
+
+  /**
+   * Builds the set of sections to display in the view. If a field contains a child form which has been marked for flattening, its
+   * sections are injected at the root level immediately after the section in which that field appears
+   */
+  private _setDisplaySections(): void {
+
+    const displaySections = new Array<{ section: FormSection, sectionIndex: number }>();
+
+    let parentSectionIdx = 0;
+    let flattenedChildFormSectionIdxMap = {};
+
+    this.form?.sections?.forEach((section: FormSection, sectionIndex: number) => {
+
+      displaySections.push({ 
+        section: section.clone(), 
+        sectionIndex: parentSectionIdx 
+      });
+
+      section.fields?.forEach((field: FormField, fieldIndex: number) => {
+
+        if (field.childForm?.flatten && field.childForm.sections?.length) {
+          if (flattenedChildFormSectionIdxMap[field.childForm.id] == null) {
+            flattenedChildFormSectionIdxMap[field.childForm.id] = 0;
+          }
+
+          this.form.sections[sectionIndex].fields[fieldIndex].childForm.sections.forEach((childSection: FormSection) => {
+
+            const childSectionClone = childSection.clone();
+
+            childSectionClone.isInFlattenedChildForm = true;
+
+            displaySections.push({ 
+              section: childSectionClone, 
+              sectionIndex: flattenedChildFormSectionIdxMap[field.childForm.id]
+            });
+
+            flattenedChildFormSectionIdxMap[field.childForm.id]++;
+          });
+        }
+      });
+
+      parentSectionIdx++;
+    });
+
+    this.displaySections = displaySections;
   }
 }

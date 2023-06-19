@@ -1,6 +1,5 @@
 <form class="cinchy-dynamic-forms-wrapper">
   <div class="navigation-buttons form-header">
-    <!-- <button mat-raised-button>Cancel</button>-->
     <div class="flex-row ml-20">
       <a class="table-url" [href]="formMetadata.tableUrl" target="_blank"><span
         class="mr-15"><b>{{formMetadata.formDisplayName}}</b></span></a>
@@ -33,23 +32,21 @@
   <div class="all-expansions-wrapper">
     <mat-accordion *ngIf="formMetadata?.isAccordion; else withoutAccordion">
       <app-fields-wrapper [form]="form"
-                          [rowId]="rowId"
-                          (eventOccurred)="handleFieldsEvent($event)"
-                          (childFormOpened)="openChildForm($event)"
                           [fieldsWithErrors]="fieldsWithErrors"
-                          (deleteDialogOpened)="openDeleteConfirm($event)"
-                          [formHasDataLoaded]="formHasDataLoaded">
+                          [formHasDataLoaded]="formHasDataLoaded"
+                          (childRowDeleted)="onChildRowDeleted($event)"
+                          (childFormOpened)="openChildForm($event)"
+                          (onChange)="handleFieldsEvent($event)">
       </app-fields-wrapper>
     </mat-accordion>
 
     <ng-template #withoutAccordion>
       <app-fields-wrapper [form]="form"
-                          [rowId]="rowId"
-                          (eventOccurred)="handleFieldsEvent($event)"
-                          (childFormOpened)="openChildForm($event)"
                           [fieldsWithErrors]="fieldsWithErrors"
-                          (deleteDialogOpened)="openDeleteConfirm($event)"
-                          [formHasDataLoaded]="formHasDataLoaded">
+                          [formHasDataLoaded]="formHasDataLoaded"
+                          (childRowDeleted)="onChildRowDeleted($event)"
+                          (childFormOpened)="openChildForm($event)"
+                          (onChange)="handleFieldsEvent($event)">
       </app-fields-wrapper>
     </ng-template>
   </div>

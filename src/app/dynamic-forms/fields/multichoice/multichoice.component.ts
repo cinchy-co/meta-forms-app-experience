@@ -1,71 +1,134 @@
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges
+} from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
+
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
 
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
 
-import { ResponseType } from "../../enums/response-type.enum";
-
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
-
-
-//#region Cinchy Dynamic Multi Choice
 /**
  * This section is used to create Multi choice driopdownList
  */
-//#endregion
 @Component({
     selector: "cinchy-multi-choice",
     templateUrl: "./multichoice.component.html",
     styleUrls: ["./multichoice.component.scss"]
 })
-export class MultichoiceComponent {
-  @Input() field: any;
-  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
-  };
-  @Input() targetTableName: string;
-  @Input() isDisabled: boolean;
+export class MultichoiceComponent implements OnChanges {
 
-  @Output() eventHandler = new EventEmitter<any>();
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
+  @Input() isDisabled: boolean;
+  @Input() sectionIndex: number;
+  @Input() targetTableName: string;
+
+  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
+  };
+
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
+
   choiceFilter: string;
   showError: boolean;
+  value: Array<string>;
+  options: Array<string>;
+
   faListUl = faListUl;
-  
-
-  constructor() {}
 
 
-  async ngOnInit() {
+  get canEdit(): boolean {
 
-    const [dataSet, linkTargetId] = [this.field, this.field.cinchyColumn.linkTargetColumnId];
-    const choices = this.field.cinchyColumn.choiceOptions;
-    let dropdownDataset = choices?.split(",") ?? null;
-    dataSet.dropdownDataset = dropdownDataset;
-    this.field.dropdownDataset = dropdownDataset;
-    this.field.value = Array.isArray(this.field.value) ? this.field.value
-      : this.field.value ? [this.field.value] : null;
+    return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
 
-  public changeFilter() {
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
+
+
+  ngOnInit(): void {
+
+    this._setValue();
+
+    const choices = this.field.cinchyColumn.choiceOptions;
+    const splitFromInvertedCommas = choices?.split(`"`) ?? [];
+
+    let allOptions = [];
+    let optionsInSubString = [];
+
+    if (splitFromInvertedCommas.length === 1) {
+      allOptions = choices?.split(",") ?? [];
+    }
+    else {
+      splitFromInvertedCommas.forEach(option => {
+
+        if (option && (option[0] === "," || option[option.length - 1] === ",")) {
+          optionsInSubString = option.split(",");
+          allOptions = [...allOptions, ...optionsInSubString];
+        }
+        else if (option) {
+          allOptions.push(option);
+        }
+      })
+    }
+    this.options = allOptions.slice();
+  }
+
+
+  resetFilter() {
+
     this.choiceFilter = "";
   }
 
-  //#region pass callback event to the project On blur
-  callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    // constant values
-    const value = event.value;
-    this.field.value = event.value;
-    this.field.cinchyColumn.hasChanged = true;
-    const Data = {
-      "TableName": targetTableName,
-      "ColumnName": columnName,
-      "Value": value,
-      "event": event,
-      "hasChanged": this.field.cinchyColumn.hasChanged,
-      "Form": this.field.form,
-      "Field": this.field
+  toggleSelectAll(selectAll: boolean): void {
+
+    this.value = selectAll ?
+      this.options.slice():
+      [];
+    this.valueChanged();
+  }
+
+
+  valueChanged(): void {
+
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.value ?? [],
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
+  }
+
+
+  private _setValue(): void {
+
+    if (this.field?.value) {
+      this.value = Array.isArray(this.field.value) ? this.field.value : [this.field.value];
     }
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.eventHandler.emit(callback);
+    else {
+      this.value = null;
+    }
   }
 }

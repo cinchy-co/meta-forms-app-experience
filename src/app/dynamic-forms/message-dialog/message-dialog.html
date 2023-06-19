@@ -1,8 +1,10 @@
-<h1 mat-dialog-title>{{data.title}}</h1>
+<h1 mat-dialog-title>{{ data.title }}</h1>
+
 <div mat-dialog-content>
-  <p>{{data.message}}</p>
- </div>
+  <p>{{ data.message }}</p>
+</div>
+
 <div mat-dialog-actions>
-        <button mat-button color="primary"  [mat-dialog-close]="'Yes'" cdkFocusInitial>Confirm</button>
-        <button mat-button color="warn"  [mat-dialog-close]="'No'">Cancel</button>
+  <button mat-button color="primary" (click)="confirm()" cdkFocusInitial>Confirm</button>
+  <button mat-button color="warn" (click)="cancel()">Cancel</button>
 </div>

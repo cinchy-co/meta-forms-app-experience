@@ -22,7 +22,7 @@ export class AppComponent implements OnDestroy, OnInit {
     }
   }
 
-  loginDone;
+  loginDone: boolean;
 
 
   private _routerEventSubscription: Subscription
@@ -123,9 +123,14 @@ export class AppComponent implements OnDestroy, OnInit {
    */
   getQueryStringValue(key: string, uri: string): string {
 
-    const idFromUri = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+    const value = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
 
-    return (idFromUri && idFromUri !== "null") ? idFromUri : null;
+    // Covers the case where there is an ID stored in the session but the queryString explicitly requests to clear it
+    if (value === "null") {
+      sessionStorage.removeItem(key);
+    }
+
+    return (value && value !== "null") ? value : null;
   }
 
 
@@ -150,9 +155,15 @@ export class AppComponent implements OnDestroy, OnInit {
    */
   setRowAndFormId() {
 
-    const uri = (window.location === window.parent.location) ? window.location.search : window.parent.location.search;
+    const uri = window.location.search;
+    const parentUri = (window.location === window.parent.location) ? window.location.search : window.parent.location.search;
 
-    this.appStateService.setFormSelected(uri ? this.getQueryStringValue("formId", uri) : sessionStorage.getItem("formId"));
-    this.appStateService.setRecordSelected(this.getIdFromSessionOrUri(uri, "rowId"));
+    // If the app is embedded, it's possible that the querystring can be passed in through the parent's queryParams, so we need to check to
+    // see if the formId is present there, and then use those if that is the case. If the app is not embedded, or if the parent instead sets
+    // the embedded frame's target using the querystring, then we use this window's queryParams instead
+    const resolvedUri = parentUri?.includes("formId") ? parentUri : uri;
+
+    this.appStateService.setRootFormId(resolvedUri ? this.getQueryStringValue("formId", resolvedUri) : sessionStorage.getItem("formId"));
+    this.appStateService.setRecordSelected(this.getIdFromSessionOrUri(resolvedUri, "rowId"));
   }
 }

@@ -3,66 +3,86 @@ import { map, startWith, isEmpty } from "rxjs/operators";
 
 import { FormControl } from "@angular/forms";
 
-import { ICinchyColumn } from "./cinchy-column.model";
-import { IForm } from "./cinchy-form.model";
+import { CinchyColumn } from "./cinchy-column.model";
+import { Form } from "./cinchy-form.model";
+
+import { ILinkedColumnDetails } from "../interface/linked-column-details";
 
 import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 import { isNullOrUndefined } from "util";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
-export interface IFormField {
-  // definition
-  id: number;
-  label: string;
-  caption: string;
-  childForm: IForm;
-  cinchyColumn: ICinchyColumn;
-  // value
-  value: any;
-  formControl: FormControl;
-  form: IForm;
+export class FormField {
 
-  hide: boolean;
-  // functions
-  setInitialValue(value: any);
-}
-
-export class FormField implements IFormField {
-  value: any;
+  // TODO: are these fields necessary?
   formControl: FormControl;
   filteredValues: Observable<DropdownOption[]>;
+
   hide: boolean = false;
 
-  private _dropdownDataset: DropdownDataset;
+  linkedColumn: ILinkedColumnDetails;
+
+  value: any;
 
   constructor(
       public id: number,
       public label: string,
       public caption: string,
-      public childForm: IForm,
-      public cinchyColumn: ICinchyColumn,
-      dropdownDataset: DropdownDataset,
-      public form: IForm
+      public childForm: Form,
+      public cinchyColumn: CinchyColumn,
+      public form: Form,
+      public dropdownDataset?: DropdownDataset,
+      linkedColumnDetails?: ILinkedColumnDetails
   ) {
 
-    this._dropdownDataset = dropdownDataset;
-
-    if (cinchyColumn.dataType == "Link" && !isNullOrUndefined(this._dropdownDataset)) {
+    if (cinchyColumn.dataType === "Link" && dropdownDataset) {
       this.formControl = new FormControl();
       this.filteredValues = this.formControl.valueChanges.pipe(startWith(""), map(value => this._filter(value)));
     }
+
+    this.linkedColumn = linkedColumnDetails;
   }
 
 
   autoCompleteValueMapper = (id) => {
 
-    let selection = this._dropdownDataset.options.find(e => e.id === id);
+    let selection = this.dropdownDataset?.options.find(e => e.id === id);
 
     if (selection)
       return selection.label;
   };
+
+
+  clone(): FormField {
+
+    const clonedField = new FormField(
+      this.id,
+      this.label,
+      this.caption,
+      this.childForm,
+      this.cinchyColumn,
+      this.form,
+      this.dropdownDataset,
+      this.linkedColumn
+    );
+
+    clonedField.hide = this.hide;
+    clonedField.value = this.value;
+
+    clonedField.formControl = this.formControl;
+    clonedField.filteredValues = this.filteredValues;
+
+    return clonedField;
+  }
+
+
+  isLinkedColumn(key: string): boolean {
+
+    return coerceBooleanProperty(this.linkedColumn?.linkLabel === key);
+  }
 
 
   setInitialValue(value: any) {
@@ -79,32 +99,29 @@ export class FormField implements IFormField {
 
       this.value = multiChoiceData;
     }
-    else if (this.cinchyColumn.dataType === "Link" && this.cinchyColumn.isMultiple) {
+    else if (value && this.cinchyColumn.dataType === "Link" && this.cinchyColumn.isMultiple && !Array.isArray(value)) {
       this.value = value?.split(",").map((item) => {
 
         return item.trim ? item.trim() : item;
-      }) ?? [];
+      });
     }
     else {
       this.value = value;
     }
 
-    if (!isNullOrUndefined(this.formControl)) {
-      this.formControl.setValue(this.value);
-    }
+    this.formControl?.setValue(this.value);
   }
 
 
-  private _filter(searchTxt: string) {
-    const filterValue = (typeof searchTxt.toLowerCase === "function") ? searchTxt.toLowerCase() : searchTxt;
+  private _filter (filter: string) {
 
-    return this._dropdownDataset.options.filter(option => {
-      if (!isNullOrUndefined(option.label) && option.label !== "") {
-        if (option.label.toLowerCase().includes(filterValue)) {
-          return option;
-        }
+    const lowercaseFilter = filter?.toLowerCase() || "";
+
+    return this.dropdownDataset?.options.filter((option: DropdownOption) => {
+
+      if (!lowercaseFilter || option.label?.toLowerCase().includes(lowercaseFilter)) {
+        return option;
       }
-
     });
   }
 }

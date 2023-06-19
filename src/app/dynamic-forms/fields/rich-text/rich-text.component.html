@@ -6,7 +6,7 @@
     &nbsp;
     <label class="cinchy-label" [title]="field.caption || ''">
       {{field.label}}
-      {{field.cinchyColumn.isMandatory == true && (field.value == '' || field.value == null) ? '*' : ''}}
+      {{(field.cinchyColumn.isMandatory && !value) ? '*' : ''}}
     </label>
     <mat-icon *ngIf="field.caption" class="info-icon"
               ngbTooltip="{{field.caption}}"
@@ -143,7 +143,7 @@
       </div>
     </div>
   </ng-container>
-  <ng-container *ngIf="field.cinchyColumn.canEdit === false || field.cinchyColumn.isViewOnly || isDisabled">
-    <label class="pre-formatted">{{field.value | json}}</label>
+  <ng-container *ngIf="!canEdit">
+    <label class="pre-formatted">{{ value | json }}</label>
   </ng-container>
 </div>

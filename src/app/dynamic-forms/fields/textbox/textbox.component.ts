@@ -1,46 +1,75 @@
-import { Component, Input, Output, EventEmitter, OnInit } from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from "@angular/core";
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
-import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
-
 import { DataFormatType } from "../../enums/data-format-type";
-import { ResponseType } from "../../enums/response-type.enum";
 
-import { IEventCallback, EventCallback } from "../../models/cinchy-event-callback.model";
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
+
+import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
-//#region Cinchy Dynamic Textbox Field
 /**
  * This section is used to create dynamic textbox field for the cinchy.
  */
-//#endregion
 @Component({
   selector: "cinchy-textbox",
   templateUrl: "./textbox.component.html",
   styleUrls: ["./textbox.component.scss"]
 })
-export class TextboxComponent implements OnInit {
-  @Input() field: any;
+export class TextboxComponent implements OnChanges, OnInit {
 
-  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
-  };
-
-  @Input() targetTableName: string;
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
   @Input() isDisabled: boolean;
   @Input() isInChildForm: boolean;
-  @Output() eventHandler = new EventEmitter<any>();
+  @Input() sectionIndex: number;
+  @Input() targetTableName: string;
 
+  @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
+  };
+
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
+
+
+  iframeHeightStyle: number = 300;
+  showActualField: boolean;
   showError: boolean;
   showImage: boolean;
   showLinkUrl: boolean;
-  showActualField: boolean;
-  showIFrame: boolean;
-  showIFrameSandbox: boolean;
-  showIFrameSandboxStrict: boolean;
-  faAlignLeft = faAlignLeft;
+  showIframe: boolean;
+  showIframeSandbox: boolean;
+  showIframeSandboxStrict: boolean;
   urlSafe: SafeResourceUrl;
-  iframeHeightStyle: string = '300px;';
+  value: string;
+
+  faAlignLeft = faAlignLeft;
+
+
+  get canEdit(): boolean {
+
+    return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+  }
+
 
   /**
    * If the field is displaying an imaged, returns the class name associated with the configured format
@@ -61,7 +90,6 @@ export class TextboxComponent implements OnInit {
 
           return "cinchy-images";
         default:
-
           return "";
       }
     }
@@ -73,60 +101,70 @@ export class TextboxComponent implements OnInit {
   constructor(public sanitizer: DomSanitizer) {}
 
 
-  ngOnInit() {
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
+
+
+  ngOnInit(): void {
+
+    this._setValue();
 
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
 
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
 
-    this.showIFrame = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
+    this.showIframe = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
 
-    this.showIFrameSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
-    this.showIFrameSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
+    this.showIframeSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
+    this.showIframeSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
 
-    if ((this.showIFrame || this.showIFrameSandbox || this.showIFrameSandboxStrict)  && this.isValidHttpUrl(this.field.value) && !this.isInChildForm){
-      this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.field.value);
-      this.iframeHeightStyle = this.field.cinchyColumn.totalTextAreaRows && this.field.cinchyColumn.totalTextAreaRows > 0 
-        ? (100 * this.field.cinchyColumn.totalTextAreaRows)+'' : '300';      
-    }else{
-      this.showIFrame = false;
-      this.showIFrameSandbox = false;
-      this.showIFrameSandboxStrict = false;
+    if ((this.showIframe || this.showIframeSandbox || this.showIframeSandboxStrict) && this.isValidHttpUrl(this.value) && !this.isInChildForm) {
+      this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.value);
+
+      this.iframeHeightStyle = (this.field.cinchyColumn?.totalTextAreaRows > 0) ? (100 * this.field.cinchyColumn.totalTextAreaRows) : 300;      
+    } else {
+      this.showIframe = false;
+      this.showIframeSandbox = false;
+      this.showIframeSandboxStrict = false;
     } 
 
-    this.showActualField = !this.showImage && !this.showLinkUrl && !this.showIFrame && !this.showIFrameSandbox && !this.showIFrameSandboxStrict;
+    this.showActualField = (!this.showImage && !this.showLinkUrl && !this.showIframe && !this.showIframeSandbox && !this.showIframeSandboxStrict);
   }
 
-  //#region pass callback event to the project On blur
-  callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-
-    // constant values
-    const value = event.target[prop];
-    this.field.cinchyColumn.hasChanged = true;
-    const Data = {
-      "TableName": targetTableName,
-      "ColumnName": columnName,
-      "Value": value,
-      "event": event,
-      "hasChanged": this.field.cinchyColumn.hasChanged,
-      "Form": this.field.form,
-      "Field": this.field
-    }
-
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-
-    this.eventHandler.emit(callback);
-  }
-  //#endregion
 
   isValidHttpUrl(str: string) {
+
     let url;
+
     try {
       url = new URL(str);
-    } catch (_) {
+    } catch (error) {
       return false;
     }
-    return url.protocol === "http:" || url.protocol === "https:";
+
+    return (url.protocol === "http:" || url.protocol === "https:");
+  }
+
+
+  valueChanged(): void {
+
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.value,
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
+  }
+
+
+  private _setValue(): void {
+
+    this.value = this.field?.value ?? null;
   }
 }

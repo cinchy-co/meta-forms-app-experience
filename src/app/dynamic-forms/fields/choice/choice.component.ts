@@ -1,11 +1,20 @@
-import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges
+} from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
+
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
+
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
 
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
-
-import { ResponseType } from "../../enums/response-type.enum";
-
-import { EventCallback, IEventCallback } from "../../models/cinchy-event-callback.model";
-
 
 //#region Cinchy Dynamic Choice Field
 /**
@@ -17,37 +26,62 @@ import { EventCallback, IEventCallback } from "../../models/cinchy-event-callbac
   templateUrl: "./choice.component.html",
   styleUrls: ["./choice.component.scss"]
 })
-export class ChoiceComponent implements OnInit {
-  @Input() field: any;
+export class ChoiceComponent implements OnChanges, OnInit {
+
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
+  @Input() isDisabled: boolean;
+  @Input() sectionIndex: number;
+  @Input() targetTableName: string;
 
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
-    this.showError = errorFields ? !!errorFields.find(item => item == this.field.label) : false;
+
+    this.showError = coerceBooleanProperty(
+      errorFields?.find((item: string) => {
+
+        return (item === this.field?.label);
+      })
+    );
   };
 
-  @Input() targetTableName: string;
-  @Input() isDisabled: boolean;
+  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
-  @Output() eventHandler = new EventEmitter<any>();
-
-  choiceFilter: string;
   showError: boolean;
+  value: string;
+  options: Array<string>;
+
   faListUl = faListUl;
-  
-  constructor() {}
 
-  async ngOnInit() {
 
-    const [dataSet, linkTargetId] = [this.field, this.field.cinchyColumn.linkTargetColumnId];
+  get canEdit(): boolean {
+
+    return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+  }
+
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.field) {
+      this._setValue();
+    }
+  }
+
+
+  ngOnInit(): void {
+
+    this._setValue();
+
     const choices = this.field.cinchyColumn.choiceOptions;
     const splitFromInvertedCommas = choices?.split(`"`) ?? [];
 
     let allOptions = [];
-    let optionsInSubString = "";
+    let optionsInSubString = [];
 
     if (splitFromInvertedCommas.length === 1) {
-      allOptions = choices?.split(",") ?? null;
+      allOptions = choices?.split(",") ?? [];
     }
-    else { // Doing when option have , between them
+    else {
       splitFromInvertedCommas.forEach(option => {
 
         if (option && (option[0] === "," || option[option.length - 1] === ",")) {
@@ -59,32 +93,25 @@ export class ChoiceComponent implements OnInit {
         }
       })
     }
-    allOptions = allOptions.filter(n => n)
-    dataSet.dropdownDataset = allOptions;
-    this.field.dropdownDataset = allOptions;
+    this.options = allOptions.slice();
   }
 
-  public changeFilter() {
-    this.choiceFilter = "";
+
+  valueChanged(): void {
+
+    this.onChange.emit({
+      form: this.form,
+      fieldIndex: this.fieldIndex,
+      newValue: this.value ?? [],
+      sectionIndex: this.sectionIndex,
+      targetColumnName: this.field.cinchyColumn.name,
+      targetTableName: this.targetTableName
+    });
   }
 
-  //#region pass callback event to the project On blur
-  callbackEvent(targetTableName: string, columnName: string, event: any, prop: string) {
-    // constant values
-    const value = event.value;
-    this.field.value = event.value;
-    this.field.cinchyColumn.hasChanged = true;
-    const Data = {
-      "TableName": targetTableName,
-      "ColumnName": columnName,
-      "Value": value,
-      "event": event,
-      "hasChanged": this.field.cinchyColumn.hasChanged,
-      "Form": this.field.form,
-      "Field": this.field
-    }
-    // pass calback event
-    const callback: IEventCallback = new EventCallback(ResponseType.onBlur, Data);
-    this.eventHandler.emit(callback);
+
+  private _setValue(): void {
+
+    this.value = this.field?.value ?? null;
   }
 }

@@ -1,7 +1,7 @@
 export interface IFormSectionMetadata {
-	id				: number;
-	name			: string;
-    columnsInRow	: string;
-    sequence	 	: number;
-    autoExpand		: boolean;
+    autoExpand: boolean;
+    columnsInRow: string;
+	  id: number;
+	  name: string;
+    sequence?: number;
 }

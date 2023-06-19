@@ -18,6 +18,8 @@ import { IFormMetadata } from "../../models/form-metadata-model";
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { ILookupRecord } from "../../models/lookup-record.model";
 
+import { IframeUtil } from "../../util/iframe-util";
+
 
 @Component({
   selector: "app-form-wrapper",
@@ -45,6 +47,12 @@ export class FormWrapperComponent implements OnInit {
   }
 
 
+  get fullScreenHeight(): string {
+
+    return IframeUtil.fullScreenHeight;
+  }
+
+
   constructor(
     private _cinchyQueryService: CinchyQueryService,
     private _appStateService: AppStateService,
@@ -61,9 +69,9 @@ export class FormWrapperComponent implements OnInit {
   }
 
 
-  async ngOnInit() {
+  ngOnInit(): void {
 
-    this._appStateService.formPopulated$.subscribe({
+    this._appStateService.rootFormIdSet$.subscribe({
       next: (formId: string) => {
 
         this.formId = formId;
@@ -76,7 +84,7 @@ export class FormWrapperComponent implements OnInit {
 
   handleOnLookupRecordFilter(filter: string): void {
 
-    let resolvedFilter = (filter ? `LOWER(CAST([${this.formMetadata.subTitleColumn}] as nvarchar)) LIKE LOWER('%${filter}%')` : null);
+    let resolvedFilter = (filter ? `LOWER(CAST([${this.formMetadata.subTitleColumn ?? "Cinchy ID"}] as nvarchar)) LIKE LOWER('%${filter}%')` : null);
 
     // Ensure that if there is a default filter on the field, it is not lost
     if (resolvedFilter && this.formMetadata.lookupFilter) {
@@ -92,6 +100,7 @@ export class FormWrapperComponent implements OnInit {
     try {
       this._spinnerService.show();
       const formMetadata = await this._cinchyQueryService.getFormMetadata().toPromise();
+
       this.formMetadata = this._appStateService.formMetadata = formMetadata;
 
       this.lookupRecords = [];
@@ -103,25 +112,23 @@ export class FormWrapperComponent implements OnInit {
 
 
   async loadFormSections() {
+
     try {
-      const formSections = await this._cinchyQueryService.getFormSections().toPromise();
+      const formSections = await this._cinchyQueryService.getFormSectionsMetadata().toPromise();
+
       this.formSectionsMetadata = formSections;
-      this._appStateService.setLatestRenderedSections(formSections);
-      if (this.formSectionsMetadata) {
-        await this._spinnerService.hide();
-      }
+
+      this._appStateService.latestRenderedSections$.next(formSections);
+
+      this._spinnerService.hide();
     } catch (e) {
       this.showError("Error getting section metadata", e);
+
+      this._spinnerService.hide();
     }
-    await this._spinnerService.hide();
   }
 
-
   async loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): Promise<void> {
-
-    if (formMetadata?.subTitleColumn == null) {
-      return;
-    }
 
     this._cinchyQueryService.resetLookupRecords.next();
 

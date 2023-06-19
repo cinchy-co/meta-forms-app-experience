@@ -39,27 +39,29 @@ export class TypeaheadComponent implements OnInit, ControlValueAccessor {
   toolTipMessage
 
   writeValue(value: any) {
+
     // Setting the full object as value because of displayFn
     this.myControl.setValue(value);
   }
 
-  propagateChange = (_: any) => {
-  }
+
+  propagateChange = (_: any) => { }
+
 
   registerOnChange(fn) {
+
     this.propagateChange = fn;
   }
 
-  registerOnTouched() {
-  }
+  registerOnTouched() {}
 
-  constructor() {
-  }
 
   ngOnInit(): void {
+
     this.onInputChange();
+
     this.toolTipMessage = `Please type at least ${this.charactersAfterWhichToShowList} characters to see the dropdown
-     list of item. You have to select from the dropdown to update this field`;
+     list of items. You have to select from the dropdown to update this field`;
   }
 
   onInputChange() {
@@ -87,17 +89,22 @@ export class TypeaheadComponent implements OnInit, ControlValueAccessor {
     return contact && contact.fullName ? contact.fullName : '';
   }
 
+
   private _filter(value: any): string[] {
+
     if (value && this.listWithAddNew) {
       let filterValue = TypeaheadComponent.getFilterValue(value);
+
       // Filtering out addNewItem because multiple inputs can cause race condition
       if (this.showAddNewContact) {
         return this.listWithAddNew.filter(option => option && option.fullName
           ? option.fullName.toLowerCase().includes(filterValue) || option.id === 'addNewItem' : null);
       }
+
       return this.listWithAddNew.filter(option => option && option.fullName
         ? option.fullName.toLowerCase().includes(filterValue) && option.id !== 'addNewItem' : null);
     }
+
     return [];
   }
 
