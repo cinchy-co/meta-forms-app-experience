@@ -24,6 +24,7 @@
            class="form-control"
            decimal="true"
            inputmode="numeric"
+           [allowNegatives]="true"
            [(ngModel)]="formattedAmount" [ngModelOptions]="{standalone: true}"
            (blur)="transformAmount()"
            (focus)="reverseTransform()" />
