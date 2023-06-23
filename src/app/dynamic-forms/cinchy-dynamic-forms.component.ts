@@ -79,6 +79,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
   private _onRecordSelectedSubscription: Subscription;
   private _formFieldMetadataSubscription: Subscription;
+  private _appStateServiceSaveClickedSubscription: Subscription;
   constructor(
     private _dialog: MatDialog,
     private _cinchyService: CinchyService,
@@ -93,6 +94,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   ngOnDestroy(): void {
     this._onRecordSelectedSubscription.unsubscribe();
     this._formFieldMetadataSubscription.unsubscribe();
+    this._appStateServiceSaveClickedSubscription.unsubscribe();
   }
 
 
@@ -105,7 +107,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
 
   ngOnInit(): void {
-   this.appStateService.saveClicked$.subscribe(() => {
+   this._appStateServiceSaveClickedSubscription = this.appStateService.saveClicked$.subscribe(() => {
 
       this.saveForm(this.form, this.rowId);
     });
@@ -431,14 +433,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         
         async (formFieldsMetadata) => {
             let selectedLookupRecord;
-            if (this.lookupRecordsList) {
-                selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
-
-                return (record.id === this.rowId);
-              });
-            }
+            
             await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
-  
+            if (this.lookupRecordsList) {
+              selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
+
+              return (record.id === this.rowId);
+            });
+          }
             // This may occur if the rowId is not provided in the queryParams, but one is
             if (this.rowId !== null) {
               if (!selectedLookupRecord) {
