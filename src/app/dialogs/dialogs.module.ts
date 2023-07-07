@@ -1,11 +1,10 @@
-import {NgModule} from '@angular/core';
-import {BrowserModule} from '@angular/platform-browser';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {CustomMaterialModule} from '../custom-material.module';
-import {SharedModule} from '../shared/shared.module';
+import {NgModule} from "@angular/core";
+import {BrowserModule} from "@angular/platform-browser";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {CustomMaterialModule} from "../custom-material.module";
+import {SharedModule} from "../shared/shared.module";
 
-import {AddNewContactDialogComponent} from './add-new-contact-dialog/add-new-contact-dialog.component';
-import {AddNewOptionDialogComponent} from './add-new-option-dialog/add-new-option-dialog.component';
+import { AddNewEntityDialogComponent } from "./add-new-entity-dialog/add-new-entity-dialog.component";
 import {CinchyDynamicFormsModule} from "../dynamic-forms/cinchy-dynamic-forms.module";
 
 
@@ -19,12 +18,10 @@ import {CinchyDynamicFormsModule} from "../dynamic-forms/cinchy-dynamic-forms.mo
     CinchyDynamicFormsModule
   ],
   declarations: [
-    AddNewContactDialogComponent,
-    AddNewOptionDialogComponent
+    AddNewEntityDialogComponent
   ],
   entryComponents: [
-    AddNewContactDialogComponent,
-    AddNewOptionDialogComponent
+    AddNewEntityDialogComponent
   ],
   providers: [],
   exports: []

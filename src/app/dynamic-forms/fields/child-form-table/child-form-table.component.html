@@ -1,60 +1,55 @@
-<div *ngIf="field.childForm" class="full-width-element">
-  <ng-container *ngFor="let section of [field.childForm.sections[0]]">
-    <!-- Child form table header -->
-    <span class="error-message" *ngIf="!hasChildTableAccess">
-      You don't have access to this table
-    </span>
-    <div class="mat-header-child">
-      {{ section.label }}
+<div *ngIf="field?.childForm" class="full-width-element">
+  <!-- Child form table header -->
+  <span class="error-message" *ngIf="!childForm.tableEntitlements.accessIsDefinedForCurrentUser">
+    You don't have access to this table
+  </span>
+  <div class="mat-header-child">
+    {{ childForm.sections[0].label }}
 
-      <span class="text-left" *ngIf="hasChildTableAccess">
-        <a (click)="manageChildRecords(field.childForm,null, section.label, 'Add',field.childForm)">
-          <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
-        </a>
-      </span>
-    </div>
-    <!-- Child form table Row header -->
-    <div class="table-responsive" *ngIf="section['MultiFields'] !== undefined && section['MultiFields']!==null">
-      <table class="table child-table" *ngIf="section['MultiFields'].length > 0">
-        <thead>
-          <tr>
-            <th class="mat-row-child">Action</th>
-            <ng-container *ngFor="let key of getSortedKeys(section['MultiFields'][0])">
-              <!-- Child form dynamic table Row header -->
-              <ng-container *ngIf="childFieldDictionary[key]?.cinchyColumn?.dataType !== 'Binary'">
-                <th *ngIf="(key !== 'Cinchy ID') && (!isLinkedColumn(section, key))">
-                  {{ getTableHeader(key, section) }}
-                </th>
-              </ng-container>
-            </ng-container>
-          </tr>
-        </thead>
-        <!-- Child form dynamic table Row Data -->
-        <tbody>
-          <tr *ngFor="let _field of section['MultiFields']" class="pre-formatted">
-            <!--Edit Child form  -->
-            <td class="action-width">
-              <a class="btn-dynamic-child primary btnForm" *ngIf="hasChildTableAccess"
-                  (click)="manageChildRecords(field.childForm, _field, section.label,'Edit',field.childForm)">
-                <fa-icon [icon]="faEdit"></fa-icon>
-              </a>
-              <a class="btn-dynamic-child warn btnForm" *ngIf="hasChildTableAccess"
-                  (click)="deleteRow(field.childForm.targetTableDomain, field.childForm.targetTableName, _field, section['MultiFields'])">
-                <fa-icon [icon]="faTrash"></fa-icon>
-              </a>
+    <span class="text-left" *ngIf="childForm.tableEntitlements.canAddRows">
+      <a (click)="addChildRecord(childForm.sections[0].label)">
+        <fa-icon [icon]="faPlus" class="plusIcon btn-dynamic-child"></fa-icon>
+      </a>
+    </span>
+  </div>
+  <!-- Child form table Row header -->
+  <div class="table-responsive" *ngIf="childForm.childFormRowValues?.length">
+    <table class="table child-table">
+      <thead>
+        <tr>
+          <th class="mat-row-child">Action</th>
+          <ng-container *ngFor="let key of fieldKeys">
+            <!-- Child form dynamic table Row header -->
+            <th *ngIf="cellShouldBeDisplayed(key)">
+              {{ getTableHeader(key) }}
+            </th>
+          </ng-container>
+        </tr>
+      </thead>
+      <!-- Child form dynamic table Row Data -->
+      <tbody>
+        <tr *ngFor="let rowData of childForm.childFormRowValues; let rowIndex = index" class="pre-formatted">
+          <!-- Edit Child form  -->
+          <td class="action-width">
+            <a class="btn-dynamic-child primary btnForm" *ngIf="childForm.tableEntitlements.accessIsDefinedForCurrentUser" (click)="editChildRecord(childForm.sections[0].label, rowData)">
+              <fa-icon [icon]="faEdit"></fa-icon>
+            </a>
+            <a class="btn-dynamic-child warn btnForm" *ngIf="childForm.tableEntitlements.canDeleteRows"
+                (click)="deleteRow(rowData)">
+              <fa-icon [icon]="faTrash"></fa-icon>
+            </a>
+          </td>
+          <ng-container *ngFor="let key of fieldKeys">
+            <td *ngIf="cellShouldBeDisplayed(key)"
+                [ngStyle]="childFieldDictionary[key]?.cinchyColumn?.doNotWrap ? { 'white-space': 'nowrap' } : ''"
+                [innerHTML]="getDisplayValue(rowIndex, key)">
             </td>
-            <ng-container *ngFor="let key of getSortedKeys(_field)">
-              <ng-container *ngIf="childFieldDictionary[key]?.cinchyColumn?.dataType !== 'Binary'">
-                <td *ngIf="(key !== 'Cinchy ID') && (!isLinkedColumn(section, key))" [ngStyle]=" childFieldDictionary[key]?.cinchyColumn?.doNotWrap ? { 'white-space': 'nowrap' } : ''"
-                    [innerHTML]="getDisplayValue(_field[key], section, key)">
-                </td>
-              </ng-container>
-            </ng-container>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </ng-container>
-  <ng-container>
-  </ng-container>
+          </ng-container>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p *ngIf="!childForm.childFormRowValues?.length">
+    There is no data in this table. You can use the add button above to get started.
+  </p>
 </div>

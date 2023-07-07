@@ -7,7 +7,6 @@ import {
   ViewChild
 } from "@angular/core";
 import { MediaMatcher } from "@angular/cdk/layout";
-import { ActivatedRoute } from "@angular/router";
 
 import { ToastrService } from "ngx-toastr";
 import { NgxSpinnerService } from "ngx-spinner";
@@ -15,9 +14,11 @@ import { NgxSpinnerService } from "ngx-spinner";
 import { CinchyQueryService } from "../../services/cinchy-query.service";
 import { AppStateService } from "../../services/app-state.service";
 
-import { IFormMetadata } from "src/app/models/form-metadata-model";
-import { IFormSectionMetadata } from "src/app/models/form-section-metadata.model";
-import { ILookupRecord } from "src/app/models/lookup-record.model";
+import { IFormMetadata } from "../../models/form-metadata-model";
+import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
+import { ILookupRecord } from "../../models/lookup-record.model";
+
+import { IframeUtil } from "../../util/iframe-util";
 
 
 @Component({
@@ -26,26 +27,41 @@ import { ILookupRecord } from "src/app/models/lookup-record.model";
   styleUrls: ["./form-wrapper.component.scss"]
 })
 export class FormWrapperComponent implements OnInit {
+
   @ViewChild("sidenav") sidenav;
+
   formMetadata: IFormMetadata;
   formSectionsMetadata: IFormSectionMetadata[];
   lookupRecords: ILookupRecord[];
 
-  rowId: string | number;
-  formId: string | number;
   mobileQuery: MediaQueryList;
+
+  formId: string;
 
   private mobileQueryListener: () => void;
 
+
+  get brandedFormWrapperTheme(): string {
+
+    return `form-wrapper-theme--${this.formMetadata?.brand}`;
+  }
+
+
+  get fullScreenHeight(): string {
+
+    return IframeUtil.fullScreenHeight;
+  }
+
+
   constructor(
-    private cinchyQueryService: CinchyQueryService,
-    private appStateService: AppStateService,
-    private activatedRoute: ActivatedRoute,
-    private toastr: ToastrService,
-    private spinner: NgxSpinnerService,
-    changeDetectorRef: ChangeDetectorRef,
-    media: MediaMatcher
+    private _cinchyQueryService: CinchyQueryService,
+    private _appStateService: AppStateService,
+    private _toastrService: ToastrService,
+    private _spinnerService: NgxSpinnerService,
+    public changeDetectorRef: ChangeDetectorRef,
+    public media: MediaMatcher
   ) {
+
     // For Sidenav
     this.mobileQuery = media.matchMedia("(max-width: 600px)");
     this.mobileQueryListener = () => changeDetectorRef.detectChanges();
@@ -53,20 +69,22 @@ export class FormWrapperComponent implements OnInit {
   }
 
 
-  async ngOnInit() {
-    await this.loadFormMetadata();
+  ngOnInit(): void {
 
-    let { formId, rowId } = this.activatedRoute.snapshot.queryParams;
+    this._appStateService.rootFormIdSet$.subscribe({
+      next: (formId: string) => {
 
-    this.formId = formId || this.appStateService.formId || sessionStorage.getItem("formId");
-    this.rowId = rowId || this.appStateService.rowId || sessionStorage.getItem("rowId");
-    this.appStateService.setRecordSelected(this.rowId);
+        this.formId = formId;
+
+        this.loadFormMetadata();
+      }
+    })
   }
 
 
   handleOnLookupRecordFilter(filter: string): void {
 
-    let resolvedFilter = (filter ? `LOWER(CAST([${this.formMetadata.subTitleColumn}] as nvarchar)) LIKE LOWER('%${filter}%')` : null);
+    let resolvedFilter = (filter ? `LOWER(CAST([${this.formMetadata.subTitleColumn ?? "Cinchy ID"}] as nvarchar)) LIKE LOWER('%${filter}%')` : null);
 
     // Ensure that if there is a default filter on the field, it is not lost
     if (resolvedFilter && this.formMetadata.lookupFilter) {
@@ -78,10 +96,12 @@ export class FormWrapperComponent implements OnInit {
 
 
   async loadFormMetadata() {
+
     try {
-      this.spinner.show();
-      const formMetadata = await this.cinchyQueryService.getFormMetadata().toPromise();
-      this.formMetadata = this.appStateService.formMetadata = formMetadata;
+      this._spinnerService.show();
+      const formMetadata = await this._cinchyQueryService.getFormMetadata().toPromise();
+
+      this.formMetadata = this._appStateService.formMetadata = formMetadata;
 
       this.lookupRecords = [];
       this.loadFormSections();
@@ -92,44 +112,44 @@ export class FormWrapperComponent implements OnInit {
 
 
   async loadFormSections() {
+
     try {
-      const formSections = await this.cinchyQueryService.getFormSections().toPromise();
+      const formSections = await this._cinchyQueryService.getFormSectionsMetadata().toPromise();
+
       this.formSectionsMetadata = formSections;
-      this.appStateService.setLatestRenderedSections(formSections);
-      if (this.formSectionsMetadata) {
-        await this.spinner.hide();
-      }
+
+      this._appStateService.latestRenderedSections$.next(formSections);
+
+      this._spinnerService.hide();
     } catch (e) {
       this.showError("Error getting section metadata", e);
-    }
-    await this.spinner.hide();
-  }
 
+      this._spinnerService.hide();
+    }
+  }
 
   async loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): Promise<void> {
 
-    if (formMetadata?.subTitleColumn == null) {
-      return;
-    }
+    this._cinchyQueryService.resetLookupRecords.next();
 
-    this.cinchyQueryService.resetLookupRecords.next();
-
-    await this.cinchyQueryService.getLookupRecords(
+    await this._cinchyQueryService.getLookupRecords(
       formMetadata.subTitleColumn,
       formMetadata.domainName,
       formMetadata.tableName,
       filter ?? formMetadata.lookupFilter,
       limitResults
     ).pipe(
-      takeUntil(this.cinchyQueryService.resetLookupRecords)    
+      takeUntil(this._cinchyQueryService.resetLookupRecords)
     ).subscribe(
-      response => {
+      {
+        next: (response: Array<ILookupRecord>) => {
 
-        this.lookupRecords = response;
-      },
-      e => {
+          this.lookupRecords = response;
+        },
+        error: (e) => {
 
-        this.showError("Error getting lookup records", e);
+          this.showError("Error getting lookup records", e);
+        }
       }
     );
   }
@@ -137,10 +157,10 @@ export class FormWrapperComponent implements OnInit {
 
   private showError(message: string, error: any) {
 
-    this.spinner.hide();
+    this._spinnerService.hide();
 
     console.error(message, error);
 
-    this.toastr.error("Could not fetch the form's metadata. You may not have the necessary entitlements to view this form.", "Error");
+    this._toastrService.error("Could not fetch the form's metadata. You may not have the necessary entitlements to view this form.", "Error");
   }
 }

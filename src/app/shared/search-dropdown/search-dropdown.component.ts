@@ -19,7 +19,6 @@ import {
   ViewChild
 } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { MatSelectChange } from "@angular/material/select";
 
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 

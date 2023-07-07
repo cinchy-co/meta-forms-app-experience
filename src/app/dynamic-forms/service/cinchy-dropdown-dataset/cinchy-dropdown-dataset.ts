@@ -1,18 +1,20 @@
-import { IDropdownOption } from "./cinchy-dropdown-options";
-import { isNullOrUndefined } from "util";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
-export interface IDropdownDataset {
-    options: Array<IDropdownOption>;
-}
+import { DropdownOption } from "./cinchy-dropdown-options";
 
-export class DropdownDataset implements IDropdownDataset {
-    options: Array<IDropdownOption>;
 
-    constructor(options: Array<IDropdownOption>) {
-        if (isNullOrUndefined(options)) {
-            this.options = [];
-        } else {
-            this.options = options;
-        }
-    }
+export class DropdownDataset {
+
+  isDummy: boolean;
+
+  options: Array<DropdownOption>;
+
+  constructor(
+    options: Array<DropdownOption>,
+    isDummy = false
+  ) {
+
+    this.isDummy = coerceBooleanProperty(isDummy);
+    this.options = options || [];
+  }
 }

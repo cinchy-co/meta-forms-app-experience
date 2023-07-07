@@ -27,10 +27,14 @@
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
-.formField {
+.form-field {
   width: 100%;
   padding-left: 10px;
   padding-right: 10px;
+
+  .mat-form-field-wrapper {
+    padding-bottom: 0;
+  }
 }
 
 .header {

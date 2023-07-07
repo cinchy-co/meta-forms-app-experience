@@ -17,9 +17,9 @@ export class CinchyUpdateInsertService {
       SELECT [Name] as 'label',
              [Company] as 'company',
              [Title] as 'title',
-             [Cinchy Id] as 'id'
+             [Cinchy ID] as 'id'
       FROM   [Contacts].[People]
-      WHERE  [Cinchy Id]=@cinchy_row_id
+      WHERE  [Cinchy ID]=@cinchy_row_id
     `;
     const params = {
       '@name': `${contactFormValues.firstName} ${contactFormValues.lastName}`,

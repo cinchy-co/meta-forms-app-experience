@@ -1,191 +1,302 @@
-import { Component, Inject, EventEmitter } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Component, Inject } from "@angular/core";
+import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
-import { DropdownDatasetService } from '../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service';
+import { DropdownDatasetService } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
 
-import { isNullOrUndefined } from 'util';
+import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
+import { FormSection } from "../../models/cinchy-form-section.model";
+
+import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
+
+import { isNullOrUndefined } from "util";
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 
-//#region Cinchy Dynamic Child Form
 /**
  * This section is used to create cinchy child form.
  */
-//#endregion
 @Component({
   selector: "cinchy-child-form",
   templateUrl: "./child-form.component.html",
   styleUrls: ["./child-form.component.scss"],
-  // TODO Need to set this environment Dynamically
   providers: [DropdownDatasetService]
 })
 export class ChildFormComponent {
-  public data: any;
-  public datachild = [];
-  public cinchyID = null;
-  public fieldName = '';
-  public fieldValue = '';
-  eventHandler = new EventEmitter();
 
   constructor(
     public dialogRef: MatDialogRef<ChildFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public _ChildFormData: any
-  ) {
-  }
+    @Inject(MAT_DIALOG_DATA) public childFormData: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      title: string
+    }
+  ) {}
 
-  ngOnInit() {
-    // bind and load child form.
-    let obj = this._ChildFormData.values;
-    this._ChildFormData.childFormData.sections.forEach(section => {
-      const linkedColumn = section['LinkedColumnDetails'];
-      section.fields.forEach(element => {
-        element.noPreSelect = false;
-        if (!element.cinchyColumn.isDisplayColumn) {
-          if (linkedColumn && (linkedColumn.linkLabel == element.label)) {
-            if (linkedColumn.linkValue) {
-              element.value = element.value ? element.value : linkedColumn.linkValue;
-            }
-            element.value = element.value ? element.value : Number(this._ChildFormData.rowId);
-            linkedColumn.linkedElement.value = linkedColumn.linkedElement.value ? linkedColumn.linkedElement.value : Number(this._ChildFormData.rowId);
+
+  ngOnInit(): void {
+    const childFormLinkName = this.childFormData.childForm?.getChildFormLinkName(this.childFormData.childForm?.childFormLinkId);
+
+    // TODO: atomize this function
+    this.childFormData.childForm?.sections?.forEach((section: FormSection, sectionIndex: number) => {
+
+      section.fields?.forEach((field: FormField, fieldIndex: number) => {
+
+        if (!field.cinchyColumn.isDisplayColumn) {
+          if (field.linkedColumn?.linkLabel === field.label) {
+
+            this.childFormData.childForm.updateFieldValue(
+              sectionIndex,
+              fieldIndex,
+              field.linkedColumn.linkValue ?? Number(this.childFormData.childForm.rowId)
+            );
+
+            // TODO: find a better way of updating this value. We should not be directly mutating any fields on a Form, even indirectly
+            field.linkedColumn.linkedField.value = this.childFormData.childForm.sections[sectionIndex].fields[fieldIndex].value;
           }
-          if (!isNullOrUndefined(obj)) {
+          else if (this.childFormData.presetValues) {
             // bind dropdown values
-            if (element.cinchyColumn.dataType === 'Link') {
-              if (!isNullOrUndefined(element['dropdownDataset'])) {
-                if (!element.value) { // When element value is not there but obj can have value and we have dropdown set
-                  element.noPreSelect = false;
-                  let dropdownResult = element['dropdownDataset'].options.find(e => e.label == obj[element.cinchyColumn.name]);
-                  if (!isNullOrUndefined(dropdownResult)) {
-                    element.value = dropdownResult['id'];
-                  } else { // Incase obj has multiple names and dropdown has those names in sepratae options
-                    if (obj[element.cinchyColumn.name] && element.cinchyColumn.isMultiple) {
-                      // Checking for multi select values in obj
-                      const allFieldLabels = obj[element.cinchyColumn.name].split(',')
-                      const trimedValues = allFieldLabels && allFieldLabels.length ? allFieldLabels.map(label => label.trim()) : allFieldLabels;
-                      let multiDropdownResult = element['dropdownDataset'].options.filter(e => trimedValues.indexOf(e.label) > -1);
-                      element.value = multiDropdownResult && multiDropdownResult.length ? multiDropdownResult.map(item => item.id).join(',') : null;
-                    }
-                    else {
-                      element.value = null;
-                      element.noPreSelect = !(dropdownResult && dropdownResult['length']);
-                    }
-                  }
-                } else if (!obj[element.cinchyColumn.name]) { // When obj doesnt have value and element.value also have no value
-                  element.value = null;
-                  element.noPreSelect = true;
-                } else if (obj[element.cinchyColumn.name] && element.cinchyColumn.isMultiple) {
-                  const allFieldLabels = obj[element.cinchyColumn.name].split(',')
-                  const trimedValues = allFieldLabels && allFieldLabels.length ? allFieldLabels.map(label => label.trim()) : allFieldLabels;
+            if (field.cinchyColumn.dataType === "Link") {
+              if (!this.childFormData.presetValues[field.cinchyColumn.name]) {
+                // Prefill child linked column value with parent id if the target table id matches parent form table id
+                const parentRowId = field.label === childFormLinkName ? this.childFormData.childForm.parentForm.rowId : null;
+                this.childFormData.childForm.updateFieldValue(
+                  sectionIndex,
+                  fieldIndex,
+                  parentRowId ?? null
+                );
+              }
+              else if (field.dropdownDataset?.options?.length) {
+                if (field.cinchyColumn.isMultiple) {
 
-                  let multiDropdownResult = element['dropdownDataset'].options.filter(e => trimedValues.indexOf(e.label) > -1);
-                  element.value = multiDropdownResult && multiDropdownResult.length ? multiDropdownResult.map(item => item.id).join(',') : element.value;
-                } else if (obj[element.cinchyColumn.name] && !element.cinchyColumn.isMultiple) {
-                  let singleDropdownResult = element['dropdownDataset'].options.find(e => e.label == obj[element.cinchyColumn.name]);
-                  if (!singleDropdownResult && element.value) { // sometimes label contains display label so it won't match, then try id
-                    singleDropdownResult = element['dropdownDataset'].options.find(e => e.id == element.value);
-                  }
-                  element.value = singleDropdownResult ? singleDropdownResult.id : null;
+                  const linkIds = this.childFormData.presetValues[field.cinchyColumn.name];
+
+                  // Search by ID, then label
+                  let result = field.dropdownDataset.options.filter((option: DropdownOption) => {
+
+                    return (linkIds.indexOf(option.id) > -1 || linkIds.indexOf(option.label) > -1);
+                  });
+
+                  this.childFormData.childForm.updateFieldValue(
+                    sectionIndex,
+                    fieldIndex,
+                    result?.length ? result.map(item => item.id) : []
+                  );
+                }
+                else {
+                  // Search by ID, then label
+                  let result = field.dropdownDataset.options.find((option: DropdownOption) => {
+
+                    // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
+                    //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
+                    return (
+                      (option.id == this.childFormData.presetValues[field.cinchyColumn.name]) ||
+                      (option.label === this.childFormData.presetValues[field.cinchyColumn.name])
+                    );
+                  });
+
+                  this.childFormData.childForm.updateFieldValue(
+                    sectionIndex,
+                    fieldIndex,
+                    result?.id ?? null
+                  );
                 }
               }
-            } else if (element.cinchyColumn.dataType === 'Binary') {
-              const keyForBinary = element.cinchyColumn.name + '_Name';
-              element.cinchyColumn.fileName = this._ChildFormData.values[keyForBinary];
-              element.value = this._ChildFormData.values[element.cinchyColumn.name];
-            } else {
-              if (this._ChildFormData.type === 'Add' && linkedColumn && (linkedColumn.linkLabel != element.label)) {
-                element.value = null;
-              } else {
-                element.value = obj[element.cinchyColumn.name]
+              else {
+                if (field.cinchyColumn.isMultiple) {
+                  const allFieldValues = this.childFormData.presetValues[field.cinchyColumn.name]?.split(",").map((value: string) => {
+
+                    return value.trim();
+                  });
+
+                  // We don't have enough information to mock the dataset, so the field component can handle generating one
+                  this.childFormData.childForm.updateFieldValue(
+                    sectionIndex,
+                    fieldIndex,
+                    allFieldValues
+                  );
+                }
+                else {
+                  // Since we have a value but not a dataset, mock the dataset as part of saving the value
+                  this.childFormData.childForm.updateFieldValue(
+                    sectionIndex,
+                    fieldIndex,
+                    this.childFormData.presetValues[field.cinchyColumn.name],
+                    [
+                      {
+                        propertyName: "dropdownDataset",
+                        propertyValue: new DropdownDataset(
+                          [
+                            {
+                              id: this.childFormData.presetValues[field.cinchyColumn.name],
+                              label: this.childFormData.presetValues[`${field.cinchyColumn.name} label`] ?? this.childFormData.presetValues[field.cinchyColumn.name]
+                            }
+                          ],
+                          true
+                        )
+                      }
+                    ]
+                  );
+                }
+              }
+            }
+            else if (field.cinchyColumn.dataType === "Binary") {
+              this.childFormData.childForm.updateFieldValue(
+                sectionIndex,
+                fieldIndex,
+                this.childFormData.presetValues[field.cinchyColumn.name],
+                [
+                  {
+                    cinchyColumn: true,
+                    propertyName: "fileName",
+                    propertyValue: this.childFormData.presetValues[`${field.cinchyColumn.name}_Name`]
+                  }
+                ]
+              );
+            }
+            else {
+              // Note: We're explicitly not using optional chaining here because we need to evaluate the
+              //       conditions of "exists" and "not equal" separately to ensure the correct execution
+              if (field.linkedColumn && field.linkedColumn.linkLabel !== field.label) {
+                this.childFormData.childForm.updateFieldValue(
+                  sectionIndex,
+                  fieldIndex,
+                  null
+                );
+              // Don't override child form link field with presetValues so we can prefill the value with parent ID
+              } else if (field.label !== childFormLinkName) {
+                this.childFormData.childForm.updateFieldValue(
+                  sectionIndex,
+                  fieldIndex,
+                  this.childFormData.presetValues[field.cinchyColumn.name]
+                );
               }
             }
           }
-          else if (linkedColumn && (linkedColumn.linkLabel != element.label)) {
-            element.noPreSelect = true;
-            element.value = null;
-          } else if (!linkedColumn) {
-            element.value = null;
-            element.noPreSelect = true;
+          else {
+            // Clear all values when default values are not provided, since that means we're creating a new record
+            this.childFormData.childForm.updateFieldValue(
+              sectionIndex,
+              fieldIndex,
+              null,
+              [
+                {
+                  propertyName: "dropdownDataset",
+                  propertyValue: null
+                }
+              ]
+            );
           }
-        } else if (element.cinchyColumn.isDisplayColumn) {
-          const labelInObj = `${element.cinchyColumn.linkTargetColumnName} label`;
-          let selectedValue;
-          let hasDropdown = false;
-          if (element.dropdownDataset && element.dropdownDataset.options) {
-            selectedValue = element.dropdownDataset.options.find(item => item.label == obj[labelInObj]);
-            if (selectedValue != null) {
-              hasDropdown = true;
-              element.value = selectedValue?.id;
-            }
-          }
+        }
+        else {
+          const displayColumnLabel = `${field.cinchyColumn.linkTargetColumnName} label`;
 
-          if (!hasDropdown) {
-            // Creating dummy dropdown and value using multi-field value since it's read only value
-            if (obj) {
-              const dummyDropdown = { id: obj[labelInObj], label: obj[labelInObj] };
-              element.dropdownDataset = { options: [dummyDropdown], isDummy: true };
-              element.value = dummyDropdown.id;
+          if (this.childFormData.presetValues) {
+            if (field.dropdownDataset?.options) {
+              const selectedValue = field.dropdownDataset.options.find((option: DropdownOption) => {
+
+                return (option.label === this.childFormData.presetValues[displayColumnLabel]);
+              });
+
+              this.childFormData.childForm.updateFieldValue(
+                sectionIndex,
+                fieldIndex,
+                selectedValue?.id ?? null
+              );
             }
+            else {
+              this.childFormData.childForm.updateFieldValue(
+                sectionIndex,
+                fieldIndex,
+                this.childFormData.presetValues[displayColumnLabel] ?? null,
+                [
+                  {
+                    propertyName: "dropdownDataset",
+                    propertyValue: new DropdownDataset(
+                      [
+                        {
+                          id: this.childFormData.presetValues[displayColumnLabel],
+                          label: this.childFormData.presetValues[displayColumnLabel]
+                        }
+                      ],
+                      true
+                    )
+                  }
+                ]
+              );
+            }
+          }
+          else {
+            // Clear all values when default values are not provided, since that means we're creating a new record
+            this.childFormData.childForm.updateFieldValue(
+              sectionIndex,
+              fieldIndex,
+              null
+            );
           }
         }
       });
     });
-    // this check is for new record or edit record
-    if (this._ChildFormData.type === 'Add') {
-      this.cinchyID = 0;
-    } else {
-      this.cinchyID = obj['Cinchy ID'];
-    }
-    this.data = this._ChildFormData;
   }
 
-  onNoClick(): void {
+
+  handleOnChange(event: IFieldChangedEvent): void {
+
+    this.childFormData.childForm.updateFieldValue(
+      event.sectionIndex,
+      event.fieldIndex,
+      event.newValue,
+      event.additionalPropertiesToUpdate
+    );
+  }
+
+
+  /**
+   * Closes the dialog and discards the form contents
+   */
+  cancel(): void {
+
     this.dialogRef.close();
   }
 
+
   /**
-   * On click of Ok Button
-   * 1. Check validation for the fields.
-   * 2. pass data to parent form
+   * Validates the form data, and the passes it back to the parent for processing
    */
-  async onOkClick() {
-    let formvalidation = this._ChildFormData.childFormData.checkChildFormValidation();
-    this._ChildFormData.childFormData.sections.forEach(section => {
-      section.fields.forEach(element => {
-        if (element.cinchyColumn.dataType === 'Binary' && element.cinchyColumn.fileName) {
-          const keyForBinary = element.cinchyColumn.name + '_Name';
-          this._ChildFormData.values = this._ChildFormData.values || {};
-          this._ChildFormData.values[keyForBinary] = element.cinchyColumn.fileName;
-        } else if (element.cinchyColumn.isDisplayColumn && element.dropdownDataset?.isDummy) {
-          element.dropdownDataset = null;
+  save() {
+
+    let formvalidation = this.childFormData.childForm.checkChildFormValidation();
+
+    this.childFormData.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
+
+      section.fields.forEach((field: FormField, fieldIndex: number) => {
+
+        if (field.cinchyColumn.dataType === "Binary" && field.cinchyColumn.fileName) {
+          const keyForBinary = field.cinchyColumn.name + "_Name";
+
+          this.childFormData.childForm.updateFieldAdditionalProperty(
+            sectionIndex,
+            fieldIndex,
+            {
+              cinchyColumn: true,
+              propertyName: "fileName",
+              propertyValue: this.childFormData.presetValues[keyForBinary]
+            }
+          );
+        }
+        else if (field.cinchyColumn.isDisplayColumn && field.dropdownDataset?.isDummy) {
+          field.dropdownDataset = null;
         }
       });
     });
-    let result = {
-      data: this._ChildFormData.childFormData,
-      id: this.cinchyID,
-      childFormId: this._ChildFormData.childFormData.id
-    };
+
     if (formvalidation.status) {
-      this.dialogRef.close(result);
+      this.dialogRef.close((!this.childFormData.presetValues || !this.childFormData.presetValues["Cinchy ID"]) ? -1 : this.childFormData.presetValues["Cinchy ID"]);
     } else {
-      //  console.log(formvalidation.message);
+      // TODO: this should be a toast, which means that we'd need to either dynamically inject the ToastrService or create a
+      //       NotificationService with static functions to display this sort of thing
+      console.error("Child form was invalid:", formvalidation.message);
     }
   }
-
-  getField(field, section) {
-    const linkedColumn = section['LinkedColumnDetails'];
-    if (linkedColumn && (linkedColumn.linkLabel == field.label)) {
-      linkedColumn.linkedElement.value = linkedColumn.linkedElement.value ? linkedColumn.linkedElement.value : this._ChildFormData.rowId;
-      return linkedColumn.linkedElement;
-    } else {
-      return field;
-    }
-  }
-
-  //#region This method is used to handle the field event
-  handleFieldsEvent($event) {
-    // Emit the event to the Project.
-    this.eventHandler.emit($event);
-  }
-
-  //#endregion
 }

@@ -1,121 +1,183 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { AppStateService } from '../../services/app-state.service';
+import { debounceTime } from "rxjs/operators";
+
+import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
+
+import { AddNewEntityDialogComponent } from "../../dialogs/add-new-entity-dialog/add-new-entity-dialog.component";
+
+import { INewEntityDialogResponse } from "../../dynamic-forms/interface/new-entity-dialog-response";
+
+import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
+import { IFormMetadata } from "../../models/form-metadata-model";
+
+import { AppStateService } from "../../services/app-state.service";
 import { DialogService } from "../../services/dialog.service";
+
 import { CinchyService } from "@cinchy-co/angular-sdk";
+
 import { NgxSpinnerService } from "ngx-spinner";
-import { Subject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
-import { AddNewOptionDialogComponent } from "../../dialogs/add-new-option-dialog/add-new-option-dialog.component";
-import { IFormSectionMetadata } from 'src/app/models/form-section-metadata.model';
-import { IFormMetadata } from 'src/app/models/form-metadata-model';
+import { debounce } from "rxjs/operators";
+
 
 @Component({
-  selector: 'app-sidenav',
-  templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.component.scss']
+  selector: "app-sidenav",
+  templateUrl: "./sidenav.component.html",
+  styleUrls: ["./sidenav.component.scss"]
 })
-export class SidenavComponent implements OnInit, OnDestroy {
-  formSectionsMetadata: IFormSectionMetadata[] = [];
-  @Input() formId: string | number;
-  @Input() tableId: string | number;
+export class SidenavComponent implements OnInit {
+
+  @Input() tableId: number;
   @Input() formMetadata: IFormMetadata;
 
-  rowId: string | number;
 
-  @Input() set tableUrl(value: string) {
+  @Input()
+  get tableUrl() {
+
+    return this._tableUrl;
+  }
+  set tableUrl(value: string) {
+
     this._tableUrl = value
-    this.filteredTableUrl = this.rowId ? `${value}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this.rowId}` : this.filteredTableUrl;
+
+    this._updateFilteredTableUrl();
   };
+  private _tableUrl: string;
 
   @Output() closeSideBar = new EventEmitter<any>();
 
-  toggleMenu: boolean;
+
   canInsert: boolean;
-  selectedSection: string;
   filteredTableUrl: string;
-  destroy$: Subject<boolean> = new Subject<boolean>();
-  _tableUrl;
+  formSectionsMetadata: IFormSectionMetadata[] = [];
+  selectedSection: string;
   showNewContactLink: boolean;
-  createNewOptionName: string;
+  toggleMenu: boolean;
 
-  get tableUrl() {
-    return this._tableUrl;
+
+  get canCreateNewRecord(): boolean {
+
+    // We're checking for rowId here so that the create button isn't visible if when the form
+    // is already in create mode
+    return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
   }
 
-  constructor(private appStateService: AppStateService,
-    private dialogService: DialogService,
-    private cinchyService: CinchyService,
-    private spinner: NgxSpinnerService) {
+
+  /**
+   * Used to display the correct entity on the create button
+   */
+  get createNewEntityLabel(): string {
+
+    return (this.formMetadata?.createNewOptionName ?? "");
   }
+
+
+  constructor(
+    private _appStateService: AppStateService,
+    private _dialogService: DialogService,
+    private _cinchyService: CinchyService,
+    private _spinner: NgxSpinnerService
+  ) {}
+
 
   ngOnInit(): void {
+
     this.loadTableEntitlements();
-    this.subscribeToSectionClickedFromForm();
-    this.subscribeToRenderedSectionUpdates();
-    this.createNewOptionName = this.formMetadata.createNewOptionName;
 
-    this.appStateService.onRecordSelected().subscribe(resp => {
-      this.rowId = resp.cinchyId;
-      this.filteredTableUrl = !this.rowId.toString().includes('null') ? `${this.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this.rowId}` : this.tableUrl;
+    
+    this._appStateService.onRecordSelected$.subscribe({
+      next: () => {
+
+        this._updateFilteredTableUrl();
+      }
     });
-  }
 
-  subscribeToRenderedSectionUpdates() {
-    this.appStateService.getLatestRenderedSections().subscribe(resp => {
-      this.formSectionsMetadata = resp;
-      if (this.formSectionsMetadata?.length)
+
+    // This has the potential to fire multiple times when the form first loads
+    this._appStateService.currentSection$.pipe(
+      debounceTime(300)
+    ).subscribe((sectionLabel: string) => {
+
+      this.selectedSection = sectionLabel ?? this.selectedSection;
+    });
+
+
+    this._appStateService.latestRenderedSections$.pipe(
+      debounceTime(300)
+    ).subscribe((sectionMetadata: Array<IFormSectionMetadata>) => {
+
+      this.formSectionsMetadata = sectionMetadata;
+
+      if (this.formSectionsMetadata?.length) {
         this.sectionClicked(this.formSectionsMetadata[0]);
+      }
     });
   }
 
-  subscribeToSectionClickedFromForm() {
-    this.appStateService.getCurrentSectionClicked().pipe(takeUntil(this.destroy$)).subscribe(section => {
-      this.selectedSection = section ? section : this.selectedSection;
-    })
+
+  createNewRecord(): void {
+
+    this.sectionClicked(this.formSectionsMetadata[0]);
+    this._appStateService.setRecordSelected(null);
   }
 
-  sectionClicked(section: IFormSectionMetadata) {
+
+  isSelected(targetSection: string): boolean {
+
+    return (this.selectedSection === targetSection);
+  }
+
+
+  async loadTableEntitlements(): Promise<void> {
+
+    const resp = await this._cinchyService.getTableEntitlementsById(this.tableId).toPromise();
+
+    this.canInsert = resp.canAddRows;
+  }
+
+
+  openAddNewOptionDialog(): void {
+
+    const newOptionDialogRef = this._dialogService.openDialog(
+      AddNewEntityDialogComponent,
+      {
+        createNewOptionFormId: this._appStateService.formId,
+        createNewOptionName: this.formMetadata.createNewOptionName
+      }
+    );
+
+    this._spinner.hide();
+
+    newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
+
+      if (value) {
+        this._appStateService.addNewEntityDialogClosed$.next(value);
+      }
+    });
+  }
+
+
+  sectionClicked(section: IFormSectionMetadata): void {
+
     this.selectedSection = section.name;
-    const sectionEle = document.getElementById(`section-${section.name}`);
-    const expansionHeader: any = sectionEle ? sectionEle.children[0] : null;
-    const expansionContent: any = sectionEle ? sectionEle.children[1] : null;
-    const isHidden = expansionContent?.style?.visibility === 'hidden';
+    const sectionElement = document.getElementById(`section-${section.name}`);
+    const expansionHeader: any = sectionElement ? sectionElement.children[0] : null;
+    const expansionContent: any = sectionElement ? sectionElement.children[1] : null;
+    const isHidden = expansionContent?.style?.visibility === "hidden";
+
     if (expansionHeader && isHidden) {
       expansionHeader.click();
       expansionHeader.focus();
     }
-    sectionEle?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    sectionElement?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  createNewRecord() {
-    this.sectionClicked(this.formSectionsMetadata[0]);
-    this.appStateService.setRecordSelected(null);
-  }
 
-  openAddNewOptionDialog() {
-    const { createNewOptionFormId, createNewOptionName } = this.formMetadata;
-    this.createNewOptionName = createNewOptionName;
-    const newOptionDialogRef = this.dialogService.openDialog(AddNewOptionDialogComponent, {
-      createNewOptionFormId,
-      createNewOptionName
-    });
-    this.spinner.hide();
-    newOptionDialogRef.afterClosed().subscribe(newContactAdded => {
-      newContactAdded && this.appStateService.newContactAdded(newContactAdded)
-    });
-  }
+  /**
+   * Adds the current row information to the querystring of the table URL
+   */
+  private _updateFilteredTableUrl() {
 
-  async loadTableEntitlements() {
-    const resp = await this.cinchyService.getTableEntitlementsById(this.tableId).toPromise();
-    this.canInsert = resp.canAddRows;
-  }
-
-  saveForm() {
-    this.appStateService.saveClicked(true);
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
+    this.filteredTableUrl = this._appStateService.rowId ? `${this._tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : this.filteredTableUrl;
   }
 }

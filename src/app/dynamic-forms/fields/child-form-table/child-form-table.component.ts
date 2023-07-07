@@ -5,30 +5,42 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
+  SimpleChanges,
   ViewEncapsulation
 } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { DatePipe } from "@angular/common";
+import { MatDialog } from "@angular/material/dialog";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
 import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 
-import { NumeralPipe } from "ngx-numeral";
+import { MessageDialogComponent } from "../../message-dialog/message-dialog.component";
 
-import { ImageType } from "../../enums/imageurl-type";
+import { DataFormatType } from "../../enums/data-format-type";
+
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
+import { FormSection } from "../../models/cinchy-form-section.model";
+
+import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 import { AppStateService } from "../../../services/app-state.service";
 
+import { NumeralPipe } from "ngx-numeral";
+import { ToastrService } from "ngx-toastr";
+import { isNullOrUndefined } from "util";
+import { ConfigService } from "src/app/services/config.service";
 
-//#region Cinchy Dynamic Child form Table
+
 /**
- * This section is used to create the table of cinchy child form data.
- * We use keyValue pipe for creating the dynamic table from array.
+ * Displays the records of a non-flattened child form
  */
-//#endregion
 @Component({
   selector: "cinchy-childform-table",
   templateUrl: "./child-form-table.component.html",
@@ -36,201 +48,567 @@ import { AppStateService } from "../../../services/app-state.service";
   providers: [DatePipe],
   encapsulation: ViewEncapsulation.None
 })
-export class ChildFormTableComponent implements OnInit, OnDestroy {
-  @Input() field: any;
-  @Input() rowId: any;
-  @Input() hasChildTableAccess: any;
-  @Output() childform = new EventEmitter<any>();
-  @Output() deleteClicked = new EventEmitter<any>();
+export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
+
+  @Input() field: FormField;
+  @Input() fieldIndex: number;
+  @Input() form: Form;
+  @Input() sectionIndex: number;
+
+  @Output() childFormOpened = new EventEmitter<{
+    childForm: Form,
+    presetValues?: { [key: string]: any },
+    title: string
+  }>();
+  @Output() childRowDeleted = new EventEmitter<{
+    childForm: Form,
+    rowId: number,
+    sectionIndex: number
+  }>();
+
+  fieldSet: Array<FormField> = new Array<FormField>();
+  fieldKeys: Array<string> = new Array<string>();
+
+  displayValueSet: Array<{ [key: string]: string }>;
+
+  fileNameAndValueMap = {};
+
+  /**
+   * A map of the name of a column in the host table to the FormField that represents its current value
+   *
+   * TODO: Explore the relationship between this and the fieldKeys set, as the field keys are used to
+   *       retrieve values from this dictionary, but the dictionary is populated using the cinchyColumn
+   *       names, so there's either no guarantee that the two values will correspond to one another or
+   *       one of the two variables is unnecessary
+   */
+  childFieldDictionary: { [key: string]: FormField } = {};
+
+
+  faEdit = faEdit;
   faPlus = faPlus;
   faTrash = faTrash;
-  faEdit = faEdit;
-  fileNameAndValueMap = {};
-  destroy$: Subject<boolean> = new Subject<boolean>();
-
-  childFieldDictionary = {};
 
 
-  constructor(private datePipe: DatePipe, private _cinchyService: CinchyService,
-    private appStateService: AppStateService) {
+  private _destroy$: Subject<void> = new Subject<void>();
+
+
+  get childForm(): Form {
+
+    return this.form.sections[this.sectionIndex]?.fields[this.fieldIndex]?.childForm;
   }
 
-  ngOnDestroy() {
-    this.destroy$.next(true);
-    this.destroy$.unsubscribe();
+
+  constructor(
+    private _appStateService: AppStateService,
+    private _cinchyService: CinchyService,
+    private _datePipe: DatePipe,
+    private _dialog: MatDialog,
+    private _toastr: ToastrService,
+    private _configService: ConfigService
+  ) {}
+
+
+  ngOnChanges(changes: SimpleChanges): void {
+
+    if (changes?.form) {
+      this.fieldSet = this._getAllFieldsInChildForm();
+      this.loadFieldKeysAndPopulateDisplayValues();
+    }
   }
 
-  ngOnInit() {
-    this.appStateService.getOpenOfChildFormAfterParentSave().pipe(takeUntil(this.destroy$)).subscribe(val => {
-      if (this.field.childForm.name == val.title) {
-        this.manageChildRecords(this.field.childForm, null, val.title, "Add", this.field.childForm);
-      }
-    })
+
+  ngOnDestroy(): void {
+
+    this._destroy$.next();
+    this._destroy$.complete();
+  }
+
+
+  ngOnInit(): void {
+
+    this._appStateService.parentFormSavedFromChild$
+      .pipe(
+        takeUntil(this._destroy$)
+      ).subscribe(
+        {
+          next: (data: {
+              childForm: Form,
+              presetValues?: { [key: string]: any },
+              title: string
+          }) => {
+
+            if (this.childForm.name === data.title) {
+              this.addChildRecord(data.title);
+            }
+          }
+        }
+      );
+
     this.getFileNames();
 
-    this.setChildFieldDictionary();
-  }
+    this.fieldSet = this._getAllFieldsInChildForm();
 
-  setChildFieldDictionary() {
-    this.field.childForm.sections[0].fields.forEach(field => {
-      this.childFieldDictionary[field.cinchyColumn.name] = field;
+    this._setChildFieldDictionary();
+
+    this._appStateService.childRecordUpdated$.pipe(
+      takeUntil(this._destroy$)
+    ).subscribe({
+      next: () => {
+
+        this.loadFieldKeysAndPopulateDisplayValues();
+      }
     });
   }
 
 
-  async getFileNames() {
-    const allFields = this.field.childForm.sections[0].fields;
-    const binaryFields = allFields.filter(field => field.cinchyColumn.dataType === "Binary");
-    const multiFields = this.field.childForm.sections[0].MultiFields;
-    if (multiFields && multiFields.length) {
-      binaryFields.forEach(field => {
-        const key = field.cinchyColumn.name;
-        const fileNameColumn = field.cinchyColumn.fileNameColumn;
-        multiFields.forEach(async multiField => {
-          const cinchyId = multiField["Cinchy ID"];
-          //const columnDetails = {domain: targetTableDomain, table: this.field.childForm.targetTableName}
-          const fileName = multiField[key] ? await this.getFileName(fileNameColumn, cinchyId) : "";
-          this.fileNameAndValueMap[fileName] = multiField[key];
-          //  multiField[key] = fileName;
-          const fileNameHeader = key + "_Name"
-          multiField[fileNameHeader] = fileName;
-        });
+  /**
+   * Notifies the parent to initiate adding a new record to the child form represented by this table
+   */
+  addChildRecord(dialogTitle: string): void {
+
+    this._updateEntitlements();
+  
+    // Find lowest negative Cinchy ID (these are all new records) so that we can generate a new one
+    let lowestCinchyId = 0;
+    this.childForm.childFormRowValues?.forEach(rowVal => {
+      if (rowVal['Cinchy ID'] < lowestCinchyId) {
+        lowestCinchyId = rowVal['Cinchy ID'];
+      }
+    });
+    lowestCinchyId--;
+
+    this.childFormOpened.emit(
+      {
+        childForm: this.childForm,
+        presetValues: { "Cinchy ID": lowestCinchyId },
+        title: dialogTitle
+      }
+    );
+  }
+
+
+  /**
+   * Determines whether or not a given cell should be displayed in the template
+   */
+  cellShouldBeDisplayed(key: string): boolean {
+
+    if (!this.displayValueSet) {
+      return false;
+    }
+
+    return coerceBooleanProperty(
+      (key !== "Cinchy ID") &&
+      (!this.field.isLinkedColumn(key)) &&
+      (this.childFieldDictionary[key]?.cinchyColumn?.dataType !== "Binary")
+    );
+  }
+
+
+  deleteRow(rowData: { [key: string]: any }): void {
+
+    if (!rowData["Cinchy ID"]) {
+      this._toastr.error("You are attempting to delete a record without a proper ID. The data may be corrupted or configured incorrectly.");
+    }
+    else {
+      const dialogRef = this._dialog.open(
+        MessageDialogComponent,
+        {
+          width: "400px",
+          data: {
+            title: "Please confirm",
+            message: "Are you sure you want to delete this record?"
+          }
+        }
+      );
+
+      dialogRef.afterClosed().subscribe({
+        next: (confirmed: boolean) => {
+
+          if (confirmed) {
+            const childFormReference = this.form.findChildForm(this.childForm.id);
+
+            if (rowData["Cinchy ID"] > 0) {
+              let query = `delete
+                         from [${childFormReference.childForm.targetTableDomain}].[${childFormReference.childForm.targetTableName}]
+                         where
+                             [Cinchy ID] = ${rowData["Cinchy ID"]}
+                         and [Deleted] is null`;
+
+              this._cinchyService.executeCsql(query, null).subscribe(
+                {
+                  next: () => {
+
+                    this._deleteRowValue(rowData);
+
+                    this.childRowDeleted.emit({
+                      childForm: this.childForm,
+                      rowId: rowData["Cinchy ID"],
+                      sectionIndex: this.sectionIndex
+                    })
+                  }
+                }
+              );
+            }
+            else {
+              this._deleteRowValue(rowData);
+            }
+          }
+        }
       });
     }
   }
 
-  async getFileName(fileNameColumn, cinchyId) {
-    const [domain, table, column] = fileNameColumn ? fileNameColumn.split(".") : [];
-    const whereCondition = `WHERE [Cinchy Id] = ${cinchyId} AND [Deleted] IS NULL `;
+
+  /**
+   * Notifies the parent to initiate editing a record from the child form represented by this table
+   *
+   * @param rowData Contains all of the current values of the record
+   */
+  editChildRecord(dialogTitle: string, rowData: { [key: string]: any }): void {
+
+    this._updateEntitlements(rowData);
+
+    this.childForm.rowId = rowData["Cinchy ID"];
+    
+    this.childFormOpened.emit(
+      {
+        childForm: this.childForm,
+        presetValues: rowData,
+        title: dialogTitle
+      }
+    );
+  }
+
+
+  getDisplayValue(rowIndex: number, key: string): string {
+
+    return this.displayValueSet[rowIndex][key] ?? "--";
+  }
+
+
+  async getFileName(fileNameColumn: string, rowId: number): Promise<string> {
+
+    const [domain, table, column] = fileNameColumn?.split(".") ?? [];
+
     if (domain) {
-      const query = `SELECT [${column}] as "fullName",
-                   [Cinchy Id] as "id"
-                   FROM
-                   [${domain}].[${table}]
-                   ${whereCondition}
-               `;
+      const query = `
+        SELECT
+            [${column}] as 'fullName',
+            [Cinchy ID] as 'id'
+          FROM [${domain}].[${table}]
+          WHERE [Cinchy ID] = ${rowId}
+            AND [Deleted] IS NULL`;
 
       const fileNameResp = await this._cinchyService.executeCsql(query, null).toPromise();
-      return fileNameResp && fileNameResp.queryResult && fileNameResp.queryResult.toObjectArray()[0] ? fileNameResp.queryResult.toObjectArray()[0]["fullName"] : null;
+
+      return fileNameResp?.queryResult?.toObjectArray()[0] ? fileNameResp.queryResult.toObjectArray()[0]["fullName"] : null;
     }
   }
 
-  isLinkedColumn(section, key) {
-    return section["LinkedColumnDetails"] && (key == section["LinkedColumnDetails"]["linkLabel"]);
-  }
 
-  getSortedKeys(field) {
-    // console.log("SORTED KEYS", Object.keys(field).sort((a: any, b: any) => a - b))
-    const allFields = this.field;
-    const allKeys = Object.keys(field);
-    //  allKeys.sort();
-    return allKeys;
-  }
+  async getFileNames(): Promise<void> {
 
-  deleteRow(domain, table, field, multiarray) {
-    this.deleteClicked.emit({ domain, table, field, multiarray });
-  }
+    const binaryFields = this.fieldSet.filter((field: FormField) => {
 
-  async manageChildRecords(childFormData: any, values: any, title: string, type: string, multiFieldValues: any) {
-    if (type !== "Add") {
-      //const valuesForLabels = type === "Add" ? childFormData.sections[0].MultiFields[0] : values;
-      const valuesForLabels = values;
-      let allFields: any = this.getAllFieldsInChildForm(childFormData);
-      const columnKeys = Object.keys(valuesForLabels);
-      const allActualFieldsColumn = columnKeys.filter(key => {
-        return allFields.find(field => field.cinchyColumn.name == key);
-      })
-      const domainAndTable = `[${childFormData["targetTableDomain"]}].[${childFormData["targetTableName"]}]`;
-      let allSelectLabels = allActualFieldsColumn.map(columnName => columnName != "Cinchy ID" ? `editable([${columnName}]) as "entitlement-${columnName}"` : null);
-      const validSelectLabels = allSelectLabels.filter(item => item);
-      const cellQuery = `SELECT ${validSelectLabels.toString()} FROM ${domainAndTable} t WHERE t.[Deleted] is NULL and t.[Cinchy Id]=${valuesForLabels["Cinchy ID"]} Order by t.[Cinchy Id]`
-      const cellEntitlementsResp = await this._cinchyService.executeCsql(cellQuery, null).toPromise();
-      if (cellEntitlementsResp) {
-        const cellEntitlements = cellEntitlementsResp.queryResult.toObjectArray()[0];
-        this.updateEntitlements(cellEntitlements, childFormData, multiFieldValues);
-      }
-      if (valuesForLabels['Cinchy ID']) childFormData.rowId = valuesForLabels['Cinchy ID'];
-    }
-    let data = {
-      childFormData: childFormData,
-      values: values,
-      title: title,
-      type: type,
-      multiFieldValues: multiFieldValues
-    };
-    this.field.cinchyColumn.hasChanged = true;
-    this.childform.emit(data);
-  }
+      return (field.cinchyColumn.dataType === "Binary")
+    });
 
-  getAllFieldsInChildForm(childFormData) {
-    let allFields: any = [];
-    childFormData.sections.forEach(section => {
-      allFields.push(section.fields);
-    })
-    return allFields.flat();
-  }
+    if (this.childForm.childFormRowValues?.length) {
+      binaryFields.forEach((field: FormField) => {
 
-  updateEntitlements(cellEntitlements, childFormData, multiFieldValues) {
-    if (cellEntitlements) {
-      const allFields = childFormData.sections[0].fields;
-      allFields.forEach(field => {
-        const cellColumnKey = `entitlement-${field.cinchyColumn.name}`;
-        field.cinchyColumn.canEdit = cellEntitlements && cellEntitlements[cellColumnKey] === 0 ? false : field.cinchyColumn.canEdit;
-      });
-    }
-  }
+        const binaryFieldColumnName = field.cinchyColumn.name;
+        const fileNameColumn = field.cinchyColumn.fileNameColumn;
 
-  getDisplayValue(value, section, key) {
-    // let currentField = section.fields.find(field => field.label === key);
-    /*    if (!currentField) {
-          currentField = section.fields.find(field => {
-            return field.cinchyColumn.linkTargetColumnName + " label" === key;
+        this.childForm.childFormRowValues.forEach(
+          async (rowData: {
+            childForm: Form,
+            presetValues?: { [key: string]: any },
+            title: string
+          }) => {
+
+            const fieldData = rowData[binaryFieldColumnName];
+
+            if (fieldData) {
+              const rowId = rowData["Cinchy ID"];
+              const fileName = await this.getFileName(fileNameColumn, rowId);
+
+              this.fileNameAndValueMap[fileName] = fieldData;
+
+              rowData[`${binaryFieldColumnName}_Name`] = fileName;
+            }
           });
-        }
-         if(this.field.childForm.name === "Customer 360 Child: Opportunities"){
-            console.log("currentField", currentField, key);
-         }*/
-    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
-    // So that the one which is display column doesn"t match and show the name, as for display column one also
-    // field.cinchyColumn.name is same
-    let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name == key);
-    if (!currentField) {
-      currentField = section.fields.find(field => {
-        return field.cinchyColumn.linkTargetColumnName + " label" === key;
-      });
+        });
     }
-    if (value && currentField && currentField.cinchyColumn.dataType === "Date and Time") {
-      let dateFormat = currentField.cinchyColumn.displayFormat;
-      dateFormat = dateFormat.replaceAll("Y", "y");
-      dateFormat = dateFormat.replaceAll("D", "d");
-      return this.datePipe.transform(value, dateFormat);
-    } else if (typeof value === "boolean") {
-      return value === true ? "Yes" : "No";
-    } else if (value && currentField && currentField.cinchyColumn.dataFormatType?.startsWith(ImageType.default)) {
-      return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
-    } else if ((value || value === 0) && currentField && currentField.cinchyColumn.numberFormatter) {
-      const numeralValue = new NumeralPipe(value);
-      return numeralValue.format(currentField.cinchyColumn.numberFormatter);
-    } else if (value && currentField && currentField.cinchyColumn.dataFormatType === "LinkUrl") {
-      return `<a href="${value}" target="_blank">Open</a>`;
-    }
-    if (this.field.childForm.name === "Customer 360 Child: Projects") {
-      //  console.log("HEADER", currentField, key);
-    }
-    return value;
   }
 
-  getTableHeader(key, section) {
-    // For child form all fields should be in 1 section
-    const notDisplayColumnFields = section.fields.filter(field => !field.cinchyColumn.isDisplayColumn);
-    // So that the one which is display column doesn"t match and show the name, as for display column one also
-    // field.cinchyColumn.name is same
-    let currentField = notDisplayColumnFields.find(field => field.cinchyColumn.name == key);
+
+  getTableHeader(key: string): string {
+
+    let currentField: FormField = this._getFieldByKey(key);
+
+    return currentField?.label || key;
+  }
+
+
+  /**
+   * Populates the header values captured by the set of child values represented by this table and the values to display in the table
+   */
+  loadFieldKeysAndPopulateDisplayValues(): void {
+
+    const childFormRowValues = this.childForm?.childFormRowValues;
+
+    this.fieldKeys = (childFormRowValues?.length ? Object.keys(childFormRowValues[0]) : []);
+
+    this._populateDisplayValueMap();
+  }
+
+
+  private _deleteRowValue(rowData: { [key: string]: any }): void {
+
+    const childFormRowValues = this.childForm.childFormRowValues.filter((originalRowData: { [key: string]: any }) => {
+
+      if (originalRowData["Cinchy ID"] && rowData["Cinchy ID"]) {
+        return (originalRowData["Cinchy ID"] !== rowData["Cinchy ID"]);
+      }
+      else if (!originalRowData["Cinchy ID"] && !rowData["Cinchy ID"]) {
+        // Since we can't just compare the ID here, we need to compare everything else and see if there's a match
+        const keys = Object.keys(rowData);
+
+        for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+          // We are intentionally using a weak comparison here in case there are some object references in the data
+          if (originalRowData[keys[keyIndex]] != rowData[keys[keyIndex]]) {
+            return true;
+          }
+        }
+
+        // If all properties match,
+        return false;
+      }
+
+      return true;
+    });
+
+    this.form.updateChildFormProperty(
+      this.sectionIndex,
+      this.fieldIndex,
+      {
+        propertyName: "childFormRowValues",
+        propertyValue: childFormRowValues
+      }
+    );
+
+    this.loadFieldKeysAndPopulateDisplayValues();
+
+    this._toastr.success(
+      "Record deleted successfully",
+      "Success"
+    );
+  }
+
+
+  /**
+   * @returns A flattened set of all of the fields contained within the child form represented by this table
+   */
+  private _getAllFieldsInChildForm(): Array<FormField> {
+
+    // TODO: this can be done using return flatMap when ES2019 is available (typescript ^4.5, angular ^14.0.7)
+    const output = new Array<FormField>();
+
+    this.childForm?.sections.forEach((section: FormSection) => {
+
+      output.push(...section.fields);
+    });
+
+    return output;
+
+    /*
+      return childForm.sections.flatMap((section: FormSection) => {
+
+        return section.fields;
+      });
+    */
+  }
+
+
+  private _getFieldByKey(key: string): FormField {
+
+    // If there is a specific display column, use that field
+    let currentField: FormField = this.fieldSet.find((field: FormField) => {
+
+      return (`${field.cinchyColumn.linkTargetColumnName} label` === key);
+    });
+
+    // Otherwise, try to find the base field
     if (!currentField) {
-      currentField = section.fields.find(field => {
-        return field.cinchyColumn.linkTargetColumnName + " label" === key;
+      currentField = this.fieldSet.find((field: FormField) => {
+
+        return (field.label === key);
       });
     }
-    return currentField ? currentField.label : key;
+
+    // If the field name doesn't match the target, then fall back to the cinchy column
+    if (!currentField) {
+      currentField = this.fieldSet.find((field: FormField) => {
+
+        return (field.cinchyColumn.name === key);
+      });
+    }
+
+    return currentField;
+  }
+
+
+  private _populateDisplayValueMap(): void {
+
+    const displayValueSet = new Array<{ [key: string]: string }>();
+
+    this.childForm.childFormRowValues?.forEach((rowData: { [key: string]: any }, rowIndex: number) => {
+
+      displayValueSet[rowIndex] = {};
+
+      this.fieldKeys.forEach((key: string) => {
+
+        let currentField: FormField = this._getFieldByKey(key);
+
+        if (!isNullOrUndefined(rowData[key])) {
+          if (currentField?.cinchyColumn.dataType === "Date and Time") {
+            let dateFormat = currentField.cinchyColumn.displayFormat;
+
+            // TODO: this can be done using String.replaceAll when ES2021 is available (typescript ^4.5, angular ^14.0.7)
+            dateFormat = dateFormat.replace(new RegExp("Y", "g"), "y");
+            dateFormat = dateFormat.replace(new RegExp("D", "g"), "d");
+
+            displayValueSet[rowIndex][key] = this._datePipe.transform(rowData[key], dateFormat);
+          }
+          else if (typeof rowData[key] === "boolean") {
+            displayValueSet[rowIndex][key] = (rowData[key] === true) ? "Yes" : "No";
+          }
+          else if (currentField?.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
+            displayValueSet[rowIndex][key] = `<img class="cinchy-images cinchy-images--min" src="${rowData[key]}">`;
+          }
+          else if (currentField?.cinchyColumn.numberFormatter) {
+            const numeralValue = new NumeralPipe(rowData[key]);
+
+            displayValueSet[rowIndex][key] = numeralValue.format(currentField.cinchyColumn.numberFormatter);
+          }
+          else if (currentField?.cinchyColumn.dataFormatType === "LinkUrl") {
+            displayValueSet[rowIndex][key] = `<a href="${rowData[key]}" target="_blank">Open</a>`;
+          }
+          else if (currentField?.cinchyColumn.dataType === "Link" && rowData[key]) {
+            let linkDisplayValues = new Array<string>();
+            let isFile = coerceBooleanProperty(currentField.cinchyColumn.attachmentUrl);
+
+            const ids: Array<string> = currentField.cinchyColumn.isMultiple ? rowData[key] : [rowData[key]];
+            ids?.forEach((id: string) => {
+
+              currentField.dropdownDataset?.options?.forEach((option: DropdownOption) => {
+
+                // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
+                //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
+                if (option.id == id) {
+
+                  if (isFile) {
+                    let replacedCinchyIdUrl = currentField.cinchyColumn.attachmentUrl.replace("@cinchyid", rowData["Cinchy ID"]);
+                    let fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", option.id);
+                    let lowercaseFileName = option.label.toLowerCase();
+                    let isImage = lowercaseFileName.endsWith(".png") ||
+                      lowercaseFileName.endsWith(".jpg") ||
+                      lowercaseFileName.endsWith(".jpeg") ||
+                      lowercaseFileName.endsWith(".gif") ||
+                      lowercaseFileName.endsWith(".svg");
+                    let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="${fileUrl}"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
+                    linkDisplayValues.push(displayValue);
+                  } else {
+                    linkDisplayValues.push(option.label);
+                  }
+                }
+              });
+            });
+
+            if (!linkDisplayValues.length) {
+              linkDisplayValues = ids;
+            }
+
+            displayValueSet[rowIndex][key] = linkDisplayValues.length ? linkDisplayValues.join(", ") : null;
+          }
+          else if (Array.isArray(rowData[key])) {
+            displayValueSet[rowIndex][key] = rowData[key].join(', ');
+          }
+          else {
+            displayValueSet[rowIndex][key] = rowData[`${key} label`]?.toString() || rowData[key]?.toString();
+          }
+        }
+      });
+    });
+
+    this.displayValueSet = displayValueSet.slice();
+  }
+
+
+  private _setChildFieldDictionary(): void {
+
+    this.form.sections.forEach((section: FormSection) => {
+
+      section.fields.forEach(field => {
+
+        this.childFieldDictionary[field.cinchyColumn.name] = field;
+      });
+    });
+  }
+
+
+  /**
+   * Determines which fields are editable by the current user
+   *
+   * TODO: while fieldKeys is still tied to the row data (which may be sparsely populated), this function
+   *       has the capacity to skip a number of fields and allow the user to edit fields that they don't
+   *       actually have access to
+   */
+  private async _updateEntitlements(rowData?: { [key: string]: any }): Promise<void> {
+
+    const domainAndTable = `[${this.childForm.targetTableDomain}].[${this.childForm.targetTableName}]`;
+
+    const columnNames: Array<string> = this.fieldKeys.filter((key: string) => {
+
+      // Ensure we're only using the fields that are actually present on in the table
+      return (key !== "Cinchy ID" && coerceBooleanProperty(this.fieldSet.find((field: FormField) => {
+
+        return (field.cinchyColumn.name === key);
+      })));
+    });
+
+    const selectLabels = columnNames.map((key: string) => {
+
+      return `editable([${key}]) as 'entitlement-${key}'`;
+    });
+
+    let entitlements: [{ [key: string]: 0 | 1 }];
+
+    if ((rowData && rowData["Cinchy ID"] && rowData["Cinchy ID"] > 0)) {
+      const entitlementQuery = `
+          SELECT ${selectLabels.join(",")}
+            FROM ${domainAndTable} t
+            WHERE t.[Deleted] is NULL
+              AND t.[Cinchy ID]=${rowData["Cinchy ID"]}
+            ORDER BY t.[Cinchy ID]`;
+
+      entitlements = (await this._cinchyService.executeCsql(entitlementQuery, null).toPromise())?.queryResult.toObjectArray() as [{ [key: string]: 0 | 1 }];
+    }
+
+    this.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
+
+      section.fields.forEach((field: FormField, fieldIndex: number) => {
+
+        this.childForm.updateFieldAdditionalProperty(
+          sectionIndex,
+          fieldIndex,
+          {
+            cinchyColumn: true,
+            propertyName: "canEdit",
+            propertyValue: entitlements?.length ? entitlements[0][`entitlement-${field.cinchyColumn.name}`] : 1
+          }
+        );
+      });
+    });
   }
 }
