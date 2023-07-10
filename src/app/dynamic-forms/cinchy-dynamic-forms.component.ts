@@ -442,7 +442,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
               return (record.id === this.rowId);
             });
-            // This may occur if the rowId is not provided in the queryParams, but one is
+            // This may occur if the rowId is not provided in the queryParams, but one is available in localstorage from a previous instance
+            // of the app. If the given rowId doesn't match a record on this table, clear it
             if (this.rowId !== null) {
               if (!selectedLookupRecord) {
                 this.appStateService.setRecordSelected(null);
