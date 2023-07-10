@@ -80,9 +80,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   private childForms: any;
 
   private _subscription = new Subscription();
-  private _onRecordSelectedSubscription: Subscription;
-  private _formFieldMetadataSubscription: Subscription;
-  private _appStateServiceSaveClickedSubscription: Subscription;
+
   constructor(
     private _dialog: MatDialog,
     private _cinchyService: CinchyService,
@@ -108,13 +106,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
 
   ngOnInit(): void {
-   this._appStateServiceSaveClickedSubscription = this.appStateService.saveClicked$.subscribe(() => {
+
+    this._subscription.add(this.appStateService.saveClicked$.subscribe(() => {
 
       this.saveForm(this.form, this.rowId);
-    });
-    this._subscription.add(this._appStateServiceSaveClickedSubscription);
+    }));
 
-    this._onRecordSelectedSubscription = this.appStateService.onRecordSelected().subscribe(
+    this._subscription.add( this.appStateService.onRecordSelected().subscribe(
       (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
 
         this.rowId = record?.cinchyId;
@@ -130,8 +128,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
           this.loadForm();
         }
       }
-    );
-    this._subscription.add(this._onRecordSelectedSubscription);
+    ));
+
   }
 
 
@@ -432,7 +430,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
       this.form = await this._formHelperService.generateForm(this.formMetadata, this.rowId,tableEntitlements);
       this._formHelperService.fillWithSections(this.form, this.formSectionsMetadata);
 
-      this._formFieldMetadataSubscription = this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
+      this._subscription.add(this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
         
         async (formFieldsMetadata:IFormFieldMetadata[]) => {
             let selectedLookupRecord;
@@ -475,8 +473,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
           this.spinner.hide();
 
           console.error(error);
-        });
-      this._subscription.add(this._formFieldMetadataSubscription);  
+        }));  
     } catch (e) {
       this.spinner.hide();
 
