@@ -29,6 +29,7 @@ import { IFormMetadata } from "../models/form-metadata-model";
 import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 import { ILookupRecord } from "../models/lookup-record.model";
 import { IQuery } from "./models/cinchy-query.model";
+import { IFormFieldMetadata } from "../models/form-field-metadata.model";
 
 import { AppStateService } from "../services/app-state.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
@@ -36,6 +37,7 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+
 
 
 
@@ -77,6 +79,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
   private childFieldArray: Array<any> = [];
   private childForms: any;
 
+  private _subscription = new Subscription();
   private _onRecordSelectedSubscription: Subscription;
   private _formFieldMetadataSubscription: Subscription;
   private _appStateServiceSaveClickedSubscription: Subscription;
@@ -92,9 +95,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
     private _configService: ConfigService
   ) {}
   ngOnDestroy(): void {
-    this._onRecordSelectedSubscription.unsubscribe();
-    this._formFieldMetadataSubscription.unsubscribe();
-    this._appStateServiceSaveClickedSubscription.unsubscribe();
+    this._subscription.unsubscribe();
   }
 
 
@@ -111,6 +112,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
       this.saveForm(this.form, this.rowId);
     });
+    this._subscription.add(this._appStateServiceSaveClickedSubscription);
 
     this._onRecordSelectedSubscription = this.appStateService.onRecordSelected().subscribe(
       (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
@@ -129,6 +131,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
         }
       }
     );
+    this._subscription.add(this._onRecordSelectedSubscription);
   }
 
 
@@ -431,16 +434,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
       this._formFieldMetadataSubscription = this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
         
-        async (formFieldsMetadata) => {
+        async (formFieldsMetadata:IFormFieldMetadata[]) => {
             let selectedLookupRecord;
             
             await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
-            if (this.lookupRecordsList) {
-              selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
+            selectedLookupRecord = this.lookupRecordsList?.find((record: ILookupRecord) => {
 
               return (record.id === this.rowId);
             });
-          }
             // This may occur if the rowId is not provided in the queryParams, but one is
             if (this.rowId !== null) {
               if (!selectedLookupRecord) {
@@ -474,6 +475,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy
 
           console.error(error);
         });
+      this._subscription.add(this._formFieldMetadataSubscription);  
     } catch (e) {
       this.spinner.hide();
 
