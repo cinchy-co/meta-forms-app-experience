@@ -328,7 +328,16 @@ export class LinkComponent implements OnChanges, OnInit {
 
       let dropdownDataset: DropdownDataset = null;
       let currentFieldJson;
-      let tableColumnQuery: string = `select tc.[Table].[Domain].[Name] as 'Domain', tc.[Table].[Name] as 'Table', tc.[Name] as 'Column' from [Cinchy].[Cinchy].[Table Columns] tc where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy ID] = ${this.field.cinchyColumn.linkTargetColumnId}`;
+
+      let tableColumnQuery: string = `
+        SELECT
+          tc.[Table].[Domain].[Name] as 'Domain',
+          tc.[Table].[Name] as 'Table',
+          tc.[Name] as 'Column'
+        FROM [Cinchy].[Cinchy].[Table Columns] tc
+        WHERE tc.[Deleted] IS NULL
+          AND tc.[Table].[Deleted] IS NULL
+          AND tc.[Cinchy ID] = ${this.field.cinchyColumn.linkTargetColumnId};`;
 
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 

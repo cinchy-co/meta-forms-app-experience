@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
 import { DropdownDataset } from "./cinchy-dropdown-dataset";
@@ -47,7 +48,7 @@ export class DropdownDatasetService {
     // Get meta data for the cinchy link
     let tableColumnQuery: string = `select tc.[Table].[Domain].[Name] as 'Domain', tc.[Table].[Name] as 'Table', tc.[Name] as 'Column'
       from [Cinchy].[Cinchy].[Table Columns] tc
-      where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy ID] = ${linkTargetColumnId}`;
+      where tc.[Deleted] IS NULL and tc.[Table].[Deleted] IS NULL and tc.[Cinchy ID] = ${linkTargetColumnId}`;
 
     let metadataQueryResult: Object[] = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
@@ -60,16 +61,16 @@ export class DropdownDatasetService {
     if (metadataQueryResult[0]["Domain"] === "Reference Data" && metadataQueryResult[0]["Table"] === "Employees") {
       dataSetQuery = `select t.[Cinchy ID] as 'Id', t.[${metadataQueryResult[0]["Column"]}] + ' (\' + [Role].[Name] +\')' as 'Label'
         from [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] t
-        where t.[Deleted] is null`;
+        where t.[Deleted] IS NULL`;
     }
     else{
       const setDisplayColumnQuery = currentFieldJson ? this.getDisplayColumnQuery(currentFieldJson) : '';
       const linkFilterExpression = currentFieldJson.linkFilterExpression;
 
-      let whereCondition = linkFilterExpression ? `where [Deleted] is null and ${linkFilterExpression}` : `where [Deleted] is null`
+      let whereCondition = linkFilterExpression ? `where [Deleted] IS NULL and ${linkFilterExpression}` : `where [Deleted] IS NULL`
 
       if (dropdownFilter && rowId) {
-        whereCondition = linkFilterExpression ? `where [Deleted] is null and ${dropdownFilter} and ${linkFilterExpression}` : `where [Deleted] is null and ${dropdownFilter}`
+        whereCondition = linkFilterExpression ? `where [Deleted] IS NULL and ${dropdownFilter} and ${linkFilterExpression}` : `where [Deleted] IS NULL and ${dropdownFilter}`
       }
 
       if (setDisplayColumnQuery) {

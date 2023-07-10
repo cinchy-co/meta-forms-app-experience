@@ -12,6 +12,7 @@ import {
 import { MatDialog } from "@angular/material/dialog";
 
 import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
+
 import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
@@ -696,10 +697,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       if (fileDetails.query) {
         const childCinchyId = fileDetails.childCinchyId;
-        const fileQuery = `update t
-                           set [${fileDetails.column}] = @p0
-                           from [${fileDetails.domain}].[${fileDetails.table}] t
-                           where t.[Cinchy ID] = ${childCinchyId ? childCinchyId : this.rowId} and t.[Deleted] is null`;
+        const fileQuery = `
+          UPDATE t
+          SET t.[${fileDetails.column}] = @p0
+          FROM [${fileDetails.domain}].[${fileDetails.table}] t
+          WHERE t.[Cinchy ID] = ${childCinchyId ? childCinchyId : this.rowId}
+            AND t.[Deleted] IS NULL`;
         const updateParams = {
           "@rowId": childCinchyId ? childCinchyId : this.rowId,
           "@fieldValue": fileDetails.value
@@ -719,9 +722,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         }
       } else {
         const query = `update t
-                       set [${fileDetails.column}] = @p0
+                       set t.[${fileDetails.column}] = @p0
                        from [${fileDetails.domain}].[${fileDetails.table}] t
-                       where t.[Cinchy ID] = ${this.rowId} and t.[Deleted] is null`;
+                       where t.[Cinchy ID] = ${this.rowId} and t.[Deleted] IS NULL`;
 
         await this._cinchyService.executeCsql(query, params).toPromise();
       }

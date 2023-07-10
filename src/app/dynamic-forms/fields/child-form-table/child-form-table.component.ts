@@ -232,7 +232,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
                          from [${childFormReference.childForm.targetTableDomain}].[${childFormReference.childForm.targetTableName}]
                          where
                              [Cinchy ID] = ${rowData["Cinchy ID"]}
-                         and [Deleted] is null`;
+                         and [Deleted] IS NULL`;
 
               this._cinchyService.executeCsql(query, null).subscribe(
                 {
@@ -499,6 +499,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
             let isFile = coerceBooleanProperty(currentField.cinchyColumn.attachmentUrl);
 
             const ids: Array<string> = currentField.cinchyColumn.isMultiple ? rowData[key] : [rowData[key]];
+
             ids?.forEach((id: string) => {
 
               currentField.dropdownDataset?.options?.forEach((option: DropdownOption) => {
@@ -588,7 +589,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
       const entitlementQuery = `
           SELECT ${selectLabels.join(",")}
             FROM ${domainAndTable} t
-            WHERE t.[Deleted] is NULL
+            WHERE t.[Deleted] IS NULL
               AND t.[Cinchy ID]=${rowData["Cinchy ID"]}
             ORDER BY t.[Cinchy ID]`;
 

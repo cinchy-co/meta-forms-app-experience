@@ -206,7 +206,7 @@ export class PrintService {
                 dontpush = !resolvedImage.includes("data:image");
                 !dontpush && properContent.push(item);
               } catch (e) {
-                console.error("Error while getting base64 file ")
+                console.error("Error while getting base64 file");
               }
             } else if (k === 1) {
               properContent.push(item)

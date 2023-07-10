@@ -523,7 +523,7 @@ export class Form {
             FROM [${this.targetTableDomain}].[${this.targetTableName}] t
             WHERE t.[Cinchy ID] = ${this.rowId}
               AND t.[Deleted] IS NULL
-            SELECT ${this.rowId}`,
+            SELECT ${this.rowId};`,
           params,
           attachedFilesInfo
         );
@@ -757,7 +757,8 @@ export class Form {
             SET ${assignmentSetClauses.join(", ")}
             FROM [${this.targetTableDomain}].[${this.targetTableName}] t
             WHERE t.[Cinchy ID] = ${this.rowId}
-              AND t.[Deleted] IS NULL; SELECT 1;`,
+              AND t.[Deleted] IS NULL;
+            SELECT 1;`,
           params,
           attachedFilesInfo
         );
@@ -812,7 +813,7 @@ export class Form {
 
     if (this.isChild) {
       
-      const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] is null`;
+      const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
 
       const whereConditionWithFilter = this.childFormFilter ? 
       `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
@@ -828,7 +829,7 @@ export class Form {
       return query;
     } else {
       let query: IQuery = new Query(
-        `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] is null Order by t.[Cinchy ID]`,
+        `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,
         null
       );
 
