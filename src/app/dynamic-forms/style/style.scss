@@ -377,6 +377,7 @@ button.btnSave.mat-raised-button {
 }
 
 .cinchy-dynamic-forms-wrapper {
+  height: 100vh;
   mat-expansion-panel {
     //  overflow: visible;
     margin: 10px 0;
@@ -426,6 +427,9 @@ button.btnSave.mat-raised-button {
   padding: 10px;
   border: 1px solid #d3d3d3;
   background: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 
   button {
     background: #9CD580;
