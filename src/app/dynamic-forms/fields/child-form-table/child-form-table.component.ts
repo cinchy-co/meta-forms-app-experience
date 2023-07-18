@@ -22,20 +22,13 @@ import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 import { MessageDialogComponent } from "../../message-dialog/message-dialog.component";
 
-import { DataFormatType } from "../../enums/data-format-type";
-
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { FormSection } from "../../models/cinchy-form-section.model";
 
-import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
-
 import { AppStateService } from "../../../services/app-state.service";
 
-import { NumeralPipe } from "ngx-numeral";
 import { ToastrService } from "ngx-toastr";
-import { isNullOrUndefined } from "util";
-import { ConfigService } from "src/app/services/config.service";
 import { ChildFormService } from "../../service/child-form/child-form.service";
 
 
@@ -103,8 +96,6 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     private _appStateService: AppStateService,
     private _childFormService: ChildFormService,
     private _cinchyService: CinchyService,
-    //private _configService: ConfigService,
-    //private _datePipe: DatePipe,
     private _dialog: MatDialog,
     private _toastr: ToastrService,
   ) {}
@@ -113,7 +104,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
 
     if (changes?.form) {
-      this.fieldSet = this._getAllFieldsInChildForm();
+      this.fieldSet = this._childFormService.getAllFields(this.childForm);
       this.loadFieldKeysAndPopulateDisplayValues();
     }
   }
@@ -148,7 +139,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
     this.getFileNames();
 
-    this.fieldSet = this._getAllFieldsInChildForm();
+    this.fieldSet = this._childFormService.getAllFields(this.childForm);
 
     this._setChildFieldDictionary();
 
@@ -403,146 +394,6 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
       "Success"
     );
   }
-
-
-  /**
-   * @returns A flattened set of all of the fields contained within the child form represented by this table
-   */
-  private _getAllFieldsInChildForm(): Array<FormField> {
-
-    // TODO: this can be done using return flatMap when ES2019 is available (typescript ^4.5, angular ^14.0.7)
-    const output = new Array<FormField>();
-
-    this.childForm?.sections.forEach((section: FormSection) => {
-
-      output.push(...section.fields);
-    });
-
-    return output;
-
-    /*
-      return childForm.sections.flatMap((section: FormSection) => {
-
-        return section.fields;
-      });
-    */
-  }
-
-
-  //private _getFieldByKey(key: string): FormField {
-
-  //  // If there is a specific display column, use that field
-  //  let currentField: FormField = this.fieldSet.find((field: FormField) => {
-
-  //    return (`${field.cinchyColumn.linkTargetColumnName} label` === key);
-  //  });
-
-  //  // Otherwise, try to find the base field
-  //  if (!currentField) {
-  //    currentField = this.fieldSet.find((field: FormField) => {
-
-  //      return (field.label === key);
-  //    });
-  //  }
-
-  //  // If the field name doesn't match the target, then fall back to the cinchy column
-  //  if (!currentField) {
-  //    currentField = this.fieldSet.find((field: FormField) => {
-
-  //      return (field.cinchyColumn.name === key);
-  //    });
-  //  }
-
-  //  return currentField;
-  //}
-
-
-  //private _populateDisplayValueMap(): void {
-
-  //  const displayValueSet = new Array<{ [key: string]: string }>();
-
-  //  this.childForm.childFormRowValues?.forEach((rowData: { [key: string]: any }, rowIndex: number) => {
-
-  //    displayValueSet[rowIndex] = {};
-
-  //    this.fieldKeys.forEach((key: string) => {
-
-  //      let currentField: FormField = this._getFieldByKey(key);
-
-  //      if (!isNullOrUndefined(rowData[key])) {
-  //        if (currentField?.cinchyColumn.dataType === "Date and Time") {
-  //          let dateFormat = currentField.cinchyColumn.displayFormat;
-
-  //          // TODO: this can be done using String.replaceAll when ES2021 is available (typescript ^4.5, angular ^14.0.7)
-  //          dateFormat = dateFormat.replace(new RegExp("Y", "g"), "y");
-  //          dateFormat = dateFormat.replace(new RegExp("D", "g"), "d");
-
-  //          displayValueSet[rowIndex][key] = this._datePipe.transform(rowData[key], dateFormat);
-  //        }
-  //        else if (typeof rowData[key] === "boolean") {
-  //          displayValueSet[rowIndex][key] = (rowData[key] === true) ? "Yes" : "No";
-  //        }
-  //        else if (currentField?.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
-  //          displayValueSet[rowIndex][key] = `<img class="cinchy-images cinchy-images--min" src="${rowData[key]}">`;
-  //        }
-  //        else if (currentField?.cinchyColumn.numberFormatter) {
-  //          const numeralValue = new NumeralPipe(rowData[key]);
-
-  //          displayValueSet[rowIndex][key] = numeralValue.format(currentField.cinchyColumn.numberFormatter);
-  //        }
-  //        else if (currentField?.cinchyColumn.dataFormatType === "LinkUrl") {
-  //          displayValueSet[rowIndex][key] = `<a href="${rowData[key]}" target="_blank">Open</a>`;
-  //        }
-  //        else if (currentField?.cinchyColumn.dataType === "Link" && rowData[key]) {
-  //          let linkDisplayValues = new Array<string>();
-  //          let isFile = coerceBooleanProperty(currentField.cinchyColumn.attachmentUrl);
-
-  //          const ids: Array<string> = currentField.cinchyColumn.isMultiple ? rowData[key] : [rowData[key]];
-
-  //          ids?.forEach((id: string) => {
-
-  //            currentField.dropdownDataset?.options?.forEach((option: DropdownOption) => {
-
-  //              // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
-  //              //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
-  //              if (option.id == id) {
-
-  //                if (isFile) {
-  //                  let replacedCinchyIdUrl = currentField.cinchyColumn.attachmentUrl.replace("@cinchyid", rowData["Cinchy ID"]);
-  //                  let fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", option.id);
-  //                  let lowercaseFileName = option.label.toLowerCase();
-  //                  let isImage = lowercaseFileName.endsWith(".png") ||
-  //                    lowercaseFileName.endsWith(".jpg") ||
-  //                    lowercaseFileName.endsWith(".jpeg") ||
-  //                    lowercaseFileName.endsWith(".gif") ||
-  //                    lowercaseFileName.endsWith(".svg");
-  //                  let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="${fileUrl}"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
-  //                  linkDisplayValues.push(displayValue);
-  //                } else {
-  //                  linkDisplayValues.push(option.label);
-  //                }
-  //              }
-  //            });
-  //          });
-
-  //          if (!linkDisplayValues.length) {
-  //            linkDisplayValues = ids;
-  //          }
-
-  //          displayValueSet[rowIndex][key] = linkDisplayValues.length ? linkDisplayValues.join(", ") : null;
-  //        }
-  //        else if (Array.isArray(rowData[key])) {
-  //          displayValueSet[rowIndex][key] = rowData[key].join(', ');
-  //        }
-  //        else {
-  //          displayValueSet[rowIndex][key] = rowData[`${key} label`]?.toString() || rowData[key]?.toString();
-  //        }
-  //      }
-  //    });
-  //  });
-
-  //  this.displayValueSet = displayValueSet.slice();
-  //}
 
 
   private _setChildFieldDictionary(): void {
