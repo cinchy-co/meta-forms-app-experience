@@ -36,6 +36,7 @@ import { NumeralPipe } from "ngx-numeral";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
 import { ConfigService } from "src/app/services/config.service";
+import { ChildFormService } from "../../service/child-form/child-form.service";
 
 
 /**
@@ -100,11 +101,12 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
   constructor(
     private _appStateService: AppStateService,
+    private _childFormService: ChildFormService,
     private _cinchyService: CinchyService,
-    private _datePipe: DatePipe,
+    //private _configService: ConfigService,
+    //private _datePipe: DatePipe,
     private _dialog: MatDialog,
     private _toastr: ToastrService,
-    private _configService: ConfigService
   ) {}
 
 
@@ -171,8 +173,8 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     // Find lowest negative Cinchy ID (these are all new records) so that we can generate a new one
     let lowestCinchyId = 0;
     this.childForm.childFormRowValues?.forEach(rowVal => {
-      if (rowVal['Cinchy ID'] < lowestCinchyId) {
-        lowestCinchyId = rowVal['Cinchy ID'];
+      if (rowVal["Cinchy ID"] < lowestCinchyId) {
+        lowestCinchyId = rowVal["Cinchy ID"];
       }
     });
     lowestCinchyId--;
@@ -344,7 +346,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
   getTableHeader(key: string): string {
 
-    let currentField: FormField = this._getFieldByKey(key);
+    let currentField: FormField = this._childFormService.getFieldByKey(this.fieldSet, key);
 
     return currentField?.label || key;
   }
@@ -355,11 +357,8 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
    */
   loadFieldKeysAndPopulateDisplayValues(): void {
 
-    const childFormRowValues = this.childForm?.childFormRowValues;
-
-    this.fieldKeys = (childFormRowValues?.length ? Object.keys(childFormRowValues[0]) : []);
-
-    this._populateDisplayValueMap();
+    this.fieldKeys = this._childFormService.getFieldKeys(this.childForm);
+    this.displayValueSet = this._childFormService.getDisplayValueMap(this.childForm);
   }
 
 
@@ -430,120 +429,120 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
-  private _getFieldByKey(key: string): FormField {
+  //private _getFieldByKey(key: string): FormField {
 
-    // If there is a specific display column, use that field
-    let currentField: FormField = this.fieldSet.find((field: FormField) => {
+  //  // If there is a specific display column, use that field
+  //  let currentField: FormField = this.fieldSet.find((field: FormField) => {
 
-      return (`${field.cinchyColumn.linkTargetColumnName} label` === key);
-    });
+  //    return (`${field.cinchyColumn.linkTargetColumnName} label` === key);
+  //  });
 
-    // Otherwise, try to find the base field
-    if (!currentField) {
-      currentField = this.fieldSet.find((field: FormField) => {
+  //  // Otherwise, try to find the base field
+  //  if (!currentField) {
+  //    currentField = this.fieldSet.find((field: FormField) => {
 
-        return (field.label === key);
-      });
-    }
+  //      return (field.label === key);
+  //    });
+  //  }
 
-    // If the field name doesn't match the target, then fall back to the cinchy column
-    if (!currentField) {
-      currentField = this.fieldSet.find((field: FormField) => {
+  //  // If the field name doesn't match the target, then fall back to the cinchy column
+  //  if (!currentField) {
+  //    currentField = this.fieldSet.find((field: FormField) => {
 
-        return (field.cinchyColumn.name === key);
-      });
-    }
+  //      return (field.cinchyColumn.name === key);
+  //    });
+  //  }
 
-    return currentField;
-  }
+  //  return currentField;
+  //}
 
 
-  private _populateDisplayValueMap(): void {
+  //private _populateDisplayValueMap(): void {
 
-    const displayValueSet = new Array<{ [key: string]: string }>();
+  //  const displayValueSet = new Array<{ [key: string]: string }>();
 
-    this.childForm.childFormRowValues?.forEach((rowData: { [key: string]: any }, rowIndex: number) => {
+  //  this.childForm.childFormRowValues?.forEach((rowData: { [key: string]: any }, rowIndex: number) => {
 
-      displayValueSet[rowIndex] = {};
+  //    displayValueSet[rowIndex] = {};
 
-      this.fieldKeys.forEach((key: string) => {
+  //    this.fieldKeys.forEach((key: string) => {
 
-        let currentField: FormField = this._getFieldByKey(key);
+  //      let currentField: FormField = this._getFieldByKey(key);
 
-        if (!isNullOrUndefined(rowData[key])) {
-          if (currentField?.cinchyColumn.dataType === "Date and Time") {
-            let dateFormat = currentField.cinchyColumn.displayFormat;
+  //      if (!isNullOrUndefined(rowData[key])) {
+  //        if (currentField?.cinchyColumn.dataType === "Date and Time") {
+  //          let dateFormat = currentField.cinchyColumn.displayFormat;
 
-            // TODO: this can be done using String.replaceAll when ES2021 is available (typescript ^4.5, angular ^14.0.7)
-            dateFormat = dateFormat.replace(new RegExp("Y", "g"), "y");
-            dateFormat = dateFormat.replace(new RegExp("D", "g"), "d");
+  //          // TODO: this can be done using String.replaceAll when ES2021 is available (typescript ^4.5, angular ^14.0.7)
+  //          dateFormat = dateFormat.replace(new RegExp("Y", "g"), "y");
+  //          dateFormat = dateFormat.replace(new RegExp("D", "g"), "d");
 
-            displayValueSet[rowIndex][key] = this._datePipe.transform(rowData[key], dateFormat);
-          }
-          else if (typeof rowData[key] === "boolean") {
-            displayValueSet[rowIndex][key] = (rowData[key] === true) ? "Yes" : "No";
-          }
-          else if (currentField?.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
-            displayValueSet[rowIndex][key] = `<img class="cinchy-images cinchy-images--min" src="${rowData[key]}">`;
-          }
-          else if (currentField?.cinchyColumn.numberFormatter) {
-            const numeralValue = new NumeralPipe(rowData[key]);
+  //          displayValueSet[rowIndex][key] = this._datePipe.transform(rowData[key], dateFormat);
+  //        }
+  //        else if (typeof rowData[key] === "boolean") {
+  //          displayValueSet[rowIndex][key] = (rowData[key] === true) ? "Yes" : "No";
+  //        }
+  //        else if (currentField?.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
+  //          displayValueSet[rowIndex][key] = `<img class="cinchy-images cinchy-images--min" src="${rowData[key]}">`;
+  //        }
+  //        else if (currentField?.cinchyColumn.numberFormatter) {
+  //          const numeralValue = new NumeralPipe(rowData[key]);
 
-            displayValueSet[rowIndex][key] = numeralValue.format(currentField.cinchyColumn.numberFormatter);
-          }
-          else if (currentField?.cinchyColumn.dataFormatType === "LinkUrl") {
-            displayValueSet[rowIndex][key] = `<a href="${rowData[key]}" target="_blank">Open</a>`;
-          }
-          else if (currentField?.cinchyColumn.dataType === "Link" && rowData[key]) {
-            let linkDisplayValues = new Array<string>();
-            let isFile = coerceBooleanProperty(currentField.cinchyColumn.attachmentUrl);
+  //          displayValueSet[rowIndex][key] = numeralValue.format(currentField.cinchyColumn.numberFormatter);
+  //        }
+  //        else if (currentField?.cinchyColumn.dataFormatType === "LinkUrl") {
+  //          displayValueSet[rowIndex][key] = `<a href="${rowData[key]}" target="_blank">Open</a>`;
+  //        }
+  //        else if (currentField?.cinchyColumn.dataType === "Link" && rowData[key]) {
+  //          let linkDisplayValues = new Array<string>();
+  //          let isFile = coerceBooleanProperty(currentField.cinchyColumn.attachmentUrl);
 
-            const ids: Array<string> = currentField.cinchyColumn.isMultiple ? rowData[key] : [rowData[key]];
+  //          const ids: Array<string> = currentField.cinchyColumn.isMultiple ? rowData[key] : [rowData[key]];
 
-            ids?.forEach((id: string) => {
+  //          ids?.forEach((id: string) => {
 
-              currentField.dropdownDataset?.options?.forEach((option: DropdownOption) => {
+  //            currentField.dropdownDataset?.options?.forEach((option: DropdownOption) => {
 
-                // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
-                //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
-                if (option.id == id) {
+  //              // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
+  //              //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
+  //              if (option.id == id) {
 
-                  if (isFile) {
-                    let replacedCinchyIdUrl = currentField.cinchyColumn.attachmentUrl.replace("@cinchyid", rowData["Cinchy ID"]);
-                    let fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", option.id);
-                    let lowercaseFileName = option.label.toLowerCase();
-                    let isImage = lowercaseFileName.endsWith(".png") ||
-                      lowercaseFileName.endsWith(".jpg") ||
-                      lowercaseFileName.endsWith(".jpeg") ||
-                      lowercaseFileName.endsWith(".gif") ||
-                      lowercaseFileName.endsWith(".svg");
-                    let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="${fileUrl}"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
-                    linkDisplayValues.push(displayValue);
-                  } else {
-                    linkDisplayValues.push(option.label);
-                  }
-                }
-              });
-            });
+  //                if (isFile) {
+  //                  let replacedCinchyIdUrl = currentField.cinchyColumn.attachmentUrl.replace("@cinchyid", rowData["Cinchy ID"]);
+  //                  let fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", option.id);
+  //                  let lowercaseFileName = option.label.toLowerCase();
+  //                  let isImage = lowercaseFileName.endsWith(".png") ||
+  //                    lowercaseFileName.endsWith(".jpg") ||
+  //                    lowercaseFileName.endsWith(".jpeg") ||
+  //                    lowercaseFileName.endsWith(".gif") ||
+  //                    lowercaseFileName.endsWith(".svg");
+  //                  let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="${fileUrl}"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
+  //                  linkDisplayValues.push(displayValue);
+  //                } else {
+  //                  linkDisplayValues.push(option.label);
+  //                }
+  //              }
+  //            });
+  //          });
 
-            if (!linkDisplayValues.length) {
-              linkDisplayValues = ids;
-            }
+  //          if (!linkDisplayValues.length) {
+  //            linkDisplayValues = ids;
+  //          }
 
-            displayValueSet[rowIndex][key] = linkDisplayValues.length ? linkDisplayValues.join(", ") : null;
-          }
-          else if (Array.isArray(rowData[key])) {
-            displayValueSet[rowIndex][key] = rowData[key].join(', ');
-          }
-          else {
-            displayValueSet[rowIndex][key] = rowData[`${key} label`]?.toString() || rowData[key]?.toString();
-          }
-        }
-      });
-    });
+  //          displayValueSet[rowIndex][key] = linkDisplayValues.length ? linkDisplayValues.join(", ") : null;
+  //        }
+  //        else if (Array.isArray(rowData[key])) {
+  //          displayValueSet[rowIndex][key] = rowData[key].join(', ');
+  //        }
+  //        else {
+  //          displayValueSet[rowIndex][key] = rowData[`${key} label`]?.toString() || rowData[key]?.toString();
+  //        }
+  //      }
+  //    });
+  //  });
 
-    this.displayValueSet = displayValueSet.slice();
-  }
+  //  this.displayValueSet = displayValueSet.slice();
+  //}
 
 
   private _setChildFieldDictionary(): void {
@@ -569,7 +568,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
     const domainAndTable = `[${this.childForm.targetTableDomain}].[${this.childForm.targetTableName}]`;
 
-    const columnNames: Array<string> = this.fieldKeys.filter((key: string) => {
+    const columnNames: Array<string> = this._childFormService.getFieldKeys(this.childForm).filter((key: string) => {
 
       // Ensure we're only using the fields that are actually present on in the table
       return (key !== "Cinchy ID" && coerceBooleanProperty(this.fieldSet.find((field: FormField) => {
