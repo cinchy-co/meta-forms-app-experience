@@ -286,8 +286,8 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     if (domain) {
       const query = `
         SELECT
-            [${column}] as 'fullName',
-            [Cinchy ID] as 'id'
+            [${column}] AS 'fullName',
+            [Cinchy ID] AS 'id'
           FROM [${domain}].[${table}]
           WHERE [Cinchy ID] = ${rowId}
             AND [Deleted] IS NULL`;

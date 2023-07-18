@@ -506,7 +506,7 @@ export class Form {
               INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(", ")})
               OUTPUT INSERTED.[Cinchy ID] INTO #tmp ([id])
               VALUES (${assignmentValues.join(", ")})
-              SELECT x.[id] as 'id' FROM #tmp x`;
+              SELECT x.[id] AS 'id' FROM #tmp x`;
         }
 
         query = new Query(queryString, params, attachedFilesInfo)
@@ -821,7 +821,7 @@ export class Form {
       const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
 
       let query: IQuery = new Query(
-        `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
+        `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
         null,
         null
       );
@@ -829,7 +829,7 @@ export class Form {
       return query;
     } else {
       let query: IQuery = new Query(
-        `select ${fields.join(",")} from [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,
+        `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,
         null
       );
 

@@ -721,10 +721,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           this._spinner.hide();
         }
       } else {
-        const query = `update t
-                       set t.[${fileDetails.column}] = @p0
-                       from [${fileDetails.domain}].[${fileDetails.table}] t
-                       where t.[Cinchy ID] = ${this.rowId} and t.[Deleted] IS NULL`;
+        const query = `UPDATE t
+                       SET t.[${fileDetails.column}] = @p0
+                       FROM [${fileDetails.domain}].[${fileDetails.table}] t
+                       WHERE t.[Cinchy ID] = ${this.rowId}
+                        AND t.[Deleted] IS NULL;`;
 
         await this._cinchyService.executeCsql(query, params).toPromise();
       }

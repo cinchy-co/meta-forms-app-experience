@@ -331,9 +331,9 @@ export class LinkComponent implements OnChanges, OnInit {
 
       let tableColumnQuery: string = `
         SELECT
-          tc.[Table].[Domain].[Name] as 'Domain',
-          tc.[Table].[Name] as 'Table',
-          tc.[Name] as 'Column'
+          tc.[Table].[Domain].[Name] AS 'Domain',
+          tc.[Table].[Name] AS 'Table',
+          tc.[Name] AS 'Column'
         FROM [Cinchy].[Cinchy].[Table Columns] tc
         WHERE tc.[Deleted] IS NULL
           AND tc.[Table].[Deleted] IS NULL
