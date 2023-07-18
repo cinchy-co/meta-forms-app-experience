@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
 import { DropdownDataset } from "./cinchy-dropdown-dataset";
@@ -45,9 +46,15 @@ export class DropdownDatasetService {
     }
 
     // Get meta data for the cinchy link
-    let tableColumnQuery: string = `select tc.[Table].[Domain].[Name] as 'Domain', tc.[Table].[Name] as 'Table', tc.[Name] as 'Column'
-      from [Cinchy].[Cinchy].[Table Columns] tc
-      where tc.[Deleted] is null and tc.[Table].[Deleted] is null and tc.[Cinchy ID] = ${linkTargetColumnId}`;
+    let tableColumnQuery: string = `
+      SELECT
+        tc.[Table].[Domain].[Name] AS 'Domain',
+        tc.[Table].[Name] AS 'Table',
+        tc.[Name] AS 'Column'
+      FROM [Cinchy].[Cinchy].[Table Columns] tc
+      WHERE tc.[Deleted] IS NULL
+        AND tc.[Table].[Deleted] IS NULL
+        AND tc.[Cinchy ID] = ${linkTargetColumnId}`;
 
     let metadataQueryResult: Object[] = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
@@ -58,26 +65,43 @@ export class DropdownDatasetService {
     let dataSetQuery: string = "";
 
     if (metadataQueryResult[0]["Domain"] === "Reference Data" && metadataQueryResult[0]["Table"] === "Employees") {
-      dataSetQuery = `select t.[Cinchy ID] as 'Id', t.[${metadataQueryResult[0]["Column"]}] + ' (\' + [Role].[Name] +\')' as 'Label'
-        from [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] t
-        where t.[Deleted] is null`;
+      dataSetQuery = `
+        SELECT
+          t.[Cinchy ID] AS 'Id',
+          t.[${metadataQueryResult[0]["Column"]}] + ' (\' + [Role].[Name] +\')' AS 'Label'
+        FROM [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] t
+        WHERE t.[Deleted] IS NULL`;
     }
     else{
       const setDisplayColumnQuery = currentFieldJson ? this.getDisplayColumnQuery(currentFieldJson) : '';
       const linkFilterExpression = currentFieldJson.linkFilterExpression;
 
-      let whereCondition = linkFilterExpression ? `where [Deleted] is null and ${linkFilterExpression}` : `where [Deleted] is null`
+      let whereCondition: string = `WHERE [Deleted] IS NULL`;
+
+      if (linkFilterExpression) {
+        whereCondition += ` AND ${linkFilterExpression}`;
+      }
 
       if (dropdownFilter && rowId) {
-        whereCondition = linkFilterExpression ? `where [Deleted] is null and ${dropdownFilter} and ${linkFilterExpression}` : `where [Deleted] is null and ${dropdownFilter}`
+        whereCondition += ` AND ${dropdownFilter}`;
       }
 
       if (setDisplayColumnQuery) {
-        dataSetQuery = `select ${setDisplayColumnQuery},[Cinchy ID] as 'Id', [${metadataQueryResult[0]["Column"]}] as 'Label'
-          from [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] ` + whereCondition;
-      }else{
-        dataSetQuery = `select [Cinchy ID] as 'Id', [${metadataQueryResult[0]["Column"]}] as 'Label'
-          from [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] ` + whereCondition;
+        dataSetQuery = `
+          SELECT
+            ${setDisplayColumnQuery},
+            [Cinchy ID] as 'Id',
+            [${metadataQueryResult[0]["Column"]}] as 'Label'
+          FROM [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}]
+          ${whereCondition};`;
+      }
+      else {
+        dataSetQuery = `
+          SELECT
+            [Cinchy ID] AS 'Id',
+            [${metadataQueryResult[0]["Column"]}] AS 'Label'
+          FROM [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}]
+          ${whereCondition};`;
       }
     }
 

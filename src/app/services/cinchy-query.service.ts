@@ -47,7 +47,12 @@ export class CinchyQueryService {
 
   getFilesInCell(columnName: string, domainName: string, tableName: string, cinchyId: number): Observable<Array<{ fileId: number, fileName: string }>> {
 
-    const query = `SELECT [${columnName}].[Cinchy ID] as 'fileIds', [${columnName}].[File Name] as 'fileNames'  FROM [${domainName}].[${tableName}] WHERE [Cinchy ID]=${cinchyId}`;
+    const query = `
+      SELECT
+        [${columnName}].[Cinchy ID] AS 'fileIds',
+        [${columnName}].[File Name] AS 'fileNames'
+      FROM [${domainName}].[${tableName}]
+      WHERE [Cinchy ID]=${cinchyId};`;
 
     return this._cinchyService.executeCsql(query, null).pipe(map(
       resp => {
@@ -176,7 +181,9 @@ export class CinchyQueryService {
         [Cinchy ID] as 'id',
         [${subCol}] as 'label'
       FROM [${domain}].[${table}]
-      WHERE [Deleted] IS NULL AND [${subCol}] IS NOT NULL ${lookupFilter ? `AND ${lookupFilter}` : ''}
+      WHERE [Deleted] IS NULL
+        AND [${subCol}] IS NOT NULL
+        ${lookupFilter ? `AND ${lookupFilter}` : ''}
       ORDER BY [${subCol}];`;
 
     return this._cinchyService.executeCsql(query, null).pipe(
@@ -217,7 +224,12 @@ export class CinchyQueryService {
   updateFilesInCell(fileIds: number[], columnName: string, domainName: string, tableName: string, cinchyId: number): Observable<any> {
 
     const ids = fileIds.length > 0 ? fileIds?.join(',1,') + ',1' : '';
-    const query = `UPDATE t SET t.[${columnName}]='${ids}' FROM [${domainName}].[${tableName}] t WHERE [Deleted] IS NULL AND [Cinchy ID]=${cinchyId}`;
+    const query = `
+      UPDATE t
+      SET t.[${columnName}]='${ids}'
+      FROM [${domainName}].[${tableName}] t
+      WHERE [Deleted] IS NULL
+        AND [Cinchy ID]=${cinchyId};`;
 
     return this._cinchyService.executeCsql(query, null).pipe(map(result => result.queryResult.toObjectArray() as { fileId: number, fileName: string }[]));
   }

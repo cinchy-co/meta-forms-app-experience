@@ -283,9 +283,11 @@ export class FormHelperService {
 
     try {
       if (form.isChild && form.childFormParentId && form.childFormLinkId && parentDomainName && parentTableName) {
-        const queryToGetMatchIdFromParent = `SELECT ${form.childFormParentId} AS 'idParent'
-                                            FROM [${parentDomainName}].[${parentTableName}]
-                                            WHERE [Cinchy ID] = ${targetRowId}`;
+        const queryToGetMatchIdFromParent = `
+          SELECT
+            ${form.childFormParentId} AS 'idParent'
+          FROM [${parentDomainName}].[${parentTableName}]
+          WHERE [Cinchy ID] = ${targetRowId};`;
 
         let cinchyIdForMatchFromParentResp = (
           await this._cinchyService.executeCsql(
@@ -346,10 +348,11 @@ export class FormHelperService {
 
     const selectClause = formFieldsMetadata
       .filter(_ => _.columnName)
-      .map(_ => ` editable([${_.columnName}]) as 'entitlement-${_.columnName.substring(0, 114)}'`);
+      .map(_ => ` editable([${_.columnName}]) AS 'entitlement-${_.columnName.substring(0, 114)}'`);
 
     const query = `
-      SELECT ${selectClause.toString()}
+      SELECT
+        ${selectClause.toString()}
       FROM [${domainName}].[${tableName}] t
       WHERE t.[Deleted] IS NULL
         AND t.[Cinchy ID]=${cinchyId};`;
@@ -369,14 +372,14 @@ export class FormHelperService {
   private async _getFileName(cinchyId: number, fileNameColumn: string): Promise<string> {
 
     const [domain, table, column] = fileNameColumn?.split(".") || [];
-    const whereCondition = `WHERE [Cinchy ID] = ${cinchyId} AND [Deleted] IS NULL `;
+    const whereCondition = `WHERE [Cinchy ID] = ${cinchyId} AND [Deleted] IS NULL`;
 
     if (domain) {
       const query = `SELECT [${column}] as 'fullName',
                        [Cinchy ID] as 'id'
                      FROM
                        [${domain}].[${table}]
-                       ${whereCondition}`;
+                       ${whereCondition};`;
 
       const fileNameResp = await this._cinchyService.executeCsql(query, null, null, QueryType.DRAFT_QUERY).toPromise();
 
