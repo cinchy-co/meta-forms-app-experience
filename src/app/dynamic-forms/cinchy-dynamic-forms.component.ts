@@ -16,6 +16,7 @@ import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
+import { Subscription } from "rxjs";
 
 import { MessageDialogComponent } from "./message-dialog/message-dialog.component";
 
@@ -28,6 +29,7 @@ import { IFormMetadata } from "../models/form-metadata-model";
 import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 import { ILookupRecord } from "../models/lookup-record.model";
 import { IQuery } from "./models/cinchy-query.model";
+import { IFormFieldMetadata } from "../models/form-field-metadata.model";
 
 import { AppStateService } from "../services/app-state.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
@@ -37,13 +39,15 @@ import { PrintService } from "./service/print/print.service";
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
 
 
+
+
 @Component({
   selector: "cinchy-dynamic-forms",
   templateUrl: "./cinchy-dynamic-forms.component.html",
   styleUrls: ["./style/style.scss"],
   encapsulation: ViewEncapsulation.None
 })
-export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
+export class CinchyDynamicFormsComponent implements OnInit, OnChanges, OnDestroy {
 
   @ViewChild("recordDropdown") dropdownComponent: SearchDropdownComponent;
   
@@ -75,6 +79,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   private childFieldArray: Array<any> = [];
   private childForms: any;
 
+  private _subscription = new Subscription();
+
   constructor(
     private _dialog: MatDialog,
     private _cinchyService: CinchyService,
@@ -86,6 +92,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     private _formHelperService: FormHelperService,
     private _configService: ConfigService
   ) {}
+  ngOnDestroy(): void {
+    this._subscription.unsubscribe();
+  }
 
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -98,12 +107,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
 
-    this.appStateService.saveClicked$.subscribe(() => {
+    this._subscription.add(this.appStateService.saveClicked$.subscribe(() => {
 
       this.saveForm(this.form, this.rowId);
-    });
+    }));
 
-    this.appStateService.onRecordSelected().subscribe(
+    this._subscription.add( this.appStateService.onRecordSelected().subscribe(
       (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
 
         this.rowId = record?.cinchyId;
@@ -119,7 +128,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           this.loadForm();
         }
       }
-    );
+    ));
+
   }
 
 
@@ -420,48 +430,50 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       this.form = await this._formHelperService.generateForm(this.formMetadata, this.rowId,tableEntitlements);
       this._formHelperService.fillWithSections(this.form, this.formSectionsMetadata);
 
-      this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
-        async (formFieldsMetadata) => {
+      this._subscription.add(this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
+        
+        async (formFieldsMetadata:IFormFieldMetadata[]) => {
+            let selectedLookupRecord;
+            
+            await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
+            selectedLookupRecord = this.lookupRecordsList?.find((record: ILookupRecord) => {
 
-          let selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
-
-            return (record.id === this.rowId);
-          });
-
-          await this._formHelperService.fillWithFields(this.form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
-
-          // This may occur if the rowId is not provided in the queryParams, but one is
-          if (this.rowId !== null) {
-            if (!selectedLookupRecord) {
-              this.appStateService.setRecordSelected(null);
+              return (record.id === this.rowId);
+            });
+            // This may occur if the rowId is not provided in the queryParams, but one is available in localstorage from a previous instance
+            // of the app. If the given rowId doesn't match a record on this table, clear it
+            if (this.rowId !== null) {
+              if (!selectedLookupRecord) {
+                this.appStateService.setRecordSelected(null);
+              }
+              else {
+                await this._formHelperService.fillWithData(this.form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+              }
             }
-            else {
-              await this._formHelperService.fillWithData(this.form, this.rowId, selectedLookupRecord, null, null, null, this.afterChildFormEdit.bind(this));
+  
+            this.enableSaveBtn = true;
+  
+            this.isLoadingForm = false;
+            this.formHasDataLoaded = true;
+           
+            this.spinner.hide();
+  
+            if (childData) {
+              setTimeout(() => {
+  
+                childData.rowId = this.rowId;
+  
+                this.appStateService.setOpenOfChildFormAfterParentSave(childData);
+              }, 500);
             }
-          }
 
-          this.enableSaveBtn = true;
-
-          this.isLoadingForm = false;
-          this.formHasDataLoaded = true;
-         
-          this.spinner.hide();
-
-          if (childData) {
-            setTimeout(() => {
-
-              childData.rowId = this.rowId;
-
-              this.appStateService.setOpenOfChildFormAfterParentSave(childData);
-            }, 500);
-          }
         },
         error => {
 
           this.spinner.hide();
 
           console.error(error);
-        });
+        }));  
     } catch (e) {
       this.spinner.hide();
 

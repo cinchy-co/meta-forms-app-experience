@@ -126,6 +126,7 @@ export class SidenavComponent implements OnInit {
     const newOptionDialogRef = this.dialogService.openDialog(
       AddNewOptionDialogComponent,
       {
+        createLinkOptionFormId:this.formMetadata.createNewOptionFormId,
         createNewOptionFormId: this.appStateService.formId,
         createNewOptionName: this.formMetadata.createNewOptionName
       }
