@@ -143,8 +143,7 @@
       </mat-autocomplete>
     </ng-container>
     <ng-container *ngIf="!canEdit && !downloadLink">
-      <label class="pre-formatted" *ngIf="showActualField">
-        {{ selectedValue?.label || "-" }}
+      <label class="pre-formatted" *ngIf="showActualField" [innerHTML]="selectedValue && selectedValue.label ? selectedValue.label : '-'">
       </label>
     </ng-container>
     <ng-container *ngIf="showImage && selectedValue">
