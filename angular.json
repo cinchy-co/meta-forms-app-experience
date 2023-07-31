@@ -116,8 +116,6 @@
               "./node_modules/angular2-multiselect-dropdown/themes/default.theme.css"
             ],
             "scripts": [
-              "./node_modules/iframe-resizer/js/iframeResizer.js",
-              "./node_modules/iframe-resizer/js/iframeResizer.contentWindow.js",
               "./node_modules/ace-builds/src-min/ace.js",
               "./node_modules/ace-builds/src-min/theme-monokai.js",
               "./node_modules/ace-builds/src-min/mode-sql.js",
