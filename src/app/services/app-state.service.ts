@@ -110,7 +110,7 @@ export class AppStateService {
         }
       };
 
-      window.parent.postMessage(JSON.stringify(messageJSON), '*');
+      window.postMessage(JSON.stringify(messageJSON), '*');
     }
 
     sessionStorage.setItem("rowId", this._rowId ? this._rowId.toString() : "");
