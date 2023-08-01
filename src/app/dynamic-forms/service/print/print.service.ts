@@ -5,6 +5,8 @@ import { DataFormatType } from "../../enums/data-format-type";
 
 import { DropdownOption } from "../cinchy-dropdown-dataset/cinchy-dropdown-options";
 
+import { ChildFormService } from "../child-form/child-form.service";
+
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { FormSection } from "../../models/cinchy-form-section.model";
@@ -13,7 +15,6 @@ import { ILookupRecord } from "../../../models/lookup-record.model";
 
 import { AppStateService } from "../../../services/app-state.service";
 
-import { NumeralPipe } from "ngx-numeral";
 import { NgxSpinnerService } from "ngx-spinner";
 
 import pdfMake from "pdfmake/build/pdfmake";
@@ -117,19 +118,20 @@ export class PrintService {
 
 
   constructor(
-    private appStateService: AppStateService,
-    private spinner: NgxSpinnerService,
-    @Inject(LOCALE_ID) public locale: string,
-    private datePipe: DatePipe
-  ) { }
+    private _appStateService: AppStateService,
+    private _childFormService: ChildFormService,
+    private _datePipe: DatePipe,
+    private _spinner: NgxSpinnerService,
+    @Inject(LOCALE_ID) public locale: string
+  ) {}
 
 
   async generatePdf(form: Form, currentRow: ILookupRecord) {
 
-    this.spinner.show();
+    this._spinner.show();
     this.content = [
       {
-        text: this.appStateService.formMetadata.formName,
+        text: this._appStateService.formMetadata.formName,
         style: "formHeader"
       }
     ];
@@ -137,13 +139,13 @@ export class PrintService {
     currentRow?.label && this.content.push({ text: currentRow.label, style: "formSubHeader" });
 
     const documentDefinition = await this.getDocDefFromForm(form);
-    const fileName = currentRow?.label ? `${this.appStateService.formMetadata.formName}-${currentRow.label}.pdf` : `${this.appStateService.formMetadata.formName}.pdf`;
+    const fileName = currentRow?.label ? `${this._appStateService.formMetadata.formName}-${currentRow.label}.pdf` : `${this._appStateService.formMetadata.formName}.pdf`;
 
     setTimeout(() => {
 
       pdfMake.createPdf(documentDefinition).download(fileName);
 
-      this.spinner.hide();
+      this._spinner.hide();
     }, 300);
   }
 
@@ -164,9 +166,9 @@ export class PrintService {
 
     const properContent = await this.getProperContent();
 
-    return new Promise((res, rej) => {
+    return new Promise((resolve, reject) => {
 
-      const pdfContent = {
+      resolve({
         header: this.header,
         content: properContent, styles: this.styles,
         pageSize: "LETTER",
@@ -174,9 +176,7 @@ export class PrintService {
         footer: function (currentPage, pageCount) {
           return { text: currentPage.toString() + " of " + pageCount, style: "footer" }
         }
-      }
-
-      res(pdfContent);
+      });
     });
   }
 
@@ -206,7 +206,7 @@ export class PrintService {
                 dontpush = !resolvedImage.includes("data:image");
                 !dontpush && properContent.push(item);
               } catch (e) {
-                console.error("Error while getting base64 file ")
+                console.error("Error while getting base64 file");
               }
             } else if (k === 1) {
               properContent.push(item)
@@ -277,7 +277,7 @@ export class PrintService {
 
       try {
         if (actualField.value) {
-          stringDate = this.datePipe.transform(actualField.value, "MMM/dd/yyyy")
+          stringDate = this._datePipe.transform(actualField.value, "MMM/dd/yyyy")
         }
       } catch (e) {
         console.error("Error converting date:", actualField.value)
@@ -407,136 +407,58 @@ export class PrintService {
   }
 
 
-  getChildFormTable(form: Form) {
+  getChildFormTable(childForm: Form) {
 
-    // TODO get proper table header and photos
     const table = this.getDefaultTable();
+    const tbody = new Array<Array<{ text: string, style: string }>>();
 
-    let childFormRowValues = form?.childFormRowValues;
+    const fieldKeys = this._childFormService.getFieldKeys(childForm)?.filter((field: string) => {
 
-    let [body, widths] = [[], []];
-    const colsToRemove = {}
+      return (field !== "Cinchy ID" && field !== "Actions");
+    });
 
-    if (childFormRowValues?.length) {
-      let tableColumns = Object.keys(childFormRowValues[0]);
+    const displayValueMap = this._childFormService.getDisplayValueMap(childForm);
 
-      tableColumns = tableColumns.filter(col => col !== "Cinchy ID" && col !== "Actions" && !colsToRemove[col]);
+    if (fieldKeys?.length && displayValueMap?.length) {
+      const fields = this._childFormService.getAllFields(childForm);
 
-      widths = tableColumns.map(column => "auto");
+      tbody.push(fieldKeys.map((key: string) => {
 
-      body.push(tableColumns.map(col => ({ text: this.getTableHeader(col, form.sections[0]), style: "tableHeader" })));
+        return {
+          text: this._childFormService.getFieldByKey(fields, key)?.label ?? key,
+          style: "tableHeader"
+        };
+      }));
 
-      childFormRowValues.forEach((rowData: { [key: string]: any }) => {
+      displayValueMap.forEach((rowValues: { [key: string]: string }) => {
 
-        body.push(
-          tableColumns.map((colKey: string) => {
+        tbody.push(fieldKeys.map((field: string) => {
 
-            return {
-              text: this.getDisplayValue(rowData[colKey], form.sections[0], colKey),
-              style: "tableRow"
-            };
+          return {
+            text: rowValues[field],
+            style: "tableRow"
           }
-          ));
+        }));
       });
-    }
 
-    table.body = body;
-    table.widths = widths;
+      table.body = tbody.slice();
 
-    if (body?.length) {
+      table.widths = fieldKeys.map((key: string) => {
+
+        return "auto";
+      });
+
       return {
         table: table,
-        sectionHeader: { ...this.sectionHeaderDefault, text: form.sections[0].label },
+        sectionHeader: { ...this.sectionHeaderDefault, text: childForm.sections[0].label },
         layout: this.layout
       }
     }
-    return {};
-  }
+    else {
+      table.body = table.widths = [];
 
-  getTableHeader(key: string, section: FormSection): string {
-
-    const notDisplayColumnFields = section.fields.filter((field: FormField) => {
-
-      return !field.cinchyColumn.isDisplayColumn;
-    });
-
-    // So that the one which is display column doesn"t match and show the name, as for display column one also
-    // field.cinchyColumn.name is same
-    let currentField = notDisplayColumnFields.find((field: FormField) => {
-
-      return (field.cinchyColumn.name === key);
-    });
-
-    if (!currentField) {
-      currentField = section.fields.find((field: FormField) => {
-
-        return (field.cinchyColumn.linkTargetColumnName + " label" === key);
-      });
+      return {};
     }
-
-    return (currentField?.label || key);
-  }
-
-  getDisplayValue(value: any, section: FormSection, key: string) {
-
-    const notDisplayColumnFields = section.fields.filter((field: FormField) => {
-
-      return !field.cinchyColumn.isDisplayColumn;
-    });
-
-    // So that the one which is display column doesn"t match and show the name, as for display column one also
-    // field.cinchyColumn.name is same
-    let currentField = notDisplayColumnFields.find((field: FormField) => {
-
-      return (field.cinchyColumn.name === key);
-    });
-
-    if (!currentField) {
-      currentField = section.fields.find((field: FormField) => {
-
-        return (field.cinchyColumn.linkTargetColumnName + " label" === key);
-      });
-    }
-
-    if (value && currentField?.cinchyColumn.dataType === "Date and Time") {
-      return this.datePipe.transform(value, "dd-MMM-yyyy");
-    }
-    else if (typeof value === "boolean") {
-      return value === true ? "Yes" : "No";
-    }
-    else if (value && currentField?.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
-      return `<img class="cinchy-images cinchy-images--min" src="${value}">`;
-    }
-    else if ((value || value === 0) && currentField?.cinchyColumn.numberFormatter) {
-      const numeralValue = new NumeralPipe(value);
-      return numeralValue.format(currentField.cinchyColumn.numberFormatter);
-    }
-    else if (value && currentField?.cinchyColumn.dataFormatType === "LinkUrl") {
-      return `<a href="${value}" target="_blank">Open</a>`;
-    }
-    else if (this.isAnchor(value)) {
-      const anchor = this.htmlToElement(value.match(/<a.*?<\/a>/g)[0]);
-      const urlLink = anchor.href;
-      const urlText = anchor.text
-      const anchorWithText = value.split(value.match(/<a.*?<\/a>/g));
-      const frontStr = anchorWithText[0];
-      const backStr = anchorWithText[1];
-      const returnStr: any[] = [];
-
-      if (frontStr) {
-        returnStr.push(frontStr);
-      }
-
-      returnStr.push({ text: urlText, link: urlLink, color: "#007bff" });
-
-      if (backStr) {
-        returnStr.push(backStr);
-      }
-
-      return returnStr;
-    }
-
-    return value;
   }
 
 
@@ -560,6 +482,7 @@ export class PrintService {
     template.innerHTML = html;
     return template.content.firstChild;
   }
+
 
   isAnchor(str) {
 
