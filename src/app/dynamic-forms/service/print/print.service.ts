@@ -117,6 +117,11 @@ export class PrintService {
   };
 
 
+  private readonly _anchorRegex = /<a.*?<\/a>/gi;
+
+  private readonly _imgRegex = /<img.*\/?>/gi
+
+
   constructor(
     private _appStateService: AppStateService,
     private _childFormService: ChildFormService,
@@ -229,9 +234,11 @@ export class PrintService {
       fields.forEach((field: FormField) => {
 
         if (field.childForm) {
-          const { table, sectionHeader, layout } = this.getChildFormTable(field.childForm);
+          const result = this.getChildFormTable(field.childForm);
 
-          table && this.content.push({ table, layout });
+          if (result.table) {
+            this.content.push(result);
+          }
         } else {
           switch (field.cinchyColumn.dataType) {
             case "Link":
@@ -410,7 +417,14 @@ export class PrintService {
   getChildFormTable(childForm: Form) {
 
     const table = this.getDefaultTable();
-    const tbody = new Array<Array<{ text: string, style: string }>>();
+    const tbody = new Array<
+      Array<
+        {
+          text: string | Array<string | { text: string, link: string, color: string } | { image: any }>,
+          style: string
+        }
+      >
+    >();
 
     const fieldKeys = this._childFormService.getFieldKeys(childForm)?.filter((field: string) => {
 
@@ -435,7 +449,7 @@ export class PrintService {
         tbody.push(fieldKeys.map((field: string) => {
 
           return {
-            text: rowValues[field],
+            text: this._processChildFormTableValue(rowValues, field),
             style: "tableRow"
           }
         }));
@@ -469,23 +483,126 @@ export class PrintService {
       // you can declare how many rows should be treated as headers
       headerRows: 1,
       widths: [],
-
       body: []
     }
   }
 
 
-  htmlToElement(html): any {
+  private _generateAnchorArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { text: string, link: string, color: string }> {
 
-    const template = document.createElement("template");
-    html = html.trim(); // Never return a text node of whitespace as the result
-    template.innerHTML = html;
-    return template.content.firstChild;
+    const returnValues = new Array<string | { text: string, link: string, color: string }>();
+
+    const anchorElementWrapper = document.createElement("template");
+
+    anchorElementWrapper.innerHTML = targetItem.trim();
+
+    returnValues.push({
+      text: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).text,
+      link: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).href,
+      color: "#007bff"
+    });
+
+    if (adjacentNonTargetItem?.length) {
+      returnValues.push(adjacentNonTargetItem);
+    }
+
+    return returnValues;
   }
 
 
-  isAnchor(str) {
+  private _generateImageArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { image: any }> {
 
-    return /<a.*?<\/a>/g.test(str);
+    const returnValues = new Array<string | { image: any }>();
+
+    const sourceUrl = targetItem.match(/src="([^\"]*)"/i)[1];
+
+    // TODO: THIS IS A PROMISE. Need it to not be a promise. How do we await this without having the outer function
+    //       return a promise? If the outer function is forced to be async, we can no longer guarantee that the result
+    //       elements will be inserted into the right place in the output JSON
+    const image = this.getBase64ImageFromUrl(sourceUrl);
+
+    returnValues.push({
+      image: image
+    });
+
+    if (adjacentNonTargetItem?.length) {
+      returnValues.push(adjacentNonTargetItem);
+    }
+
+    return returnValues;
+  }
+
+
+  private _generateHtmlArray(textValue: string, htmlItemRegex: RegExp): Array<string | { text: string, link: string, color: string } | { image: any }> {
+
+    const returnValues = new Array<string | { text: string, link: string, color: string } | { image: any }>();
+
+    const allTargets = textValue.match(htmlItemRegex);
+    const allNonTargets = textValue.split(htmlItemRegex);
+
+    // If there is text before the first anchor, we want to preserve that
+    if (allNonTargets.length && textValue.indexOf(allNonTargets[0]) === 0) {
+      const firstNonTargetItem = allNonTargets.shift();
+
+      if (firstNonTargetItem?.length) {
+        returnValues.push(firstNonTargetItem);
+      }
+    }
+
+    for (let index = 0; index < allTargets.length; index++) {
+      if (this._isHtmlAnchor(textValue)) {
+        returnValues.push(...this._generateAnchorArrayItem(allTargets[index], allNonTargets[index]));
+      }
+      else {
+        returnValues.push(...this._generateImageArrayItem(allTargets[index], allNonTargets[index]));
+      }
+    }
+
+    return returnValues;
+  }
+
+
+  /**
+   * Determines whether or not the given text contains an HTML anchor
+   */
+  private _isHtmlAnchor(textValue: string): boolean {
+
+    return this._anchorRegex.test(textValue);
+  }
+
+
+  /**
+   * Determines whether or not the given text contains an HTML image. If there is anything else present in the text
+   */
+  private _isHtmlImage(textValue: string): boolean {
+
+    return this._imgRegex.test(textValue);
+  }
+
+
+  /**
+   * If the given value is contains an anchor tag or an image, then we want to render that in the output. Otherwise, just pass the value
+   * through, as it has already been processed
+   */
+  private _processChildFormTableValue(
+      displayValueMap: { [key: string]: any },
+      field: string
+  ): string | Array<string | { text: string, link: string, color: string } | { image: any }> {
+
+    const textValue: string = displayValueMap[field];
+
+    // DEBUG
+    console.log(textValue);
+
+    // Could be either an anchor on its own, or any number of anchors in a paragraph of text
+    if (this._isHtmlAnchor(textValue)) {
+      return this._generateHtmlArray(textValue, this._anchorRegex);
+    }
+    else if (this._isHtmlImage(textValue)) {
+      return this._generateHtmlArray(textValue, this._imgRegex);
+    }
+    else {
+      return textValue;
+    }
   }
 }
