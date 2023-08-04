@@ -211,12 +211,15 @@ export class PrintService {
       else if (content?.image && content.image instanceof Promise) {
         const result = await content.image;
 
+        // DEBUG
+        console.log(result);
+
         if (result?.includes("data:image")) {
           // Clone any other properties, but ensure that the image property contains the new data
           resolve(Object.assign({}, content, { image: result }));
         }
         else {
-          resolve(Object.assign({}, content, { text: "Could not resolve image" }));
+          resolve(Object.assign({}, content, { text: "Could not resolve image", image: null }));
         }
       }
       else if (content && typeof content === "object") {
@@ -283,6 +286,11 @@ export class PrintService {
       this.content.push({ columns: this.getLinkColumns(actualField) });
     }
     else if (field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
+      // DEBUG
+      console.log(field.label);
+      console.log(field.cinchyColumn.dataFormatType);
+      console.log(field.value);
+
       const base64Img = this.getBase64ImageFromUrl(field.value);
       this.content.push({ columns: this.getImageColumns(field, base64Img) });
     }
@@ -424,14 +432,7 @@ export class PrintService {
   getChildFormTable(childForm: Form) {
 
     const table = this.getDefaultTable();
-    const tbody = new Array<
-      Array<
-        {
-          text: string | Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }>,
-          style: string
-        }
-      >
-    >();
+    const tbody = new Array<Array<any>>();
 
     const fieldKeys = this._childFormService.getFieldKeys(childForm)?.filter((field: string) => {
 
@@ -455,9 +456,17 @@ export class PrintService {
 
         tbody.push(fieldKeys.map((field: string) => {
 
-          return {
-            text: this._processChildFormTableValue(rowValues, field),
-            style: "tableRow"
+          if (this._isHtmlImage(rowValues[field])) {
+            return {
+              columns: this._generateHtmlArray(rowValues[field], this._imgRegex),
+              style: "tableRow"
+            };
+          }
+          else {
+            return {
+              text: this._processChildFormTableValue(rowValues, field),
+              style: "tableRow"
+            };
           }
         }));
       });
@@ -528,7 +537,7 @@ export class PrintService {
 
     returnValues.push({
       image: image,
-      height: 20
+      width: 80
     });
 
     if (adjacentNonTargetItem?.length) {
@@ -605,7 +614,7 @@ export class PrintService {
       return this._generateHtmlArray(textValue, this._imgRegex);
     }
     else {
-      return textValue;
+      return textValue || "-";
     }
   }
 }
