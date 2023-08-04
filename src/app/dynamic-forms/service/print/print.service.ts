@@ -169,13 +169,17 @@ export class PrintService {
       })
     }
 
-    const properContent = await this.getProperContent();
+    const resolvedContent = await this.resolveImagePromises(this.content);
+
+    // DEBUG
+    console.log(resolvedContent);
 
     return new Promise((resolve, reject) => {
 
       resolve({
         header: this.header,
-        content: properContent, styles: this.styles,
+        content: resolvedContent,
+        styles: this.styles,
         pageSize: "LETTER",
         pageMargins: [30, 62, 62, 30],
         footer: function (currentPage, pageCount) {
@@ -186,43 +190,46 @@ export class PrintService {
   }
 
 
-  async getProperContent() {
+  /**
+   * Recursively iterates through the content and resolves any outstanding promises for images. Note that the types are "any" because
+   * properly typing this function would be too verbose for the current ticket.
+   */
+  async resolveImagePromises(content: any): Promise<any> {
 
-    let dontpush;
-    const properContent = [];
+    return new Promise(async (resolve, reject) => {
 
-    return new Promise(async (resolve, rej) => {
+      if (Array.isArray(content)) {
+        const output = new Array<any>();
 
-      for (let i = 0; i < this.content.length; i++) {
-        let item = this.content[i];
+        content.forEach(async (item: any) => {
 
-        if (item.text) {
-          properContent.push(item);
+          output.push(await this.resolveImagePromises(item));
+        });
+
+        resolve(output);
+      }
+      else if (content?.image && content.image instanceof Promise) {
+        const result = await content.image;
+
+        if (result?.includes("data:image")) {
+          // Clone any other properties, but ensure that the image property contains the new data
+          resolve(Object.assign({}, content, { image: result }));
         }
-        else if (item.columns) {
-          for (let k = 0; k < item.columns.length; k++) {
-            let col = item.columns[k];
-            if (col.image) {
-              // wait for the promise to resolve before advancing the for loop
-              try {
-                const resolvedImage = await col.image;
-                col.image = resolvedImage;
-                col.fff = resolvedImage;
-                dontpush = !resolvedImage.includes("data:image");
-                !dontpush && properContent.push(item);
-              } catch (e) {
-                console.error("Error while getting base64 file");
-              }
-            } else if (k === 1) {
-              properContent.push(item)
-            }
-          }
-        } else {
-          properContent.push(item);
+        else {
+          resolve(Object.assign({}, content, { text: "Could not resolve image" }));
         }
-        if (i === this.content.length - 1) {
-          resolve(properContent);
-        }
+      }
+      else if (content && typeof content === "object") {
+        const output = {};
+
+        Object.keys(content).forEach(async (key: string) => {
+          output[key] = await this.resolveImagePromises(content[key]);
+        });
+
+        resolve(output);
+      }
+      else {
+        resolve(content);
       }
     });
   }
@@ -420,7 +427,7 @@ export class PrintService {
     const tbody = new Array<
       Array<
         {
-          text: string | Array<string | { text: string, link: string, color: string } | { image: any }>,
+          text: string | Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }>,
           style: string
         }
       >
@@ -510,19 +517,18 @@ export class PrintService {
   }
 
 
-  private _generateImageArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { image: any }> {
+  private _generateImageArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { image: any, height?: number, width?: number }> {
 
-    const returnValues = new Array<string | { image: any }>();
+    const returnValues = new Array<string | { image: any, height?: number, width?: number }>();
 
     const sourceUrl = targetItem.match(/src="([^\"]*)"/i)[1];
 
-    // TODO: THIS IS A PROMISE. Need it to not be a promise. How do we await this without having the outer function
-    //       return a promise? If the outer function is forced to be async, we can no longer guarantee that the result
-    //       elements will be inserted into the right place in the output JSON
+    // Note: this is a promise. The promise will resolve as part of the resolveImagePromises function call
     const image = this.getBase64ImageFromUrl(sourceUrl);
 
     returnValues.push({
-      image: image
+      image: image,
+      height: 20
     });
 
     if (adjacentNonTargetItem?.length) {
@@ -533,9 +539,9 @@ export class PrintService {
   }
 
 
-  private _generateHtmlArray(textValue: string, htmlItemRegex: RegExp): Array<string | { text: string, link: string, color: string } | { image: any }> {
+  private _generateHtmlArray(textValue: string, htmlItemRegex: RegExp): Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }> {
 
-    const returnValues = new Array<string | { text: string, link: string, color: string } | { image: any }>();
+    const returnValues = new Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }>();
 
     const allTargets = textValue.match(htmlItemRegex);
     const allNonTargets = textValue.split(htmlItemRegex);
@@ -587,12 +593,9 @@ export class PrintService {
   private _processChildFormTableValue(
       displayValueMap: { [key: string]: any },
       field: string
-  ): string | Array<string | { text: string, link: string, color: string } | { image: any }> {
+  ): string | Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }> {
 
     const textValue: string = displayValueMap[field];
-
-    // DEBUG
-    console.log(textValue);
 
     // Could be either an anchor on its own, or any number of anchors in a paragraph of text
     if (this._isHtmlAnchor(textValue)) {
