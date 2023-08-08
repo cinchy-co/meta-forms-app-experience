@@ -216,14 +216,21 @@ export class PrintService {
         resolve(output);
       }
       else if (content?.image && content.image instanceof Promise) {
-        const result = await content.image;
+        try {
+          const result = await content.image;
 
-        if (result?.includes("data:image")) {
-          // Clone any other properties, but ensure that the image property contains the new data
-          resolve(Object.assign({}, content, { image: result }));
+          if (result?.includes("data:image")) {
+            // Clone any other properties, but ensure that the image property contains the new data
+            resolve(Object.assign({}, content, { image: result }));
+          }
+          else {
+            // If the promise resolves into an invalid value, i.e. the image could not be found, then just return an empty value
+            resolve(Object.assign({}, content, { text: "-", image: null }));
+          }
         }
-        else {
-          resolve(Object.assign({}, content, { text: "Could not resolve image", image: null }));
+        catch (error) {
+          // Just use a default in the case of an error
+          resolve(Object.assign({}, content, { text: "-", image: null }));
         }
       }
       else if (content && typeof content === "object") {
@@ -296,12 +303,17 @@ export class PrintService {
         imageUrl = field.value;
       }
       else {
-        imageUrl = field.dropdownDataset?.options[0].label;
+        imageUrl = field.dropdownDataset?.options[0].label || field.value;
       }
 
-      const base64Img = this.getBase64ImageFromUrl(imageUrl);
+      if (imageUrl) {
+        const base64Img = this.getBase64ImageFromUrl(imageUrl);
 
-      this.content.push({ columns: this.getImageColumns(field, base64Img) });
+        this.content.push({ columns: this.getImageColumns(field, base64Img) });
+      }
+      else {
+        this.content.push({ text: "-" });
+      }
     }
     else if (field.cinchyColumn.dataType === "Date and Time") {
       let stringDate = actualField.value;
@@ -589,7 +601,7 @@ export class PrintService {
 
     returnValues.push({
       image: image,
-      width: 80
+      width: 60
     });
 
     if (adjacentNonTargetItem?.length) {
