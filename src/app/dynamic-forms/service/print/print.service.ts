@@ -51,7 +51,6 @@ export class PrintService {
     },
     section: {
       bold: true,
-      /*  decoration: "underline",*/
       fontSize: 14,
       color: "#E7015B",
       margin: [0, 15, 0, 5]
@@ -117,6 +116,22 @@ export class PrintService {
   };
 
 
+  /**
+   * Passes if the string contains an HTML anchor, e.g. `<a href="...">...</a>`
+   */
+  private readonly _anchorRegex = /<a.*?<\/a>/gi;
+
+  /**
+   * Passes if the string contains an HTML image, e.g. `<img src="..." />`
+   */
+  private readonly _imgRegex = /<img.*\/?>/gi
+
+  /**
+   * Passes if the whole string matches an http- or https-based URL, e.g. `https://www.cinchy.net`
+   */
+  private readonly _urlRegex = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.%]+$/i
+
+
   constructor(
     private _appStateService: AppStateService,
     private _childFormService: ChildFormService,
@@ -164,13 +179,14 @@ export class PrintService {
       })
     }
 
-    const properContent = await this.getProperContent();
+    const resolvedContent = await this.resolveImagePromises(this.content);
 
     return new Promise((resolve, reject) => {
 
       resolve({
         header: this.header,
-        content: properContent, styles: this.styles,
+        content: resolvedContent,
+        styles: this.styles,
         pageSize: "LETTER",
         pageMargins: [30, 62, 62, 30],
         footer: function (currentPage, pageCount) {
@@ -181,43 +197,46 @@ export class PrintService {
   }
 
 
-  async getProperContent() {
+  /**
+   * Recursively iterates through the content and resolves any outstanding promises for images. Note that the types are "any" because
+   * properly typing this function would be too verbose for the current ticket.
+   */
+  async resolveImagePromises(content: any): Promise<any> {
 
-    let dontpush;
-    const properContent = [];
+    return new Promise(async (resolve, reject) => {
 
-    return new Promise(async (resolve, rej) => {
+      if (Array.isArray(content)) {
+        const output = new Array<any>();
 
-      for (let i = 0; i < this.content.length; i++) {
-        let item = this.content[i];
+        content.forEach(async (item: any) => {
 
-        if (item.text) {
-          properContent.push(item);
+          output.push(await this.resolveImagePromises(item));
+        });
+
+        resolve(output);
+      }
+      else if (content?.image && content.image instanceof Promise) {
+        const result = await content.image;
+
+        if (result?.includes("data:image")) {
+          // Clone any other properties, but ensure that the image property contains the new data
+          resolve(Object.assign({}, content, { image: result }));
         }
-        else if (item.columns) {
-          for (let k = 0; k < item.columns.length; k++) {
-            let col = item.columns[k];
-            if (col.image) {
-              // wait for the promise to resolve before advancing the for loop
-              try {
-                const resolvedImage = await col.image;
-                col.image = resolvedImage;
-                col.fff = resolvedImage;
-                dontpush = !resolvedImage.includes("data:image");
-                !dontpush && properContent.push(item);
-              } catch (e) {
-                console.error("Error while getting base64 file");
-              }
-            } else if (k === 1) {
-              properContent.push(item)
-            }
-          }
-        } else {
-          properContent.push(item);
+        else {
+          resolve(Object.assign({}, content, { text: "Could not resolve image", image: null }));
         }
-        if (i === this.content.length - 1) {
-          resolve(properContent);
-        }
+      }
+      else if (content && typeof content === "object") {
+        const output = {};
+
+        Object.keys(content).forEach(async (key: string) => {
+          output[key] = await this.resolveImagePromises(content[key]);
+        });
+
+        resolve(output);
+      }
+      else {
+        resolve(content);
       }
     });
   }
@@ -229,9 +248,11 @@ export class PrintService {
       fields.forEach((field: FormField) => {
 
         if (field.childForm) {
-          const { table, sectionHeader, layout } = this.getChildFormTable(field.childForm);
+          const result = this.getChildFormTable(field.childForm);
 
-          table && this.content.push({ table, layout });
+          if (result.table) {
+            this.content.push(result);
+          }
         } else {
           switch (field.cinchyColumn.dataType) {
             case "Link":
@@ -268,8 +289,18 @@ export class PrintService {
     if (field.cinchyColumn.dataFormatType === "LinkUrl") {
       this.content.push({ columns: this.getLinkColumns(actualField) });
     }
-    else if (field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
-      const base64Img = this.getBase64ImageFromUrl(field.value);
+    else if (field.value && field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
+      let imageUrl: string;
+
+      if (this._isHtmlImage(field.value) || this._isUrl(field.value)) {
+        imageUrl = field.value;
+      }
+      else {
+        imageUrl = field.dropdownDataset?.options[0].label;
+      }
+
+      const base64Img = this.getBase64ImageFromUrl(imageUrl);
+
       this.content.push({ columns: this.getImageColumns(field, base64Img) });
     }
     else if (field.cinchyColumn.dataType === "Date and Time") {
@@ -314,24 +345,55 @@ export class PrintService {
   }
 
 
+  /**
+   * Generates a structure that represents the label and value for the given field. Will render HTML anchors as clickable links
+   * and include a placeholder value for fields which are not populated.
+   */
   getFieldColumns(field: FormField, overrideValue?: any) {
 
-    return [
+    const result: Array<{
+        marginRight?: number | string,
+        style: string,
+        text?: string | Array<any>,
+        width: number | string
+    }> = [
       {
-        width: 130,
+        style: "fieldLabel",
         text: `${field.label}: `,
-        style: "fieldLabel"
-      },
-      {
-        width: "80%",
-        marginRight: 15,
-        text: overrideValue ? overrideValue : field.value,
-        style: "fieldValue"
+        width: 130
       }
     ];
+
+    const valueColumn: {
+      marginRight?: number | string,
+      style: string,
+      text?: string | Array<any>,
+      width: number | string
+    } = {
+      marginRight: 15,
+      style: "fieldValue",
+      width: "80%"
+    };
+
+    if (overrideValue) {
+      valueColumn.text = overrideValue
+    }
+    else if (this._isHtmlAnchor(field.value)) {
+      valueColumn.text = this._generateHtmlArray(field.value, this._anchorRegex);
+    }
+    else {
+      valueColumn.text = field.value || "-";
+    }
+
+    result.push(valueColumn);
+
+    return result;
   }
 
 
+  /**
+   * Generates a structure that represents the label and value for a link column, specifically.
+   */
   getLinkColumns(field: FormField) {
 
     return [
@@ -341,6 +403,7 @@ export class PrintService {
         style: "fieldLabel"
       },
       {
+        color: "#007bff",
         text: "Open",
         link: field.value,
         style: "fieldValue"
@@ -349,6 +412,10 @@ export class PrintService {
   }
 
 
+  /**
+   * Generates a structure that represents a the label and value for a field that contains an image. At
+   * this stage, the value is a promise that will be resolved at a later step.
+   */
   getImageColumns(field: FormField, value: any) {
 
     return [
@@ -402,7 +469,7 @@ export class PrintService {
     }
     return {
       label: field.label,
-      value: ""
+      value: "-"
     };
   }
 
@@ -410,7 +477,7 @@ export class PrintService {
   getChildFormTable(childForm: Form) {
 
     const table = this.getDefaultTable();
-    const tbody = new Array<Array<{ text: string, style: string }>>();
+    const tbody = new Array<Array<any>>();
 
     const fieldKeys = this._childFormService.getFieldKeys(childForm)?.filter((field: string) => {
 
@@ -434,9 +501,17 @@ export class PrintService {
 
         tbody.push(fieldKeys.map((field: string) => {
 
-          return {
-            text: rowValues[field],
-            style: "tableRow"
+          if (this._isHtmlImage(rowValues[field])) {
+            return {
+              columns: this._generateHtmlArray(rowValues[field], this._imgRegex),
+              style: "tableRow"
+            };
+          }
+          else {
+            return {
+              text: this._processChildFormTableValue(rowValues, field),
+              style: "tableRow"
+            };
           }
         }));
       });
@@ -462,30 +537,152 @@ export class PrintService {
   }
 
 
-  getDefaultTable() {
+  /**
+   * @returns the default structure for a table. Headers are automatically repeated if the table spans over multiple pages.
+   */
+  getDefaultTable(headerRows = 1) {
 
     return {
-      // headers are automatically repeated if the table spans over multiple pages
-      // you can declare how many rows should be treated as headers
-      headerRows: 1,
+      headerRows: headerRows,
       widths: [],
-
       body: []
     }
   }
 
 
-  htmlToElement(html): any {
+  /**
+   * Generates a structure representing one pair of [HTML anchor, non-anchor trailing text]. Will ignore the trailing text if it is falsey.
+   */
+  private _generateAnchorArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { text: string, link: string, color: string }> {
 
-    const template = document.createElement("template");
-    html = html.trim(); // Never return a text node of whitespace as the result
-    template.innerHTML = html;
-    return template.content.firstChild;
+    const returnValues = new Array<string | { text: string, link: string, color: string }>();
+
+    const anchorElementWrapper = document.createElement("template");
+
+    anchorElementWrapper.innerHTML = targetItem.trim();
+
+    returnValues.push({
+      text: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).text,
+      link: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).href,
+      color: "#007bff"
+    });
+
+    if (adjacentNonTargetItem?.length) {
+      returnValues.push(adjacentNonTargetItem);
+    }
+
+    return returnValues;
   }
 
 
-  isAnchor(str) {
+  /**
+   * Generates a structure representing one pair of [HTML image, non-image trailing text]. Will ignore the trailing text if it is falsey.
+   */
+  private _generateImageArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { image: any, height?: number, width?: number }> {
 
-    return /<a.*?<\/a>/g.test(str);
+    const returnValues = new Array<string | { image: any, height?: number, width?: number }>();
+
+    const sourceUrl = targetItem.match(/src="([^\"]*)"/i)[1];
+
+    // Note: this is a promise. The promise will resolve as part of the resolveImagePromises function call
+    const image = this.getBase64ImageFromUrl(sourceUrl);
+
+    returnValues.push({
+      image: image,
+      width: 80
+    });
+
+    if (adjacentNonTargetItem?.length) {
+      returnValues.push(adjacentNonTargetItem);
+    }
+
+    return returnValues;
+  }
+
+
+  /**
+   * Constructs an array containing HTML elements which match the given regex. The input text will be split into sets of matching HTML elements and
+   * non-matching plaintext, and will alternate adding those in so that the ordering of the original value is maintained.
+   */
+  private _generateHtmlArray(
+      textValue: string,
+      htmlItemRegex: RegExp
+  ): Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }> {
+
+    const returnValues = new Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }>();
+
+    const allTargets = textValue.match(htmlItemRegex);
+    const allNonTargets = textValue.split(htmlItemRegex);
+
+    // If there is text before the first item, we want to preserve that
+    if (allNonTargets.length && textValue.indexOf(allNonTargets[0]) === 0) {
+      const firstNonTargetItem = allNonTargets.shift();
+
+      if (firstNonTargetItem?.length) {
+        returnValues.push(firstNonTargetItem);
+      }
+    }
+
+    for (let index = 0; index < allTargets.length; index++) {
+      if (this._isHtmlAnchor(textValue)) {
+        returnValues.push(...this._generateAnchorArrayItem(allTargets[index], allNonTargets[index]));
+      }
+      else {
+        returnValues.push(...this._generateImageArrayItem(allTargets[index], allNonTargets[index]));
+      }
+    }
+
+    return returnValues;
+  }
+
+
+  /**
+   * Determines whether or not the given text contains an HTML anchor
+   */
+  private _isHtmlAnchor(textValue: string): boolean {
+
+    return this._anchorRegex.test(textValue);
+  }
+
+
+  /**
+   * Determines whether or not the given text contains an HTML image.
+   */
+  private _isHtmlImage(textValue: string): boolean {
+
+    return this._imgRegex.test(textValue);
+  }
+
+
+  /**
+   * Determines whether or not the given text is a URL
+   */
+  private _isUrl(textValue: string): boolean {
+
+    return this._urlRegex.test(textValue);
+  }
+
+
+  /**
+   * If the given value is contains an anchor tag or an image, then we want to render that in the output. Otherwise, just pass the value
+   * through, as it has already been processed
+   */
+  private _processChildFormTableValue(
+      displayValueMap: { [key: string]: any },
+      field: string
+  ): string | Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }> {
+
+    const textValue: string = displayValueMap[field];
+
+    // Could be either an anchor on its own, or any number of anchors in a paragraph of text
+    if (this._isHtmlAnchor(textValue)) {
+      return this._generateHtmlArray(textValue, this._anchorRegex);
+    }
+    else if (this._isHtmlImage(textValue)) {
+      return this._generateHtmlArray(textValue, this._imgRegex);
+    }
+    else {
+      return textValue || "-";
+    }
   }
 }

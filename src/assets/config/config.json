@@ -1,6 +1,6 @@
 {
-  "authority": "<cinchy-domain>/idp",
-  "cinchyRootUrl": "<cinchy-domain>",
+  "authority": "https://sandbox.cinchy.net/product-aurora-1/idp",
+  "cinchyRootUrl": "https://sandbox.cinchy.net/product-aurora-1/",
   "clientId": "cinchy_meta_forms",
-  "redirectUri": "<cinchy-domain>/metaforms"
+  "redirectUri": "https://localhost:3000/"
 }

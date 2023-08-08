@@ -89,13 +89,13 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   // TODO: Add proper types to these
-  downloadLink;
   downloadableLinks;
   metadataQueryResult;
 
   charactersAfterWhichToShowList: number = 0;
   createlinkOptionName: boolean;
   filteredOptions: Array<DropdownOption>;
+  imageIsDownloadable: boolean;
   isCursorIn: boolean = false;
   isLoading: boolean = false;
   showActualField: boolean;
@@ -111,6 +111,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
   renderImageFiles = true;
 
+  // TODO: global icon singleton?
   faPlus = faPlus;
   faShareAlt = faShareAlt;
   faSitemap = faSitemap;
@@ -208,7 +209,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
   checkForAttachmentUrl(): void {
 
-    this.downloadLink = coerceBooleanProperty(this.field.cinchyColumn.attachmentUrl);
+    this.imageIsDownloadable = coerceBooleanProperty(this.field.cinchyColumn.attachmentUrl);
 
     if (this.field.cinchyColumn.attachmentUrl && this.selectedValue) {
       const replacedCinchyIdUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form.rowId?.toString());
@@ -292,20 +293,20 @@ export class LinkComponent implements OnChanges, OnInit {
       this.form.rowId
     ).subscribe(
       {
-        next: (resp) => {
+        next: (results: Array<{ fileId: number, fileName: string }>) => {
 
-          if (resp?.length) {
+          if (results?.length) {
 
-            this.selectedValue = new DropdownOption(resp[0].fileId?.toString(), resp[0].fileName);
+            this.selectedValue = new DropdownOption(results[0].fileId?.toString(), results[0].fileName);
 
             const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form.rowId?.toString());
-            const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", resp[0].fileId?.toString());
+            const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", results[0].fileId?.toString());
 
             this.downloadableLinks = [
               {
-                fileName: resp[0].fileName,
+                fileName: results[0].fileName,
                 fileUrl: fileUrl,
-                fileId: resp[0].fileId
+                fileId: results[0].fileId
               }
             ];
 
