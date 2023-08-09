@@ -416,9 +416,43 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     this.currentRow = row ?? this.currentRow;
 
+    this.setRecordSelected(row?.id ?? this.rowId);
     this._appStateService.setRecordSelected(row?.id ?? this.rowId);
   }
 
+  setRecordSelected(cinchyId: number | null, doNotReloadForm: boolean = false): void {
+
+    // Update URL with the new ID, if present
+    if (window.location.search?.includes("rowId")) {
+      const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+
+        const [key, value] = paramString.split("=");
+
+        if (key === "rowId") {
+          return `${key}=${cinchyId ? cinchyId.toString() : "null"}`;
+        }
+        else {
+          return paramString;
+        }
+      });
+
+      if (queryParams?.length) {
+        const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
+
+        window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams.join("&")}`);
+      }
+    }
+    else if (window.parent.location.search?.includes("rowId")) {
+      const messageJSON = {
+        updateCinchyURLParams:
+        {
+          rowId: cinchyId
+        }
+      };
+
+      window.parent.postMessage(JSON.stringify(messageJSON), '*');
+    }
+  }
 
   saveChildForm(rowId: number, recursionCounter: number): Promise<void> {
 
