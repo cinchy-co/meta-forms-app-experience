@@ -424,7 +424,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     console.log("messageJSON", messageJSON);
 
-    window.postMessage(JSON.stringify(messageJSON), '*');
+    window.parent.postMessage(JSON.stringify(messageJSON), '*');
 
     console.log("postMessage", JSON.stringify(messageJSON));
 
