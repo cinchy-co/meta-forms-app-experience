@@ -428,9 +428,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     console.log("postMessage", JSON.stringify(messageJSON));
 
-    this.currentRow = row ?? this.currentRow;
+    // this.currentRow = row ?? this.currentRow;
 
-    this._appStateService.setRecordSelected(row?.id ?? this.rowId);
+    // this._appStateService.setRecordSelected(row?.id ?? this.rowId);
   }
 
 
