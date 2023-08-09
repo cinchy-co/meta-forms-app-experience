@@ -81,7 +81,18 @@ export class AppStateService {
 
     this.onRecordSelected$.next({ cinchyId, doNotReloadForm });
 
-    // // Update URL with the new ID, if present
+    this.updateConnectionQueryParams(cinchyId);
+
+    // const messageJSON = {
+    //   updateCinchyURLParams:
+    //   {
+    //     rowId: cinchyId
+    //   }
+    // };
+
+    // window.parent.postMessage(JSON.stringify(messageJSON), '*');
+
+    // Update URL with the new ID, if present
     // if (window.location.search?.includes("rowId")) {
     //   const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
 
@@ -114,5 +125,51 @@ export class AppStateService {
 
     sessionStorage.setItem("rowId", this._rowId ? this._rowId.toString() : "");
     sessionStorage.setItem("formId", this.formId ?? "");
+  }
+
+  updateConnectionQueryParams(id: number) {
+    const messageJSON = {
+      updateCinchyURLParams:
+      {
+        rowId: id
+      }
+    };
+    const message = JSON.stringify(messageJSON);
+    window.parent.postMessage(message, '*');
+
+    const existingUrl = this.getCurrentURLByRemovingLastSlash();
+    const queryParams = messageJSON['updateCinchyURLParams'];
+    const queryString = Object.keys(queryParams)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
+      .join('&');
+
+    const urlWithQueryString = `${existingUrl}?${queryString}`;
+    window.history.pushState('', '', urlWithQueryString);
+  }
+
+  deleteConnectionQueryParams() {
+    const messageJSON = {
+      deleteCinchyURLParams:
+        [
+          'rowId'
+        ]
+    };
+    const message = JSON.stringify(messageJSON);
+    window.parent.postMessage(message, '*');
+
+    const existingUrl = this.getCurrentURLByRemovingLastSlash();
+    window.history.pushState('', '', existingUrl);
+    sessionStorage.removeItem('rowId');
+  }
+
+  private getCurrentURLByRemovingLastSlash() {
+    let existingUrl = window.location.href.split('?')[0];
+    const existingUrlLength = existingUrl.length;
+    const lastIndex = existingUrl.lastIndexOf('/');
+    if (lastIndex !== -1 && lastIndex == (existingUrlLength - 1)) {
+      existingUrl = existingUrl.substring(0, lastIndex) + existingUrl.substring(lastIndex + 1);
+    }
+
+    return existingUrl;
   }
 }
