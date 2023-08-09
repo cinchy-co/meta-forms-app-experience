@@ -413,24 +413,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   rowSelected(row: ILookupRecord): void {
-    console.log("rowSelected");
 
-    const messageJSON = {
-      updateCinchyURLParams:
-      {
-        rowId: 100
-      }
-    };
+    this.currentRow = row ?? this.currentRow;
 
-    console.log("messageJSON", messageJSON);
-
-    window.parent.postMessage(JSON.stringify(messageJSON), '*');
-
-    console.log("postMessage", JSON.stringify(messageJSON));
-
-    // this.currentRow = row ?? this.currentRow;
-
-    // this._appStateService.setRecordSelected(row?.id ?? this.rowId);
+    this._appStateService.setRecordSelected(row?.id ?? this.rowId);
   }
 
 

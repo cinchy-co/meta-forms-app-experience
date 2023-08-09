@@ -30,7 +30,7 @@ export class AppStateService {
 
   parentFormSavedFromChild$ = new Subject<{
     childForm: Form,
-    presetValues ?: { [key: string]: any },
+    presetValues?: { [key: string]: any },
     title: string
   }>();
 
@@ -77,7 +77,6 @@ export class AppStateService {
 
 
   setRecordSelected(cinchyId: number | null, doNotReloadForm: boolean = false): void {
-
     this._rowId = cinchyId;
 
     this.onRecordSelected$.next({ cinchyId, doNotReloadForm });
@@ -110,7 +109,7 @@ export class AppStateService {
         }
       };
 
-      window.postMessage(JSON.stringify(messageJSON), '*');
+      window.parent.postMessage(JSON.stringify(messageJSON), '*');
     }
 
     sessionStorage.setItem("rowId", this._rowId ? this._rowId.toString() : "");
