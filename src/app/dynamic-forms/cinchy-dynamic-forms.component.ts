@@ -422,6 +422,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   setRecordSelected(cinchyId: number | null, doNotReloadForm: boolean = false): void {
 
+    const messageJSON = {
+      updateCinchyURLParams:
+      {
+        rowId: cinchyId
+      }
+    };
+
+    window.parent.postMessage(JSON.stringify(messageJSON), '*');
+
     // Update URL with the new ID, if present
     if (window.location.search?.includes("rowId")) {
       const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
