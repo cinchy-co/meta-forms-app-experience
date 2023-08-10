@@ -81,7 +81,12 @@ export class AppStateService {
 
     this.onRecordSelected$.next({ cinchyId, doNotReloadForm });
 
-    this.updateConnectionQueryParams(cinchyId);
+    if (cinchyId == null) {
+      this.deleteConnectionQueryParams();
+    }
+    else {
+      this.updateConnectionQueryParams(cinchyId);
+    }
 
     // const messageJSON = {
     //   updateCinchyURLParams:

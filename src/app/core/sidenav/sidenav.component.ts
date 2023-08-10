@@ -116,6 +116,7 @@ export class SidenavComponent implements OnInit {
 
   createNewRecord(): void {
     this.sectionClicked(this.formSectionsMetadata[0]);
+    this._appStateService.setRecordSelected(null);
     //this._appStateService.deleteConnectionQueryParams();
   }
 
