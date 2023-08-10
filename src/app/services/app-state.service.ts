@@ -93,25 +93,25 @@ export class AppStateService {
     // window.parent.postMessage(JSON.stringify(messageJSON), '*');
 
     // Update URL with the new ID, if present
-    // if (window.location.search?.includes("rowId")) {
-    //   const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+    if (window.location.search?.includes("rowId")) {
+      const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
 
-    //     const [key, value] = paramString.split("=");
+        const [key, value] = paramString.split("=");
 
-    //     if (key === "rowId") {
-    //       return `${key}=${cinchyId ? cinchyId.toString() : "null"}`;
-    //     }
-    //     else {
-    //       return paramString;
-    //     }
-    //   });
+        if (key === "rowId") {
+          return `${key}=${cinchyId ? cinchyId.toString() : "null"}`;
+        }
+        else {
+          return paramString;
+        }
+      });
 
-    //   if (queryParams?.length) {
-    //     const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
+      if (queryParams?.length) {
+        const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
 
-    //     window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams.join("&")}`);
-    //   }
-    // }
+        window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams.join("&")}`);
+      }
+    }
     // else if (window.parent.location.search?.includes("rowId")) {
     //   const messageJSON = {
     //     updateCinchyURLParams:
@@ -137,14 +137,14 @@ export class AppStateService {
     const message = JSON.stringify(messageJSON);
     window.parent.postMessage(message, '*');
 
-    const existingUrl = this.getCurrentURLByRemovingLastSlash();
-    const queryParams = messageJSON['updateCinchyURLParams'];
-    const queryString = Object.keys(queryParams)
-      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
-      .join('&');
+    // const existingUrl = this.getCurrentURLByRemovingLastSlash();
+    // const queryParams = messageJSON['updateCinchyURLParams'];
+    // const queryString = Object.keys(queryParams)
+    //   .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(queryParams[key])}`)
+    //   .join('&');
 
-    const urlWithQueryString = `${existingUrl}?${queryString}`;
-    window.history.pushState('', '', urlWithQueryString);
+    // const urlWithQueryString = `${existingUrl}?${queryString}`;
+    // window.history.pushState('', '', urlWithQueryString);
   }
 
   deleteConnectionQueryParams() {
