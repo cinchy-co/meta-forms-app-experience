@@ -206,7 +206,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this._lastTemporaryCinchyId = INITIAL_TEMPORARY_CINCHY_ID;
 
     this.form.restoreFormReferenceOnAllFields();
-    this._appStateService.deleteConnectionQueryParams();
+    this._appStateService.setRecordSelected(null, true);
     this._toastr.info("The record was cloned, please save in order to create it. If this field contained any child records, please ensure the field used to link them is updated accordingly.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
   }
 
@@ -485,7 +485,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       title: string
     }
   ): Promise<void> {
-
     if (formData) {
       // check validations for the form eg: Required, Regular expression
       const formvalidation = formData.checkFormValidation();
