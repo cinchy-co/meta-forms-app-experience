@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 import { SpinnerCondition } from '../dynamic-forms/models/cinchy-spinner.model';
 
 @Injectable()
