@@ -147,7 +147,7 @@ export class PrintService {
   ) {}
 
 
-  async generatePdf(form: Form, currentRow: ILookupRecord): void {
+  async generatePdf(form: Form, currentRow: ILookupRecord): Promise<void> {
 
     this._spinner.show();
     this.content = [
