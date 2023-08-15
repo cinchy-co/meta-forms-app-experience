@@ -361,7 +361,12 @@ export class PrintService {
    */
   async getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 
-    const response = await fetch(imageUrl);
+    const response = await fetch(
+      imageUrl,
+      {
+        mode: "no-cors"
+      }
+    );
 
     if (response.status < 400) {
       const blob = await response.blob();
