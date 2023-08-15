@@ -1,6 +1,8 @@
 import { Inject, Injectable, LOCALE_ID } from "@angular/core";
 import { DatePipe } from "@angular/common";
 
+import { CinchyService } from "@cinchy-co/angular-sdk";
+
 import { DataFormatType } from "../../enums/data-format-type";
 
 import { DropdownOption } from "../cinchy-dropdown-dataset/cinchy-dropdown-options";
@@ -24,6 +26,9 @@ import pdfFonts from "pdfmake/build/vfs_fonts";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 
+/**
+ * Used to generate a PDF "print" of a form
+ */
 @Injectable({
   providedIn: "root",
 })
@@ -98,7 +103,7 @@ export class PrintService {
 
 
   layout = {
-    fillColor: function (rowIndex, node, columnIndex) {
+    fillColor: function (rowIndex) {
       return (rowIndex === 0) ? "#f1f1f1" : null;
     },
     hLineWidth: function (i, node) {
@@ -135,13 +140,14 @@ export class PrintService {
   constructor(
     private _appStateService: AppStateService,
     private _childFormService: ChildFormService,
+    private _cinchyService: CinchyService,
     private _datePipe: DatePipe,
     private _spinner: NgxSpinnerService,
     @Inject(LOCALE_ID) public locale: string
   ) {}
 
 
-  async generatePdf(form: Form, currentRow: ILookupRecord) {
+  async generatePdf(form: Form, currentRow: ILookupRecord): void {
 
     this._spinner.show();
     this.content = [
@@ -165,7 +171,7 @@ export class PrintService {
   }
 
 
-  async getDocDefFromForm(form: Form) {
+  async getDocDefFromForm(form: Form): Promise<any> {
 
     if (form === null) {
       return;
@@ -219,7 +225,9 @@ export class PrintService {
         try {
           const result = await content.image;
 
-          if (result?.includes("data:image")) {
+          // a string starting with data:image is assumed to be an encoded image, but if the last character is a comma
+          // then the image did not successfully resolve
+          if (result?.includes("data:image") && result[result.length - 1] !== ",") {
             // Clone any other properties, but ensure that the image property contains the new data
             resolve(Object.assign({}, content, { image: result }));
           }
@@ -249,7 +257,7 @@ export class PrintService {
   }
 
 
-  setFieldsForSection(fields: Array<FormField>) {
+  setFieldsForSection(fields: Array<FormField>): void {
 
     if (fields?.length) {
       fields.forEach((field: FormField) => {
@@ -284,7 +292,7 @@ export class PrintService {
         label: string,
         value: string
       }
-  ) {
+  ): Promise<void> {
 
     const actualField = field.clone();
 
@@ -333,9 +341,27 @@ export class PrintService {
   }
 
 
-  async getBase64ImageFromUrl(imageUrl: string) {
+  /**
+   * Fetches the given imageUrl in order to render the image, then take that result and encodes it into a base64 string that can
+   * be injected directly into the PDF. We're explicitly using a configuration of request parameters and headers that will
+   * hopefully reduce the number of requests that get blocked by the browser or by the host's security policies
+   */
+  async getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 
-    const res = await fetch(imageUrl);
+    const token = await this._cinchyService.getAccessToken();
+
+    const res = await fetch(
+      imageUrl,
+      {
+        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "image"
+        },
+        mode: "no-cors"
+      }
+    );
+
     const blob = await res.blob();
 
     return new Promise((resolve, reject) => {
@@ -344,7 +370,7 @@ export class PrintService {
 
       reader.addEventListener("load", () => {
 
-        resolve(reader.result);
+        resolve(reader.result as string);
       }, false);
 
       reader.onerror = () => {
@@ -361,7 +387,7 @@ export class PrintService {
    * Generates a structure that represents the label and value for the given field. Will render HTML anchors as clickable links
    * and include a placeholder value for fields which are not populated.
    */
-  getFieldColumns(field: FormField, overrideValue?: any) {
+  getFieldColumns(field: FormField, overrideValue?: any): Array<any> {
 
     const result: Array<{
         marginRight?: number | string,
@@ -406,7 +432,7 @@ export class PrintService {
   /**
    * Generates a structure that represents the label and value for a link column, specifically.
    */
-  getLinkColumns(field: FormField) {
+  getLinkColumns(field: FormField): Array<any> {
 
     return [
       {
@@ -428,7 +454,7 @@ export class PrintService {
    * Generates a structure that represents a the label and value for a field that contains an image. At
    * this stage, the value is a promise that will be resolved at a later step.
    */
-  getImageColumns(field: FormField, value: any) {
+  getImageColumns(field: FormField, value: any): Array<any> {
 
     return [
       {
@@ -437,17 +463,21 @@ export class PrintService {
         style: "fieldLabel"
       },
       {
-        image: value,
-        width: 80,
-        marginBottom: 10
+        columns: [
+          {
+            image: value,
+            width: 80
+          }
+        ],
+        width: "80%"
       }
     ];
   }
 
 
   getLinkFieldLabelAndValue(field: FormField): {
-    label: string,
-    value: string
+      label: string,
+      value: string
   } {
 
     const dropdownSet: Array<DropdownOption> = field.dropdownDataset?.options;
@@ -486,7 +516,19 @@ export class PrintService {
   }
 
 
-  getChildFormTable(childForm: Form) {
+  getChildFormTable(childForm: Form): {
+      table?: {
+        headerRows: number,
+        body: Array<any>,
+        widths: Array<any>
+      },
+      sectionHeader?: {
+        text: any,
+        bold: boolean,
+        style?: string
+      },
+      layout?: any
+  } {
 
     const table = this.getDefaultTable();
     const tbody = new Array<Array<any>>();
@@ -552,12 +594,16 @@ export class PrintService {
   /**
    * @returns the default structure for a table. Headers are automatically repeated if the table spans over multiple pages.
    */
-  getDefaultTable(headerRows = 1) {
+  getDefaultTable(headerRows = 1): {
+      headerRows: number,
+      body: Array<any>,
+      widths: Array<any>
+  } {
 
     return {
       headerRows: headerRows,
-      widths: [],
-      body: []
+      body: [],
+      widths: []
     }
   }
 
@@ -601,7 +647,7 @@ export class PrintService {
 
     returnValues.push({
       image: image,
-      width: 60
+      width: 24
     });
 
     if (adjacentNonTargetItem?.length) {

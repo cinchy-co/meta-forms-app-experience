@@ -812,7 +812,6 @@ export class Form {
     fields.push("[Cinchy ID]");
 
     if (this.isChild) {
-      
       const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
 
       const whereConditionWithFilter = this.childFormFilter ? 
@@ -839,13 +838,13 @@ export class Form {
 
 
   getFileNameAndItsTable(field: FormField, childCinchyId?: number): {
-    childCinchyId: number,
-    column: string,
-    domain: string,
-    fileName: string,
-    query: string,
-    table: string,
-    value: any
+      childCinchyId: number,
+      column: string,
+      domain: string,
+      fileName: string,
+      query: string,
+      table: string,
+      value: any
   } {
 
     const [domain, table, column]: [string, string, string] = field.cinchyColumn.fileNameColumn?.split(".") ?? [];
