@@ -361,14 +361,11 @@ export class PrintService {
    */
   async getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 
-    const token = await this._cinchyService.getAccessToken();
-
     const response = await fetch(
       imageUrl,
       {
         credentials: "include",
         headers: {
-          "Authorization": `Bearer ${token}`,
           "Content-Type": "image"
         },
         mode: "no-cors"
@@ -461,7 +458,7 @@ export class PrintService {
     ];
 
     if (this._isHtmlAnchor(field.value)) {
-      returnValues.push(this._generateAnchorArrayItem(field.value, null));
+      returnValues.push(this._generateAnchorArrayItem(field.value, null, "Open"));
     }
     else if (!field.value) {
       returnValues.push(
@@ -667,7 +664,9 @@ export class PrintService {
   /**
    * Generates a structure representing one pair of [HTML anchor, non-anchor trailing text]. Will ignore the trailing text if it is falsey.
    */
-  private _generateAnchorArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { text: string, link: string, style: string }> {
+  private _generateAnchorArrayItem(targetItem: string, adjacentNonTargetItem: string, labelOverride?: string):
+      Array<string | { text: string, link: string, style: string }>
+  {
 
     const returnValues = new Array<string | { text: string, link: string, style: string }>();
 
@@ -676,7 +675,7 @@ export class PrintService {
     anchorElementWrapper.innerHTML = targetItem.trim();
 
     returnValues.push({
-      text: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).text,
+      text: labelOverride ?? (anchorElementWrapper.content.firstChild as HTMLAnchorElement).text,
       link: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).href,
       style: "anchor"
     });
