@@ -42,6 +42,11 @@ export class PrintService {
 
 
   styles = {
+    anchor: {
+      color: "#007bff",
+      fontSize: 10,
+      italics: false
+    },
     formHeader: {
       bold: true,
       fontSize: 20,
@@ -131,10 +136,14 @@ export class PrintService {
    */
   private readonly _imgRegex = /<img.*\/?>/gi
 
+  private readonly _labelColumnWidth = 130;
+
   /**
    * Passes if the whole string matches an http- or https-based URL, e.g. `https://www.cinchy.net`
    */
   private readonly _urlRegex = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.%]+$/i
+
+  private readonly _valueColumnWidth = "80%";
 
 
   constructor(
@@ -232,6 +241,10 @@ export class PrintService {
             resolve(Object.assign({}, content, { image: result }));
           }
           else {
+            if (result?.includes("error")) {
+              console.error(result);
+            }
+
             // If the promise resolves into an invalid value, i.e. the image could not be found, then just return an empty value
             resolve(Object.assign({}, content, { text: "-", image: null }));
           }
@@ -350,7 +363,7 @@ export class PrintService {
 
     const token = await this._cinchyService.getAccessToken();
 
-    const res = await fetch(
+    const response = await fetch(
       imageUrl,
       {
         credentials: "include",
@@ -362,24 +375,29 @@ export class PrintService {
       }
     );
 
-    const blob = await res.blob();
+    if (response.status < 400) {
+      const blob = await response.blob();
 
-    return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
 
-      const reader = new FileReader();
+        const reader = new FileReader();
 
-      reader.addEventListener("load", () => {
+        reader.addEventListener("load", () => {
 
-        resolve(reader.result as string);
-      }, false);
+          resolve(reader.result as string);
+        }, false);
 
-      reader.onerror = () => {
+        reader.onerror = () => {
 
-        return reject(this);
-      };
+          return reject(this);
+        };
 
-      reader.readAsDataURL(blob);
-    });
+        reader.readAsDataURL(blob);
+      });
+    }
+    else {
+      return Promise.reject(`Failed to fetch image from URL: ${imageUrl} (${response.status}: ${response.statusText})`);
+    }
   }
 
 
@@ -398,7 +416,7 @@ export class PrintService {
       {
         style: "fieldLabel",
         text: `${field.label}: `,
-        width: 130
+        width: this._labelColumnWidth
       }
     ];
 
@@ -410,7 +428,7 @@ export class PrintService {
     } = {
       marginRight: 15,
       style: "fieldValue",
-      width: "80%"
+      width: this._valueColumnWidth
     };
 
     if (overrideValue) {
@@ -434,19 +452,36 @@ export class PrintService {
    */
   getLinkColumns(field: FormField): Array<any> {
 
-    return [
+    const returnValues: Array<any> = [
       {
-        width: 130,
+        width: this._labelColumnWidth,
         text: `${field.label}: `,
         style: "fieldLabel"
-      },
-      {
-        color: "#007bff",
-        text: "Open",
-        link: field.value,
-        style: "fieldValue"
       }
     ];
+
+    if (this._isHtmlAnchor(field.value)) {
+      returnValues.push(this._generateAnchorArrayItem(field.value, null));
+    }
+    else if (!field.value) {
+      returnValues.push(
+        {
+          text: "-",
+          style: "fieldValue"
+        }
+      );
+    }
+    else {
+      returnValues.push(
+        {
+          text: "Open",
+          link: field.value,
+          style: "anchor"
+        }
+      );
+    }
+
+    return returnValues;
   }
 
 
@@ -456,22 +491,43 @@ export class PrintService {
    */
   getImageColumns(field: FormField, value: any): Array<any> {
 
-    return [
+    const returnValues: Array<any> = [
       {
-        width: 160,
+        width: this._labelColumnWidth,
         text: `${field.label}: `,
         style: "fieldLabel"
-      },
-      {
-        columns: [
-          {
-            image: value,
-            width: 80
-          }
-        ],
-        width: "80%"
       }
     ];
+
+    if (this._isHtmlImage(field.value)) {
+      returnValues.push(
+        {
+          columns: this._generateImageArrayItem(field.value, null, 80),
+          width: this._valueColumnWidth
+        }
+      );
+    }
+    else if (!field.value) {
+      returnValues.push({
+        text: "-",
+        style: "fieldValue"
+      });
+    }
+    else {
+      returnValues.push(
+        {
+          columns: [
+            {
+              image: value,
+              width: 80
+            }
+          ],
+          width: this._valueColumnWidth
+        }
+      );
+    }
+
+    return returnValues;
   }
 
 
@@ -611,9 +667,9 @@ export class PrintService {
   /**
    * Generates a structure representing one pair of [HTML anchor, non-anchor trailing text]. Will ignore the trailing text if it is falsey.
    */
-  private _generateAnchorArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { text: string, link: string, color: string }> {
+  private _generateAnchorArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { text: string, link: string, style: string }> {
 
-    const returnValues = new Array<string | { text: string, link: string, color: string }>();
+    const returnValues = new Array<string | { text: string, link: string, style: string }>();
 
     const anchorElementWrapper = document.createElement("template");
 
@@ -622,7 +678,7 @@ export class PrintService {
     returnValues.push({
       text: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).text,
       link: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).href,
-      color: "#007bff"
+      style: "anchor"
     });
 
     if (adjacentNonTargetItem?.length) {
@@ -636,7 +692,7 @@ export class PrintService {
   /**
    * Generates a structure representing one pair of [HTML image, non-image trailing text]. Will ignore the trailing text if it is falsey.
    */
-  private _generateImageArrayItem(targetItem: string, adjacentNonTargetItem: string): Array<string | { image: any, height?: number, width?: number }> {
+  private _generateImageArrayItem(targetItem: string, adjacentNonTargetItem: string, width = 24): Array<string | { image: any, height?: number, width?: number }> {
 
     const returnValues = new Array<string | { image: any, height?: number, width?: number }>();
 
@@ -647,7 +703,7 @@ export class PrintService {
 
     returnValues.push({
       image: image,
-      width: 24
+      width: width
     });
 
     if (adjacentNonTargetItem?.length) {
@@ -665,9 +721,9 @@ export class PrintService {
   private _generateHtmlArray(
       textValue: string,
       htmlItemRegex: RegExp
-  ): Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }> {
+  ): Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }> {
 
-    const returnValues = new Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }>();
+    const returnValues = new Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }>();
 
     const allTargets = textValue.match(htmlItemRegex);
     const allNonTargets = textValue.split(htmlItemRegex);
@@ -699,6 +755,9 @@ export class PrintService {
    */
   private _isHtmlAnchor(textValue: string): boolean {
 
+    // Global RegExp are stateful, so in order to ensure this test is independent we need to manually reset it
+    this._anchorRegex.lastIndex = 0;
+
     return this._anchorRegex.test(textValue);
   }
 
@@ -707,6 +766,9 @@ export class PrintService {
    * Determines whether or not the given text contains an HTML image.
    */
   private _isHtmlImage(textValue: string): boolean {
+
+    // Global RegExp are stateful, so in order to ensure this test is independent we need to manually reset it
+    this._imgRegex.lastIndex = 0;
 
     return this._imgRegex.test(textValue);
   }
@@ -728,7 +790,7 @@ export class PrintService {
   private _processChildFormTableValue(
       displayValueMap: { [key: string]: any },
       field: string
-  ): string | Array<string | { text: string, link: string, color: string } | { image: any, height?: number, width?: number }> {
+  ): string | Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }> {
 
     const textValue: string = displayValueMap[field];
 
