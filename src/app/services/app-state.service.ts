@@ -120,7 +120,7 @@ export class AppStateService {
     window.parent.postMessage(message, '*');
   }
 
-  deleteConnectionQueryParams() {
+  deleteRowIdInQueryParams() {
     const messageJSON = {
       deleteCinchyURLParams:
         [
