@@ -814,8 +814,7 @@ export class Form {
     if (this.isChild) {
       const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
 
-      const whereConditionWithFilter = this.childFormFilter ?
-        `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
+      const whereConditionWithFilter = this.childFormFilter ? `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
 
       const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
 

@@ -76,15 +76,14 @@ export class AppStateService {
   }
 
 
-  setRecordSelected(cinchyId: number | null, doNotReloadForm: boolean = false): void {
-    this._rowId = cinchyId;
-    this.onRecordSelected$.next({ cinchyId, doNotReloadForm });
+  setRecordSelected(rowId: number | null, doNotReloadForm: boolean = false): void {
+    this.onRecordSelected$.next({ cinchyId: rowId, doNotReloadForm });
 
-    if (cinchyId == null) {
+    if (rowId === null) {
       this.deleteConnectionQueryParams();
     }
     else {
-      this.updateConnectionQueryParams(cinchyId);
+      this.updateRowIdInQueryParams(rowId);
     }
 
     // Update URL with the new ID, if present
@@ -94,7 +93,7 @@ export class AppStateService {
         const [key, value] = paramString.split("=");
 
         if (key === "rowId") {
-          return `${key}=${cinchyId ? cinchyId.toString() : "null"}`;
+          return `${key}=${rowId ? rowId.toString() : "null"}`;
         }
         else {
           return paramString;
@@ -108,28 +107,27 @@ export class AppStateService {
     }
   }
 
-  updateConnectionQueryParams(id: number) {
+  updateRowIdInQueryParams(rowId: number) {
     const messageJSON = {
       updateCinchyURLParams:
       {
-        rowId: id
+        rowId: rowId
       }
     };
+
     const message = JSON.stringify(messageJSON);
+
     window.parent.postMessage(message, '*');
-    sessionStorage.setItem("rowId", this._rowId ? this._rowId.toString() : "");
-    sessionStorage.setItem("formId", this.formId ?? "");
   }
 
   deleteConnectionQueryParams() {
     const messageJSON = {
       deleteCinchyURLParams:
         [
-          'rowId'
+          "rowId"
         ]
     };
     const message = JSON.stringify(messageJSON);
     window.parent.postMessage(message, '*');
-    sessionStorage.removeItem('rowId');
   }
 }
