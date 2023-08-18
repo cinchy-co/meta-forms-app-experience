@@ -80,7 +80,7 @@ export class AppStateService {
     this.onRecordSelected$.next({ cinchyId: rowId, doNotReloadForm });
 
     if (rowId === null) {
-      this.deleteConnectionQueryParams();
+      this.deleteRowIdInQueryParams();
     }
     else {
       this.updateRowIdInQueryParams(rowId);
