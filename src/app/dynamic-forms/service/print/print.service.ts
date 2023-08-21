@@ -194,7 +194,7 @@ export class PrintService {
       })
     }
 
-    const resolvedContent = await this.resolveImagePromises(this.content);
+    const resolvedContent = await this._resolveImagePromises(this.content);
 
     return new Promise((resolve, reject) => {
 
@@ -208,64 +208,6 @@ export class PrintService {
           return { text: currentPage.toString() + " of " + pageCount, style: "footer" }
         }
       });
-    });
-  }
-
-
-  /**
-   * Recursively iterates through the content and resolves any outstanding promises for images. Note that the types are "any" because
-   * properly typing this function would be too verbose for the current ticket.
-   */
-  async resolveImagePromises(content: any): Promise<any> {
-
-    return new Promise(async (resolve, reject) => {
-
-      if (Array.isArray(content)) {
-        const output = new Array<any>();
-
-        content.forEach(async (item: any) => {
-
-          output.push(await this.resolveImagePromises(item));
-        });
-
-        resolve(output);
-      }
-      else if (content?.image && content.image instanceof Promise) {
-        try {
-          const result = await content.image;
-
-          // a string starting with data:image is assumed to be an encoded image, but if the last character is a comma
-          // then the image did not successfully resolve
-          if (result?.includes("data:image") && result[result.length - 1] !== ",") {
-            // Clone any other properties, but ensure that the image property contains the new data
-            resolve(Object.assign({}, content, { image: result }));
-          }
-          else {
-            if (result?.includes("error")) {
-              console.error(result);
-            }
-
-            // If the promise resolves into an invalid value, i.e. the image could not be found, then just return an empty value
-            resolve(Object.assign({}, content, { text: "-", image: null }));
-          }
-        }
-        catch (error) {
-          // Just use a default in the case of an error
-          resolve(Object.assign({}, content, { text: "-", image: null }));
-        }
-      }
-      else if (content && typeof content === "object") {
-        const output = {};
-
-        Object.keys(content).forEach(async (key: string) => {
-          output[key] = await this.resolveImagePromises(content[key]);
-        });
-
-        resolve(output);
-      }
-      else {
-        resolve(content);
-      }
     });
   }
 
@@ -688,7 +630,7 @@ export class PrintService {
 
     const sourceUrl = targetItem.match(/src="([^\"]*)"/i)[1];
 
-    // Note: this is a promise. The promise will resolve as part of the resolveImagePromises function call
+    // Note: this is a promise. The promise will resolve as part of the _resolveImagePromises function call
     const image = this.getBase64ImageFromUrl(sourceUrl);
 
     returnValues.push({
@@ -794,5 +736,83 @@ export class PrintService {
     else {
       return textValue || "-";
     }
+  }
+
+
+  /**
+   * Handles the resolution of an image promise within an actual image object. Any input to this function is considered to be
+   * a leaf node, so it will not recurse.
+   */
+  private async _resolveIndividualImagePromise(
+      item: { image: any, height?: number, width?: number }
+  ): Promise<{ image: any, height?: number, text?: string, width?: number }> {
+
+    try {
+      const result = await item.image;
+
+      // a string starting with data:image is assumed to be an encoded image, but if the last character is a comma
+      // then the image did not successfully resolve
+      if (result?.includes("data:image") && result[result.length - 1] !== ",") {
+        // Clone any other properties, but ensure that the image property contains the new data
+        return { ...item, image: result };
+      }
+      else {
+        if (result?.includes("error")) {
+          console.error(result);
+        }
+
+        // If the promise resolves into an invalid value, i.e. the image could not be found, then just return an empty value
+        return { ...item, text: "-", image: null };
+      }
+    }
+    catch (error) {
+      // Just use a default in the case of an error
+      return { ...item, text: "-", image: null };
+    }
+  }
+
+
+  /**
+   * Recursively iterates through the content and resolves any outstanding promises for images.
+   *
+   * TODO: the types are "any" because properly typing this function would be too verbose for the current ticket. There will
+   *       be a chore to properly type all of the PDF library types used by this application
+   */
+  private async _resolveImagePromises(content: any): Promise<any> {
+
+    if (Array.isArray(content)) {
+      return Promise.all(content.map((item: any) => {
+
+        return this._resolveImagePromises(item);
+      }));
+    }
+    else if (content?.image && content.image instanceof Promise) {
+      return this._resolveIndividualImagePromise(content);
+    }
+    else if (content && typeof content === "object") {
+      return this._resolveImagePromisesFromObjectProperties(content);
+    }
+    else {
+      return Promise.resolve(content);
+    }
+  }
+
+
+  /**
+   * Dives into the given objects individual properties so that the recursive _resolveImagePromises can guarantee it touches
+   * every node in the tree.
+   */
+  private async _resolveImagePromisesFromObjectProperties(originalObject: any): Promise<any> {
+
+    const output = {};
+
+    await Promise.all(
+      Object.keys(originalObject).map(async (key: string) => {
+
+        output[key] = await this._resolveImagePromises(originalObject[key]);
+      })
+    );
+
+    return output;
   }
 }
