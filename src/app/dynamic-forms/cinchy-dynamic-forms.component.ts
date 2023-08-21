@@ -1,6 +1,7 @@
 import {
   Component,
   EventEmitter,
+  HostListener,
   Input,
   OnChanges,
   OnInit,
@@ -53,6 +54,13 @@ const INITIAL_TEMPORARY_CINCHY_ID = -2;
   encapsulation: ViewEncapsulation.None
 })
 export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
+
+  @HostListener("window:beforeunload", ["$event"])
+  beforeUnloadHandler($event) {
+    if (this.form.hasChanged) {
+      $event.returnValue = "Are you sure you want to exit? You may have some unsaved changes";
+    }
+  }
 
   @ViewChild("recordDropdown") dropdownComponent: SearchDropdownComponent;
   
@@ -529,8 +537,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   this.closeAddNewDialog.emit({ newRowId: this.rowId });
                 }
 
-                formData.hasChanged = false;
-                this._appStateService.hasFormChanged = false;
+                formData.updateRootProperty(
+                  {
+                    propertyName: "hasChanged",
+                    propertyValue: false
+                  }
+                );
               },
               error => {
                 console.error("Error in cinchy-dynamic-forms save method", error);
