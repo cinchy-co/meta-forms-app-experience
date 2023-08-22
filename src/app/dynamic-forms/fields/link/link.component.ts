@@ -88,9 +88,16 @@ export class LinkComponent implements OnChanges, OnInit {
   @Output() childform = new EventEmitter<any>();
 
 
-  // TODO: Add proper types to these
-  downloadableLinks;
+  // TODO: Add proper type
   metadataQueryResult;
+
+  downloadableLinks: Array<
+    {
+      fileName: string,
+      fileUrl: string,
+      fileId: number
+    }
+  >;
 
   charactersAfterWhichToShowList: number = 0;
   createlinkOptionName: boolean;
@@ -214,7 +221,7 @@ export class LinkComponent implements OnChanges, OnInit {
     if (this.field.cinchyColumn.attachmentUrl && this.selectedValue) {
       const replacedCinchyIdUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form.rowId?.toString());
       const replacedFileIdUrl = replacedCinchyIdUrl.replace("@fileid", this.selectedValue.id);
-      const selectedValuesWithUrl = { fileName: this.selectedValue.label, fileUrl: replacedFileIdUrl, fileId: this.selectedValue.id };
+      const selectedValuesWithUrl = { fileName: this.selectedValue.label, fileUrl: replacedFileIdUrl, fileId: +this.selectedValue.id };
 
       this.downloadableLinks = [selectedValuesWithUrl];
     }

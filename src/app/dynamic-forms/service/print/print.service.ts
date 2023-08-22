@@ -1,8 +1,6 @@
 import { Inject, Injectable, LOCALE_ID } from "@angular/core";
 import { DatePipe } from "@angular/common";
 
-import { CinchyService } from "@cinchy-co/angular-sdk";
-
 import { DataFormatType } from "../../enums/data-format-type";
 
 import { DropdownOption } from "../cinchy-dropdown-dataset/cinchy-dropdown-options";
@@ -21,6 +19,7 @@ import { NgxSpinnerService } from "ngx-spinner";
 
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
@@ -141,7 +140,7 @@ export class PrintService {
   /**
    * Passes if the whole string matches an http- or https-based URL, e.g. `https://www.cinchy.net`
    */
-  private readonly _urlRegex = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.%]+$/i
+  private readonly _urlRegex = /^(?:http(?:s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:\/?#[\]@!\$&'\(\)\*\+,;=.%]+$/i
 
   private readonly _valueColumnWidth = "80%";
 
@@ -149,7 +148,6 @@ export class PrintService {
   constructor(
     private _appStateService: AppStateService,
     private _childFormService: ChildFormService,
-    private _cinchyService: CinchyService,
     private _datePipe: DatePipe,
     private _spinner: NgxSpinnerService,
     @Inject(LOCALE_ID) public locale: string
@@ -227,6 +225,7 @@ export class PrintService {
           switch (field.cinchyColumn.dataType) {
             case "Link":
               const selectedOptionField = this.getLinkFieldLabelAndValue(field);
+
               this.pushFields(field, selectedOptionField);
 
               break;
@@ -249,49 +248,58 @@ export class PrintService {
       }
   ): Promise<void> {
 
-    const actualField = field.clone();
+    const fieldCopy = field.clone();
 
     if (selectedOptionField) {
-      actualField.value = selectedOptionField.value;
-      actualField.label = selectedOptionField.label;
+      fieldCopy.value = selectedOptionField.value;
+      fieldCopy.label = selectedOptionField.label;
     }
 
-    if (field.cinchyColumn.dataFormatType === "LinkUrl") {
-      this.content.push({ columns: this.getLinkColumns(actualField) });
-    }
-    else if (field.value && field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
+    if (fieldCopy.value && fieldCopy.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
       let imageUrl: string;
 
-      if (this._isHtmlImage(field.value) || this._isUrl(field.value)) {
-        imageUrl = field.value;
+      if (this._isHtmlImage(fieldCopy.value) || this._isUrl(fieldCopy.value)) {
+        imageUrl = fieldCopy.value;
       }
       else {
-        imageUrl = field.dropdownDataset?.options[0].label || field.value;
+        // Only use the dropdownDataset if it was an option explicitly generated to be a placeholder in a prepopulated set. Otherwise,
+        // we could just be puling in a value for an arbitrary file in the set of those associated with this form
+        imageUrl = (fieldCopy.dropdownDataset?.isDummy ? fieldCopy.dropdownDataset.options[0]?.label : fieldCopy.value) || fieldCopy.value;
       }
 
-      if (imageUrl) {
+      if (this._isUrl(imageUrl)) {
         const base64Img = this.getBase64ImageFromUrl(imageUrl);
 
-        this.content.push({ columns: this.getImageColumns(field, base64Img) });
+        this.content.push({ columns: this.getImageColumns(fieldCopy, base64Img) });
       }
       else {
-        this.content.push({ text: "-" });
+        // We specifically want to use the preprocessed imageUrl field in case it was populated using the dropdownDataset but still isn't a valid URL
+        this.content.push({ columns: this.getFieldColumns(fieldCopy, imageUrl) });
       }
     }
-    else if (field.cinchyColumn.dataType === "Date and Time") {
-      let stringDate = actualField.value;
+    // If the field was designated as a link, then we want to override the label to keep the behaviour consistent with earlier versions
+    else if (field.cinchyColumn.dataFormatType === "LinkUrl") {
+      this.content.push({ columns: this.getLinkColumns(fieldCopy, "Open") });
+    }
+    // If the field is plaintext but contains a URL, most PDF readers will make the text into a link anyway, so we're manually enforcing that
+    // behaviour and adding proper styling
+    else if (this._isUrl(fieldCopy.value)) {
+      this.content.push({ columns: this.getLinkColumns(fieldCopy) });
+    }
+    else if (fieldCopy.cinchyColumn.dataType === "Date and Time") {
+      let stringDate = fieldCopy.value;
 
       try {
-        if (actualField.value) {
-          stringDate = this._datePipe.transform(actualField.value, "MMM/dd/yyyy")
+        if (fieldCopy.value) {
+          stringDate = this._datePipe.transform(fieldCopy.value, "MMM/dd/yyyy")
         }
       } catch (e) {
-        console.error("Error converting date:", actualField.value)
+        console.error("Error converting date:", fieldCopy.value)
       }
 
-      this.content.push({ columns: this.getFieldColumns(actualField, stringDate) });
+      this.content.push({ columns: this.getFieldColumns(fieldCopy, stringDate) });
     } else {
-      this.content.push({ columns: this.getFieldColumns(actualField) });
+      this.content.push({ columns: this.getFieldColumns(fieldCopy) });
     }
   }
 
@@ -365,7 +373,7 @@ export class PrintService {
       valueColumn.text = overrideValue
     }
     else if (this._isHtmlAnchor(field.value)) {
-      valueColumn.text = this._generateHtmlArray(field.value, this._anchorRegex);
+      valueColumn.text = this._generateArrayFromHtml(field.value, this._anchorRegex);
     }
     else {
       valueColumn.text = field.value || "-";
@@ -380,7 +388,7 @@ export class PrintService {
   /**
    * Generates a structure that represents the label and value for a link column, specifically.
    */
-  getLinkColumns(field: FormField): Array<any> {
+  getLinkColumns(field: FormField, anchorTextOverride?: string): Array<any> {
 
     const returnValues: Array<any> = [
       {
@@ -391,7 +399,7 @@ export class PrintService {
     ];
 
     if (this._isHtmlAnchor(field.value)) {
-      returnValues.push(this._generateAnchorArrayItem(field.value, null, "Open"));
+      returnValues.push(this._generateAnchorArrayItemFromHtml(field.value, null, "Open"));
     }
     else if (!field.value) {
       returnValues.push(
@@ -404,7 +412,7 @@ export class PrintService {
     else {
       returnValues.push(
         {
-          text: "Open",
+          text: anchorTextOverride || field.value,
           link: field.value,
           style: "anchor"
         }
@@ -432,7 +440,7 @@ export class PrintService {
     if (this._isHtmlImage(field.value)) {
       returnValues.push(
         {
-          columns: this._generateImageArrayItem(field.value, null, 80),
+          columns: this._generateImageArrayItemFromHtml(field.value, null, 80),
           width: this._valueColumnWidth
         }
       );
@@ -543,7 +551,7 @@ export class PrintService {
 
           if (this._isHtmlImage(rowValues[field])) {
             return {
-              columns: this._generateHtmlArray(rowValues[field], this._imgRegex),
+              columns: this._generateArrayFromHtml(rowValues[field], this._imgRegex),
               style: "tableRow"
             };
           }
@@ -595,9 +603,45 @@ export class PrintService {
 
 
   /**
+   * Constructs an array containing HTML elements which match the given regex. The input text will be split into sets of matching HTML elements and
+   * non-matching plaintext, and will alternate adding those in so that the ordering of the original value is maintained.
+   */
+  private _generateArrayFromHtml(
+    textValue: string,
+    htmlItemRegex: RegExp
+  ): Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }> {
+
+    const returnValues = new Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }>();
+
+    const allTargets = textValue.match(htmlItemRegex);
+    const allNonTargets = textValue.split(htmlItemRegex);
+
+    // If there is text before the first item, we want to preserve that
+    if (allNonTargets.length && textValue.indexOf(allNonTargets[0]) === 0) {
+      const firstNonTargetItem = allNonTargets.shift();
+
+      if (firstNonTargetItem?.length) {
+        returnValues.push(firstNonTargetItem);
+      }
+    }
+
+    for (let index = 0; index < allTargets.length; index++) {
+      if (this._isHtmlAnchor(textValue)) {
+        returnValues.push(...this._generateAnchorArrayItemFromHtml(allTargets[index], allNonTargets[index]));
+      }
+      else {
+        returnValues.push(...this._generateImageArrayItemFromHtml(allTargets[index], allNonTargets[index]));
+      }
+    }
+
+    return returnValues;
+  }
+
+
+  /**
    * Generates a structure representing one pair of [HTML anchor, non-anchor trailing text]. Will ignore the trailing text if it is falsey.
    */
-  private _generateAnchorArrayItem(targetItem: string, adjacentNonTargetItem: string, labelOverride?: string):
+  private _generateAnchorArrayItemFromHtml(targetItem: string, adjacentNonTargetItem: string, labelOverride?: string):
       Array<string | { text: string, link: string, style: string }>
   {
 
@@ -624,7 +668,7 @@ export class PrintService {
   /**
    * Generates a structure representing one pair of [HTML image, non-image trailing text]. Will ignore the trailing text if it is falsey.
    */
-  private _generateImageArrayItem(targetItem: string, adjacentNonTargetItem: string, width = 24): Array<string | { image: any, height?: number, width?: number }> {
+  private _generateImageArrayItemFromHtml(targetItem: string, adjacentNonTargetItem: string, width = 24): Array<string | { image: any, height?: number, width?: number }> {
 
     const returnValues = new Array<string | { image: any, height?: number, width?: number }>();
 
@@ -640,42 +684,6 @@ export class PrintService {
 
     if (adjacentNonTargetItem?.length) {
       returnValues.push(adjacentNonTargetItem);
-    }
-
-    return returnValues;
-  }
-
-
-  /**
-   * Constructs an array containing HTML elements which match the given regex. The input text will be split into sets of matching HTML elements and
-   * non-matching plaintext, and will alternate adding those in so that the ordering of the original value is maintained.
-   */
-  private _generateHtmlArray(
-      textValue: string,
-      htmlItemRegex: RegExp
-  ): Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }> {
-
-    const returnValues = new Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }>();
-
-    const allTargets = textValue.match(htmlItemRegex);
-    const allNonTargets = textValue.split(htmlItemRegex);
-
-    // If there is text before the first item, we want to preserve that
-    if (allNonTargets.length && textValue.indexOf(allNonTargets[0]) === 0) {
-      const firstNonTargetItem = allNonTargets.shift();
-
-      if (firstNonTargetItem?.length) {
-        returnValues.push(firstNonTargetItem);
-      }
-    }
-
-    for (let index = 0; index < allTargets.length; index++) {
-      if (this._isHtmlAnchor(textValue)) {
-        returnValues.push(...this._generateAnchorArrayItem(allTargets[index], allNonTargets[index]));
-      }
-      else {
-        returnValues.push(...this._generateImageArrayItem(allTargets[index], allNonTargets[index]));
-      }
     }
 
     return returnValues;
@@ -711,7 +719,7 @@ export class PrintService {
    */
   private _isUrl(textValue: string): boolean {
 
-    return this._urlRegex.test(textValue);
+    return coerceBooleanProperty(textValue && this._urlRegex.test(textValue));
   }
 
 
@@ -728,10 +736,10 @@ export class PrintService {
 
     // Could be either an anchor on its own, or any number of anchors in a paragraph of text
     if (this._isHtmlAnchor(textValue)) {
-      return this._generateHtmlArray(textValue, this._anchorRegex);
+      return this._generateArrayFromHtml(textValue, this._anchorRegex);
     }
     else if (this._isHtmlImage(textValue)) {
-      return this._generateHtmlArray(textValue, this._imgRegex);
+      return this._generateArrayFromHtml(textValue, this._imgRegex);
     }
     else {
       return textValue || "-";
