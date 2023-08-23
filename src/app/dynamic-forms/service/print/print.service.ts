@@ -17,10 +17,10 @@ import { ILookupRecord } from "../../../models/lookup-record.model";
 import { AppStateService } from "../../../services/app-state.service";
 
 import { NgxSpinnerService } from "ngx-spinner";
+import { ToastrService } from "ngx-toastr";
 
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
-import { ToastrService } from "ngx-toastr";
 
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
@@ -151,7 +151,7 @@ export class PrintService {
     private _childFormService: ChildFormService,
     private _datePipe: DatePipe,
     private _spinner: NgxSpinnerService,
-    private _toastr: ToastrService
+    private _toastr: ToastrService,
     @Inject(LOCALE_ID) public locale: string
   ) {}
 
