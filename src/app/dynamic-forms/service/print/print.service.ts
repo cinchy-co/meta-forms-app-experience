@@ -710,11 +710,6 @@ export class PrintService {
     else if (field.cinchyColumn.dataFormatType === "LinkUrl") {
       this.content.push({ columns: this._getLinkColumns(fieldCopy, "Open") });
     }
-    // If the field is plaintext but contains a URL, most PDF readers will make the text into a link anyway, so we're manually enforcing that
-    // behaviour and adding proper styling
-    else if (this._isUrl(fieldCopy.value)) {
-      this.content.push({ columns: this._getLinkColumns(fieldCopy) });
-    }
     else if (fieldCopy.cinchyColumn.dataType === "Date and Time") {
       let stringDate = fieldCopy.value;
 
