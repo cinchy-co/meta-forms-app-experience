@@ -1,4 +1,5 @@
 import { Inject, Injectable, LOCALE_ID } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { DatePipe } from "@angular/common";
 
 import { DataFormatType } from "../../enums/data-format-type";
@@ -19,7 +20,7 @@ import { NgxSpinnerService } from "ngx-spinner";
 
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { ToastrService } from "ngx-toastr";
 
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
@@ -150,6 +151,7 @@ export class PrintService {
     private _childFormService: ChildFormService,
     private _datePipe: DatePipe,
     private _spinner: NgxSpinnerService,
+    private _toastr: ToastrService
     @Inject(LOCALE_ID) public locale: string
   ) {}
 
@@ -166,148 +168,27 @@ export class PrintService {
 
     currentRow?.label && this.content.push({ text: currentRow.label, style: "formSubHeader" });
 
-    const documentDefinition = await this.getDocDefFromForm(form);
-    const fileName = currentRow?.label ? `${this._appStateService.formMetadata.formName}-${currentRow.label}.pdf` : `${this._appStateService.formMetadata.formName}.pdf`;
+    const documentDefinition = await this._getDocDefFromForm(form);
 
-    setTimeout(() => {
+    if (documentDefinition) {
+      const fileName = currentRow?.label ? `${this._appStateService.formMetadata.formName}-${currentRow.label}.pdf` : `${this._appStateService.formMetadata.formName}.pdf`;
 
-      pdfMake.createPdf(documentDefinition).download(fileName);
+      setTimeout(() => {
 
-      this._spinner.hide();
-    }, 300);
-  }
+        pdfMake.createPdf(documentDefinition).download(fileName);
 
-
-  async getDocDefFromForm(form: Form): Promise<any> {
-
-    if (form === null) {
-      return;
+        this._spinner.hide();
+      }, 300);
     }
-
-    if (form.sections?.length) {
-      form.sections.forEach((section: FormSection) => {
-
-        this.content.push({ ...this.sectionHeaderDefault, text: section.label });
-        this.setFieldsForSection(section.fields);
-      })
-    }
-
-    const resolvedContent = await this._resolveImagePromises(this.content);
-
-    return new Promise((resolve, reject) => {
-
-      resolve({
-        header: this.header,
-        content: resolvedContent,
-        styles: this.styles,
-        pageSize: "LETTER",
-        pageMargins: [30, 62, 62, 30],
-        footer: function (currentPage, pageCount) {
-          return { text: currentPage.toString() + " of " + pageCount, style: "footer" }
-        }
-      });
-    });
-  }
-
-
-  setFieldsForSection(fields: Array<FormField>): void {
-
-    if (fields?.length) {
-      fields.forEach((field: FormField) => {
-
-        if (field.childForm) {
-          const result = this.getChildFormTable(field.childForm);
-
-          if (result.table) {
-            this.content.push(result);
-          }
-        } else {
-          switch (field.cinchyColumn.dataType) {
-            case "Link":
-              const selectedOptionField = this.getLinkFieldLabelAndValue(field);
-
-              this.pushFields(field, selectedOptionField);
-
-              break;
-            default:
-              if (field.label !== "Actions") {
-                this.pushFields(field);
-              }
-          }
-        }
-      });
-    }
-  }
-
-
-  async pushFields(
-      field: FormField,
-      selectedOptionField?: {
-        label: string,
-        value: string
-      }
-  ): Promise<void> {
-
-    const fieldCopy = field.clone();
-
-    if (selectedOptionField) {
-      fieldCopy.value = selectedOptionField.value;
-      fieldCopy.label = selectedOptionField.label;
-    }
-
-    if (fieldCopy.value && fieldCopy.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
-      let imageUrl: string;
-
-      if (this._isHtmlImage(fieldCopy.value) || this._isUrl(fieldCopy.value)) {
-        imageUrl = fieldCopy.value;
-      }
-      else {
-        // Only use the dropdownDataset if it was an option explicitly generated to be a placeholder in a prepopulated set. Otherwise,
-        // we could just be puling in a value for an arbitrary file in the set of those associated with this form
-        imageUrl = (fieldCopy.dropdownDataset?.isDummy ? fieldCopy.dropdownDataset.options[0]?.label : fieldCopy.value) || fieldCopy.value;
-      }
-
-      if (this._isUrl(imageUrl)) {
-        const base64Img = this.getBase64ImageFromUrl(imageUrl);
-
-        this.content.push({ columns: this.getImageColumns(fieldCopy, base64Img) });
-      }
-      else {
-        // We specifically want to use the preprocessed imageUrl field in case it was populated using the dropdownDataset but still isn't a valid URL
-        this.content.push({ columns: this.getFieldColumns(fieldCopy, imageUrl) });
-      }
-    }
-    // If the field was designated as a link, then we want to override the label to keep the behaviour consistent with earlier versions
-    else if (field.cinchyColumn.dataFormatType === "LinkUrl") {
-      this.content.push({ columns: this.getLinkColumns(fieldCopy, "Open") });
-    }
-    // If the field is plaintext but contains a URL, most PDF readers will make the text into a link anyway, so we're manually enforcing that
-    // behaviour and adding proper styling
-    else if (this._isUrl(fieldCopy.value)) {
-      this.content.push({ columns: this.getLinkColumns(fieldCopy) });
-    }
-    else if (fieldCopy.cinchyColumn.dataType === "Date and Time") {
-      let stringDate = fieldCopy.value;
-
-      try {
-        if (fieldCopy.value) {
-          stringDate = this._datePipe.transform(fieldCopy.value, "MMM/dd/yyyy")
-        }
-      } catch (e) {
-        console.error("Error converting date:", fieldCopy.value)
-      }
-
-      this.content.push({ columns: this.getFieldColumns(fieldCopy, stringDate) });
-    } else {
-      this.content.push({ columns: this.getFieldColumns(fieldCopy) });
+    else {
+      this._toastr.warning("Nothing to print");
     }
   }
 
 
   /**
    * Fetches the given imageUrl in order to render the image, then take that result and encodes it into a base64 string that can
-   * be injected directly into the PDF. We're explicitly using a configuration of request parameters and headers that will
-   * hopefully reduce the number of requests that get blocked by the browser or by the host's security policies
+   * be injected directly into a PDF.
    */
   async getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 
@@ -335,269 +216,6 @@ export class PrintService {
     }
     else {
       return Promise.reject(`Failed to fetch image from URL: ${imageUrl} (${response.status}: ${response.statusText})`);
-    }
-  }
-
-
-  /**
-   * Generates a structure that represents the label and value for the given field. Will render HTML anchors as clickable links
-   * and include a placeholder value for fields which are not populated.
-   */
-  getFieldColumns(field: FormField, overrideValue?: any): Array<any> {
-
-    const result: Array<{
-        marginRight?: number | string,
-        style: string,
-        text?: string | Array<any>,
-        width: number | string
-    }> = [
-      {
-        style: "fieldLabel",
-        text: `${field.label}: `,
-        width: this._labelColumnWidth
-      }
-    ];
-
-    const valueColumn: {
-      marginRight?: number | string,
-      style: string,
-      text?: string | Array<any>,
-      width: number | string
-    } = {
-      marginRight: 15,
-      style: "fieldValue",
-      width: this._valueColumnWidth
-    };
-
-    if (overrideValue) {
-      valueColumn.text = overrideValue
-    }
-    else if (this._isHtmlAnchor(field.value)) {
-      valueColumn.text = this._generateArrayFromHtml(field.value, this._anchorRegex);
-    }
-    else {
-      valueColumn.text = field.value || "-";
-    }
-
-    result.push(valueColumn);
-
-    return result;
-  }
-
-
-  /**
-   * Generates a structure that represents the label and value for a link column, specifically.
-   */
-  getLinkColumns(field: FormField, anchorTextOverride?: string): Array<any> {
-
-    const returnValues: Array<any> = [
-      {
-        width: this._labelColumnWidth,
-        text: `${field.label}: `,
-        style: "fieldLabel"
-      }
-    ];
-
-    if (this._isHtmlAnchor(field.value)) {
-      returnValues.push(this._generateAnchorArrayItemFromHtml(field.value, null, "Open"));
-    }
-    else if (!field.value) {
-      returnValues.push(
-        {
-          text: "-",
-          style: "fieldValue"
-        }
-      );
-    }
-    else {
-      returnValues.push(
-        {
-          text: anchorTextOverride || field.value,
-          link: field.value,
-          style: "anchor"
-        }
-      );
-    }
-
-    return returnValues;
-  }
-
-
-  /**
-   * Generates a structure that represents a the label and value for a field that contains an image. At
-   * this stage, the value is a promise that will be resolved at a later step.
-   */
-  getImageColumns(field: FormField, value: any): Array<any> {
-
-    const returnValues: Array<any> = [
-      {
-        width: this._labelColumnWidth,
-        text: `${field.label}: `,
-        style: "fieldLabel"
-      }
-    ];
-
-    if (this._isHtmlImage(field.value)) {
-      returnValues.push(
-        {
-          columns: this._generateImageArrayItemFromHtml(field.value, null, 80),
-          width: this._valueColumnWidth
-        }
-      );
-    }
-    else if (!field.value) {
-      returnValues.push({
-        text: "-",
-        style: "fieldValue"
-      });
-    }
-    else {
-      returnValues.push(
-        {
-          columns: [
-            {
-              image: value,
-              width: 80
-            }
-          ],
-          width: this._valueColumnWidth
-        }
-      );
-    }
-
-    return returnValues;
-  }
-
-
-  getLinkFieldLabelAndValue(field: FormField): {
-      label: string,
-      value: string
-  } {
-
-    const dropdownSet: Array<DropdownOption> = field.dropdownDataset?.options;
-
-    if (dropdownSet && field.cinchyColumn.isMultiple) {
-      let selectedOptions;
-
-      const fieldValues = (field.value instanceof Array ? field.value : field.value?.split(",")) || [];
-
-      if (fieldValues?.length) {
-        selectedOptions = dropdownSet.filter((option: DropdownOption) => {
-
-          return fieldValues.find((id: string) => {
-
-            return (option.id === id?.trim());
-          });
-        });
-      }
-
-      return {
-        label: field.label,
-        value: selectedOptions?.map(option => option.label).join(", ") || ""
-      }
-    } else if (dropdownSet) {
-      const selectedOption = dropdownSet.find(option => option.id === field.value);
-
-      return {
-        label: field.label,
-        value: selectedOption?.label
-      };
-    }
-    return {
-      label: field.label,
-      value: "-"
-    };
-  }
-
-
-  getChildFormTable(childForm: Form): {
-      table?: {
-        headerRows: number,
-        body: Array<any>,
-        widths: Array<any>
-      },
-      sectionHeader?: {
-        text: any,
-        bold: boolean,
-        style?: string
-      },
-      layout?: any
-  } {
-
-    const table = this.getDefaultTable();
-    const tbody = new Array<Array<any>>();
-
-    const fieldKeys = this._childFormService.getFieldKeys(childForm)?.filter((field: string) => {
-
-      return (field !== "Cinchy ID" && field !== "Actions");
-    });
-
-    const displayValueMap = this._childFormService.getDisplayValueMap(childForm);
-
-    if (fieldKeys?.length && displayValueMap?.length) {
-      const fields = this._childFormService.getAllFields(childForm);
-
-      tbody.push(fieldKeys.map((key: string) => {
-
-        return {
-          text: this._childFormService.getFieldByKey(fields, key)?.label ?? key,
-          style: "tableHeader"
-        };
-      }));
-
-      displayValueMap.forEach((rowValues: { [key: string]: string }) => {
-
-        tbody.push(fieldKeys.map((field: string) => {
-
-          if (this._isHtmlImage(rowValues[field])) {
-            return {
-              columns: this._generateArrayFromHtml(rowValues[field], this._imgRegex),
-              style: "tableRow"
-            };
-          }
-          else {
-            return {
-              text: this._processChildFormTableValue(rowValues, field),
-              style: "tableRow"
-            };
-          }
-        }));
-      });
-
-      table.body = tbody.slice();
-
-      table.widths = fieldKeys.map((key: string) => {
-
-        return "auto";
-      });
-
-      return {
-        table: table,
-        sectionHeader: { ...this.sectionHeaderDefault, text: childForm.sections[0].label },
-        layout: this.layout
-      }
-    }
-    else {
-      table.body = table.widths = [];
-
-      return {};
-    }
-  }
-
-
-  /**
-   * @returns the default structure for a table. Headers are automatically repeated if the table spans over multiple pages.
-   */
-  getDefaultTable(headerRows = 1): {
-      headerRows: number,
-      body: Array<any>,
-      widths: Array<any>
-  } {
-
-    return {
-      headerRows: headerRows,
-      body: [],
-      widths: []
     }
   }
 
@@ -691,6 +309,307 @@ export class PrintService {
 
 
   /**
+   * Generates a structure representing the given child form table
+   */
+  private _getChildFormTable(childForm: Form): {
+      table?: {
+        headerRows: number,
+        body: Array<any>,
+        widths: Array<any>
+      },
+      sectionHeader?: {
+        text: any,
+        bold: boolean,
+        style?: string
+      },
+      layout?: any
+  } {
+
+    const table = this._getDefaultTable();
+    const tbody = new Array<Array<any>>();
+
+    const fieldKeys = this._childFormService.getFieldKeys(childForm)?.filter((field: string) => {
+
+      return (field !== "Cinchy ID" && field !== "Actions");
+    });
+
+    const displayValueMap = this._childFormService.getDisplayValueMap(childForm);
+
+    if (fieldKeys?.length && displayValueMap?.length) {
+      const fields = this._childFormService.getAllFields(childForm);
+
+      tbody.push(fieldKeys.map((key: string) => {
+
+        return {
+          text: this._childFormService.getFieldByKey(fields, key)?.label ?? key,
+          style: "tableHeader"
+        };
+      }));
+
+      displayValueMap.forEach((rowValues: { [key: string]: string }) => {
+
+        tbody.push(fieldKeys.map((field: string) => {
+
+          if (this._isHtmlImage(rowValues[field])) {
+            return {
+              columns: this._generateArrayFromHtml(rowValues[field], this._imgRegex),
+              style: "tableRow"
+            };
+          }
+          else {
+            return {
+              text: this._processChildFormTableValue(rowValues, field),
+              style: "tableRow"
+            };
+          }
+        }));
+      });
+
+      table.body = tbody.slice();
+
+      table.widths = fieldKeys.map((key: string) => {
+
+        return "auto";
+      });
+
+      return {
+        table: table,
+        sectionHeader: { ...this.sectionHeaderDefault, text: childForm.sections[0].label },
+        layout: this.layout
+      }
+    }
+    else {
+      table.body = table.widths = [];
+
+      return {};
+    }
+  }
+
+
+  /**
+   * @returns the default structure for a table. Headers are automatically repeated if the table spans over multiple pages.
+   */
+  private _getDefaultTable(headerRows = 1): {
+      headerRows: number,
+      body: Array<any>,
+      widths: Array<any>
+  } {
+
+    return {
+      headerRows: headerRows,
+      body: [],
+      widths: []
+    }
+  }
+
+
+  /**
+   * Builds the PDF structure for PDFMake
+   */
+  private async _getDocDefFromForm(form: Form): Promise<any> {
+
+    if (form?.sections?.length) {
+      form.sections.forEach((section: FormSection) => {
+
+        this.content.push({ ...this.sectionHeaderDefault, text: section.label });
+
+        this._setFieldsForSection(section);
+      });
+
+      const resolvedContent = await this._resolveImagePromises(this.content);
+
+      return {
+        header: this.header,
+        content: resolvedContent,
+        styles: this.styles,
+        pageSize: "LETTER",
+        pageMargins: [30, 62, 62, 30],
+        footer: function (currentPage, pageCount) {
+          return { text: currentPage.toString() + " of " + pageCount, style: "footer" }
+        }
+      };
+    }
+    else {
+      return null;
+    }
+  }
+
+
+  /**
+   * Generates a structure that represents the label and value for the given field. Will render HTML anchors as clickable links
+   * and include a placeholder value for fields which are not populated.
+   */
+  private _getFieldColumns(field: FormField, overrideValue?: any): Array<any> {
+
+    const result: Array<{
+        marginRight?: number | string,
+        style: string,
+        text?: string | Array<any>,
+        width: number | string
+    }> = [
+      {
+        style: "fieldLabel",
+        text: `${field.label}: `,
+        width: this._labelColumnWidth
+      }
+    ];
+
+    const valueColumn: {
+      marginRight?: number | string,
+      style: string,
+      text?: string | Array<any>,
+      width: number | string
+    } = {
+      marginRight: 15,
+      style: "fieldValue",
+      width: this._valueColumnWidth
+    };
+
+    if (overrideValue) {
+      valueColumn.text = overrideValue
+    }
+    else if (this._isHtmlAnchor(field.value)) {
+      valueColumn.text = this._generateArrayFromHtml(field.value, this._anchorRegex);
+    }
+    else {
+      valueColumn.text = field.value || "-";
+    }
+
+    result.push(valueColumn);
+
+    return result;
+  }
+
+
+  /**
+   * Generates a structure that represents a the label and value for a field that contains an image. At
+   * this stage, the value is a promise that will be resolved at a later step.
+   */
+  private _getImageColumns(field: FormField, value: any): Array<any> {
+
+    const returnValues: Array<any> = [
+      {
+        width: this._labelColumnWidth,
+        text: `${field.label}: `,
+        style: "fieldLabel"
+      }
+    ];
+
+    if (this._isHtmlImage(field.value)) {
+      returnValues.push(
+        {
+          columns: this._generateImageArrayItemFromHtml(field.value, null, 80),
+          width: this._valueColumnWidth
+        }
+      );
+    }
+    else if (!field.value) {
+      returnValues.push({
+        text: "-",
+        style: "fieldValue"
+      });
+    }
+    else {
+      returnValues.push(
+        {
+          columns: [
+            {
+              image: value,
+              width: 80
+            }
+          ],
+          width: this._valueColumnWidth
+        }
+      );
+    }
+
+    return returnValues;
+  }
+
+
+  /**
+   * Generates a structure that represents the label and value for a field which contains a URL
+   */
+  private _getLinkColumns(field: FormField, anchorTextOverride?: string): Array<any> {
+
+    const returnValues: Array<any> = [
+      {
+        width: this._labelColumnWidth,
+        text: `${field.label}: `,
+        style: "fieldLabel"
+      }
+    ];
+
+    if (this._isHtmlAnchor(field.value)) {
+      returnValues.push(this._generateAnchorArrayItemFromHtml(field.value, null, "Open"));
+    }
+    else if (!field.value) {
+      returnValues.push(
+        {
+          text: "-",
+          style: "fieldValue"
+        }
+      );
+    }
+    else {
+      returnValues.push(
+        {
+          text: anchorTextOverride || field.value,
+          link: field.value,
+          style: "anchor"
+        }
+      );
+    }
+
+    return returnValues;
+  }
+
+
+  /**
+   * Gets the display values associated with the given link fink
+   */
+  private _getLinkFieldLabelAndValue(field: FormField): {
+      label: string,
+      value: string
+  } {
+
+    const dropdownSet: Array<DropdownOption> = field.dropdownDataset?.options;
+
+    if (dropdownSet && field.cinchyColumn.isMultiple) {
+      let selectedOptions;
+
+      const fieldValues = (field.value instanceof Array ? field.value : field.value?.split(",")) || [];
+
+      if (fieldValues?.length) {
+        selectedOptions = dropdownSet.filter((option: DropdownOption) => {
+
+          return fieldValues.find((id: string) => {
+
+            return (option.id === id?.trim());
+          });
+        });
+      }
+
+      return {
+        label: field.label,
+        value: selectedOptions?.map(option => option.label).join(", ") || ""
+      }
+    } else if (dropdownSet) {
+      const selectedOption = dropdownSet.find(option => option.id === field.value);
+
+      return {
+        label: field.label,
+        value: selectedOption?.label
+      };
+    }
+    return {
+      label: field.label,
+      value: "-"
+    };
+  }
+
+
+  /**
    * Determines whether or not the given text contains an HTML anchor
    */
   private _isHtmlAnchor(textValue: string): boolean {
@@ -743,6 +662,73 @@ export class PrintService {
     }
     else {
       return textValue || "-";
+    }
+  }
+
+
+  /**
+   * Adds content to the document representing the given field
+   */
+  private async _pushFields(
+      field: FormField,
+      selectedOptionField?: {
+        label: string,
+        value: string
+      }
+  ): Promise<void> {
+
+    const fieldCopy = field.clone();
+
+    if (selectedOptionField) {
+      fieldCopy.value = selectedOptionField.value;
+      fieldCopy.label = selectedOptionField.label;
+    }
+
+    if (fieldCopy.value && fieldCopy.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
+      let imageUrl: string;
+
+      if (this._isHtmlImage(fieldCopy.value) || this._isUrl(fieldCopy.value)) {
+        imageUrl = fieldCopy.value;
+      }
+      else {
+        // Only use the dropdownDataset if it was an option explicitly generated to be a placeholder in a prepopulated set. Otherwise,
+        // we could just be puling in a value for an arbitrary file in the set of those associated with this form
+        imageUrl = (fieldCopy.dropdownDataset?.isDummy ? fieldCopy.dropdownDataset.options[0]?.label : fieldCopy.value) || fieldCopy.value;
+      }
+
+      if (this._isUrl(imageUrl)) {
+        const base64Img = this.getBase64ImageFromUrl(imageUrl);
+
+        this.content.push({ columns: this._getImageColumns(fieldCopy, base64Img) });
+      }
+      else {
+        // We specifically want to use the preprocessed imageUrl field in case it was populated using the dropdownDataset but still isn't a valid URL
+        this.content.push({ columns: this._getFieldColumns(fieldCopy, imageUrl) });
+      }
+    }
+    // If the field was designated as a link, then we want to override the label to keep the behaviour consistent with earlier versions
+    else if (field.cinchyColumn.dataFormatType === "LinkUrl") {
+      this.content.push({ columns: this._getLinkColumns(fieldCopy, "Open") });
+    }
+    // If the field is plaintext but contains a URL, most PDF readers will make the text into a link anyway, so we're manually enforcing that
+    // behaviour and adding proper styling
+    else if (this._isUrl(fieldCopy.value)) {
+      this.content.push({ columns: this._getLinkColumns(fieldCopy) });
+    }
+    else if (fieldCopy.cinchyColumn.dataType === "Date and Time") {
+      let stringDate = fieldCopy.value;
+
+      try {
+        if (fieldCopy.value) {
+          stringDate = this._datePipe.transform(fieldCopy.value, "MMM/dd/yyyy")
+        }
+      } catch (e) {
+        console.error("Error converting date:", fieldCopy.value)
+      }
+
+      this.content.push({ columns: this._getFieldColumns(fieldCopy, stringDate) });
+    } else {
+      this.content.push({ columns: this._getFieldColumns(fieldCopy) });
     }
   }
 
@@ -822,5 +808,36 @@ export class PrintService {
     );
 
     return output;
+  }
+
+
+  /**
+   * Iterates through the fields in the given section and adds each to the document
+   */
+  private _setFieldsForSection(section: FormSection): void {
+
+    section.fields?.forEach((field: FormField) => {
+
+      if (field.childForm) {
+        const result = this._getChildFormTable(field.childForm);
+
+        if (result.table) {
+          this.content.push(result);
+        }
+      } else {
+        switch (field.cinchyColumn.dataType) {
+          case "Link":
+            const selectedOptionField = this._getLinkFieldLabelAndValue(field);
+
+            this._pushFields(field, selectedOptionField);
+
+            break;
+          default:
+            if (field.label !== "Actions") {
+              this._pushFields(field);
+            }
+        }
+      }
+    });
   }
 }
