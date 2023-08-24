@@ -85,26 +85,6 @@ export class AppStateService {
     else {
       this.updateRowIdInQueryParams(rowId);
     }
-
-    // Update URL with the new ID, if present
-    if (window.location.search?.includes("rowId")) {
-      const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
-
-        const [key, value] = paramString.split("=");
-
-        if (key === "rowId") {
-          return `${key}=${rowId ? rowId.toString() : "null"}`;
-        }
-        else {
-          return paramString;
-        }
-      });
-
-      if (queryParams?.length) {
-        const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
-        window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams.join("&")}`);
-      }
-    }
   }
 
   updateRowIdInQueryParams(rowId: number) {
@@ -116,8 +96,24 @@ export class AppStateService {
     };
 
     const message = JSON.stringify(messageJSON);
-
     window.parent.postMessage(message, '*');
+
+    const rowIdQueryParams = messageJSON['updateCinchyURLParams'];
+    const rowIdQueryString = Object.keys(rowIdQueryParams)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(rowIdQueryParams[key])}`)
+      .join('&');
+
+    const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+      const [key, value] = paramString.split("=");
+      if (key != "rowId") {
+        return `${key}=${value}`;
+      }
+    }).join('');
+
+    if (queryParams?.length) {
+      const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
+      window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}&${rowIdQueryString}`);
+    }
   }
 
   deleteRowIdInQueryParams() {
@@ -129,5 +125,14 @@ export class AppStateService {
     };
     const message = JSON.stringify(messageJSON);
     window.parent.postMessage(message, '*');
+
+    const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+      const [key, value] = paramString.split("=");
+      if (key != "rowId") {
+        return `${key}=${value}`;
+      }
+    }).join('');
+    const baseUrl = window.location.href.substr(0, window.location.href.indexOf("&"));
+    window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}`);
   }
 }

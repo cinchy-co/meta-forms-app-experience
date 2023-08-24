@@ -872,7 +872,6 @@ export class Form {
         if (field.cinchyColumn.name) {
           allRowData.forEach((rowData: { [key: string]: any }) => {
 
-            //TODO: Passing array value in case of multiselect
             if (field.cinchyColumn.dataType === "Choice" && field.cinchyColumn.isMultiple === true) {
               const valueArray = rowData[field.cinchyColumn.name]?.split(",") ?? [];
 
