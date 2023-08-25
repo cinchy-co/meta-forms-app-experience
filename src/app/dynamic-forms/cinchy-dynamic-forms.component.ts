@@ -57,6 +57,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   @HostListener("window:beforeunload", ["$event"])
   beforeUnloadHandler($event) {
+
     if (this.form.hasChanged) {
       $event.returnValue = "Are you sure you want to exit? You may have some unsaved changes";
     }
