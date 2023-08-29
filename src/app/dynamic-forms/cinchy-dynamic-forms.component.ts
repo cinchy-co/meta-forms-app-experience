@@ -415,7 +415,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  async printCurrentForm(): void {
+  async printCurrentForm(): Promise<void> {
 
     await this._printService.generatePdf(this.form, this.currentRow);
   }
@@ -460,7 +460,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               this._toastr.success("Child form saved successfully", "Success");
             }
           },
-          error => {
+          () => {
             this._spinner.hide();
             this._toastr.error("Error while saving child form", "Error");
           });
