@@ -197,11 +197,14 @@ export class LinkComponent implements OnChanges, OnInit {
       this.setWhenNewRowAddedForParent();
     }
 
-    this._appStateService.addNewEntityDialogClosed$.subscribe((value: INewEntityDialogResponse) => {
+    this._appStateService.addNewEntityDialogClosed$.subscribe({
+      next: async (value: INewEntityDialogResponse) => {
 
-      if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]["Table"] === value.tableName) {
-        this.filteredOptions = null;
-        this.getListItems(true);
+        if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]["Table"] === value.tableName) {
+          this.filteredOptions = null;
+
+          await this.getListItems(true);
+        }
       }
     });
 
@@ -309,10 +312,6 @@ export class LinkComponent implements OnChanges, OnInit {
           if (results?.length) {
             this.selectedValue = new DropdownOption(results[0].fileId?.toString(), results[0].fileName);
 
-            // DEBUG
-            console.log(this.form.rowId);
-            console.log(this.form.childFormRowValues);
-
             const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form.rowId?.toString());
             const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", results[0].fileId?.toString());
 
@@ -342,7 +341,7 @@ export class LinkComponent implements OnChanges, OnInit {
       this.isLoading = true;
 
       let dropdownDataset: DropdownDataset = null;
-      let currentFieldJson;
+      let currentFieldJson: any;
 
       let tableColumnQuery: string = `
         SELECT
@@ -356,7 +355,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
-      const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
+      const formFieldsJsonData: any = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
 
       if (formFieldsJsonData?.Columns) {
         currentFieldJson = formFieldsJsonData.Columns.find(field => field.name === this.field.cinchyColumn.name);
@@ -406,9 +405,10 @@ export class LinkComponent implements OnChanges, OnInit {
           return coerceBooleanProperty(option.label);
         }).sort((a: DropdownOption, b: DropdownOption) => {
 
-          var lblA = a.label?.toString()?.toLocaleLowerCase() ?? '';
-          var lblB = b.label?.toString()?.toLocaleLowerCase() ?? '';
-          return (lblA.localeCompare(lblB));
+          const labelA = a.label?.toString()?.toLocaleLowerCase() ?? '';
+          const labelB = b.label?.toString()?.toLocaleLowerCase() ?? '';
+
+          return (labelA.localeCompare(labelB));
         }),
         dropdownDataset.isDummy
       );
@@ -473,14 +473,14 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  openNewOptionDialog(): void {
+  async openNewOptionDialog(): Promise<void> {
 
     const newOptionDialogRef = this._dialogService.openDialog(AddNewEntityDialogComponent, {
       createLinkOptionFormId: this.field.cinchyColumn.createlinkOptionFormId,
       createLinkOptionName: this.field.cinchyColumn.createlinkOptionName
     });
 
-    this._spinner.hide();
+    await this._spinner.hide();
 
     newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
 

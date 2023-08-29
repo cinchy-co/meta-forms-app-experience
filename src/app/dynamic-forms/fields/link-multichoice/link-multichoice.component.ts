@@ -332,10 +332,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         this.selectedValues = this.selectedValues ?? [];
         this.downloadableLinks = this.downloadableLinks ?? [];
 
-        // DEBUG
-        console.log(this.form.rowId);
-        console.log(this.form.childFormRowValues);
-
         resp.forEach((newFile: { fileId: any, fileName: string }) => {
 
           const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", newFile.fileId?.toString());
