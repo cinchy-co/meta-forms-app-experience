@@ -64,7 +64,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
   @ViewChild("recordDropdown") dropdownComponent: SearchDropdownComponent;
-  
+
   @Input() formId: string;
   @Input() formMetadata: IFormMetadata;
   @Input() formSectionsMetadata: Array<IFormSectionMetadata>;
@@ -611,8 +611,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       title: string
     }
   ): void {
-
-    data.childForm.rowId = this.rowId;
 
     const dialogRef = this._dialog.open(
       ChildFormComponent,
