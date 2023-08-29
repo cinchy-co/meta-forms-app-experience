@@ -612,6 +612,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     }
   ): void {
 
+    if (data.presetValues["Cinchy ID"]) {
+      data.childForm.rowId = data.presetValues["Cinchy ID"];
+    }
+
     const dialogRef = this._dialog.open(
       ChildFormComponent,
       {

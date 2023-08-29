@@ -117,7 +117,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
 
     this._appStateService.parentFormSavedFromChild$
       .pipe(
@@ -137,7 +137,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
         }
       );
 
-    this.getFileNames();
+    await this.getFileNames();
 
     this.fieldSet = this._childFormService.getAllFields(this.childForm);
 
@@ -157,10 +157,10 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   /**
    * Notifies the parent to initiate adding a new record to the child form represented by this table
    */
-  addChildRecord(dialogTitle: string): void {
+  async addChildRecord(dialogTitle: string): Promise<void> {
 
-    this._updateEntitlements();
-  
+    await this._updateEntitlements();
+
     // Find lowest negative Cinchy ID (these are all new records) so that we can generate a new one
     let lowestCinchyId = 0;
     this.childForm.childFormRowValues?.forEach(rowVal => {
@@ -255,14 +255,15 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   /**
    * Notifies the parent to initiate editing a record from the child form represented by this table
    *
+   * @param dialogTitle Indicates the text to be displayed at the top of the dialog
    * @param rowData Contains all of the current values of the record
    */
-  editChildRecord(dialogTitle: string, rowData: { [key: string]: any }): void {
+  async editChildRecord(dialogTitle: string, rowData: { [key: string]: any }): Promise<void> {
 
-    this._updateEntitlements(rowData);
+    await this._updateEntitlements(rowData);
 
     this.childForm.rowId = rowData["Cinchy ID"];
-    
+
     this.childFormOpened.emit(
       {
         childForm: this.childForm,

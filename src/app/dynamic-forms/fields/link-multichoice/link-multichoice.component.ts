@@ -15,7 +15,6 @@ import {
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { FormControl } from "@angular/forms";
-import { MatOption } from "@angular/material/core";
 import { MatSelect } from "@angular/material/select";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
@@ -78,17 +77,15 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   selectedValues = [];
 
-  allSelected = false;
   charactersAfterWhichToShowList = 0;
   downloadLink: boolean;
   downloadableLinks: Array<any>;
-  dropdownListFromLinkedTable;
-  dropdownSettings;
+  dropdownListFromLinkedTable: boolean;
   dropdownSetOptions: Array<DropdownOption>;
   isCursorIn: boolean = false;
   isLoading: boolean;
   maxLimitForMaterialSelect = 4000;
-  metadataQueryResult;
+  metadataQueryResult: Array<{ [key: string]: any }>;
   renderImageFiles = true;
   showError: boolean;
   tableSourceURL: any;
@@ -107,13 +104,19 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   }
 
 
+  get rowIdIsValid(): boolean {
+
+    return (this.form.rowId && this.form.rowId > -1);
+  }
+
+
   constructor(
     private _dropdownDatasetService: DropdownDatasetService,
     private _cinchyService: CinchyService,
     private _configService: ConfigService,
     private _cinchyQueryService: CinchyQueryService,
     private _toastr: ToastrService
-  ) { }
+  ) {}
 
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -162,14 +165,20 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
-      const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
+      const formFieldsJsonData: any = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
 
       if (formFieldsJsonData?.Columns) {
         currentFieldJson = formFieldsJsonData.Columns.find(field => field.name === this.field.cinchyColumn.name);
       }
 
       if (this.field.cinchyColumn.linkTargetColumnId) {
-        dropdownDataset = await this._dropdownDatasetService.getDropdownDataset(this.field.cinchyColumn.linkTargetColumnId, this.field.label, currentFieldJson, this.field.cinchyColumn.dropdownFilter, this.form.rowId);
+        dropdownDataset = await this._dropdownDatasetService.getDropdownDataset(
+          this.field.cinchyColumn.linkTargetColumnId,
+          this.field.label,
+          currentFieldJson,
+          this.field.cinchyColumn.dropdownFilter,
+          this.form.rowId
+        );
 
         this.dropdownListFromLinkedTable = true;
 
@@ -232,12 +241,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   }
 
 
-  compareWith(a: MatOption, b: MatOption): boolean {
-
-    return (a?.id && b?.id && a.id === b.id);
-  };
-
-
   /**
    * Generates a tooltip for the given link
    */
@@ -285,9 +288,9 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       let selectedIds: Array<string>;
 
       // Fallback for legacy logic
-      if (this.field.dropdownDataset.options.length === 1 && 
+      if (this.field.dropdownDataset.options.length === 1 &&
           this.field.dropdownDataset.options[0].id.includes(",")) {
-            
+
         selectedIds = this.field.dropdownDataset.options[0].id?.split(",").map((id: string) => id.trim());
 
         this.field.dropdownDataset.options = this.field.dropdownDataset.options[0].label.split(",").map((label: string, index: number) => {
@@ -329,6 +332,10 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         this.selectedValues = this.selectedValues ?? [];
         this.downloadableLinks = this.downloadableLinks ?? [];
 
+        // DEBUG
+        console.log(this.form.rowId);
+        console.log(this.form.childFormRowValues);
+
         resp.forEach((newFile: { fileId: any, fileName: string }) => {
 
           const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", newFile.fileId?.toString());
@@ -338,10 +345,21 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
           this.downloadableLinks.push(newSelectedValue);
         });
 
-        this._cinchyQueryService.updateFilesInCell(this.downloadableLinks.map(x => x.fileId), this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.form.rowId).subscribe(resp => {
-          this.fileInput.nativeElement.value = null;
-          this._toastr.success("File(s) uploaded", "Success");
-        });
+        this._cinchyQueryService.updateFilesInCell(
+            this.downloadableLinks.map(x => x.fileId),
+            this.field.cinchyColumn.name,
+            this.field.cinchyColumn.domainName,
+            this.field.cinchyColumn.tableName,
+            this.form.rowId
+        ).subscribe(
+          {
+            next: (): void => {
+
+              this.fileInput.nativeElement.value = null;
+              this._toastr.success("File(s) uploaded", "Success");
+            }
+          }
+        );
       }
     });
   }
@@ -356,20 +374,16 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
       return new DropdownDataset(
         filteredOutNullSets.sort((a: DropdownOption, b: DropdownOption) => {
-          var lblA = a.label?.toString()?.toLocaleLowerCase() ?? "";
-          var lblB = b.label?.toString()?.toLocaleLowerCase() ?? "";
-          return lblA.localeCompare(lblB);
+
+          const labelA = a.label?.toString()?.toLocaleLowerCase() ?? "";
+          const labelB = b.label?.toString()?.toLocaleLowerCase() ?? "";
+
+          return labelA.localeCompare(labelB);
         })
       );
     }
 
     return null;
-  }
-
-
-  isSelected(dropdownOption: DropdownOption): boolean {
-
-    return this.selectedValues.find(item => item.id === dropdownOption.id);
   }
 
 
@@ -459,7 +473,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   toggleSelectAll(selectAll: boolean): void {
-    
+
     this.selectedValues = selectAll ?
       this.filteredListMulti.value:
       [];

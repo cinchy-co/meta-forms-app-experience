@@ -61,7 +61,6 @@ import { ToastrService } from "ngx-toastr";
 })
 export class LinkComponent implements OnChanges, OnInit {
 
-  @ViewChild("searchInput") searchInput;
   @ViewChild("fileInput") fileInput: ElementRef;
   @ViewChild("t") public tooltip: NgbTooltip;
 
@@ -85,7 +84,7 @@ export class LinkComponent implements OnChanges, OnInit {
   };
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
-  @Output() childform = new EventEmitter<any>();
+  @Output() childForm = new EventEmitter<any>();
 
 
   // TODO: Add proper type
@@ -100,7 +99,6 @@ export class LinkComponent implements OnChanges, OnInit {
   >;
 
   charactersAfterWhichToShowList: number = 0;
-  createlinkOptionName: boolean;
   filteredOptions: Array<DropdownOption>;
   imageIsDownloadable: boolean;
   isCursorIn: boolean = false;
@@ -136,6 +134,12 @@ export class LinkComponent implements OnChanges, OnInit {
   get canEdit(): boolean {
 
     return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+  }
+
+
+  get rowIdIsValid(): boolean {
+
+    return (this.form.rowId && this.form.rowId > -1);
   }
 
 
@@ -303,8 +307,11 @@ export class LinkComponent implements OnChanges, OnInit {
         next: (results: Array<{ fileId: number, fileName: string }>) => {
 
           if (results?.length) {
-
             this.selectedValue = new DropdownOption(results[0].fileId?.toString(), results[0].fileName);
+
+            // DEBUG
+            console.log(this.form.rowId);
+            console.log(this.form.childFormRowValues);
 
             const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form.rowId?.toString());
             const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", results[0].fileId?.toString());
@@ -563,7 +570,7 @@ export class LinkComponent implements OnChanges, OnInit {
         case DataFormatType.ImageUrlLarge:
 
           return "cinchy-images-large";
-        case DataFormatType.ImageUrlSmall:
+        case DataFormatType.ImageUrlMedium:
           // falls through
         case DataFormatType.ImageUrl:
 
@@ -576,7 +583,7 @@ export class LinkComponent implements OnChanges, OnInit {
     return "";
   }
 
-  
+
   private _filter(value: string): DropdownOption[] {
 
     if (this.field.dropdownDataset?.options?.length && this.searchCharacterLimitMet) {
