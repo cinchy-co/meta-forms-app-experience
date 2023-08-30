@@ -105,18 +105,11 @@ export class ChildFormService {
                 // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
                 //       populated. In the future we'll need to figure out which is correct and make sure we're using it consistently
                 if (option.id == id) {
-
                   if (isFile) {
                     let replacedCinchyIdUrl = currentField.cinchyColumn.attachmentUrl.replace("@cinchyid", rowData["Cinchy ID"]);
                     let fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", option.id);
-                    let lowercaseFileName = option.label.toLowerCase();
-                    let isImage = lowercaseFileName.endsWith(".png") ||
-                      lowercaseFileName.endsWith(".jpg") ||
-                      lowercaseFileName.endsWith(".jpeg") ||
-                      lowercaseFileName.endsWith(".gif") ||
-                      lowercaseFileName.endsWith(".svg");
-                    let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="${fileUrl}"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
-                    linkDisplayValues.push(displayValue);
+
+                    linkDisplayValues.push(`<a href="${fileUrl}" target="_blank">${option.label}</a>`);
                   } else {
                     linkDisplayValues.push(option.label);
                   }

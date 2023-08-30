@@ -15,13 +15,6 @@ import { AppStateService } from "./services/app-state.service";
 })
 export class AppComponent implements OnDestroy, OnInit {
 
-  @HostListener("window:beforeunload", ["$event"])
-  beforeUnloadHandler($event) {
-    if (this.appStateService.hasFormChanged) {
-      $event.returnValue = "Are you sure you want to exit? You may have some unsaved changes";
-    }
-  }
-
   loginDone: boolean;
 
 

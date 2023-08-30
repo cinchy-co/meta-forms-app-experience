@@ -215,6 +215,19 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
 
   private _setValue(): void {
 
-    this.value = ((this.field?.cinchyColumn?.dataFormatType === "JSON") ? JSON.stringify(JSON.parse(this.field.value ?? ""), null, 2) : this.field?.value) ?? null;
+    if (this.field?.cinchyColumn?.dataFormatType === DataFormatType.JSON) {
+      try {
+        const parsedValue = JSON.parse(this.field.value);
+
+        this.value = parsedValue ? JSON.stringify(parsedValue, null, 2) : null;
+      }
+      catch (error) {
+        // If the JSON is invalid, just pass it through as-is
+        this.value = this.field.value ?? null;
+      }
+    }
+    else {
+      this.value = this.field?.value ?? null;
+    }
   }
 }

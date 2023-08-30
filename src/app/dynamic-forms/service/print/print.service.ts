@@ -1,4 +1,5 @@
 import { Inject, Injectable, LOCALE_ID } from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { DatePipe } from "@angular/common";
 
 import { DataFormatType } from "../../enums/data-format-type";
@@ -16,6 +17,7 @@ import { ILookupRecord } from "../../../models/lookup-record.model";
 import { AppStateService } from "../../../services/app-state.service";
 
 import { NgxSpinnerService } from "ngx-spinner";
+import { ToastrService } from "ngx-toastr";
 
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
@@ -24,6 +26,9 @@ import pdfFonts from "pdfmake/build/vfs_fonts";
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 
+/**
+ * Used to generate a PDF "print" of a form
+ */
 @Injectable({
   providedIn: "root",
 })
@@ -37,6 +42,11 @@ export class PrintService {
 
 
   styles = {
+    anchor: {
+      color: "#007bff",
+      fontSize: 10,
+      italics: false
+    },
     formHeader: {
       bold: true,
       fontSize: 20,
@@ -51,7 +61,6 @@ export class PrintService {
     },
     section: {
       bold: true,
-      /*  decoration: "underline",*/
       fontSize: 14,
       color: "#E7015B",
       margin: [0, 15, 0, 5]
@@ -99,7 +108,7 @@ export class PrintService {
 
 
   layout = {
-    fillColor: function (rowIndex, node, columnIndex) {
+    fillColor: function (rowIndex) {
       return (rowIndex === 0) ? "#f1f1f1" : null;
     },
     hLineWidth: function (i, node) {
@@ -117,16 +126,37 @@ export class PrintService {
   };
 
 
+  /**
+   * Passes if the string contains an HTML anchor, e.g. `<a href="...">...</a>`
+   */
+  private readonly _anchorRegex = /<a.*?<\/a>/gi;
+
+  /**
+   * Passes if the string contains an HTML image, e.g. `<img src="..." />`
+   */
+  private readonly _imgRegex = /<img.*\/?>/gi
+
+  private readonly _labelColumnWidth = 130;
+
+  /**
+   * Passes if the whole string matches an http- or https-based URL, e.g. `https://www.cinchy.net`
+   */
+  private readonly _urlRegex = /^(?:http(?:s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:\/?#[\]@!\$&'\(\)\*\+,;=.%]+$/i
+
+  private readonly _valueColumnWidth = "80%";
+
+
   constructor(
     private _appStateService: AppStateService,
     private _childFormService: ChildFormService,
     private _datePipe: DatePipe,
     private _spinner: NgxSpinnerService,
+    private _toastr: ToastrService,
     @Inject(LOCALE_ID) public locale: string
   ) {}
 
 
-  async generatePdf(form: Form, currentRow: ILookupRecord) {
+  async generatePdf(form: Form, currentRow: ILookupRecord): Promise<void> {
 
     this._spinner.show();
     this.content = [
@@ -138,237 +168,409 @@ export class PrintService {
 
     currentRow?.label && this.content.push({ text: currentRow.label, style: "formSubHeader" });
 
-    const documentDefinition = await this.getDocDefFromForm(form);
-    const fileName = currentRow?.label ? `${this._appStateService.formMetadata.formName}-${currentRow.label}.pdf` : `${this._appStateService.formMetadata.formName}.pdf`;
+    const documentDefinition = await this._getDocDefFromForm(form);
 
-    setTimeout(() => {
+    if (documentDefinition) {
+      const fileName = currentRow?.label ? `${this._appStateService.formMetadata.formName}-${currentRow.label}.pdf` : `${this._appStateService.formMetadata.formName}.pdf`;
 
-      pdfMake.createPdf(documentDefinition).download(fileName);
+      setTimeout(() => {
 
-      this._spinner.hide();
-    }, 300);
+        pdfMake.createPdf(documentDefinition).download(fileName);
+
+        this._spinner.hide();
+      }, 300);
+    }
+    else {
+      this._toastr.warning("Nothing to print");
+    }
   }
 
 
-  async getDocDefFromForm(form: Form) {
+  /**
+   * Fetches the given imageUrl in order to render the image, then take that result and encodes it into a base64 string that can
+   * be injected directly into a PDF.
+   */
+  async getBase64ImageFromUrl(imageUrl: string): Promise<string> {
 
-    if (form === null) {
-      return;
+    const response = await fetch(imageUrl);
+
+    if (response.status < 400) {
+      const blob = await response.blob();
+
+      return new Promise((resolve, reject) => {
+
+        const reader = new FileReader();
+
+        reader.addEventListener("load", () => {
+
+          resolve(reader.result as string);
+        }, false);
+
+        reader.onerror = () => {
+
+          return reject(this);
+        };
+
+        reader.readAsDataURL(blob);
+      });
+    }
+    else {
+      return Promise.reject(`Failed to fetch image from URL: ${imageUrl} (${response.status}: ${response.statusText})`);
+    }
+  }
+
+
+  /**
+   * Constructs an array containing HTML elements which match the given regex. The input text will be split into sets of matching HTML elements and
+   * non-matching plaintext, and will alternate adding those in so that the ordering of the original value is maintained.
+   */
+  private _generateArrayFromHtml(
+    textValue: string,
+    htmlItemRegex: RegExp
+  ): Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }> {
+
+    const returnValues = new Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }>();
+
+    const allTargets = textValue.match(htmlItemRegex);
+    const allNonTargets = textValue.split(htmlItemRegex);
+
+    // If there is text before the first item, we want to preserve that
+    if (allNonTargets.length && textValue.indexOf(allNonTargets[0]) === 0) {
+      const firstNonTargetItem = allNonTargets.shift();
+
+      if (firstNonTargetItem?.length) {
+        returnValues.push(firstNonTargetItem);
+      }
     }
 
-    if (form.sections?.length) {
+    for (let index = 0; index < allTargets.length; index++) {
+      if (this._isHtmlAnchor(textValue)) {
+        returnValues.push(...this._generateAnchorArrayItemFromHtml(allTargets[index], allNonTargets[index]));
+      }
+      else {
+        returnValues.push(...this._generateImageArrayItemFromHtml(allTargets[index], allNonTargets[index]));
+      }
+    }
+
+    return returnValues;
+  }
+
+
+  /**
+   * Generates a structure representing one pair of [HTML anchor, non-anchor trailing text]. Will ignore the trailing text if it is falsey.
+   */
+  private _generateAnchorArrayItemFromHtml(targetItem: string, adjacentNonTargetItem: string, labelOverride?: string):
+      Array<string | { text: string, link: string, style: string }>
+  {
+
+    const returnValues = new Array<string | { text: string, link: string, style: string }>();
+
+    const anchorElementWrapper = document.createElement("template");
+
+    anchorElementWrapper.innerHTML = targetItem.trim();
+
+    returnValues.push({
+      text: labelOverride ?? (anchorElementWrapper.content.firstChild as HTMLAnchorElement).text,
+      link: (anchorElementWrapper.content.firstChild as HTMLAnchorElement).href,
+      style: "anchor"
+    });
+
+    if (adjacentNonTargetItem?.length) {
+      returnValues.push(adjacentNonTargetItem);
+    }
+
+    return returnValues;
+  }
+
+
+  /**
+   * Generates a structure representing one pair of [HTML image, non-image trailing text]. Will ignore the trailing text if it is falsey.
+   */
+  private _generateImageArrayItemFromHtml(targetItem: string, adjacentNonTargetItem: string, width = 24): Array<string | { image: any, height?: number, width?: number }> {
+
+    const returnValues = new Array<string | { image: any, height?: number, width?: number }>();
+
+    const sourceUrl = targetItem.match(/src="([^\"]*)"/i)[1];
+
+    // Note: this is a promise. The promise will resolve as part of the _resolveImagePromises function call
+    const image = this.getBase64ImageFromUrl(sourceUrl);
+
+    returnValues.push({
+      image: image,
+      width: width
+    });
+
+    if (adjacentNonTargetItem?.length) {
+      returnValues.push(adjacentNonTargetItem);
+    }
+
+    return returnValues;
+  }
+
+
+  /**
+   * Generates a structure representing the given child form table
+   */
+  private _getChildFormTable(childForm: Form): {
+      table?: {
+        headerRows: number,
+        body: Array<any>,
+        widths: Array<any>
+      },
+      sectionHeader?: {
+        text: any,
+        bold: boolean,
+        style?: string
+      },
+      layout?: any
+  } {
+
+    const table = this._getDefaultTable();
+    const tbody = new Array<Array<any>>();
+
+    const fieldKeys = this._childFormService.getFieldKeys(childForm)?.filter((field: string) => {
+
+      return (field !== "Cinchy ID" && field !== "Actions");
+    });
+
+    const displayValueMap = this._childFormService.getDisplayValueMap(childForm);
+
+    if (fieldKeys?.length && displayValueMap?.length) {
+      const fields = this._childFormService.getAllFields(childForm);
+
+      tbody.push(fieldKeys.map((key: string) => {
+
+        return {
+          text: this._childFormService.getFieldByKey(fields, key)?.label ?? key,
+          style: "tableHeader"
+        };
+      }));
+
+      displayValueMap.forEach((rowValues: { [key: string]: string }) => {
+
+        tbody.push(fieldKeys.map((field: string) => {
+
+          if (this._isHtmlImage(rowValues[field])) {
+            return {
+              columns: this._generateArrayFromHtml(rowValues[field], this._imgRegex),
+              style: "tableRow"
+            };
+          }
+          else {
+            return {
+              text: this._processChildFormTableValue(rowValues, field),
+              style: "tableRow"
+            };
+          }
+        }));
+      });
+
+      table.body = tbody.slice();
+
+      table.widths = fieldKeys.map((key: string) => {
+
+        return "auto";
+      });
+
+      return {
+        table: table,
+        sectionHeader: { ...this.sectionHeaderDefault, text: childForm.sections[0].label },
+        layout: this.layout
+      }
+    }
+    else {
+      table.body = table.widths = [];
+
+      return {};
+    }
+  }
+
+
+  /**
+   * @returns the default structure for a table. Headers are automatically repeated if the table spans over multiple pages.
+   */
+  private _getDefaultTable(headerRows = 1): {
+      headerRows: number,
+      body: Array<any>,
+      widths: Array<any>
+  } {
+
+    return {
+      headerRows: headerRows,
+      body: [],
+      widths: []
+    }
+  }
+
+
+  /**
+   * Builds the PDF structure for PDFMake
+   */
+  private async _getDocDefFromForm(form: Form): Promise<any> {
+
+    if (form?.sections?.length) {
       form.sections.forEach((section: FormSection) => {
 
         this.content.push({ ...this.sectionHeaderDefault, text: section.label });
-        this.setFieldsForSection(section.fields);
-      })
-    }
 
-    const properContent = await this.getProperContent();
+        this._setFieldsForSection(section);
+      });
 
-    return new Promise((resolve, reject) => {
+      const resolvedContent = await this._resolveImagePromises(this.content);
 
-      resolve({
+      return {
         header: this.header,
-        content: properContent, styles: this.styles,
+        content: resolvedContent,
+        styles: this.styles,
         pageSize: "LETTER",
         pageMargins: [30, 62, 62, 30],
         footer: function (currentPage, pageCount) {
           return { text: currentPage.toString() + " of " + pageCount, style: "footer" }
         }
-      });
-    });
-  }
-
-
-  async getProperContent() {
-
-    let dontpush;
-    const properContent = [];
-
-    return new Promise(async (resolve, rej) => {
-
-      for (let i = 0; i < this.content.length; i++) {
-        let item = this.content[i];
-
-        if (item.text) {
-          properContent.push(item);
-        }
-        else if (item.columns) {
-          for (let k = 0; k < item.columns.length; k++) {
-            let col = item.columns[k];
-            if (col.image) {
-              // wait for the promise to resolve before advancing the for loop
-              try {
-                const resolvedImage = await col.image;
-                col.image = resolvedImage;
-                col.fff = resolvedImage;
-                dontpush = !resolvedImage.includes("data:image");
-                !dontpush && properContent.push(item);
-              } catch (e) {
-                console.error("Error while getting base64 file");
-              }
-            } else if (k === 1) {
-              properContent.push(item)
-            }
-          }
-        } else {
-          properContent.push(item);
-        }
-        if (i === this.content.length - 1) {
-          resolve(properContent);
-        }
-      }
-    });
-  }
-
-
-  setFieldsForSection(fields: Array<FormField>) {
-
-    if (fields?.length) {
-      fields.forEach((field: FormField) => {
-
-        if (field.childForm) {
-          const { table, sectionHeader, layout } = this.getChildFormTable(field.childForm);
-
-          table && this.content.push({ table, layout });
-        } else {
-          switch (field.cinchyColumn.dataType) {
-            case "Link":
-              const selectedOptionField = this.getLinkFieldLabelAndValue(field);
-              this.pushFields(field, selectedOptionField);
-
-              break;
-            default:
-              if (field.label !== "Actions") {
-                this.pushFields(field);
-              }
-          }
-        }
-      });
-    }
-  }
-
-
-  async pushFields(
-      field: FormField,
-      selectedOptionField?: {
-        label: string,
-        value: string
-      }
-  ) {
-
-    const actualField = field.clone();
-
-    if (selectedOptionField) {
-      actualField.value = selectedOptionField.value;
-      actualField.label = selectedOptionField.label;
-    }
-
-    if (field.cinchyColumn.dataFormatType === "LinkUrl") {
-      this.content.push({ columns: this.getLinkColumns(actualField) });
-    }
-    else if (field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
-      const base64Img = this.getBase64ImageFromUrl(field.value);
-      this.content.push({ columns: this.getImageColumns(field, base64Img) });
-    }
-    else if (field.cinchyColumn.dataType === "Date and Time") {
-      let stringDate = actualField.value;
-
-      try {
-        if (actualField.value) {
-          stringDate = this._datePipe.transform(actualField.value, "MMM/dd/yyyy")
-        }
-      } catch (e) {
-        console.error("Error converting date:", actualField.value)
-      }
-
-      this.content.push({ columns: this.getFieldColumns(actualField, stringDate) });
-    } else {
-      this.content.push({ columns: this.getFieldColumns(actualField) });
-    }
-  }
-
-
-  async getBase64ImageFromUrl(imageUrl: string) {
-
-    const res = await fetch(imageUrl);
-    const blob = await res.blob();
-
-    return new Promise((resolve, reject) => {
-
-      const reader = new FileReader();
-
-      reader.addEventListener("load", () => {
-
-        resolve(reader.result);
-      }, false);
-
-      reader.onerror = () => {
-
-        return reject(this);
       };
-
-      reader.readAsDataURL(blob);
-    });
+    }
+    else {
+      return null;
+    }
   }
 
 
-  getFieldColumns(field: FormField, overrideValue?: any) {
+  /**
+   * Generates a structure that represents the label and value for the given field. Will render HTML anchors as clickable links
+   * and include a placeholder value for fields which are not populated.
+   */
+  private _getFieldColumns(field: FormField, overrideValue?: any): Array<any> {
 
-    return [
+    const result: Array<{
+        marginRight?: number | string,
+        style: string,
+        text?: string | Array<any>,
+        width: number | string
+    }> = [
       {
-        width: 130,
+        style: "fieldLabel",
+        text: `${field.label}: `,
+        width: this._labelColumnWidth
+      }
+    ];
+
+    const valueColumn: {
+      marginRight?: number | string,
+      style: string,
+      text?: string | Array<any>,
+      width: number | string
+    } = {
+      marginRight: 15,
+      style: "fieldValue",
+      width: this._valueColumnWidth
+    };
+
+    if (overrideValue) {
+      valueColumn.text = overrideValue
+    }
+    else if (this._isHtmlAnchor(field.value)) {
+      valueColumn.text = this._generateArrayFromHtml(field.value, this._anchorRegex);
+    }
+    else {
+      valueColumn.text = field.value || "-";
+    }
+
+    result.push(valueColumn);
+
+    return result;
+  }
+
+
+  /**
+   * Generates a structure that represents a the label and value for a field that contains an image. At
+   * this stage, the value is a promise that will be resolved at a later step.
+   */
+  private _getImageColumns(field: FormField, value: any): Array<any> {
+
+    const returnValues: Array<any> = [
+      {
+        width: this._labelColumnWidth,
         text: `${field.label}: `,
         style: "fieldLabel"
-      },
-      {
-        width: "80%",
-        marginRight: 15,
-        text: overrideValue ? overrideValue : field.value,
+      }
+    ];
+
+    if (this._isHtmlImage(field.value)) {
+      returnValues.push(
+        {
+          columns: this._generateImageArrayItemFromHtml(field.value, null, 80),
+          width: this._valueColumnWidth
+        }
+      );
+    }
+    else if (!field.value) {
+      returnValues.push({
+        text: "-",
         style: "fieldValue"
-      }
-    ];
+      });
+    }
+    else {
+      returnValues.push(
+        {
+          columns: [
+            {
+              image: value,
+              width: 80
+            }
+          ],
+          width: this._valueColumnWidth
+        }
+      );
+    }
+
+    return returnValues;
   }
 
 
-  getLinkColumns(field: FormField) {
+  /**
+   * Generates a structure that represents the label and value for a field which contains a URL
+   */
+  private _getLinkColumns(field: FormField, anchorTextOverride?: string): Array<any> {
 
-    return [
+    const returnValues: Array<any> = [
       {
-        width: 130,
+        width: this._labelColumnWidth,
         text: `${field.label}: `,
         style: "fieldLabel"
-      },
-      {
-        text: "Open",
-        link: field.value,
-        style: "fieldValue"
       }
     ];
+
+    if (this._isHtmlAnchor(field.value)) {
+      returnValues.push(this._generateAnchorArrayItemFromHtml(field.value, null, "Open"));
+    }
+    else if (!field.value) {
+      returnValues.push(
+        {
+          text: "-",
+          style: "fieldValue"
+        }
+      );
+    }
+    else {
+      returnValues.push(
+        {
+          text: anchorTextOverride || field.value,
+          link: field.value,
+          style: "anchor"
+        }
+      );
+    }
+
+    return returnValues;
   }
 
 
-  getImageColumns(field: FormField, value: any) {
-
-    return [
-      {
-        width: 160,
-        text: `${field.label}: `,
-        style: "fieldLabel"
-      },
-      {
-        image: value,
-        width: 80,
-        marginBottom: 10
-      }
-    ];
-  }
-
-
-  getLinkFieldLabelAndValue(field: FormField): {
-    label: string,
-    value: string
+  /**
+   * Gets the display values associated with the given link fink
+   */
+  private _getLinkFieldLabelAndValue(field: FormField): {
+      label: string,
+      value: string
   } {
 
     const dropdownSet: Array<DropdownOption> = field.dropdownDataset?.options;
@@ -402,90 +604,235 @@ export class PrintService {
     }
     return {
       label: field.label,
-      value: ""
+      value: "-"
     };
   }
 
 
-  getChildFormTable(childForm: Form) {
+  /**
+   * Determines whether or not the given text contains an HTML anchor
+   */
+  private _isHtmlAnchor(textValue: string): boolean {
 
-    const table = this.getDefaultTable();
-    const tbody = new Array<Array<{ text: string, style: string }>>();
+    // Global RegExp are stateful, so in order to ensure this test is independent we need to manually reset it
+    this._anchorRegex.lastIndex = 0;
 
-    const fieldKeys = this._childFormService.getFieldKeys(childForm)?.filter((field: string) => {
+    return this._anchorRegex.test(textValue);
+  }
 
-      return (field !== "Cinchy ID" && field !== "Actions");
-    });
 
-    const displayValueMap = this._childFormService.getDisplayValueMap(childForm);
+  /**
+   * Determines whether or not the given text contains an HTML image.
+   */
+  private _isHtmlImage(textValue: string): boolean {
 
-    if (fieldKeys?.length && displayValueMap?.length) {
-      const fields = this._childFormService.getAllFields(childForm);
+    // Global RegExp are stateful, so in order to ensure this test is independent we need to manually reset it
+    this._imgRegex.lastIndex = 0;
 
-      tbody.push(fieldKeys.map((key: string) => {
+    return this._imgRegex.test(textValue);
+  }
 
-        return {
-          text: this._childFormService.getFieldByKey(fields, key)?.label ?? key,
-          style: "tableHeader"
-        };
-      }));
 
-      displayValueMap.forEach((rowValues: { [key: string]: string }) => {
+  /**
+   * Determines whether or not the given text is a URL
+   */
+  private _isUrl(textValue: string): boolean {
 
-        tbody.push(fieldKeys.map((field: string) => {
+    return coerceBooleanProperty(textValue && this._urlRegex.test(textValue));
+  }
 
-          return {
-            text: rowValues[field],
-            style: "tableRow"
-          }
-        }));
-      });
 
-      table.body = tbody.slice();
+  /**
+   * If the given value is contains an anchor tag or an image, then we want to render that in the output. Otherwise, just pass the value
+   * through, as it has already been processed
+   */
+  private _processChildFormTableValue(
+      displayValueMap: { [key: string]: any },
+      field: string
+  ): string | Array<string | { text: string, link: string, style: string } | { image: any, height?: number, width?: number }> {
 
-      table.widths = fieldKeys.map((key: string) => {
+    const textValue: string = displayValueMap[field];
 
-        return "auto";
-      });
-
-      return {
-        table: table,
-        sectionHeader: { ...this.sectionHeaderDefault, text: childForm.sections[0].label },
-        layout: this.layout
-      }
+    // Could be either an anchor on its own, or any number of anchors in a paragraph of text
+    if (this._isHtmlAnchor(textValue)) {
+      return this._generateArrayFromHtml(textValue, this._anchorRegex);
+    }
+    else if (this._isHtmlImage(textValue)) {
+      return this._generateArrayFromHtml(textValue, this._imgRegex);
     }
     else {
-      table.body = table.widths = [];
-
-      return {};
+      return textValue || "-";
     }
   }
 
 
-  getDefaultTable() {
+  /**
+   * Adds content to the document representing the given field
+   */
+  private async _pushFields(
+      field: FormField,
+      selectedOptionField?: {
+        label: string,
+        value: string
+      }
+  ): Promise<void> {
 
-    return {
-      // headers are automatically repeated if the table spans over multiple pages
-      // you can declare how many rows should be treated as headers
-      headerRows: 1,
-      widths: [],
+    const fieldCopy = field.clone();
 
-      body: []
+    if (selectedOptionField) {
+      fieldCopy.value = selectedOptionField.value;
+      fieldCopy.label = selectedOptionField.label;
+    }
+
+    if (fieldCopy.value && fieldCopy.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl)) {
+      let imageUrl: string;
+
+      if (this._isHtmlImage(fieldCopy.value) || this._isUrl(fieldCopy.value)) {
+        imageUrl = fieldCopy.value;
+      }
+      else {
+        // Only use the dropdownDataset if it was an option explicitly generated to be a placeholder in a prepopulated set. Otherwise,
+        // we could just be puling in a value for an arbitrary file in the set of those associated with this form
+        imageUrl = (fieldCopy.dropdownDataset?.isDummy ? fieldCopy.dropdownDataset.options[0]?.label : fieldCopy.value) || fieldCopy.value;
+      }
+
+      if (this._isUrl(imageUrl)) {
+        const base64Img = this.getBase64ImageFromUrl(imageUrl);
+
+        this.content.push({ columns: this._getImageColumns(fieldCopy, base64Img) });
+      }
+      else {
+        // We specifically want to use the preprocessed imageUrl field in case it was populated using the dropdownDataset but still isn't a valid URL
+        this.content.push({ columns: this._getFieldColumns(fieldCopy, imageUrl) });
+      }
+    }
+    // If the field was designated as a link, then we want to override the label to keep the behaviour consistent with earlier versions
+    else if (field.cinchyColumn.dataFormatType === "LinkUrl") {
+      this.content.push({ columns: this._getLinkColumns(fieldCopy, "Open") });
+    }
+    else if (fieldCopy.cinchyColumn.dataType === "Date and Time") {
+      let stringDate = fieldCopy.value;
+
+      try {
+        if (fieldCopy.value) {
+          stringDate = this._datePipe.transform(fieldCopy.value, "MMM/dd/yyyy")
+        }
+      } catch (e) {
+        console.error("Error converting date:", fieldCopy.value)
+      }
+
+      this.content.push({ columns: this._getFieldColumns(fieldCopy, stringDate) });
+    } else {
+      this.content.push({ columns: this._getFieldColumns(fieldCopy) });
     }
   }
 
 
-  htmlToElement(html): any {
+  /**
+   * Handles the resolution of an image promise within an actual image object. Any input to this function is considered to be
+   * a leaf node, so it will not recurse.
+   */
+  private async _resolveIndividualImagePromise(
+      item: { image: any, height?: number, width?: number }
+  ): Promise<{ image: any, height?: number, text?: string, width?: number }> {
 
-    const template = document.createElement("template");
-    html = html.trim(); // Never return a text node of whitespace as the result
-    template.innerHTML = html;
-    return template.content.firstChild;
+    try {
+      const result = await item.image;
+
+      // a string starting with data:image is assumed to be an encoded image, but if the last character is a comma
+      // then the image did not successfully resolve
+      if (result?.includes("data:image") && result[result.length - 1] !== ",") {
+        // Clone any other properties, but ensure that the image property contains the new data
+        return { ...item, image: result };
+      }
+      else {
+        if (result?.includes("error")) {
+          console.error(result);
+        }
+
+        // If the promise resolves into an invalid value, i.e. the image could not be found, then just return an empty value
+        return { ...item, text: "-", image: null };
+      }
+    }
+    catch (error) {
+      // Just use a default in the case of an error
+      return { ...item, text: "-", image: null };
+    }
   }
 
 
-  isAnchor(str) {
+  /**
+   * Recursively iterates through the content and resolves any outstanding promises for images.
+   *
+   * TODO: the types are "any" because properly typing this function would be too verbose for the current ticket. There will
+   *       be a chore to properly type all of the PDF library types used by this application
+   */
+  private async _resolveImagePromises(content: any): Promise<any> {
 
-    return /<a.*?<\/a>/g.test(str);
+    if (Array.isArray(content)) {
+      return Promise.all(content.map((item: any) => {
+
+        return this._resolveImagePromises(item);
+      }));
+    }
+    else if (content?.image && content.image instanceof Promise) {
+      return this._resolveIndividualImagePromise(content);
+    }
+    else if (content && typeof content === "object") {
+      return this._resolveImagePromisesFromObjectProperties(content);
+    }
+    else {
+      return Promise.resolve(content);
+    }
+  }
+
+
+  /**
+   * Dives into the given objects individual properties so that the recursive _resolveImagePromises can guarantee it touches
+   * every node in the tree.
+   */
+  private async _resolveImagePromisesFromObjectProperties(originalObject: any): Promise<any> {
+
+    const output = {};
+
+    await Promise.all(
+      Object.keys(originalObject).map(async (key: string) => {
+
+        output[key] = await this._resolveImagePromises(originalObject[key]);
+      })
+    );
+
+    return output;
+  }
+
+
+  /**
+   * Iterates through the fields in the given section and adds each to the document
+   */
+  private _setFieldsForSection(section: FormSection): void {
+
+    section.fields?.forEach((field: FormField) => {
+
+      if (field.childForm) {
+        const result = this._getChildFormTable(field.childForm);
+
+        if (result.table) {
+          this.content.push(result);
+        }
+      } else {
+        switch (field.cinchyColumn.dataType) {
+          case "Link":
+            const selectedOptionField = this._getLinkFieldLabelAndValue(field);
+
+            this._pushFields(field, selectedOptionField);
+
+            break;
+          default:
+            if (field.label !== "Actions") {
+              this._pushFields(field);
+            }
+        }
+      }
+    });
   }
 }
