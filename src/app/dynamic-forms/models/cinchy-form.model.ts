@@ -826,7 +826,7 @@ export class Form {
         null
       );
 
-      return query;
+      return this.childFormLinkId != null ? query : null;
     } else {
       let query: IQuery = new Query(
         `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,

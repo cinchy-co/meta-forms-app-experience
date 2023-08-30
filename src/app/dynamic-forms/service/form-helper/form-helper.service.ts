@@ -280,6 +280,10 @@ export class FormHelperService {
     }
 
     const selectQuery: IQuery = form.generateSelectQuery(targetRowId);
+    
+    if(isNullOrUndefined(selectQuery)){
+      return false;
+    }
 
     try {
       if (form.isChild && form.childFormParentId && form.childFormLinkId && parentDomainName && parentTableName) {
