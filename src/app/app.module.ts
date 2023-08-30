@@ -12,14 +12,13 @@ import { NumeralModule } from "ngx-numeral";
 import { NgxSpinnerModule } from "ngx-spinner";
 
 import { AppRoutingModule } from "./app-routing.module";
+import { CinchyDynamicFormsModule } from "./dynamic-forms/cinchy-dynamic-forms.module";
 import { CoreModule } from "./core/core.module";
 import { CustomMaterialModule } from "./custom-material.module";
 import { DialogsModule } from "./dialogs/dialogs.module";
 import { PagesModule } from "./pages/pages.module";
-import {CinchyDynamicFormsModule} from "./dynamic-forms/cinchy-dynamic-forms.module";
 
 import { ConfigService } from "./services/config.service";
-import { SectionService } from "./services/section-service";
 
 import { AppComponent } from "./app.component";
 
@@ -64,7 +63,6 @@ export function getBaseUrl() {
     },
     CinchyModule,
     CinchyService,
-    SectionService,
     {
       provide: CinchyConfig,
       useFactory: (config: ConfigService) => {
@@ -76,5 +74,4 @@ export function getBaseUrl() {
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule {
-}
+export class AppModule {}
