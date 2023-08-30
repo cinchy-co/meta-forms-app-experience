@@ -108,14 +108,8 @@ export class ChildFormService {
                   if (isFile) {
                     let replacedCinchyIdUrl = currentField.cinchyColumn.attachmentUrl.replace("@cinchyid", rowData["Cinchy ID"]);
                     let fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", option.id);
-                    let lowercaseFileName = option.label.toLowerCase();
-                    let isImage = lowercaseFileName.endsWith(".png") ||
-                      lowercaseFileName.endsWith(".jpg") ||
-                      lowercaseFileName.endsWith(".jpeg") ||
-                      lowercaseFileName.endsWith(".gif") ||
-                      lowercaseFileName.endsWith(".svg");
-                    let displayValue = isImage ? `<div class="file-image-container"><img class="cinchy-images cinchy-images--min" src="${fileUrl}"/><a href="${fileUrl}" target="_blank">${option.label}</a></div>` : `<a href="${fileUrl}" target="_blank">${option.label}</a>`;
-                    linkDisplayValues.push(displayValue);
+
+                    linkDisplayValues.push(`<a href="${fileUrl}" target="_blank">${option.label}</a>`);
                   } else {
                     linkDisplayValues.push(option.label);
                   }
