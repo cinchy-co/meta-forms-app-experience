@@ -29,7 +29,7 @@ export class AppStateService {
 
   parentFormSavedFromChild$ = new Subject<{
     childForm: Form,
-    presetValues ?: { [key: string]: any },
+    presetValues?: { [key: string]: any },
     title: string
   }>();
 
@@ -75,44 +75,63 @@ export class AppStateService {
   }
 
 
-  setRecordSelected(cinchyId: number | null, doNotReloadForm: boolean = false): void {
+  setRecordSelected(rowId: number | null, doNotReloadForm: boolean = false): void {
+    this.onRecordSelected$.next({ cinchyId: rowId, doNotReloadForm });
 
-    this._rowId = cinchyId;
+    if (rowId === null) {
+      this.deleteRowIdInQueryParams();
+    }
+    else {
+      this.updateRowIdInQueryParams(rowId);
+    }
+  }
 
-    this.onRecordSelected$.next({ cinchyId, doNotReloadForm });
-
-    // Update URL with the new ID, if present
-    if (window.location.search?.includes("rowId")) {
-      const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
-
-        const [key, value] = paramString.split("=");
-
-        if (key === "rowId") {
-          return `${key}=${cinchyId ? cinchyId.toString() : "null"}`;
-        }
-        else {
-          return paramString;
-        }
-      });
-
-      if (queryParams?.length) {
-        const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
-
-        window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams.join("&")}`);
+  updateRowIdInQueryParams(rowId: number) {
+    const messageJSON = {
+      updateCinchyURLParams:
+      {
+        rowId: rowId
       }
-    }
-    else if (window.parent.location.search?.includes("rowId")) {
-      const messageJSON = {
-        updateCinchyURLParams:
-        {
-          rowId: cinchyId
-        }
-      };
+    };
 
-      window.parent.postMessage(JSON.stringify(messageJSON), '*');
-    }
+    const message = JSON.stringify(messageJSON);
+    window.parent.postMessage(message, '*');
 
-    sessionStorage.setItem("rowId", this._rowId ? this._rowId.toString() : "");
-    sessionStorage.setItem("formId", this.formId ?? "");
+    const rowIdQueryParams = messageJSON['updateCinchyURLParams'];
+    const rowIdQueryString = Object.keys(rowIdQueryParams)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(rowIdQueryParams[key])}`)
+      .join('&');
+
+    const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+      const [key, value] = paramString.split("=");
+      if (key != "rowId") {
+        return `${key}=${value}`;
+      }
+    }).join('');
+
+    if (queryParams?.length) {
+      const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
+      window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}&${rowIdQueryString}`);
+    }
+  }
+
+  deleteRowIdInQueryParams() {
+    const messageJSON = {
+      deleteCinchyURLParams:
+        [
+          "rowId"
+        ]
+    };
+    const message = JSON.stringify(messageJSON);
+    window.parent.postMessage(message, '*');
+
+    const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+      const [key, value] = paramString.split("=");
+      if (key != "rowId") {
+        return `${key}=${value}`;
+      }
+    }).join('');
+    const baseUrl = window.location.href.substr(0, window.location.href.indexOf("&"));
+    window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}`);
   }
 }

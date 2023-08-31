@@ -76,14 +76,14 @@ export class SidenavComponent implements OnInit {
     private _dialogService: DialogService,
     private _cinchyService: CinchyService,
     private _spinner: NgxSpinnerService
-  ) {}
+  ) { }
 
 
   ngOnInit(): void {
 
     this.loadTableEntitlements();
 
-    
+
     this._appStateService.onRecordSelected$.subscribe({
       next: () => {
 
@@ -115,7 +115,6 @@ export class SidenavComponent implements OnInit {
 
 
   createNewRecord(): void {
-
     this.sectionClicked(this.formSectionsMetadata[0]);
     this._appStateService.setRecordSelected(null);
   }
