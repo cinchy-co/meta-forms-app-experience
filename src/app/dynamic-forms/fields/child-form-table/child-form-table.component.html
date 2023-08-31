@@ -50,7 +50,7 @@
     </table>
   </div>
   <p *ngIf="childForm.childFormLinkId == null || childForm.childFormParentId == null ;else noRecord"> 
-     The columns "Child Form Link Field" or both the “Child Form Parent ID” and the "Child Form Link ID" must be populated in your form fields table. 
+     The columns "Child Form Link Field" or both the "Child Form Parent ID" and the "Child Form Link ID" must be populated in your form fields table. 
   </p>
   <ng-template #noRecord>
     <p *ngIf="!childForm.childFormRowValues?.length">
