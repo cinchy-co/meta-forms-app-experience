@@ -177,44 +177,46 @@ export class FormHelperService {
 
           childFormFieldsMetadata = childFormFieldsMetadata.filter(_ => !isNullOrUndefined(displayColumnId.find(id => id === _.formFieldId)));
 
-          const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
+          if(childFormMetadata != null){
+            const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
 
-          childForm = await this.generateForm(childFormMetadata, null, childTableEntitlements, true, formFields[i].flattenChildForm, parentColumnNameForLinkingToChild, childFormColumnNameForLinkingToParent, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
+            childForm = await this.generateForm(childFormMetadata, null, childTableEntitlements, true, formFields[i].flattenChildForm, parentColumnNameForLinkingToChild, childFormColumnNameForLinkingToParent, formFields[i].childFormFilter, formFields[i].sortChildTable, form);
 
-          childForm.populateSectionsFromFormMetadata(childFormSectionsMetadata);
+            childForm.populateSectionsFromFormMetadata(childFormSectionsMetadata);
 
-          await this.fillWithFields(childForm, rowId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
-          await this.fillWithData(childForm, rowId, selectedLookupRecord, formMetadata.tableName, formMetadata.domainName);
+            await this.fillWithFields(childForm, rowId, childFormMetadata, childFormFieldsMetadata, selectedLookupRecord, childTableEntitlements);
+            await this.fillWithData(childForm, rowId, selectedLookupRecord, formMetadata.tableName, formMetadata.domainName);
 
-          // Override these, they will be checked later when opening up the child form
-          cinchyColumn.canEdit = true;
-          cinchyColumn.canView = true;
+            // Override these, they will be checked later when opening up the child form
+            cinchyColumn.canEdit = true;
+            cinchyColumn.canView = true;
 
-          // If flatten, we have to check the entitlements for the last record and readjust the entitlements
-          if (childForm.flatten && childForm.sections?.length && childForm.childFormRowValues?.length) {
-            let childFormData = childForm.childFormRowValues;
-            let lastRecordId = childFormData[childFormData.length - 1]["Cinchy ID"];
-            if (lastRecordId) {
-            //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
-              const childCellEntitlements = await this._getCellEntitlements(childFormMetadata.domainName, childFormMetadata.tableName, lastRecordId, childFormFieldsMetadata);
-              childForm.rowId = lastRecordId;
-              if (childForm.sections) {
-                for (let x = 0; x < childForm.sections.length; x++) {
-                  if (childForm.sections[x].fields?.length) {
-                    for (let y = 0; y < childForm.sections[x].fields.length; y++) {
-                      const childColumnEntitlements = childTableEntitlements.columnEntitlements.find(_ => _.columnId === childForm.sections[x].fields[y].cinchyColumn.id);
-                      const childColumnEntitlementKey = childColumnEntitlements ? `entitlement-${childColumnEntitlements?.columnName.substring(0, 114)}` : '';
+            // If flatten, we have to check the entitlements for the last record and readjust the entitlements
+            if (childForm.flatten && childForm.sections?.length && childForm.childFormRowValues?.length) {
+              let childFormData = childForm.childFormRowValues;
+              let lastRecordId = childFormData[childFormData.length - 1]["Cinchy ID"];
+              if (lastRecordId) {
+              //  const childTableEntitlements = await this._cinchyService.getTableEntitlementsById(childFormMetadata.tableId).toPromise();
+                const childCellEntitlements = await this._getCellEntitlements(childFormMetadata.domainName, childFormMetadata.tableName, lastRecordId, childFormFieldsMetadata);
+                childForm.rowId = lastRecordId;
+                if (childForm.sections) {
+                  for (let x = 0; x < childForm.sections.length; x++) {
+                    if (childForm.sections[x].fields?.length) {
+                      for (let y = 0; y < childForm.sections[x].fields.length; y++) {
+                        const childColumnEntitlements = childTableEntitlements.columnEntitlements.find(_ => _.columnId === childForm.sections[x].fields[y].cinchyColumn.id);
+                        const childColumnEntitlementKey = childColumnEntitlements ? `entitlement-${childColumnEntitlements?.columnName.substring(0, 114)}` : '';
 
-                      childForm.sections[x].fields[y].cinchyColumn.canEdit = (isNullOrUndefined(childColumnEntitlements) || childCellEntitlements && childCellEntitlements[childColumnEntitlementKey] === 0) ? false : childColumnEntitlements.canEdit;
-                      childForm.sections[x].fields[y].cinchyColumn.canView = !isNullOrUndefined(childColumnEntitlements?.canView) ? childColumnEntitlements.canView : false;
+                        childForm.sections[x].fields[y].cinchyColumn.canEdit = (isNullOrUndefined(childColumnEntitlements) || childCellEntitlements && childCellEntitlements[childColumnEntitlementKey] === 0) ? false : childColumnEntitlements.canEdit;
+                        childForm.sections[x].fields[y].cinchyColumn.canView = !isNullOrUndefined(childColumnEntitlements?.canView) ? childColumnEntitlements.canView : false;
+                      }
                     }
                   }
                 }
               }
             }
-          }
 
-          allChildForms.push(childForm);
+            allChildForms.push(childForm);
+          }
         }
 
         const formField: FormField = new FormField(
