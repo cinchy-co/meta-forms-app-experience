@@ -130,7 +130,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     private _printService: PrintService,
     private _formHelperService: FormHelperService,
     private _configService: ConfigService
-  ) {}
+  ) { }
 
 
   async ngOnChanges(changes: SimpleChanges): Promise<void> {
@@ -196,13 +196,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  checkNoRecord(lookupRecords: ILookupRecord[]): ILookupRecord[]{
+  checkNoRecord(lookupRecords: ILookupRecord[]): ILookupRecord[] {
 
     if (lookupRecords?.length > 0) {
       return lookupRecords;
     }
-    else{
-      return [{id: -1, label: "No records available"}];
+    else {
+      return [{ id: -1, label: "No records available" }];
     }
   }
 
@@ -215,7 +215,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this._lastTemporaryCinchyId = INITIAL_TEMPORARY_CINCHY_ID;
 
     this.form.restoreFormReferenceOnAllFields();
-
+    this._appStateService.setRecordSelected(null, true);
     this._toastr.info("The record was cloned, please save in order to create it. If this field contained any child records, please ensure the field used to link them is updated accordingly.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
   }
 
@@ -268,11 +268,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Gets called upon load, save, and row changes
    */
   async loadForm(
-      childData?: {
-        childForm: Form,
-        presetValues?: { [key: string]: any },
-        title: string
-      }
+    childData?: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      title: string
+    }
   ): Promise<void> {
 
     if (!this._formIsLoading) {
@@ -380,11 +380,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   async openChildForm(
-      data: {
-        childForm: Form,
-        presetValues?: { [key: string]: any },
-        title: string
-      }
+    data: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      title: string
+    }
   ) {
 
     if (!this.form.isClone && !this.rowId) {
@@ -403,9 +403,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Removes any pending operations that would have affected the deleted row
    */
   onChildRowDeleted(data: {
-      childForm: Form,
-      rowId: number,
-      sectionIndex: number
+    childForm: Form,
+    rowId: number,
+    sectionIndex: number
   }): void {
 
     this._pendingChildFormQueries = this._pendingChildFormQueries.filter((query: IChildFormQuery) => {
@@ -473,15 +473,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   async saveForm(
-      formData: Form,
-      rowId: number,
-      childData?: {
-        childForm: Form,
-        presetValues?: { [key: string]: any },
-        title: string
-      }
+    formData: Form,
+    rowId: number,
+    childData?: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      title: string
+    }
   ): Promise<void> {
-
     if (formData) {
       // check validations for the form eg: Required, Regular expression
       const formValidation = formData.checkFormValidation();
@@ -621,7 +620,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           });
         });
 
-        const rowDataIndex = childFormRowValues.findIndex( (rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
+        const rowDataIndex = childFormRowValues.findIndex((rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
 
         if (rowDataIndex > -1) {
           newValues["Cinchy ID"] = resultId;
