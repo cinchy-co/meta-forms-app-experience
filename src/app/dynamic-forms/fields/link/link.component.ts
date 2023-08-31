@@ -61,7 +61,6 @@ import { ToastrService } from "ngx-toastr";
 })
 export class LinkComponent implements OnChanges, OnInit {
 
-  @ViewChild("searchInput") searchInput;
   @ViewChild("fileInput") fileInput: ElementRef;
   @ViewChild("t") public tooltip: NgbTooltip;
 
@@ -85,17 +84,23 @@ export class LinkComponent implements OnChanges, OnInit {
   };
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
-  @Output() childform = new EventEmitter<any>();
+  @Output() childForm = new EventEmitter<any>();
 
 
-  // TODO: Add proper types to these
-  downloadLink;
-  downloadableLinks;
+  // TODO: Add proper type
   metadataQueryResult;
 
+  downloadableLinks: Array<
+    {
+      fileName: string,
+      fileUrl: string,
+      fileId: number
+    }
+  >;
+
   charactersAfterWhichToShowList: number = 0;
-  createlinkOptionName: boolean;
   filteredOptions: Array<DropdownOption>;
+  imageIsDownloadable: boolean;
   isCursorIn: boolean = false;
   isLoading: boolean = false;
   showActualField: boolean;
@@ -111,6 +116,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
   renderImageFiles = true;
 
+  // TODO: global icon singleton?
   faPlus = faPlus;
   faShareAlt = faShareAlt;
   faSitemap = faSitemap;
@@ -128,6 +134,12 @@ export class LinkComponent implements OnChanges, OnInit {
   get canEdit(): boolean {
 
     return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+  }
+
+
+  get rowIdIsValid(): boolean {
+
+    return (this.form.rowId && this.form.rowId > -1);
   }
 
 
@@ -185,11 +197,14 @@ export class LinkComponent implements OnChanges, OnInit {
       this.setWhenNewRowAddedForParent();
     }
 
-    this._appStateService.addNewEntityDialogClosed$.subscribe((value: INewEntityDialogResponse) => {
+    this._appStateService.addNewEntityDialogClosed$.subscribe({
+      next: async (value: INewEntityDialogResponse) => {
 
-      if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]["Table"] === value.tableName) {
-        this.filteredOptions = null;
-        this.getListItems(true);
+        if (value && this.filteredOptions && this.metadataQueryResult && this.metadataQueryResult[0]["Table"] === value.tableName) {
+          this.filteredOptions = null;
+
+          await this.getListItems(true);
+        }
       }
     });
 
@@ -208,12 +223,12 @@ export class LinkComponent implements OnChanges, OnInit {
 
   checkForAttachmentUrl(): void {
 
-    this.downloadLink = coerceBooleanProperty(this.field.cinchyColumn.attachmentUrl);
+    this.imageIsDownloadable = coerceBooleanProperty(this.field.cinchyColumn.attachmentUrl);
 
     if (this.field.cinchyColumn.attachmentUrl && this.selectedValue) {
       const replacedCinchyIdUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form.rowId?.toString());
       const replacedFileIdUrl = replacedCinchyIdUrl.replace("@fileid", this.selectedValue.id);
-      const selectedValuesWithUrl = { fileName: this.selectedValue.label, fileUrl: replacedFileIdUrl, fileId: this.selectedValue.id };
+      const selectedValuesWithUrl = { fileName: this.selectedValue.label, fileUrl: replacedFileIdUrl, fileId: +this.selectedValue.id };
 
       this.downloadableLinks = [selectedValuesWithUrl];
     }
@@ -292,20 +307,19 @@ export class LinkComponent implements OnChanges, OnInit {
       this.form.rowId
     ).subscribe(
       {
-        next: (resp) => {
+        next: (results: Array<{ fileId: number, fileName: string }>) => {
 
-          if (resp?.length) {
-
-            this.selectedValue = new DropdownOption(resp[0].fileId?.toString(), resp[0].fileName);
+          if (results?.length) {
+            this.selectedValue = new DropdownOption(results[0].fileId?.toString(), results[0].fileName);
 
             const replacedCinchyIdUrl = this.field.cinchyColumn.attachmentUrl.replace("@cinchyid", this.form.rowId?.toString());
-            const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", resp[0].fileId?.toString());
+            const fileUrl = this._configService.envConfig.cinchyRootUrl + replacedCinchyIdUrl.replace("@fileid", results[0].fileId?.toString());
 
             this.downloadableLinks = [
               {
-                fileName: resp[0].fileName,
+                fileName: results[0].fileName,
                 fileUrl: fileUrl,
-                fileId: resp[0].fileId
+                fileId: results[0].fileId
               }
             ];
 
@@ -327,7 +341,7 @@ export class LinkComponent implements OnChanges, OnInit {
       this.isLoading = true;
 
       let dropdownDataset: DropdownDataset = null;
-      let currentFieldJson;
+      let currentFieldJson: any;
 
       let tableColumnQuery: string = `
         SELECT
@@ -341,7 +355,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
       this.metadataQueryResult = (await this._cinchyService.executeCsql(tableColumnQuery, null).toPromise()).queryResult.toObjectArray();
 
-      const formFieldsJsonData = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
+      const formFieldsJsonData: any = JSON.parse(this.field.cinchyColumn.formFieldsJsonData);
 
       if (formFieldsJsonData?.Columns) {
         currentFieldJson = formFieldsJsonData.Columns.find(field => field.name === this.field.cinchyColumn.name);
@@ -391,9 +405,10 @@ export class LinkComponent implements OnChanges, OnInit {
           return coerceBooleanProperty(option.label);
         }).sort((a: DropdownOption, b: DropdownOption) => {
 
-          var lblA = a.label?.toString()?.toLocaleLowerCase() ?? '';
-          var lblB = b.label?.toString()?.toLocaleLowerCase() ?? '';
-          return (lblA.localeCompare(lblB));
+          const labelA = a.label?.toString()?.toLocaleLowerCase() ?? '';
+          const labelB = b.label?.toString()?.toLocaleLowerCase() ?? '';
+
+          return (labelA.localeCompare(labelB));
         }),
         dropdownDataset.isDummy
       );
@@ -458,14 +473,14 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
-  openNewOptionDialog(): void {
+  async openNewOptionDialog(): Promise<void> {
 
     const newOptionDialogRef = this._dialogService.openDialog(AddNewEntityDialogComponent, {
       createLinkOptionFormId: this.field.cinchyColumn.createlinkOptionFormId,
       createLinkOptionName: this.field.cinchyColumn.createlinkOptionName
     });
 
-    this._spinner.hide();
+    await this._spinner.hide();
 
     newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
 
@@ -555,7 +570,7 @@ export class LinkComponent implements OnChanges, OnInit {
         case DataFormatType.ImageUrlLarge:
 
           return "cinchy-images-large";
-        case DataFormatType.ImageUrlSmall:
+        case DataFormatType.ImageUrlMedium:
           // falls through
         case DataFormatType.ImageUrl:
 
@@ -568,7 +583,7 @@ export class LinkComponent implements OnChanges, OnInit {
     return "";
   }
 
-  
+
   private _filter(value: string): DropdownOption[] {
 
     if (this.field.dropdownDataset?.options?.length && this.searchCharacterLimitMet) {

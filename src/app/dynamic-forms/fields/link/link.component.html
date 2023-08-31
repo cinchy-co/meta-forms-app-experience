@@ -101,7 +101,7 @@
     <ng-template #hierarchyWithoutCaption>
       From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
     </ng-template>
-    <ng-container *ngIf="canEdit && !downloadLink && showActualField">
+    <ng-container *ngIf="canEdit && !imageIsDownloadable && showActualField">
       <div class="search-input-link">
         <input #searchInput type="text" class="form-control"
                [(ngModel)]="autocompleteText" [ngModelOptions]="{ standalone: true }"
@@ -142,9 +142,8 @@
         </ng-container>
       </mat-autocomplete>
     </ng-container>
-    <ng-container *ngIf="!canEdit && !downloadLink">
-      <label class="pre-formatted" *ngIf="showActualField">
-        {{ selectedValue?.label || "-" }}
+    <ng-container *ngIf="!canEdit && !imageIsDownloadable">
+      <label class="pre-formatted" *ngIf="showActualField" [innerHTML]="selectedValue?.label || '-'">
       </label>
     </ng-container>
     <ng-container *ngIf="showImage && selectedValue">
@@ -157,15 +156,15 @@
     </ng-container>
   </div>
 
-  <ng-container *ngIf="downloadLink && !form.rowId">
+  <ng-container *ngIf="imageIsDownloadable && !rowIdIsValid">
     <p>
       Files cannot be uploaded until a record exists. Please select a record or save the form to access the file selector.
     </p>
   </ng-container>
 
-  <ng-container *ngIf="downloadLink && form.rowId">
+  <ng-container *ngIf="imageIsDownloadable && rowIdIsValid">
     <div *ngFor="let item of downloadableLinks" style="margin-top: -12px">
-      <a *ngIf="downloadLink" [href]="item.fileUrl" [title]="'Download ' + item.fileName">
+      <a *ngIf="imageIsDownloadable" [href]="item.fileUrl" [title]="'Download ' + item.fileName">
         <img *ngIf="renderImageFiles && fileNameIsImage(item.fileName)" style="height: 100px" [src]="item.fileUrl" />
         <span [style.marginLeft.px]="renderImageFiles && fileNameIsImage(item.fileName) ? 12 : 0">{{item.fileName}}</span>
       </a>

@@ -156,12 +156,12 @@ export class Form {
 
 
   checkFormValidation(): {
-    status: boolean,
+    isValid: boolean,
     message: string
   } {
 
     let validationResult = {
-      status: true,
+      isValid: true,
       message: ""
     };
 
@@ -172,19 +172,18 @@ export class Form {
       section.fields.forEach(element => {
 
         if (element.cinchyColumn.isMandatory === true && (isNullOrUndefined(element.value) || element.value === "")) {
-          validationResult.status = false;
+          validationResult.isValid = false;
 
           this.errorFields.push(element.label);
         }
 
         if (element.cinchyColumn.validationExpression) {
-          var exp = element.cinchyColumn.validationExpression;
-          const regex = new RegExp(exp);
+          const regex = new RegExp(element.cinchyColumn.validationExpression);
 
           element.value = element.value?.trim() ?? "";
 
           if (!regex.test(element.value)) {
-            validationResult.status = false;
+            validationResult.isValid = false;
             validationResult.message = `No special characters are allowed in ${element.cinchyColumn.name}`
           }
         }
@@ -200,12 +199,12 @@ export class Form {
 
 
   checkChildFormValidation(): {
-    status: boolean,
-    message: string
+      isValid: boolean,
+      message: string
   } {
 
     let validationResult = {
-      status: true,
+      isValid: true,
       message: ""
     };
 
@@ -214,19 +213,17 @@ export class Form {
       section.fields.forEach(element => {
 
         if (element.cinchyColumn.isMandatory === true && (isNullOrUndefined(element.value) || element.value === "")) {
-          validationResult.status = false;
+          validationResult.isValid = false;
           validationResult.message = `Field ${element.cinchyColumn.name} is required`;
         }
 
         if (element.cinchyColumn.validationExpression !== "" && !isNullOrUndefined(element.cinchyColumn.validationExpression)) {
-          var exp = element.cinchyColumn.validationExpression;
-
-          const regex = new RegExp(exp);
+          const regex = new RegExp(element.cinchyColumn.validationExpression);
 
           element.value = element.value?.trim() ?? "";
 
           if (!regex.test(element.value)) {
-            validationResult.status = false;
+            validationResult.isValid = false;
             validationResult.message = `No special characters are allowed in ${element.cinchyColumn.name}`
           }
         }
@@ -240,7 +237,7 @@ export class Form {
   /**
    * @param overrideId If provided, will update the formId of the clone to match this value.
    * @param markAsClean If true, will return a form with all fields considered to be untouched
-   * 
+   *
    * @returns A deep copy of this form
    */
   clone(overrideId?: string, markAsClean?: boolean): Form {
@@ -502,7 +499,7 @@ export class Form {
         }
         else {
           queryString = `
-            CREATE TABLE #tmp([id] int) 
+            CREATE TABLE #tmp([id] int)
               INSERT INTO [${this.targetTableDomain}].[${this.targetTableName}] (${assignmentColumns.join(", ")})
               OUTPUT INSERTED.[Cinchy ID] INTO #tmp ([id])
               VALUES (${assignmentValues.join(", ")})
@@ -837,13 +834,13 @@ export class Form {
 
 
   getFileNameAndItsTable(field: FormField, childCinchyId?: number): {
-    childCinchyId: number,
-    column: string,
-    domain: string,
-    fileName: string,
-    query: string,
-    table: string,
-    value: any
+      childCinchyId: number,
+      column: string,
+      domain: string,
+      fileName: string,
+      query: string,
+      table: string,
+      value: any
   } {
 
     const [domain, table, column]: [string, string, string] = field.cinchyColumn.fileNameColumn?.split(".") ?? [];

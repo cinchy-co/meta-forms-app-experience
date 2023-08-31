@@ -20,7 +20,6 @@ import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 export class AppStateService {
 
   formMetadata: IFormMetadata;
-  hasFormChanged: boolean;
   selectedOpportunityId: number;
 
   addNewEntityDialogClosed$ = new Subject<INewEntityDialogResponse>();
