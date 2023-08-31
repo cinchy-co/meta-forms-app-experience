@@ -809,20 +809,25 @@ export class Form {
     fields.push("[Cinchy ID]");
 
     if (this.isChild) {
-      const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
+      
+        if (!this.childFormLinkId) {
+          return null;
+        }
+ 
+        const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
 
-      const whereConditionWithFilter = this.childFormFilter ?
-      `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
+        const whereConditionWithFilter = this.childFormFilter ?
+        `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
+  
+        const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
+  
+        let query: IQuery = new Query(
+          `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
+          null,
+          null
+        );
+        return query;
 
-      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
-
-      let query: IQuery = new Query(
-        `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
-        null,
-        null
-      );
-
-      return this.childFormLinkId != null ? query : null;
     } else {
       let query: IQuery = new Query(
         `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,

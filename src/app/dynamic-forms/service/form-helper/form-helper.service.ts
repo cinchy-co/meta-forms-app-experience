@@ -283,7 +283,7 @@ export class FormHelperService {
 
     const selectQuery: IQuery = form.generateSelectQuery(targetRowId);
     
-    if(isNullOrUndefined(selectQuery)){
+    if (isNullOrUndefined(selectQuery)) {
       return false;
     }
 
