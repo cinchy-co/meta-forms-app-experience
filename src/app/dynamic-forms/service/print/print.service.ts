@@ -78,14 +78,14 @@ export class PrintService {
     },
     tableHeader: {
       color: "purple",
-      fontSize: 8,
+      fontSize: 10,
       bold: true,
     },
     tableRow: {
-      fontSize: 8,
+      fontSize: 10,
     },
     footer: {
-      fontSize: 8,
+      fontSize: 10,
       marginRight: 20,
       marginBottom: 0,
       alignment: "right"
