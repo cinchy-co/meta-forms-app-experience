@@ -44,7 +44,7 @@ export class PrintService {
   styles = {
     anchor: {
       color: "#007bff",
-      fontSize: 10,
+      fontSize: 8,
       italics: false
     },
     formHeader: {
@@ -78,14 +78,14 @@ export class PrintService {
     },
     tableHeader: {
       color: "purple",
-      fontSize: 10,
+      fontSize: 8,
       bold: true,
     },
     tableRow: {
-      fontSize: 10,
+      fontSize: 8,
     },
     footer: {
-      fontSize: 10,
+      fontSize: 8,
       marginRight: 20,
       marginBottom: 0,
       alignment: "right"
