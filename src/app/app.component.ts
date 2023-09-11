@@ -26,16 +26,6 @@ export class AppComponent implements OnDestroy, OnInit {
       private cinchyService: CinchyService,
       private appStateService: AppStateService
   ) {
-
-    this._routerEventSubscription = this.router.events.subscribe({
-      next: (event: RouterEvent) => {
-
-        // This is used if the incoming URL causes an immediate reload which would otherwise destroy the queryparams
-        if (event instanceof NavigationStart && !this.loginDone) {
-          this.setRowAndFormId();
-        }
-      }
-    });
   }
 
 
