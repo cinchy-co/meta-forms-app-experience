@@ -98,7 +98,29 @@ export class AppComponent implements OnDestroy, OnInit {
     // the embedded frame's target using the querystring, then we use this window's queryParams instead
     const resolvedUri = parentUri?.includes("formId") ? parentUri : uri;
     this.appStateService.setRootFormId(this.getQueryStringValue("formId", resolvedUri));
-    let rowId = this.getQueryStringValue("rowId", uri) == null ? 0 : parseInt(this.getQueryStringValue("rowId", uri));
-    this.appStateService.setRecordSelected(rowId, false);
+    this.appStateService.setRecordSelected(this.getRowIdFromUri(uri, "rowId"), false);
+  }
+
+  getRowIdFromUri(uri: string, key: string): number {
+
+    let idAsString: string;
+    let idAsNumber: number;
+  
+    if (uri) {
+      idAsString = this.getQueryStringValue("rowId", uri);
+    }
+  
+    if (idAsString) {
+      try {
+        idAsNumber = parseInt(idAsString);
+  
+      return idAsNumber;
+      }
+      catch {
+        return null;
+      }
+    }
+  
+    return null;
   }
 }
