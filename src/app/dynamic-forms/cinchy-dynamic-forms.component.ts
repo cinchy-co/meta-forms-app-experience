@@ -306,40 +306,34 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
               await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
 
-              // This may occur if the rowId is not provided in the queryParams, but one is available in the session
-              if (this.rowId) {
-                if (!selectedLookupRecord) {
-                  this._appStateService.setRecordSelected(null);
-                }
-                else {
-                  const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
+              if (selectedLookupRecord){
+                const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
 
-                  if (success && form.childFieldsLinkedToColumnName?.length) {
-                    // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
-                    for (let parentColumnName in form.childFieldsLinkedToColumnName) {
-                      let linkedParentField = form.fieldsByColumnName[parentColumnName];
-                      let linkedChildFields = form.childFieldsLinkedToColumnName[parentColumnName] || [];
+                if (success && form.childFieldsLinkedToColumnName?.length) {
+                  // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
+                  for (let parentColumnName in form.childFieldsLinkedToColumnName) {
+                    let linkedParentField = form.fieldsByColumnName[parentColumnName];
+                    let linkedChildFields = form.childFieldsLinkedToColumnName[parentColumnName] || [];
 
-                      for (let linkedChildField of linkedChildFields) {
-                        // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
-                        if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
-                          continue;
-                        }
-
-                        // Update the child form field's value
-                        const fieldIndex = form.sections[0].fields.findIndex((field: FormField) => {
-
-                          return (field.id === linkedChildField.id);
-                        });
-
-                        form.updateFieldValue(
-                          0,
-                          fieldIndex,
-                          linkedParentField.value
-                        );
-
-                        this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
+                    for (let linkedChildField of linkedChildFields) {
+                      // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
+                      if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
+                        continue;
                       }
+
+                      // Update the child form field's value
+                      const fieldIndex = form.sections[0].fields.findIndex((field: FormField) => {
+
+                        return (field.id === linkedChildField.id);
+                      });
+
+                      form.updateFieldValue(
+                        0,
+                        fieldIndex,
+                        linkedParentField.value
+                      );
+
+                      this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
                     }
                   }
                 }
