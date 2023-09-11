@@ -306,8 +306,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
               await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
 
-              // This may occur if the rowId is not provided in the queryParams, but one is available in the session
-              
               if (selectedLookupRecord){
                 const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
 

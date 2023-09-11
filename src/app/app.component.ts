@@ -113,8 +113,7 @@ export class AppComponent implements OnDestroy, OnInit {
     if (idAsString) {
       try {
         idAsNumber = parseInt(idAsString);
-  
-      return idAsNumber;
+        return idAsNumber;
       }
       catch {
         return null;
