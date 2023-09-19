@@ -426,6 +426,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this._appStateService.setRecordSelected(null);
   }
 
+  async copyWindowUrl(): Promise<void> {
+
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  }
+
 
   async printCurrentForm(): Promise<void> {
 
@@ -742,8 +751,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   /**
    * Adds the current row information to the querystring of the table URL
    */
-  private _updateFilteredTableUrl() {
-
+  private _updateFilteredTableUrl(): void {
     this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : this.filteredTableUrl;
   }
 }

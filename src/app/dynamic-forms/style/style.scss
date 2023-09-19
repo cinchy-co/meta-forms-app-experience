@@ -374,12 +374,9 @@ button.btnSave.mat-raised-button {
 
 button.btnMenu.mat-icon-button {
   background-color: transparent;
-  border: 1px solid #E7015B;
   margin: auto 0;
-  &:disabled {
-    border-color: transparent;
-  }
 }
+
 .mat-menu-content {
   button.mat-menu-item:focus {
     outline: none;

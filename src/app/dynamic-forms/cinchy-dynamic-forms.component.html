@@ -23,15 +23,15 @@
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #menu="matMenu" xPosition="before">
-        <button mat-menu-item  *ngIf="canCreateNewRecord" (click)="createNewRecord()">
+        <button mat-menu-item  [disabled]="!canCreateNewRecord" (click)="createNewRecord()">
           <mat-icon>add_circle</mat-icon>
           <span>Create</span>
         </button>
-        <button mat-menu-item *ngIf="rowId" [disabled]="!enableSaveBtn" (click)="cloneFormData()">
+        <button mat-menu-item [disabled]="!rowId" (click)="cloneFormData()">
           <mat-icon>content_copy</mat-icon>
           <span>Duplicate</span>
         </button>
-        <button mat-menu-item>
+        <button mat-menu-item [disabled]="!rowId" (click)="copyWindowUrl()">
           <mat-icon>content_paste</mat-icon>
           <span>Copy link</span>
         </button>
@@ -39,9 +39,9 @@
           <mat-icon>picture_as_pdf</mat-icon>
           <span>Export PDF</span>
         </button>
-        <a mat-menu-item *ngIf="filteredTableUrl" target="_blank" [href]="filteredTableUrl" >
-          <mat-icon>table_view</mat-icon>
-          <span>View Record in Table</span>
+        <a mat-menu-item target="_blank" [disabled]="!filteredTableUrl" [href]="filteredTableUrl" >
+          <mat-icon>table</mat-icon>
+          <span>View in Table</span>
         </a>
       </mat-menu>
 
