@@ -111,10 +111,10 @@ export class AppStateService {
 
 
   /**
-   * Stores the selected record in the
+   * Stores the selected record in the service and updates the application state to match it
    *
-   * @param rowId
-   * @param doNotReloadForm
+   * @param rowId The Cinchy ID of the selected record. If null, the selected record has been cleared
+   * @param doNotReloadForm Indicates that a refresh is not required
    */
   setRecordSelected(rowId: number | null, doNotReloadForm: boolean = false): void {
 
