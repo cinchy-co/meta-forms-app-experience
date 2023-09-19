@@ -99,7 +99,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   private _formIsLoading: boolean = false;
 
 
-  private _queuedRecordSelection: { cinchyId: number | null, doNotReloadForm: boolean };
+  private _queuedRecordSelection: { rowId: number | null, doNotReloadForm: boolean };
 
   /**
    * Contains the set of all pending updates and inserts for child form records on this form. When the form is saved,
@@ -154,7 +154,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this.lookupRecordsList = [{ id: -1, label: "Loading..." }];
 
     this._appStateService.onRecordSelected$.subscribe(
-      (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
+      (record: { rowId: number | null, doNotReloadForm: boolean }) => {
 
         if (this.lookupRecordsListPopulated) {
           this._handleRecordSelection(record);
@@ -557,9 +557,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   /**
    * Ingests the selected record and populates the form accordingly
    */
-  private async _handleRecordSelection(record: { cinchyId: number | null, doNotReloadForm: boolean }): Promise<void> {
+  private async _handleRecordSelection(record: { rowId: number | null, doNotReloadForm: boolean }): Promise<void> {
 
-    this.rowId = record?.cinchyId;
+    this.rowId = record?.rowId;
 
     if (this.rowId) {
       this.setLookupRecords(this.lookupRecordsList);
