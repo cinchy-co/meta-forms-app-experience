@@ -13,15 +13,47 @@
     </div>
 
     <div class="action-buttons" matTooltip="Data is loading..." [matTooltipDisabled]="enableSaveBtn">
-      <button class="no-bg mr-20" type="button" mat-button color="accent" (click)="cloneFormData()" *ngIf="rowId" [disabled]="!enableSaveBtn" >
+      <button class="no-bg" type="button" mat-button color="accent" (click)="cloneFormData()" *ngIf="rowId" [disabled]="!enableSaveBtn" >
         <mat-icon class="font-22" title="Clone Data">queue</mat-icon>
         Duplicate Record
       </button>
 
-      <button type="button" class="no-bg mr-20" mat-button color="accent" [disabled]="!enableSaveBtn" (click)="printCurrentForm()">
+      <button type="button" class="no-bg" mat-button color="accent" [disabled]="!enableSaveBtn" (click)="printCurrentForm()">
         <mat-icon class="font-22" title="Export To Pdf">archive</mat-icon>
         Export As Pdf
       </button>
+
+      <button mat-icon-button
+        aria-label="Menu"
+        class="btnMenu"
+        color="accent"
+        type="button"
+        [matMenuTriggerFor]="menu"
+      >
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu" xPosition="before">
+        <button mat-menu-item  *ngIf="canCreateNewRecord" (click)="createNewRecord()">
+          <mat-icon>add_circle</mat-icon>
+          <span>Create</span>
+        </button>
+        <button mat-menu-item *ngIf="rowId" [disabled]="!enableSaveBtn" (click)="cloneFormData()">
+          <mat-icon>content_copy</mat-icon>
+          <span>Duplicate</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>content_paste</mat-icon>
+          <span>Copy link</span>
+        </button>
+        <button mat-menu-item [disabled]="!enableSaveBtn" (click)="printCurrentForm()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>Export PDF</span>
+        </button>
+        <button mat-menu-item>
+          <mat-icon>table_view</mat-icon>
+          <span>View Record in Table</span>
+        </button>
+      </mat-menu>
 
       <!--<button mat-raised-button class="ml-20 navigation-buttons have-brand float-right" (click)="printCurrentForm()">Print</button>-->
 

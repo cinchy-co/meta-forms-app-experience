@@ -11,6 +11,7 @@ import {
   ViewEncapsulation
 } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
 
@@ -42,6 +43,7 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import { table } from "console";
 
 
 const INITIAL_TEMPORARY_CINCHY_ID = -2;
@@ -82,6 +84,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   fieldsWithErrors: Array<any>;
   currentRow: ILookupRecord;
 
+  canInsert: boolean;
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
 
@@ -89,6 +92,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   get lookupRecordsListPopulated(): boolean {
 
     return (this.lookupRecordsList?.length && this.lookupRecordsList[0].id !== -1);
+  }
+
+  get canCreateNewRecord(): boolean {
+
+    // We're checking for rowId here so that the create button isn't visible if when the form
+    // is already in create mode
+    return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
   }
 
 
@@ -291,6 +301,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       try {
         let tableEntitlements = await this._cinchyService.getTableEntitlementsById(this.formMetadata.tableId).toPromise();
 
+        this.canInsert = tableEntitlements.canAddRows;
         const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
 
         form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
@@ -406,6 +417,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       return query.rowId !== data.rowId;
     });
+  }
+
+  createNewRecord(): void {
+    this._appStateService.setRecordSelected(null);
   }
 
 
