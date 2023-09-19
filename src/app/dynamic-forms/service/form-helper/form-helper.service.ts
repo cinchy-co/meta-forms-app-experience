@@ -101,7 +101,7 @@ export class FormHelperService {
         const columnEntitlements = tableEntitlements.columnEntitlements.find(_ => _.columnId === formFields[i].columnId);
         const columnEntitlementKey = columnEntitlements ? `entitlement-${columnEntitlements?.columnName.substring(0, 114)}` : '';
         const attachedFileName = await this._getFileName(rowId, formFields[i].fileNameColumn);
-      
+
         if (columnMetadata?.dependencyColumnIds && columnMetadata?.dependencyColumnIds.length > 0){
           const parentMetadata = tableJson.Columns.find(_ => _.columnId === columnMetadata?.dependencyColumnIds[0]);
 
@@ -157,7 +157,7 @@ export class FormHelperService {
           const displayColumnId = formFields[i].displayColumn.split(',').map(_ => parseInt(_, 10));
 
           displayColumnId.push(formFields[i].linkFieldId);
-        
+
           const childFormMetadata = await this._cinchyQueryService.getFormMetadata(childFormId).toPromise();
           const childFormSectionsMetadata = await this._cinchyQueryService.getFormSectionsMetadata(childFormId).toPromise();
 
@@ -248,7 +248,7 @@ export class FormHelperService {
         if (allChildForms[i].childFormParentId && allChildForms[i].childFormLinkId) {
           let parentColName = this._parseColumnNameByChildFormLinkId(allChildForms[i].childFormParentId);
           let childColName = this._parseColumnNameByChildFormLinkId(allChildForms[i].childFormLinkId);
-        
+
           if (parentColName && form.fieldsByColumnName[parentColName] && childColName && allChildForms[i].fieldsByColumnName[childColName]) {
             if (isNullOrUndefined(parentChildLinkedColumns[parentColName])) {
               parentChildLinkedColumns[parentColName] = [];
@@ -282,7 +282,7 @@ export class FormHelperService {
     }
 
     const selectQuery: IQuery = form.generateSelectQuery(targetRowId);
-    
+
     if (isNullOrUndefined(selectQuery)) {
       return false;
     }
@@ -350,7 +350,7 @@ export class FormHelperService {
   }
 
 
-  private async _getCellEntitlements(domainName: string, tableName: string, cinchyId: number, formFieldsMetadata: IFormFieldMetadata[]): Promise<Object> {
+  private async _getCellEntitlements(domainName: string, tableName: string, rowId: number, formFieldsMetadata: IFormFieldMetadata[]): Promise<Object> {
 
     const selectClause = formFieldsMetadata
       .filter(_ => _.columnName)
@@ -361,7 +361,7 @@ export class FormHelperService {
         ${selectClause.toString()}
       FROM [${domainName}].[${tableName}] t
       WHERE t.[Deleted] IS NULL
-        AND t.[Cinchy ID]=${cinchyId};`;
+        AND t.[Cinchy ID]=${rowId};`;
 
     try {
       let response = await this._cinchyService.executeCsql(query, null).toPromise();
@@ -375,10 +375,10 @@ export class FormHelperService {
   }
 
 
-  private async _getFileName(cinchyId: number, fileNameColumn: string): Promise<string> {
+  private async _getFileName(rowId: number, fileNameColumn: string): Promise<string> {
 
     const [domain, table, column] = fileNameColumn?.split(".") || [];
-    const whereCondition = `WHERE [Cinchy ID] = ${cinchyId} AND [Deleted] IS NULL`;
+    const whereCondition = `WHERE [Cinchy ID] = ${rowId} AND [Deleted] IS NULL`;
 
     if (domain) {
       const query = `SELECT [${column}] as 'fullName',

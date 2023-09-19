@@ -45,14 +45,14 @@ export class CinchyQueryService {
   ) {}
 
 
-  getFilesInCell(columnName: string, domainName: string, tableName: string, cinchyId: number): Observable<Array<{ fileId: number, fileName: string }>> {
+  getFilesInCell(columnName: string, domainName: string, tableName: string, rowId: number): Observable<Array<{ fileId: number, fileName: string }>> {
 
     const query = `
       SELECT
         [${columnName}].[Cinchy ID] AS 'fileIds',
         [${columnName}].[File Name] AS 'fileNames'
       FROM [${domainName}].[${tableName}]
-      WHERE [Cinchy ID]=${cinchyId};`;
+      WHERE [Cinchy ID]=${rowId};`;
 
     return this._cinchyService.executeCsql(query, null).pipe(map(
       resp => {
@@ -221,7 +221,7 @@ export class CinchyQueryService {
   }
 
 
-  updateFilesInCell(fileIds: number[], columnName: string, domainName: string, tableName: string, cinchyId: number): Observable<any> {
+  updateFilesInCell(fileIds: number[], columnName: string, domainName: string, tableName: string, rowId: number): Observable<any> {
 
     const ids = fileIds.length > 0 ? fileIds?.join(',1,') + ',1' : '';
     const query = `
@@ -229,7 +229,7 @@ export class CinchyQueryService {
       SET t.[${columnName}]='${ids}'
       FROM [${domainName}].[${tableName}] t
       WHERE [Deleted] IS NULL
-        AND [Cinchy ID]=${cinchyId};`;
+        AND [Cinchy ID]=${rowId};`;
 
     return this._cinchyService.executeCsql(query, null).pipe(map(result => result.queryResult.toObjectArray() as { fileId: number, fileName: string }[]));
   }
