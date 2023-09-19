@@ -85,6 +85,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   currentRow: ILookupRecord;
 
   canInsert: boolean;
+  filteredTableUrl: string;
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
 
@@ -172,6 +173,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         else {
           this._queuedRecordSelection = record;
         }
+
+        this._updateFilteredTableUrl();
       }
     );
   }
@@ -734,5 +737,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         await this._cinchyService.executeCsql(query, params).toPromise();
       }
     });
+  }
+
+  /**
+   * Adds the current row information to the querystring of the table URL
+   */
+  private _updateFilteredTableUrl() {
+
+    this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : this.filteredTableUrl;
   }
 }

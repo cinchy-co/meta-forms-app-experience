@@ -379,7 +379,9 @@ button.btnMenu.mat-icon-button {
   &:disabled {
     border-color: transparent;
   }
-  &:focus {
+}
+.mat-menu-content {
+  button.mat-menu-item:focus {
     outline: none;
   }
 }
@@ -424,7 +426,7 @@ button.btnMenu.mat-icon-button {
       text-decoration: underline;
     }
   }
-  
+
 
   mat-icon {
     line-height: 1.2 !important;
