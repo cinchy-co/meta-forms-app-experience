@@ -430,6 +430,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     try {
       await navigator.clipboard.writeText(window.location.href);
+      this._toastr.success("Copied", "Success");
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
