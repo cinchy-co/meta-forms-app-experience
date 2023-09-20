@@ -95,10 +95,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     return (this.lookupRecordsList?.length && this.lookupRecordsList[0].id !== -1);
   }
 
+  /**
+   * We're checking for rowId here so that the create button isn't visible if when the form
+   * is already in create mode
+   */
   get canCreateNewRecord(): boolean {
 
-    // We're checking for rowId here so that the create button isn't visible if when the form
-    // is already in create mode
     return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
   }
 
@@ -422,14 +424,17 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     });
   }
 
+
   createNewRecord(): void {
     this._appStateService.setRecordSelected(null);
   }
+
 
   async copyWindowUrl(): Promise<void> {
 
     try {
       await navigator.clipboard.writeText((window.location === window.parent.location) ? window.location.href : window.parent.location.href);
+
       this._toastr.success("Copied", "Success");
     } catch (err) {
       console.error('Failed to copy: ', err);
@@ -749,10 +754,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     });
   }
 
+
   /**
    * Adds the current row information to the querystring of the table URL
    */
   private _updateFilteredTableUrl(): void {
-    this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : this.filteredTableUrl;
+    this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : "";
   }
 }
