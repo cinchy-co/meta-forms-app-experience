@@ -429,7 +429,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   async copyWindowUrl(): Promise<void> {
 
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText((window.location === window.parent.location) ? window.location.href : window.parent.location.href);
       this._toastr.success("Copied", "Success");
     } catch (err) {
       console.error('Failed to copy: ', err);
