@@ -39,27 +39,16 @@ export class SidenavComponent implements OnInit {
 
     this._tableUrl = value
 
-    this._updateFilteredTableUrl();
   };
   private _tableUrl: string;
 
   @Output() closeSideBar = new EventEmitter<any>();
 
 
-  canInsert: boolean;
-  filteredTableUrl: string;
   formSectionsMetadata: IFormSectionMetadata[] = [];
   selectedSection: string;
   showNewContactLink: boolean;
   toggleMenu: boolean;
-
-
-  get canCreateNewRecord(): boolean {
-
-    // We're checking for rowId here so that the create button isn't visible if when the form
-    // is already in create mode
-    return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
-  }
 
 
   /**
@@ -80,17 +69,6 @@ export class SidenavComponent implements OnInit {
 
 
   ngOnInit(): void {
-
-    this.loadTableEntitlements();
-
-
-    this._appStateService.onRecordSelected$.subscribe({
-      next: () => {
-
-        this._updateFilteredTableUrl();
-      }
-    });
-
 
     // This has the potential to fire multiple times when the form first loads
     this._appStateService.currentSection$.pipe(
@@ -114,25 +92,10 @@ export class SidenavComponent implements OnInit {
   }
 
 
-  createNewRecord(): void {
-    this.sectionClicked(this.formSectionsMetadata[0]);
-    this._appStateService.setRecordSelected(null);
-  }
-
-
   isSelected(targetSection: string): boolean {
 
     return (this.selectedSection === targetSection);
   }
-
-
-  async loadTableEntitlements(): Promise<void> {
-
-    const resp = await this._cinchyService.getTableEntitlementsById(this.tableId).toPromise();
-
-    this.canInsert = resp.canAddRows;
-  }
-
 
   openAddNewOptionDialog(): void {
 
@@ -169,14 +132,5 @@ export class SidenavComponent implements OnInit {
     }
 
     sectionElement?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-
-  /**
-   * Adds the current row information to the querystring of the table URL
-   */
-  private _updateFilteredTableUrl() {
-
-    this.filteredTableUrl = this._appStateService.rowId ? `${this._tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : this.filteredTableUrl;
   }
 }

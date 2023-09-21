@@ -11,6 +11,7 @@ import {
   ViewEncapsulation
 } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
 
@@ -42,6 +43,7 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import { table } from "console";
 
 
 const INITIAL_TEMPORARY_CINCHY_ID = -2;
@@ -82,6 +84,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   fieldsWithErrors: Array<any>;
   currentRow: ILookupRecord;
 
+  canInsert: boolean;
+  filteredTableUrl: string;
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
 
@@ -89,6 +93,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   get lookupRecordsListPopulated(): boolean {
 
     return (this.lookupRecordsList?.length && this.lookupRecordsList[0].id !== -1);
+  }
+
+  /**
+   * We're checking for rowId here so that the create button isn't visible if when the form
+   * is already in create mode
+   */
+  get canCreateNewRecord(): boolean {
+
+    return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
   }
 
 
@@ -162,6 +175,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         else {
           this._queuedRecordSelection = record;
         }
+
+        this._updateFilteredTableUrl();
       }
     );
   }
@@ -291,6 +306,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       try {
         let tableEntitlements = await this._cinchyService.getTableEntitlementsById(this.formMetadata.tableId).toPromise();
 
+        this.canInsert = tableEntitlements.canAddRows;
         const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
 
         form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
@@ -406,6 +422,23 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       return query.rowId !== data.rowId;
     });
+  }
+
+
+  createNewRecord(): void {
+    this._appStateService.setRecordSelected(null);
+  }
+
+
+  async copyWindowUrl(): Promise<void> {
+
+    try {
+      await navigator.clipboard.writeText((window.location === window.parent.location) ? window.location.href : window.parent.location.href);
+
+      this._toastr.success("Copied", "Success");
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
   }
 
 
@@ -719,5 +752,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         await this._cinchyService.executeCsql(query, params).toPromise();
       }
     });
+  }
+
+
+  /**
+   * Adds the current row information to the querystring of the table URL
+   */
+  private _updateFilteredTableUrl(): void {
+    this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : "";
   }
 }

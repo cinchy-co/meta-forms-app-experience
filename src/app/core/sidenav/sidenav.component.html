@@ -1,7 +1,3 @@
-<div class="sidenav-table-link" *ngIf="filteredTableUrl">
-  <a [href]="filteredTableUrl" target="_blank">< Back to Table View</a>
-</div>
-
 <div class="sidenav" [ngClass]="{'hide-show': toggleMenu}">
   <div class="sidenav-options">
     <h6 class="m-b-10">
@@ -23,11 +19,6 @@
 
   <div class="useful-links-wrapper">
     <hr>
-    <p class="link-with-icon" *ngIf="canCreateNewRecord" (click)="createNewRecord()">
-      <mat-icon>queue</mat-icon>
-      <span>Create New Record</span>
-    </p>
-
     <p class="link-with-icon" *ngIf="createNewEntityLabel" (click)="openAddNewOptionDialog()">
       <mat-icon>queue</mat-icon>
       <span>Add {{createNewEntityLabel}}</span>
