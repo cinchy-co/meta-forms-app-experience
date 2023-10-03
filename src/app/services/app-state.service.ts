@@ -29,7 +29,7 @@ export class AppStateService {
 
   parentFormSavedFromChild$ = new Subject<{
     childForm: Form,
-    presetValues ?: { [key: string]: any },
+    presetValues?: { [key: string]: any },
     title: string
   }>();
 
@@ -42,7 +42,7 @@ export class AppStateService {
   /**
    * Notifies subscribers that a new record has been selected
    */
-  onRecordSelected$ = new BehaviorSubject<{ cinchyId: number | null, doNotReloadForm: boolean }>(null);
+  onRecordSelected$ = new BehaviorSubject<{ rowId: number | null, doNotReloadForm: boolean }>(null);
 
 
   /**
@@ -67,6 +67,41 @@ export class AppStateService {
   private _rowId: number;
 
 
+  /**
+   * Removes the rowId parameter from the querystring of the application and, if the app is embedded in an iframe, the wrapping view. If the app is not
+   * embedded, then posting the message will have no effect.
+   */
+  deleteRowIdInQueryParams() {
+
+    // Targets the wrapping view
+    const message = JSON.stringify({
+      deleteCinchyURLParams:
+        [
+          "rowId"
+        ]
+    });
+
+    window.parent.postMessage(message, '*');
+
+    // Modifies the app's URL
+    const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+
+      const [key, value] = paramString.split("=");
+
+      if (key != "rowId") {
+        return `${key}=${value}`;
+      }
+    }).join("");
+
+    const baseUrl = window.location.href.substr(0, window.location.href.indexOf("&"));
+
+    window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}`);
+  }
+
+
+  /**
+   * Stores the ID of the root form at the application level. Child forms load their IDs locally, and should not affect hte application state
+   */
   setRootFormId(id: string): void {
 
     this._formId = id;
@@ -75,44 +110,61 @@ export class AppStateService {
   }
 
 
-  setRecordSelected(cinchyId: number | null, doNotReloadForm: boolean = false): void {
+  /**
+   * Stores the selected record in the service and updates the application state to match it
+   *
+   * @param rowId The Cinchy ID of the selected record. If null, the selected record has been cleared
+   * @param doNotReloadForm Indicates that a refresh is not required
+   */
+  setRecordSelected(rowId: number | null, doNotReloadForm: boolean = false): void {
 
-    this._rowId = cinchyId;
+    this._rowId = rowId;
 
-    this.onRecordSelected$.next({ cinchyId, doNotReloadForm });
+    this.onRecordSelected$.next({
+      rowId: rowId,
+      doNotReloadForm: doNotReloadForm
+    });
 
-    // Update URL with the new ID, if present
-    if (window.location.search?.includes("rowId")) {
-      const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+    if (rowId === null) {
+      this.deleteRowIdInQueryParams();
+    }
+    else {
+      this.updateRowIdInQueryParams(rowId);
+    }
+  }
 
-        const [key, value] = paramString.split("=");
 
-        if (key === "rowId") {
-          return `${key}=${cinchyId ? cinchyId.toString() : "null"}`;
-        }
-        else {
-          return paramString;
-        }
-      });
+  updateRowIdInQueryParams(rowId: number) {
 
-      if (queryParams?.length) {
-        const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
-
-        window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams.join("&")}`);
+    const messageJSON = {
+      updateCinchyURLParams:
+      {
+        rowId: rowId
       }
-    }
-    else if (window.parent.location.search?.includes("rowId")) {
-      const messageJSON = {
-        updateCinchyURLParams:
-        {
-          rowId: cinchyId
-        }
-      };
+    };
 
-      window.parent.postMessage(JSON.stringify(messageJSON), '*');
-    }
+    const message = JSON.stringify(messageJSON);
 
-    sessionStorage.setItem("rowId", this._rowId ? this._rowId.toString() : "");
-    sessionStorage.setItem("formId", this.formId ?? "");
+    window.parent.postMessage(message, '*');
+
+    const rowIdQueryParams = messageJSON['updateCinchyURLParams'];
+    const rowIdQueryString = Object.keys(rowIdQueryParams)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(rowIdQueryParams[key])}`)
+      .join('&');
+
+    const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
+
+      const [key, value] = paramString.split("=");
+
+      if (key != "rowId") {
+        return `${key}=${value}`;
+      }
+    }).join("");
+
+    if (queryParams?.length) {
+      const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
+
+      window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}&${rowIdQueryString}`);
+    }
   }
 }

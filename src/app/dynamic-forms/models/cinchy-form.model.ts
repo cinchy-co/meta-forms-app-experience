@@ -558,15 +558,15 @@ export class Form {
 
         const isLinkedColumnForInsert = coerceBooleanProperty(
           !this.rowId &&
-            (field.cinchyColumn.dataType === "Link" ||
-              field.label === childFormLinkName)
+          (field.cinchyColumn.dataType === "Link" ||
+            field.label === childFormLinkName)
         );
 
         if (
-            field.cinchyColumn.canEdit &&
-            field.cinchyColumn.name &&
-            (!field.cinchyColumn.isViewOnly || forClonedForm) &&
-            (field.cinchyColumn.hasChanged || isLinkedColumnForInsert)
+          field.cinchyColumn.canEdit &&
+          field.cinchyColumn.name &&
+          (!field.cinchyColumn.isViewOnly || forClonedForm) &&
+          (field.cinchyColumn.hasChanged || isLinkedColumnForInsert)
         ) {
           paramName = `@p${paramNumber++}`;
           foundLinkedColumn ||= field.label === childFormLinkName;
@@ -575,7 +575,7 @@ export class Form {
             case "Date and Time":
               try {
                 params[paramName] = field.value ?
-                  ( ((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null ) :
+                  (((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null) :
                   null;
               }
               catch (error) {
@@ -809,20 +809,25 @@ export class Form {
     fields.push("[Cinchy ID]");
 
     if (this.isChild) {
-      const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
+      
+        if (!this.childFormLinkId) {
+          return null;
+        }
+ 
+        const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
 
-      const whereConditionWithFilter = this.childFormFilter ?
-      `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
+        const whereConditionWithFilter = this.childFormFilter ?
+        `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
+  
+        const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
+  
+        let query: IQuery = new Query(
+          `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
+          null,
+          null
+        );
+        return query;
 
-      const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
-
-      let query: IQuery = new Query(
-        `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
-        null,
-        null
-      );
-
-      return query;
     } else {
       let query: IQuery = new Query(
         `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,
@@ -870,59 +875,58 @@ export class Form {
         if (field.cinchyColumn.name) {
           allRowData.forEach((rowData: { [key: string]: any }) => {
 
-          //TODO: Passing array value in case of multiselect
-          if (field.cinchyColumn.dataType === "Choice" && field.cinchyColumn.isMultiple === true) {
-            const valueArray = rowData[field.cinchyColumn.name]?.split(",") ?? [];
+            if (field.cinchyColumn.dataType === "Choice" && field.cinchyColumn.isMultiple === true) {
+              const valueArray = rowData[field.cinchyColumn.name]?.split(",") ?? [];
 
-            let optionArray = [];
+              let optionArray = [];
 
-            valueArray.forEach((element: any) => {
+              valueArray.forEach((element: any) => {
 
-              if (element) {
-                const value = element.trim();
-                const objValues = {
-                  id: value,
-                  itemName: value
-                };
+                if (element) {
+                  const value = element.trim();
+                  const objValues = {
+                    id: value,
+                    itemName: value
+                  };
 
-                optionArray.push(objValues);
-              }
-            });
+                  optionArray.push(objValues);
+                }
+              });
 
-            field.setInitialValue(optionArray);
-          } else {
-            field.setInitialValue(rowData[field.cinchyColumn.name]);
-          }
+              field.setInitialValue(optionArray);
+            } else {
+              field.setInitialValue(rowData[field.cinchyColumn.name]);
+            }
 
-          if (field.cinchyColumn.dataType === "Link") {
-            let optionArray: Array<DropdownOption> = new Array<DropdownOption>();
+            if (field.cinchyColumn.dataType === "Link") {
+              let optionArray: Array<DropdownOption> = new Array<DropdownOption>();
 
-            if (rowData[field.cinchyColumn.name]) {
-              const labelForColumn = field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name;
+              if (rowData[field.cinchyColumn.name]) {
+                const labelForColumn = field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name;
 
-              let properLabelForColumn = " label";
+                let properLabelForColumn = " label";
 
-              if (field.cinchyColumn.isDisplayColumn) {
-                if (duplicateLabelColumns[labelForColumn] || duplicateLabelColumns[labelForColumn] === 0) {
-                  duplicateLabelColumns[labelForColumn] = duplicateLabelColumns[labelForColumn] + 1;
-                  properLabelForColumn = `${properLabelForColumn}${duplicateLabelColumns[labelForColumn]}`;
-                } else {
-                  duplicateLabelColumns[labelForColumn] = 0;
+                if (field.cinchyColumn.isDisplayColumn) {
+                  if (duplicateLabelColumns[labelForColumn] || duplicateLabelColumns[labelForColumn] === 0) {
+                    duplicateLabelColumns[labelForColumn] = duplicateLabelColumns[labelForColumn] + 1;
+                    properLabelForColumn = `${properLabelForColumn}${duplicateLabelColumns[labelForColumn]}`;
+                  } else {
+                    duplicateLabelColumns[labelForColumn] = 0;
+                  }
+                }
+
+                optionArray.push(new DropdownOption(rowData[field.cinchyColumn.name], rowData[labelForColumn + properLabelForColumn]));
+
+                let result = new DropdownDataset(optionArray, true);
+
+                rowData[field.cinchyColumn.name] = field.value;
+
+                if (isNullOrUndefined(field.dropdownDataset)) {
+                  field.dropdownDataset = result;
                 }
               }
-
-              optionArray.push(new DropdownOption(rowData[field.cinchyColumn.name], rowData[labelForColumn + properLabelForColumn]));
-
-              let result = new DropdownDataset(optionArray, true);
-
-              rowData[field.cinchyColumn.name] = field.value;
-
-              if (isNullOrUndefined(field.dropdownDataset)) {
-                field.dropdownDataset = result;
-              }
             }
-          }
-        });
+          });
         }
       });
     });
@@ -937,8 +941,8 @@ export class Form {
    * that the application can digest.
    */
   populateChildRecordData(
-      selectQueryResult: Array<{ [key: string]: any }>,
-      preselectedRecord?: ILookupRecord
+    selectQueryResult: Array<{ [key: string]: any }>,
+    preselectedRecord?: ILookupRecord
   ): void {
 
     this.childFormRowValues = selectQueryResult.slice();
@@ -1082,9 +1086,9 @@ export class Form {
   updateChildFormProperty(sectionIndex: number, fieldIndex: number, property: IAdditionalProperty): void {
 
     if (
-        this._sections?.length > sectionIndex &&
-        this._sections[sectionIndex].fields?.length > fieldIndex &&
-        this._sections[sectionIndex].fields[fieldIndex].childForm
+      this._sections?.length > sectionIndex &&
+      this._sections[sectionIndex].fields?.length > fieldIndex &&
+      this._sections[sectionIndex].fields[fieldIndex].childForm
     ) {
       this._sections[sectionIndex].fields[fieldIndex].childForm.updateRootProperty(property);
     }
@@ -1164,3 +1168,4 @@ export class Form {
     return set;
   }
 }
+

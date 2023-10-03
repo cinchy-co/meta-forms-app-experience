@@ -26,16 +26,6 @@ export class AppComponent implements OnDestroy, OnInit {
       private cinchyService: CinchyService,
       private appStateService: AppStateService
   ) {
-
-    this._routerEventSubscription = this.router.events.subscribe({
-      next: (event: RouterEvent) => {
-
-        // This is used if the incoming URL causes an immediate reload which would otherwise destroy the queryparams
-        if (event instanceof NavigationStart && !this.loginDone) {
-          this.setRowAndFormId();
-        }
-      }
-    });
   }
 
 
@@ -70,59 +60,11 @@ export class AppComponent implements OnDestroy, OnInit {
 
 
   /**
-   * Gets the numerical rowId associated with this session regardless of its source
-   */
-  getIdFromSessionOrUri(uri: string, key: string): number {
-
-    let idAsString: string;
-    let idAsNumber: number;
-
-    if (uri) {
-      idAsString = this.getQueryStringValue("rowId", uri); 
-    }
-
-    if (idAsString) {
-      try {
-        idAsNumber = parseInt(idAsString);
-
-        return idAsNumber;
-      }
-      catch (error) {
-        // Since the given ID isn't valid, ignore it and move on
-      }
-    }
-
-    idAsString = sessionStorage.getItem(key);
-
-    // We are intentionally performing this action twice so that we can guarantee a fallback in cases where the given rowId is mangled
-    // and cases where it is not provided in the queryParams
-    if (idAsString) {
-      try {
-        idAsNumber = parseInt(idAsString);
-
-        return idAsNumber;
-      }
-      catch (error) {
-        return null;
-      }
-    }
-
-    return null;
-  }
-
-
-  /**
    * Pulls the value with the target key out of the querystring
    */
   getQueryStringValue(key: string, uri: string): string {
 
     const value = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
-
-    // Covers the case where there is an ID stored in the session but the queryString explicitly requests to clear it
-    if (value === "null") {
-      sessionStorage.removeItem(key);
-    }
-
     return (value && value !== "null") ? value : null;
   }
 
@@ -155,8 +97,29 @@ export class AppComponent implements OnDestroy, OnInit {
     // see if the formId is present there, and then use those if that is the case. If the app is not embedded, or if the parent instead sets
     // the embedded frame's target using the querystring, then we use this window's queryParams instead
     const resolvedUri = parentUri?.includes("formId") ? parentUri : uri;
+    this.appStateService.setRootFormId(this.getQueryStringValue("formId", resolvedUri));
+    this.appStateService.setRecordSelected(this.getRowIdFromUri(uri, "rowId"), false);
+  }
 
-    this.appStateService.setRootFormId(resolvedUri ? this.getQueryStringValue("formId", resolvedUri) : sessionStorage.getItem("formId"));
-    this.appStateService.setRecordSelected(this.getIdFromSessionOrUri(resolvedUri, "rowId"));
+  getRowIdFromUri(uri: string, key: string): number {
+
+    let idAsString: string;
+    let idAsNumber: number;
+  
+    if (uri) {
+      idAsString = this.getQueryStringValue("rowId", uri);
+    }
+  
+    if (idAsString) {
+      try {
+        idAsNumber = parseInt(idAsString);
+        return idAsNumber;
+      }
+      catch {
+        return null;
+      }
+    }
+  
+    return null;
   }
 }

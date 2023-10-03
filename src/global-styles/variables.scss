@@ -42,6 +42,18 @@ $GREEN: green;
     background: transparent;
   }
 
+  button.btnMenu.mat-icon-button {
+    background-color: transparent;
+    color: $Tertiary_Color;
+    margin: auto 0;
+  }
+
+  .mat-menu-content {
+    button.mat-menu-item:focus {
+      outline: none;
+    }
+  }
+
   .full-height-element {
     overflow: auto;
   }

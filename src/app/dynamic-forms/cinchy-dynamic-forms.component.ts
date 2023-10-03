@@ -11,6 +11,7 @@ import {
   ViewEncapsulation
 } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
 
@@ -42,6 +43,7 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import { table } from "console";
 
 
 const INITIAL_TEMPORARY_CINCHY_ID = -2;
@@ -82,6 +84,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   fieldsWithErrors: Array<any>;
   currentRow: ILookupRecord;
 
+  canInsert: boolean;
+  filteredTableUrl: string;
   enableSaveBtn: boolean = false;
   formHasDataLoaded: boolean = false;
 
@@ -89,6 +93,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   get lookupRecordsListPopulated(): boolean {
 
     return (this.lookupRecordsList?.length && this.lookupRecordsList[0].id !== -1);
+  }
+
+  /**
+   * We're checking for rowId here so that the create button isn't visible if when the form
+   * is already in create mode
+   */
+  get canCreateNewRecord(): boolean {
+
+    return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
   }
 
 
@@ -99,7 +112,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   private _formIsLoading: boolean = false;
 
 
-  private _queuedRecordSelection: { cinchyId: number | null, doNotReloadForm: boolean };
+  private _queuedRecordSelection: { rowId: number | null, doNotReloadForm: boolean };
 
   /**
    * Contains the set of all pending updates and inserts for child form records on this form. When the form is saved,
@@ -130,7 +143,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     private _printService: PrintService,
     private _formHelperService: FormHelperService,
     private _configService: ConfigService
-  ) {}
+  ) { }
 
 
   async ngOnChanges(changes: SimpleChanges): Promise<void> {
@@ -154,7 +167,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this.lookupRecordsList = [{ id: -1, label: "Loading..." }];
 
     this._appStateService.onRecordSelected$.subscribe(
-      (record: { cinchyId: number | null, doNotReloadForm: boolean }) => {
+      (record: { rowId: number | null, doNotReloadForm: boolean }) => {
 
         if (this.lookupRecordsListPopulated) {
           this._handleRecordSelection(record);
@@ -162,6 +175,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         else {
           this._queuedRecordSelection = record;
         }
+
+        this._updateFilteredTableUrl();
       }
     );
   }
@@ -196,13 +211,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  checkNoRecord(lookupRecords: ILookupRecord[]): ILookupRecord[]{
+  checkNoRecord(lookupRecords: ILookupRecord[]): ILookupRecord[] {
 
     if (lookupRecords?.length > 0) {
       return lookupRecords;
     }
-    else{
-      return [{id: -1, label: "No records available"}];
+    else {
+      return [{ id: -1, label: "No records available" }];
     }
   }
 
@@ -215,7 +230,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this._lastTemporaryCinchyId = INITIAL_TEMPORARY_CINCHY_ID;
 
     this.form.restoreFormReferenceOnAllFields();
-
+    this._appStateService.setRecordSelected(null, true);
     this._toastr.info("The record was cloned, please save in order to create it. If this field contained any child records, please ensure the field used to link them is updated accordingly.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
   }
 
@@ -268,11 +283,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Gets called upon load, save, and row changes
    */
   async loadForm(
-      childData?: {
-        childForm: Form,
-        presetValues?: { [key: string]: any },
-        title: string
-      }
+    childData?: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      title: string
+    }
   ): Promise<void> {
 
     if (!this._formIsLoading) {
@@ -291,6 +306,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       try {
         let tableEntitlements = await this._cinchyService.getTableEntitlementsById(this.formMetadata.tableId).toPromise();
 
+        this.canInsert = tableEntitlements.canAddRows;
         const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
 
         form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
@@ -306,40 +322,34 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
               await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
 
-              // This may occur if the rowId is not provided in the queryParams, but one is available in the session
-              if (this.rowId) {
-                if (!selectedLookupRecord) {
-                  this._appStateService.setRecordSelected(null);
-                }
-                else {
-                  const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
+              if (selectedLookupRecord){
+                const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
 
-                  if (success && form.childFieldsLinkedToColumnName?.length) {
-                    // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
-                    for (let parentColumnName in form.childFieldsLinkedToColumnName) {
-                      let linkedParentField = form.fieldsByColumnName[parentColumnName];
-                      let linkedChildFields = form.childFieldsLinkedToColumnName[parentColumnName] || [];
+                if (success && form.childFieldsLinkedToColumnName?.length) {
+                  // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
+                  for (let parentColumnName in form.childFieldsLinkedToColumnName) {
+                    let linkedParentField = form.fieldsByColumnName[parentColumnName];
+                    let linkedChildFields = form.childFieldsLinkedToColumnName[parentColumnName] || [];
 
-                      for (let linkedChildField of linkedChildFields) {
-                        // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
-                        if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
-                          continue;
-                        }
-
-                        // Update the child form field's value
-                        const fieldIndex = form.sections[0].fields.findIndex((field: FormField) => {
-
-                          return (field.id === linkedChildField.id);
-                        });
-
-                        form.updateFieldValue(
-                          0,
-                          fieldIndex,
-                          linkedParentField.value
-                        );
-
-                        this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
+                    for (let linkedChildField of linkedChildFields) {
+                      // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
+                      if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
+                        continue;
                       }
+
+                      // Update the child form field's value
+                      const fieldIndex = form.sections[0].fields.findIndex((field: FormField) => {
+
+                        return (field.id === linkedChildField.id);
+                      });
+
+                      form.updateFieldValue(
+                        0,
+                        fieldIndex,
+                        linkedParentField.value
+                      );
+
+                      this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
                     }
                   }
                 }
@@ -380,11 +390,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   async openChildForm(
-      data: {
-        childForm: Form,
-        presetValues?: { [key: string]: any },
-        title: string
-      }
+    data: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      title: string
+    }
   ) {
 
     if (!this.form.isClone && !this.rowId) {
@@ -403,15 +413,32 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Removes any pending operations that would have affected the deleted row
    */
   onChildRowDeleted(data: {
-      childForm: Form,
-      rowId: number,
-      sectionIndex: number
+    childForm: Form,
+    rowId: number,
+    sectionIndex: number
   }): void {
 
     this._pendingChildFormQueries = this._pendingChildFormQueries.filter((query: IChildFormQuery) => {
 
       return query.rowId !== data.rowId;
     });
+  }
+
+
+  createNewRecord(): void {
+    this._appStateService.setRecordSelected(null);
+  }
+
+
+  async copyWindowUrl(): Promise<void> {
+
+    try {
+      await navigator.clipboard.writeText((window.location === window.parent.location) ? window.location.href : window.parent.location.href);
+
+      this._toastr.success("Copied", "Success");
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
   }
 
 
@@ -473,15 +500,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   async saveForm(
-      formData: Form,
-      rowId: number,
-      childData?: {
-        childForm: Form,
-        presetValues?: { [key: string]: any },
-        title: string
-      }
+    formData: Form,
+    rowId: number,
+    childData?: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      title: string
+    }
   ): Promise<void> {
-
     if (formData) {
       // check validations for the form eg: Required, Regular expression
       const formValidation = formData.checkFormValidation();
@@ -564,9 +590,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   /**
    * Ingests the selected record and populates the form accordingly
    */
-  private async _handleRecordSelection(record: { cinchyId: number | null, doNotReloadForm: boolean }): Promise<void> {
+  private async _handleRecordSelection(record: { rowId: number | null, doNotReloadForm: boolean }): Promise<void> {
 
-    this.rowId = record?.cinchyId;
+    this.rowId = record?.rowId;
 
     if (this.rowId) {
       this.setLookupRecords(this.lookupRecordsList);
@@ -621,7 +647,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           });
         });
 
-        const rowDataIndex = childFormRowValues.findIndex( (rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
+        const rowDataIndex = childFormRowValues.findIndex((rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
 
         if (rowDataIndex > -1) {
           newValues["Cinchy ID"] = resultId;
@@ -726,5 +752,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         await this._cinchyService.executeCsql(query, params).toPromise();
       }
     });
+  }
+
+
+  /**
+   * Adds the current row information to the querystring of the table URL
+   */
+  private _updateFilteredTableUrl(): void {
+    this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : "";
   }
 }
