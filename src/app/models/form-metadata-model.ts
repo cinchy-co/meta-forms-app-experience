@@ -1,6 +1,6 @@
 export interface IFormMetadata {
 	brand: string;
-  createNewOptionFormId: number;
+  createNewOptionFormId: string;
 	createNewOptionName: string;
   domainName: string;
 	formId: string;
