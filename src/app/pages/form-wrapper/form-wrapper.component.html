@@ -29,7 +29,6 @@
   <ng-template #sideMainContent>
     <app-sidenav *ngIf="formSectionsMetadata"
                  [tableId]="formMetadata.tableId"
-                 [tableUrl]="formMetadata.tableUrl"
                  [formMetadata]="formMetadata"
                  (closeSideBar)=sidenav.toggle()>
     </app-sidenav>
