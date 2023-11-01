@@ -1,11 +1,10 @@
-import {NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
-import {CustomMaterialModule} from "../custom-material.module";
-import {SharedModule} from "../shared/shared.module";
+import { NgModule } from "@angular/core";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { BrowserModule } from "@angular/platform-browser";
 
-import { AddNewEntityDialogComponent } from "./add-new-entity-dialog/add-new-entity-dialog.component";
-import {CinchyDynamicFormsModule} from "../dynamic-forms/cinchy-dynamic-forms.module";
+import { CustomMaterialModule } from "../custom-material.module";
+import { CinchyDynamicFormsModule } from "../dynamic-forms/cinchy-dynamic-forms.module";
+import { SharedModule } from "../shared/shared.module";
 
 
 @NgModule({
@@ -17,15 +16,8 @@ import {CinchyDynamicFormsModule} from "../dynamic-forms/cinchy-dynamic-forms.mo
     ReactiveFormsModule,
     CinchyDynamicFormsModule
   ],
-  declarations: [
-    AddNewEntityDialogComponent
-  ],
-  entryComponents: [
-    AddNewEntityDialogComponent
-  ],
+  declarations: [],
   providers: [],
   exports: []
 })
-
-export class DialogsModule {
-}
+export class DialogsModule {}

@@ -23,7 +23,7 @@ import { faSitemap } from "@fortawesome/free-solid-svg-icons";
 
 import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
-import { AddNewEntityDialogComponent } from "../../../dialogs/add-new-entity-dialog/add-new-entity-dialog.component";
+import { ChildFormComponent } from "../child-form/child-form.component";
 
 import { DataFormatType } from "../../enums/data-format-type";
 
@@ -41,6 +41,7 @@ import { DialogService } from "../../../services/dialog.service";
 import { DropdownDatasetService } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
 import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
+import { FormHelperService } from "../../service/form-helper/form-helper.service";
 
 import { isNullOrUndefined } from "util";
 
@@ -162,12 +163,13 @@ export class LinkComponent implements OnChanges, OnInit {
 
   constructor(
     private _appStateService: AppStateService,
+    private _changeDetectorRef: ChangeDetectorRef,
     private _cinchyQueryService: CinchyQueryService,
     private _cinchyService: CinchyService,
     private _configService: ConfigService,
     private _dialogService: DialogService,
     private _dropdownDatasetService: DropdownDatasetService,
-    private _changeDetectorRef: ChangeDetectorRef,
+    private _formHelperService: FormHelperService,
     private _spinner: NgxSpinnerService,
     private _toastr: ToastrService
   ) {}
@@ -475,17 +477,28 @@ export class LinkComponent implements OnChanges, OnInit {
 
   async openNewOptionDialog(): Promise<void> {
 
-    const newOptionDialogRef = this._dialogService.openDialog(AddNewEntityDialogComponent, {
-      createLinkOptionFormId: this.field.cinchyColumn.createlinkOptionFormId,
-      createLinkOptionName: this.field.cinchyColumn.createlinkOptionName
-    });
+    const form: Form = await this._formHelperService.getFormById(this.field.cinchyColumn.createlinkOptionFormId);
+
+    const newOptionDialogRef = this._dialogService.openDialog(
+      ChildFormComponent,
+      {
+        childForm: form,
+        title: this.field.cinchyColumn.createlinkOptionName
+      }
+    );
 
     await this._spinner.hide();
 
-    newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
+    newOptionDialogRef.afterClosed().subscribe(async (resultId: number): Promise<void> => {
 
-      if (value) {
-        this._appStateService.addNewEntityDialogClosed$.next(value);
+      // This check only exists to confirm that the dialog was closed by a save operation. If it was cancelled
+      // or closed by clicking the backdrop, it will be nullish
+      if (resultId) {
+        await this._spinner.show();
+
+        await this._formHelperService.addOptionToLinkedTable(form);
+
+        await this._spinner.hide();
       }
     });
   }
