@@ -1162,7 +1162,9 @@ export class Form {
    * of the display settings on the original value.
    *
    * @param value Either a Date or a string representing one.
-   * @param originalFormat
+   * @param originalFormat The ISO date format that the input value is expected to be in. In the case of
+   *                       irregular or incomplete values, this can help the parser resolve a complete
+   *                       string
    * @private
    */
   private _getISOStringFromDateString(value: string | Date, originalFormat?: string): string {
