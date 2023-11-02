@@ -20,7 +20,9 @@ import { Form } from "../../models/cinchy-form.model";
 
 
 /**
- * This section is used to create Dynamic Number field
+ * Field representing a number value. The value will always be stored as a plain number, but
+ * a mask can be optionally applied to show the number in a different format while the field
+ * is unfocused.
  */
 @Component({
   selector: "cinchy-number",

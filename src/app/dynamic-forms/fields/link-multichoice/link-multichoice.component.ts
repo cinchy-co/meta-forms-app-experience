@@ -40,6 +40,10 @@ import { ToastrService } from "ngx-toastr";
 import * as R from "ramda";
 
 
+/**
+ * As the LinkComponent, but allows the user to select multiple entities. The selected entities
+ * will be saved to the table as a comma-delimited list of IDs.
+ */
 @Component({
   selector: "cinchy-link-multichoice",
   templateUrl: "./link-multichoice.component.html",
