@@ -568,7 +568,7 @@ export class Form {
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
-              params[paramName] = this._getISOStringFromDateString(field.value);
+              params[paramName] = this._getISOStringFromDateString(field.value, field.cinchyColumn.displayFormat);
 
               break;
             case "Choice":
@@ -797,7 +797,6 @@ export class Form {
     fields.push("[Cinchy ID]");
 
     if (this.isChild) {
-
         if (!this.childFormLinkId) {
           return null;
         }
@@ -814,9 +813,10 @@ export class Form {
           null,
           null
         );
-        return query;
 
-    } else {
+        return query;
+    }
+    else {
       let query: IQuery = new Query(
         `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,
         null
