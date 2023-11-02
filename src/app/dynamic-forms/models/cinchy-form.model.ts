@@ -408,9 +408,9 @@ export class Form {
               if (field.value instanceof Array || field.cinchyColumn.isMultiple) {
                 let stringLinkArray = [];
 
-                field.value.forEach(itemVal => {
+                field.value?.forEach((itemValue: string) => {
 
-                  stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
+                  stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue)
                 });
 
                 params[paramName] = stringLinkArray.join(",") || null;
@@ -452,9 +452,9 @@ export class Form {
                 if (isNullOrUndefined(this.rowId)) {
                   let stringLinkArray = [];
 
-                  field.value.forEach(itemVal => {
+                  field.value?.forEach((itemValue: string) => {
 
-                    stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal);
+                    stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue);
                   });
 
                   assignmentValues.push(`'${stringLinkArray.join(",")}'`);
@@ -592,9 +592,9 @@ export class Form {
               if (field.value && field.cinchyColumn.isMultiple) {
                 let stringLinkArray = [];
 
-                field.value.forEach(itemVal => {
+                field.value?.forEach((itemValue: string) => {
 
-                  stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
+                  stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue)
                 });
 
                 params[paramName] = stringLinkArray.join(",") || null;
@@ -636,9 +636,9 @@ export class Form {
                 if (isNullOrUndefined(this.rowId)) {
                   let stringLinkArray = [];
 
-                  field.value.forEach(itemVal => {
+                  field.value?.forEach((itemValue: string) => {
 
-                    stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal);
+                    stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue);
                   });
 
                   assignmentValues.push(`'${stringLinkArray.join(",")}'`);

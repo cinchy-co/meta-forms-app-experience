@@ -60,7 +60,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   @HostListener("window:beforeunload", ["$event"])
   beforeUnloadHandler($event) {
 
-    if (this.form.hasChanged) {
+    if (this.form?.hasChanged) {
       $event.returnValue = "Are you sure you want to exit? You may have some unsaved changes";
     }
   }
@@ -70,10 +70,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   @Input() formId: string;
   @Input() formMetadata: IFormMetadata;
   @Input() formSectionsMetadata: Array<IFormSectionMetadata>;
-  @Input() addNewFromSideNav: boolean;
 
-  @Input("lookupRecords") set lookupRecords(value: Array<ILookupRecord>) { this.setLookupRecords(value); }
-  lookupRecordsList: ILookupRecord[];
+  @Input("lookupRecords") set lookupRecords(value: Array<ILookupRecord>) {
+
+    this.setLookupRecords(value);
+  }
 
   @Output() closeAddNewDialog = new EventEmitter<INewEntityDialogResponse>();
   @Output() onLookupRecordFilter: EventEmitter<string> = new EventEmitter<string>();
@@ -82,11 +83,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   form: Form = null;
   rowId: number;
   fieldsWithErrors: Array<any>;
+  lookupRecordsList: ILookupRecord[];
   currentRow: ILookupRecord;
 
   canInsert: boolean;
-  filteredTableUrl: string;
   enableSaveBtn: boolean = false;
+  filteredTableUrl: string;
   formHasDataLoaded: boolean = false;
 
 
@@ -110,7 +112,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * load the form simultaneously (e.g. when the lookupRecords list is populated and immediately selects a record)
    */
   private _formIsLoading: boolean = false;
-
 
   private _queuedRecordSelection: { rowId: number | null, doNotReloadForm: boolean };
 
@@ -139,11 +140,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     private _toastr: ToastrService,
     private _spinner: NgxSpinnerService,
     private _appStateService: AppStateService,
-    private cinchyQueryService: CinchyQueryService,
+    private _cinchyQueryService: CinchyQueryService,
     private _printService: PrintService,
     private _formHelperService: FormHelperService,
     private _configService: ConfigService
-  ) { }
+  ) {}
 
 
   async ngOnChanges(changes: SimpleChanges): Promise<void> {
@@ -234,6 +235,25 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this._toastr.info("The record was cloned, please save in order to create it. If this field contained any child records, please ensure the field used to link them is updated accordingly.", "Info", { timeOut: 15000, extendedTimeOut: 15000 });
   }
 
+
+  async copyWindowUrl(): Promise<void> {
+
+    try {
+      await navigator.clipboard.writeText((window.location === window.parent.location) ? window.location.href : window.parent.location.href);
+
+      this._toastr.success("Copied", "Success");
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  }
+
+
+  createNewRecord(): void {
+
+    this._appStateService.setRecordSelected(null);
+  }
+
+
   /**
    * When a field has been updated, consume the event, update that field on the form, and then redistribute the form to this component's
    * ancestors.
@@ -272,6 +292,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     }
   }
 
+
+  /**
+   * Triggers the filter mechanism when the filter text changes
+   *
+   * @param filterText The user-entered filter text
+   */
   handleOnFilter(filterText: string): void {
 
     this.onLookupRecordFilter.emit(filterText);
@@ -283,11 +309,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Gets called upon load, save, and row changes
    */
   async loadForm(
-    childData?: {
-      childForm: Form,
-      presetValues?: { [key: string]: any },
-      title: string
-    }
+      childData?: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        title: string
+      }
   ): Promise<void> {
 
     if (!this._formIsLoading) {
@@ -307,11 +333,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         let tableEntitlements = await this._cinchyService.getTableEntitlementsById(this.formMetadata.tableId).toPromise();
 
         this.canInsert = tableEntitlements.canAddRows;
+
         const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
 
         form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
 
-        this.cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
+        this._cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
           async (formFieldsMetadata: Array<IFormFieldMetadata>) => {
 
             if (this.lookupRecordsListPopulated) {
@@ -390,20 +417,22 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   async openChildForm(
-    data: {
-      childForm: Form,
-      presetValues?: { [key: string]: any },
-      title: string
-    }
-  ) {
+      data: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        useLimitedFields?: boolean,
+        title: string
+      }
+  ): Promise<void> {
 
     if (!this.form.isClone && !this.rowId) {
       const formValidation = this.form.checkFormValidation();
 
       if (formValidation?.isValid) {
-        await this.saveForm(this.form, this.rowId, data);
+        await this.saveForm(this.form, null, data);
       }
-    } else {
+    }
+    else {
       this._openChildFormDialog(data);
     }
   }
@@ -413,32 +442,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Removes any pending operations that would have affected the deleted row
    */
   onChildRowDeleted(data: {
-    childForm: Form,
-    rowId: number,
-    sectionIndex: number
+      childForm: Form,
+      rowId: number,
+      sectionIndex: number
   }): void {
 
     this._pendingChildFormQueries = this._pendingChildFormQueries.filter((query: IChildFormQuery) => {
 
       return query.rowId !== data.rowId;
     });
-  }
-
-
-  createNewRecord(): void {
-    this._appStateService.setRecordSelected(null);
-  }
-
-
-  async copyWindowUrl(): Promise<void> {
-
-    try {
-      await navigator.clipboard.writeText((window.location === window.parent.location) ? window.location.href : window.parent.location.href);
-
-      this._toastr.success("Copied", "Success");
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
   }
 
 
@@ -500,14 +512,15 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
 
   async saveForm(
-    formData: Form,
-    rowId: number,
-    childData?: {
-      childForm: Form,
-      presetValues?: { [key: string]: any },
-      title: string
-    }
+      formData: Form,
+      rowId: number,
+      childData?: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        title: string
+      }
   ): Promise<void> {
+
     if (formData) {
       // check validations for the form eg: Required, Regular expression
       const formValidation = formData.checkFormValidation();
@@ -546,10 +559,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 this._updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
 
                 this._toastr.success("Data Saved Successfully", "Success");
-
-                if (this.addNewFromSideNav) {
-                  this.closeAddNewDialog.emit({ newRowId: this.rowId });
-                }
 
                 formData.updateRootProperty(
                   {
@@ -612,6 +621,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     data: {
       childForm: Form,
       presetValues?: { [key: string]: any },
+      useLimitedFields?: boolean,
       title: string
     }
   ): void {
@@ -619,6 +629,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     if (data.presetValues["Cinchy ID"]) {
       data.childForm.rowId = data.presetValues["Cinchy ID"];
     }
+
+    data.useLimitedFields = true;
 
     const dialogRef = this._dialog.open(
       ChildFormComponent,

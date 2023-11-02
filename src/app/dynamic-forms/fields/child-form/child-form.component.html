@@ -4,7 +4,7 @@
 <div mat-dialog-content>
   <app-fields-wrapper *ngIf="childFormData?.childForm"
     [form]="childFormData.childForm"
-    [isChild]="true"
+    [isChild]="childFormData.useLimitedFields"
     [formHasDataLoaded]="true"
     (onChange)="handleOnChange($event)">
   </app-fields-wrapper>

@@ -1,8 +1,13 @@
 <form class="cinchy-dynamic-forms-wrapper">
   <div class="navigation-buttons form-header">
     <div class="flex-row ml-20">
-      <a class="table-url" [href]="formMetadata.tableUrl" target="_blank"><span
-        class="mr-15"><b>{{formMetadata.formDisplayName}}</b></span></a>
+      <a class="table-url" [href]="formMetadata.tableUrl" target="_blank">
+        <span class="mr-15">
+          <b>
+            {{formMetadata.formDisplayName}}
+          </b>
+        </span>
+      </a>
 
       <app-search-dropdown #recordDropdown *ngIf="lookupRecordsList?.length"
                            [items]="lookupRecordsList"
@@ -43,8 +48,6 @@
           <span>View in Table</span>
         </a>
       </mat-menu>
-
-      <!--<button mat-raised-button class="ml-20 navigation-buttons have-brand float-right" (click)="printCurrentForm()">Print</button>-->
 
       <button type="button" mat-raised-button class="btnSave have-brand center-vertical-important" (click)="saveForm(form, rowId)" [disabled]="!enableSaveBtn">Save</button>
     </div>

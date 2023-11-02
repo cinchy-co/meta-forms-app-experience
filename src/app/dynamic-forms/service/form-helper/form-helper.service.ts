@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
-import { CinchyService, QueryType } from "@cinchy-co/angular-sdk";
+import { Cinchy, CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 
 import { DataFormatType } from "../../enums/data-format-type";
 
@@ -12,10 +12,13 @@ import { IQuery } from "../../models/cinchy-query.model";
 
 import { IFormFieldMetadata } from "../../../models/form-field-metadata.model";
 import { IFormMetadata } from "../../../models/form-metadata-model";
+import { IFormSectionMetadata } from "../../../models/form-section-metadata.model";
 import { ILookupRecord } from "../../../models/lookup-record.model";
 import { ITableEntitlements } from "../../interface/table-entitlements";
 
+import { AppStateService } from "../../../services/app-state.service";
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
+import { ConfigService } from "../../../services/config.service";
 
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
@@ -27,10 +30,52 @@ import { isNullOrUndefined } from "util";
 export class FormHelperService {
 
   constructor(
+    private _appStateService: AppStateService,
     private _cinchyService: CinchyService,
     private _cinchyQueryService: CinchyQueryService,
+    private _configService: ConfigService,
     private _toastr: ToastrService
   ) {}
+
+
+  /**
+   * Saves the data from the given form to the table it represents, and then refreshes any link fields
+   * which target that table.
+   *
+   * @param form The model of the *completed* form.
+   *
+   * TODO: Failure logic and a mechanism to roll back the view if any step fails.
+   */
+  async addOptionToLinkedTable(form: Form): Promise<void> {
+
+    const formValidation = form.checkFormValidation();
+
+    if (formValidation.isValid) {
+      const insertQuery: IQuery = form.generateSaveQuery(null, this._configService.cinchyVersion, false);
+
+      if (insertQuery) {
+        this._cinchyService.executeCsql(insertQuery.query, insertQuery.params).subscribe(
+          {
+            next: (response: {
+              queryResult: Cinchy.QueryResult,
+              callbackState?: any
+            }) => {
+
+              this._appStateService.addNewEntityDialogClosed$.next({
+                newRowId: response.queryResult._jsonResult.data[0][0],
+                tableName: form.targetTableName
+              });
+            },
+            error: (error) => {
+              console.error("Error in cinchy-dynamic-forms save method", error);
+
+              this._toastr.error("Error while updating file data.", "Error");
+            }
+          }
+        );
+      }
+    }
+  }
 
 
   async generateForm(
@@ -74,6 +119,29 @@ export class FormHelperService {
   }
 
 
+  /**
+   * Generates a form model for the form represented by the given ID
+   *
+   * TODO: There should be some kind of caching mechanism on this
+   */
+  async getFormById(formId: string): Promise<Form> {
+
+    const formMetadata: IFormMetadata = await this._cinchyQueryService.getFormMetadata(formId).toPromise();
+    const formSectionsMetadata: Array<IFormSectionMetadata> = await this._cinchyQueryService.getFormSectionsMetadata(formId).toPromise();
+    const formFieldsMetadata: Array<IFormFieldMetadata> = await this._cinchyQueryService.getFormFieldsMetadata(formId).toPromise();
+
+    const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
+
+    const form: Form = await this.generateForm(formMetadata, null, tableEntitlements);
+
+    form.populateSectionsFromFormMetadata(formSectionsMetadata);
+
+    await this.fillWithFields(form, null, formMetadata, formFieldsMetadata, null, tableEntitlements);
+
+    return form;
+  }
+
+
   async fillWithFields(
       form: Form,
       rowId: number,
@@ -87,7 +155,6 @@ export class FormHelperService {
       let tableJson = JSON.parse(formMetadata.tableJson);
       let formFields: IFormFieldMetadata[] = formFieldsMetadata.filter(_ => _.formId === form.id);
 
-     // const tableEntitlements = await this._cinchyService.getTableEntitlementsById(formMetadata.tableId).toPromise();
       const cellEntitlements = await this._getCellEntitlements(formMetadata.domainName, formMetadata.tableName, rowId, formFields);
 
       let parentChildLinkedColumns: {[columnName: string]: FormField[]} = {};

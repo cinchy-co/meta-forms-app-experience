@@ -31,12 +31,14 @@ export class ChildFormComponent {
     @Inject(MAT_DIALOG_DATA) public childFormData: {
       childForm: Form,
       presetValues?: { [key: string]: any },
+      useLimitedFields: boolean,
       title: string
     }
   ) {}
 
 
   ngOnInit(): void {
+
     const childFormLinkName = this.childFormData.childForm?.getChildFormLinkName(this.childFormData.childForm?.childFormLinkId);
 
     // TODO: atomize this function
@@ -46,7 +48,6 @@ export class ChildFormComponent {
 
         if (!field.cinchyColumn.isDisplayColumn) {
           if (field.linkedColumn?.linkLabel === field.label) {
-
             this.childFormData.childForm.updateFieldValue(
               sectionIndex,
               fieldIndex,
