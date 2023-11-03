@@ -16,6 +16,7 @@ import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdo
 
 import { isNullOrUndefined } from "util";
 
+import * as moment from "moment";
 import * as R from "ramda";
 
 
@@ -383,13 +384,7 @@ export class Form {
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
-              let elementValue: any = null;
-
-              if (!isNullOrUndefined(field.value)) {
-                elementValue = field.value instanceof Date ? field.value.toLocaleDateString() : field.value;
-              }
-
-              params[paramName] = elementValue ?? "";
+              params[paramName] = this._getISOStringFromDateString(field.value);
 
               break;
             case "Choice":
@@ -573,14 +568,7 @@ export class Form {
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
-              try {
-                params[paramName] = field.value ?
-                  (((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null) :
-                  null;
-              }
-              catch (error) {
-                // Do nothing
-              }
+              params[paramName] = this._getISOStringFromDateString(field.value);
 
               break;
             case "Choice":
@@ -809,18 +797,18 @@ export class Form {
     fields.push("[Cinchy ID]");
 
     if (this.isChild) {
-      
+
         if (!this.childFormLinkId) {
           return null;
         }
- 
+
         const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
 
         const whereConditionWithFilter = this.childFormFilter ?
         `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
-  
+
         const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
-  
+
         let query: IQuery = new Query(
           `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
           null,
@@ -1166,6 +1154,42 @@ export class Form {
     }
 
     return set;
+  }
+
+
+  /**
+   * Generates a datetime string in the ISO format that is consistent for back-end storage regardless
+   * of the display settings on the original value.
+   *
+   * @param value Either a Date or a string representing one.
+   * @param originalFormat The ISO date format that the input value is expected to be in. In the case of
+   *                       irregular or incomplete values, this can help the parser resolve a complete
+   *                       string
+   * @private
+   */
+  private _getISOStringFromDateString(value: string | Date, originalFormat?: string): string {
+
+    if (!value) {
+      return null;
+    }
+
+    let valueAsMoment: moment.Moment = moment(value, originalFormat);
+
+    if (!valueAsMoment.isValid()) {
+      return null;
+    }
+
+    // Since we don't have any explicit time selection built into our controls, setting the
+    // default time to mid-day mitigates issues related to the browser's understanding of
+    // the actual timezone offset.
+    valueAsMoment.set({
+      hour: 12,
+      minute: 0,
+      second: 0,
+      millisecond: 0
+    });
+
+    return valueAsMoment.toISOString();
   }
 }
 
