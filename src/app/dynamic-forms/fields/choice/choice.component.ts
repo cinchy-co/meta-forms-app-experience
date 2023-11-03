@@ -16,11 +16,10 @@ import { FormField } from "../../models/cinchy-form-field.model";
 
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
 
-//#region Cinchy Dynamic Choice Field
+
 /**
- * This section is used to create choice field.
+ * A field representing a choice field with a static set of options
  */
-//#endregion
 @Component({
   selector: "cinchy-choice",
   templateUrl: "./choice.component.html",

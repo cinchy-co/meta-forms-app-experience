@@ -18,7 +18,7 @@ import { faCheckSquare } from "@fortawesome/free-regular-svg-icons";
 
 
 /**
- * This section is used to create Yes/No fields for cinchy
+ * Field representing a boolean Yes/No value
  */
 @Component({
   selector: "cinchy-checkbox",

@@ -19,6 +19,10 @@ import { AppStateService } from "../../services/app-state.service";
 import { isNullOrUndefined } from "util";
 
 
+/**
+ * For each field in this form, renders a component appropriate to its configured type and
+ * characteristics.
+ */
 @Component({
   selector: "app-fields-wrapper",
   templateUrl: "./fields-wrapper.component.html",
@@ -113,9 +117,9 @@ export class FieldsWrapperComponent {
 
     this.form?.sections?.forEach((section: FormSection, sectionIndex: number) => {
 
-      displaySections.push({ 
-        section: section.clone(), 
-        sectionIndex: parentSectionIdx 
+      displaySections.push({
+        section: section.clone(),
+        sectionIndex: parentSectionIdx
       });
 
       section.fields?.forEach((field: FormField, fieldIndex: number) => {
@@ -131,8 +135,8 @@ export class FieldsWrapperComponent {
 
             childSectionClone.isInFlattenedChildForm = true;
 
-            displaySections.push({ 
-              section: childSectionClone, 
+            displaySections.push({
+              section: childSectionClone,
               sectionIndex: flattenedChildFormSectionIdxMap[field.childForm.id]
             });
 
