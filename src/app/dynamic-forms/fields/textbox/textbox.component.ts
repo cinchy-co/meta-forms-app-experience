@@ -21,7 +21,7 @@ import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
 /**
- * This section is used to create dynamic textbox field for the cinchy.
+ * Field representing a text value with a maximum length less than 500 characters
  */
 @Component({
   selector: "cinchy-textbox",
@@ -119,18 +119,18 @@ export class TextboxComponent implements OnChanges, OnInit {
 
     this.showIframe = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
 
-    this.showIframeSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
+    this.showIframeSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox;
     this.showIframeSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
 
     if ((this.showIframe || this.showIframeSandbox || this.showIframeSandboxStrict) && this.isValidHttpUrl(this.value) && !this.isInChildForm) {
       this.urlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(this.value);
 
-      this.iframeHeightStyle = (this.field.cinchyColumn?.totalTextAreaRows > 0) ? (100 * this.field.cinchyColumn.totalTextAreaRows) : 300;      
+      this.iframeHeightStyle = (this.field.cinchyColumn?.totalTextAreaRows > 0) ? (100 * this.field.cinchyColumn.totalTextAreaRows) : 300;
     } else {
       this.showIframe = false;
       this.showIframeSandbox = false;
       this.showIframeSandboxStrict = false;
-    } 
+    }
 
     this.showActualField = (!this.showImage && !this.showLinkUrl && !this.showIframe && !this.showIframeSandbox && !this.showIframeSandboxStrict);
   }

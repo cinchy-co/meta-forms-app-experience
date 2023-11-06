@@ -51,8 +51,8 @@ import { ToastrService } from "ngx-toastr";
 
 
 /**
- * This section is used to create Link field for the cinchy.
- * Lazy loading of the dropdown is used here. Bind dropdown on click
+ * A field representing a linked value. The component itself will internally store a model of
+ * the linked entity, but only the ID of that entity will be saved to the table
  */
 @Component({
   selector: "cinchy-link",

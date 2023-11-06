@@ -15,8 +15,10 @@ import { FormField } from "../../models/cinchy-form-field.model";
 
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
 
+
 /**
- * This section is used to create Multi choice driopdownList
+ * As the ChoiceComponent, but allows the user to select multiple options. The value will be
+ * stored to the table as a comma-delimited list.
  */
 @Component({
     selector: "cinchy-multi-choice",

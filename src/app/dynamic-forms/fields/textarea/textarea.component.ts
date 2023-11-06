@@ -23,7 +23,7 @@ import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
 
 /**
- * This section is used to create dynamic textarea fields for the cinchy.
+ * Field representing a text value with a maximum size of or greater than 500 characters
  */
 @Component({
   selector: "cinchy-textarea",
@@ -73,7 +73,7 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
 
     return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
   }
-  
+
 
   constructor(public sanitizer: DomSanitizer) { }
 
@@ -93,7 +93,7 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
     this.showImage = this.field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl);
     this.showLinkUrl = this.field.cinchyColumn.dataFormatType === "LinkUrl";
     this.showIframe = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrame;
-    this.showIframeSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox; 
+    this.showIframeSandbox = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandbox;
     this.showIframeSandboxStrict = this.field.cinchyColumn.dataFormatType === DataFormatType.IFrameSandboxStrict;
 
     this.isFormatted = coerceBooleanProperty(

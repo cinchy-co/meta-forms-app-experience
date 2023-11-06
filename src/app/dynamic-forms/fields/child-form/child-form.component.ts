@@ -15,7 +15,8 @@ import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 
 /**
- * This section is used to create cinchy child form.
+ * This dialog is used to display a nested form outside the context of the active form. Typically, this
+ * is used to add an additional record to a table that populates a field on the active form
  */
 @Component({
   selector: "cinchy-child-form",

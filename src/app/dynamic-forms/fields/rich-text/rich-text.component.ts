@@ -66,6 +66,12 @@ import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 
 
+/**
+ * Field representing a rich text editor on the form. The value can be saved to the table as
+ * either HTML or JSON, per the field's configuration. If the initial value of the field was
+ * plaintext prior to interaction with this component, the output will be converted once the
+ * form is saved.
+ */
 @Component({
   selector: "cinchy-rich-text",
   templateUrl: "./rich-text.component.html",
@@ -171,7 +177,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
   private _DEFAULT_TABLE_COLUMN_COUNT = 3;
 
   private _DEFAULT_TABLE_ROW_COUNT = 3;
-  
+
 
   /**
    * Determines whether or not the form is in a savable state
@@ -198,7 +204,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
     catch (error) {
       content = this.field.value;
     }
-    
+
     if (this.canEdit) {
       // Disable spellcheck in code blocks
       const CustomCodeBlockLowlight = CodeBlockLowlight.extend({
@@ -222,7 +228,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
 
                   self.toggleLink()
 
-                  return true                
+                  return true
                 },
               }
             },
@@ -252,7 +258,7 @@ export class RichTextComponent implements AfterViewInit, OnDestroy {
          * Update the state of the marks at the cursor position
          */
         onTransaction: (args: { editor: Editor, transaction: Transaction }): void => {
-          
+
           this.activeMarks.bold = args.editor.isActive("bold");
           this.activeMarks.code = args.editor.isActive("code");
           this.activeMarks.codeBlock = args.editor.isActive("codeBlock");

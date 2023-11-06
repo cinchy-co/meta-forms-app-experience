@@ -9,11 +9,9 @@ import { FormField } from "../../models/cinchy-form-field.model";
 import { faFile } from "@fortawesome/free-regular-svg-icons";
 
 
-//#region Cinchy Dynamic DateTime Field
 /**
- * This section is used to create dynamic DateTime field for the cinchy.
+ * Field representing an attached file
  */
-//#endregion
 @Component({
   selector: "cinchy-attach-file",
   templateUrl: "./attach-file.component.html",
