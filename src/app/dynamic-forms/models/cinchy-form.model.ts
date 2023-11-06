@@ -384,7 +384,7 @@ export class Form {
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
-              params[paramName] = this._getISOStringFromDateString(field.value);
+              params[paramName] = this._getISOStringFromDateString(field.value, field.cinchyColumn.displayFormat);
 
               break;
             case "Choice":
@@ -568,7 +568,7 @@ export class Form {
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
-              params[paramName] = this._getISOStringFromDateString(field.value);
+              params[paramName] = this._getISOStringFromDateString(field.value, field.cinchyColumn.displayFormat);
 
               break;
             case "Choice":
