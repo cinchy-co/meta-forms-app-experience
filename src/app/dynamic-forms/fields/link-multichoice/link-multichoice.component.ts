@@ -264,8 +264,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
    */
   compareFn(a: DropdownOption, b: DropdownOption): boolean {
 
-    // Adding the `false` part ensures that the comparison will still return a boolean if either value is nullish
-    return (a?.id === b?.id) || false;
+    return (a?.id === b?.id);
   }
 
 
