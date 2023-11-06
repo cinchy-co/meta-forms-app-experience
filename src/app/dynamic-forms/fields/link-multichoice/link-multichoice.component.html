@@ -106,8 +106,12 @@
             </ngx-mat-select-search>
           </mat-option>
 
-          <cdk-virtual-scroll-viewport [itemSize]="48" [style.height.px]="4*48" [minBufferPx]="300"
-                                       [maxBufferPx]="600">
+          <cdk-virtual-scroll-viewport
+              [itemSize]="DROPDOWN_OPTION_SIZE"
+              [style.height.px]="scrollViewportHeight"
+              [minBufferPx]="300"
+              [maxBufferPx]="600"
+          >
             <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
                         [value]="dropdownOption"
                         [title]="dropdownOption.label">

@@ -88,6 +88,8 @@ export class LinkComponent implements OnChanges, OnInit {
   @Output() childForm = new EventEmitter<any>();
 
 
+  DROPDOWN_OPTION_SIZE = 48;
+
   // TODO: Add proper type
   metadataQueryResult;
 
@@ -141,6 +143,17 @@ export class LinkComponent implements OnChanges, OnInit {
   get rowIdIsValid(): boolean {
 
     return (this.form.rowId && this.form.rowId > -1);
+  }
+
+
+  /**
+   * Determines the height of the expanded option set. Scales up to at most four options
+   */
+  get scrollViewportHeight(): number {
+
+    const itemCount = Math.min(4, this.filteredOptions?.length ?? 1);
+
+    return (itemCount * this.DROPDOWN_OPTION_SIZE);
   }
 
 

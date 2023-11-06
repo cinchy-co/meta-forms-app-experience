@@ -77,6 +77,9 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
+
+  DROPDOWN_OPTION_SIZE = 42;
+
   multiFilterCtrl: FormControl = new FormControl();
 
   selectedValues = [];
@@ -111,6 +114,17 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   get rowIdIsValid(): boolean {
 
     return (this.form.rowId && this.form.rowId > -1);
+  }
+
+
+  /**
+   * Determines the height of the expanded option set. Scales up to at most four options
+   */
+  get scrollViewportHeight(): number {
+
+    const itemCount = Math.min(4, this.filteredListMulti?.value.length ?? 1);
+
+    return (itemCount * this.DROPDOWN_OPTION_SIZE);
   }
 
 
