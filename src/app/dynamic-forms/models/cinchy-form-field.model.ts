@@ -25,7 +25,8 @@ export class FormField {
 
   linkedColumn: ILinkedColumnDetails;
 
-  value: any;
+  // This is initialized to null to prevent false positives for change detection
+  value: any = null;
 
   constructor(
       public id: number,
@@ -39,21 +40,12 @@ export class FormField {
   ) {
 
     if (cinchyColumn.dataType === "Link" && dropdownDataset) {
-      this.formControl = new FormControl();
+      this.formControl = new FormControl(null);
       this.filteredValues = this.formControl.valueChanges.pipe(startWith(""), map(value => this._filter(value)));
     }
 
     this.linkedColumn = linkedColumnDetails;
   }
-
-
-  autoCompleteValueMapper = (id) => {
-
-    let selection = this.dropdownDataset?.options.find(e => e.id === id);
-
-    if (selection)
-      return selection.label;
-  };
 
 
   clone(): FormField {
@@ -91,7 +83,7 @@ export class FormField {
       this.value = new Date(value);
     }
     else if (this.cinchyColumn.dataType === "Choice" && !isNullOrUndefined(value) && this.cinchyColumn.isMultiple) {
-      let multiChoiceData = new Array();
+      let multiChoiceData = new Array<any>();
 
       for (let selected of value) {
         multiChoiceData.push(selected.itemName);
