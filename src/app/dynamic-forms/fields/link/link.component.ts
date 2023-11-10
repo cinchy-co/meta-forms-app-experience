@@ -48,6 +48,7 @@ import { isNullOrUndefined } from "util";
 import { NumeralPipe } from "ngx-numeral";
 import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
+import {MatSelectChange} from "@angular/material/select";
 
 
 /**
@@ -479,12 +480,16 @@ export class LinkComponent implements OnChanges, OnInit {
   /**
    * Resolves the selectedValue when the user selects an option from the autocomplete
    */
-  onOptionSelected(option: DropdownOption): void {
+  onOptionSelected(event: MatSelectChange, option: DropdownOption): void {
 
-    // We don't need to explicitly set autocompleteText because the value of the selected option already does that
-    this.selectedValue = option;
+    // This function will also be called on the previously-selected value, if any, so we're just
+    // checking to see if the given option is the one we care about
+    if (event.source.selected) {
+      // We don't need to explicitly set autocompleteText because the value of the selected option already does that
+      this.selectedValue = option;
 
-    this.valueChanged();
+      this.valueChanged();
+    }
   }
 
 
