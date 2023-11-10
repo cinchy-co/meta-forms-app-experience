@@ -129,20 +129,6 @@
                         (onSelectionChange)="onOptionSelected($event, option)">
               {{ option.displayOnlyLabel ?? option.label ?? "" }}
             </mat-option>
-
-            <!--
-              We need to ensure that values which were previously selected still render within the
-              viewport even if they are out of the current view, because otherwise they will be
-              deselected when the value changes. This hack forces them to be present.
-
-              See: https://github.com/angular/components/issues/13087#issuecomment-422188788
-            -->
-            <mat-option *ngIf="selectedValue"
-                        style="position: absolute; visibility: hidden;"
-                        [value]="selectedValue"
-            >
-              {{selectedValue.label}}
-            </mat-option>
           </cdk-virtual-scroll-viewport>
         </ng-container>
       </mat-autocomplete>
