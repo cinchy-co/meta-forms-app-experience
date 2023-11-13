@@ -14,6 +14,7 @@ import {
   ViewChild
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { MatSelectChange } from "@angular/material/select";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
@@ -88,6 +89,8 @@ export class LinkComponent implements OnChanges, OnInit {
   @Output() childForm = new EventEmitter<any>();
 
 
+  DROPDOWN_OPTION_SIZE = 48;
+
   // TODO: Add proper type
   metadataQueryResult;
 
@@ -141,6 +144,17 @@ export class LinkComponent implements OnChanges, OnInit {
   get rowIdIsValid(): boolean {
 
     return (this.form.rowId && this.form.rowId > -1);
+  }
+
+
+  /**
+   * Determines the height of the expanded option set. Scales up to at most four options
+   */
+  get scrollViewportHeight(): number {
+
+    const itemCount = Math.min(4, this.filteredOptions?.length ?? 1);
+
+    return (itemCount * this.DROPDOWN_OPTION_SIZE);
   }
 
 
@@ -466,12 +480,16 @@ export class LinkComponent implements OnChanges, OnInit {
   /**
    * Resolves the selectedValue when the user selects an option from the autocomplete
    */
-  onOptionSelected(option: DropdownOption): void {
+  onOptionSelected(event: MatSelectChange, option: DropdownOption): void {
 
-    // We don't need to explicitly set autocompleteText because the value of the selected option already does that
-    this.selectedValue = option;
+    // This function will also be called on the previously-selected value, if any, so we're just
+    // checking to see if the given option is the one we care about
+    if (event.source.selected) {
+      // We don't need to explicitly set autocompleteText because the value of the selected option already does that
+      this.selectedValue = option;
 
-    this.valueChanged();
+      this.valueChanged();
+    }
   }
 
 

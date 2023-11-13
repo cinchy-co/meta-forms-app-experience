@@ -94,6 +94,7 @@
     </ng-template>
     <ng-template #hierarchyWithCaption>
       {{this.field.caption}}
+
       <br /> <br />
 
       From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
@@ -120,25 +121,15 @@
             <mat-spinner diameter="35"></mat-spinner>
           </mat-option>
           <cdk-virtual-scroll-viewport *ngIf="searchCharacterLimitMet && !isLoading"
-                                       [itemSize]="48"
-                                       [style.height.px]="192">
-            <ng-container>
-              <mat-option *ngFor="let option of filteredOptions"
-                          [title]="option.label"
-                          [value]="option.label"
-                          (click)="onOptionSelected(option)">
-                {{ option.displayOnlyLabel ?? option.label ?? "" }}
-              </mat-option>
-            </ng-container>
-          </cdk-virtual-scroll-viewport>
-          <ng-container *ngIf="!searchCharacterLimitMet && !isLoading">
-            <mat-option *ngFor="let option of filteredOptions"
+                                       [itemSize]="DROPDOWN_OPTION_SIZE"
+                                       [style.height.px]="scrollViewportHeight">
+            <mat-option *cdkVirtualFor="let option of filteredOptions"
                         [title]="option.label"
                         [value]="option.label"
-                        (click)="onOptionSelected(option)">
+                        (onSelectionChange)="onOptionSelected($event, option)">
               {{ option.displayOnlyLabel ?? option.label ?? "" }}
             </mat-option>
-          </ng-container>
+          </cdk-virtual-scroll-viewport>
         </ng-container>
       </mat-autocomplete>
     </ng-container>

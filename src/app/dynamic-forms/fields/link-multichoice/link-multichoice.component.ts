@@ -77,6 +77,9 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
+
+  DROPDOWN_OPTION_SIZE = 42;
+
   multiFilterCtrl: FormControl = new FormControl();
 
   selectedValues = [];
@@ -111,6 +114,17 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   get rowIdIsValid(): boolean {
 
     return (this.form.rowId && this.form.rowId > -1);
+  }
+
+
+  /**
+   * Determines the height of the expanded option set. Scales up to at most four options
+   */
+  get scrollViewportHeight(): number {
+
+    const itemCount = Math.min(4, this.filteredListMulti?.value.length ?? 1);
+
+    return (itemCount * this.DROPDOWN_OPTION_SIZE);
   }
 
 
@@ -201,7 +215,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
             return item.id;
           }, this.dropdownSetOptions)
 
-          this.filteredListMulti.next(this.dropdownSetOptions.slice());
+          this.filteredListMulti.next(this.dropdownSetOptions);
         }
 
         this.checkForAttachmentUrl();
@@ -246,6 +260,15 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   /**
+   * The function used to determine whether or not dropdown options represent the same entity
+   */
+  compareFn(a: DropdownOption, b: DropdownOption): boolean {
+
+    return (a?.id === b?.id);
+  }
+
+
+  /**
    * Generates a tooltip for the given link
    */
   downloadableLinkTooltip(link: { fileName: string, fileUrl: string, fileId: string }): string {
@@ -273,8 +296,9 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       let search = this.multiFilterCtrl.value;
 
       if (!search) {
-        this.filteredListMulti.next(this.dropdownSetOptions.slice());
-      } else {
+        this.filteredListMulti.next(this.dropdownSetOptions);
+      }
+      else {
         search = search.toLowerCase();
 
         // filter the list
@@ -498,6 +522,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   private _setValue(): void {
+
     if (this.field.dropdownDataset?.options?.length || this.isInChildForm) {
       this.selectedValues = this.generateMultipleOptionsFromSingle();
     }

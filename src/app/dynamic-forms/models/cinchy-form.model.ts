@@ -343,31 +343,27 @@ export class Form {
 
   generateDeleteQuery(): IQuery {
 
-    let query: IQuery = new Query(
+    return new Query(
       `DELETE
         FROM [${this.targetTableDomain}].[${this.targetTableName}]
         WHERE [Cinchy ID] = ${this.rowId}
           AND [Deleted] IS NULL`,
       null
     );
-
-    return query;
   }
 
 
-  generateSaveQuery(rowID: number, cinchyVersion?: string, forClonedForm?: boolean): IQuery {
+  generateSaveQuery(rowId: number, cinchyVersion?: string, forClonedForm?: boolean): IQuery {
 
     let query: IQuery = null;
 
-    let assignmentColumns: string[] = [];
-    let assignmentValues: string[] = [];
-    let attachedFilesInfo = [];
+    let assignmentColumns: string[] = new Array<string>();
+    let assignmentValues: string[] = new Array<string>();
+    let attachedFilesInfo: Array<any> = new Array<any>();
 
     let paramName: string;
     let paramNumber: number = 0;
     let params: { [key: string]: any } = {};
-
-    this.rowId = rowID;
 
     this.sections.forEach((section: FormSection) => {
 
@@ -396,7 +392,7 @@ export class Form {
                 params[paramName] = field.value ?? "";
 
                 assignmentColumns.push(`[${field.cinchyColumn.name}]`);
-                assignmentValues.push(`'${params[paramName]}'`);
+                assignmentValues.push(paramName);
                 attachedFilesInfo.push(this.getFileNameAndItsTable(field));
               }
               else if (this.rowId) {
@@ -437,10 +433,7 @@ export class Form {
             assignmentColumns.push(`[${field.cinchyColumn.name}]`);
 
             if (isNullOrUndefined(field.cinchyColumn.linkTargetColumnName)) {
-              if (isNullOrUndefined(this.rowId)) {
-                assignmentValues.push(`'${params[paramName]}'`);
-              }
-              else if ((field.cinchyColumn.dataType === "Text") && !field.value) {
+              if ((field.cinchyColumn.dataType === "Text") && !field.value) {
                 assignmentValues.push((params[paramName] !== "") ? `cast(${paramName} as nvarchar(100))` : paramName);
               }
               else {
@@ -449,17 +442,7 @@ export class Form {
             }
             else {
               if (field.value instanceof Array || field.cinchyColumn.isMultiple) {
-                if (isNullOrUndefined(this.rowId)) {
-                  let stringLinkArray = [];
-
-                  field.value?.forEach((itemValue: string) => {
-
-                    stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue);
-                  });
-
-                  assignmentValues.push(`'${stringLinkArray.join(",")}'`);
-                }
-                else if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
+                if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
                   assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 }
                 else {
@@ -468,7 +451,7 @@ export class Form {
               }
               else {
                 if (field.cinchyColumn.dataType === "Link") {
-                  assignmentValues.push(`ResolveLink(${isNullOrUndefined(this.rowId) ? params[paramName] : paramName},'Cinchy ID')`);
+                  assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
                 }
                 else if (isNullOrUndefined(field.childForm)) {
                   assignmentValues.push(paramName);
@@ -483,7 +466,7 @@ export class Form {
     const ifUpdateAttachedFilePresent = attachedFilesInfo.find(fileInfo => fileInfo.query);
 
     if (assignmentValues?.length) {
-      if (!this.rowId) {
+      if (!rowId) {
         let queryString: string;
 
         if (isNullOrUndefined(cinchyVersion) || cinchyVersion.startsWith("4.")) {
@@ -580,7 +563,7 @@ export class Form {
                 params[paramName] = field.value ?? "";
 
                 assignmentColumns.push(`[${field.cinchyColumn.name}]`);
-                assignmentValues.push(`'${params[paramName]}'`);
+                assignmentValues.push(paramName);
                 attachedFilesInfo.push(this.getFileNameAndItsTable(field));
               }
               else if (this.rowId) {
@@ -633,17 +616,7 @@ export class Form {
             }
             else {
               if (field.value && field.cinchyColumn.isMultiple) {
-                if (isNullOrUndefined(this.rowId)) {
-                  let stringLinkArray = [];
-
-                  field.value?.forEach((itemValue: string) => {
-
-                    stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue);
-                  });
-
-                  assignmentValues.push(`'${stringLinkArray.join(",")}'`);
-                }
-                else if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
+                if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
                   assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 }
                 else {
@@ -808,21 +781,17 @@ export class Form {
 
         const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
 
-        let query: IQuery = new Query(
+        return new Query(
           `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
           null,
           null
         );
-
-        return query;
     }
     else {
-      let query: IQuery = new Query(
+      return new Query(
         `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,
         null
       );
-
-      return query;
     }
   }
 
@@ -1041,14 +1010,12 @@ export class Form {
 
     this._sections = metadata.map((sectionMetadata: IFormSectionMetadata) => {
 
-      let result = new FormSection(
+      return new FormSection(
         sectionMetadata.id,
         sectionMetadata.name,
         sectionMetadata.autoExpand,
         sectionMetadata.columnsInRow
       );
-
-      return result;
     });
   }
 
