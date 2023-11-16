@@ -85,6 +85,6 @@ export class DatetimeComponent implements OnChanges, OnInit {
 
   private _setValue(): void {
 
-    this.value = this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : "";
+    this.value = this.field?.hasValue ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : "";
   }
 }

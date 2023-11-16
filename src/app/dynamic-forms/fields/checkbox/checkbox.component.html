@@ -11,7 +11,7 @@
     &nbsp;
     <label class="pre-formatted" [for]="field.label" [title]="field.caption || ''">
       {{field.label}}
-      {{(field.cinchyColumn.isMandatory && !field.value) ? '*' : ''}}
+      {{(field.cinchyColumn.isMandatory && !field.hasValue) ? '*' : ''}}
     </label>
     <mat-icon *ngIf="field.caption" class="info-icon-checkbox"
               ngbTooltip="{{field.caption}}"
@@ -22,7 +22,7 @@
       info
     </mat-icon>
   </div>
-  <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.value">
+  <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.hasValue">
     *{{field.label}} is Required.
   </mat-error>
 </div>

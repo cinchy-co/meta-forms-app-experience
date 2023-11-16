@@ -651,7 +651,7 @@ export class LinkComponent implements OnChanges, OnInit {
       this.getListItems(true, true);
     }
     else {
-      if (this.field.value) {
+      if (this.field.hasValue) {
         // Handles the case where there is a placeholder element (e.g. "Loading...")
         if (dataset?.length === 1) {
           this.selectedValue = { ...dataset[0] };
@@ -660,8 +660,7 @@ export class LinkComponent implements OnChanges, OnInit {
         else if (dataset?.length > 1) {
           this.selectedValue = dataset.find((option: DropdownOption) => {
 
-            // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
-            //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
+            // We're explicitly using a double equals here because at this stage the ID may be either a number or string
             return (option.id == this.field.value);
           });
         }

@@ -167,7 +167,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
     if (!this.dropdownListFromLinkedTable) {
       this.isLoading = true;
       let dropdownDataset: DropdownDataset;
-      let currentFieldJson;
+      let currentFieldJson: any;
 
       let tableColumnQuery: string = `
         SELECT
@@ -316,8 +316,10 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       let selectedIds: Array<string>;
 
       // Fallback for legacy logic
-      if (this.field.dropdownDataset.options.length === 1 &&
-          this.field.dropdownDataset.options[0].id.includes(",")) {
+      if (
+          this.field.dropdownDataset.options.length === 1 &&
+          this.field.dropdownDataset.options[0].id.includes(",")
+      ) {
 
         selectedIds = this.field.dropdownDataset.options[0].id?.split(",").map((id: string) => id.trim());
 
@@ -329,7 +331,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         });
       }
 
-      if (this.field.value) {
+      if (this.field.hasValue) {
         // Fallback for legacy logic
         if (typeof this.field.value === "string") {
           selectedIds = this.field.value.split(",").map((id: string) => id.trim() );
@@ -340,7 +342,14 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       }
 
       if (selectedIds?.length) {
-        return selectedIds.map((id: string) => this.field.dropdownDataset.options.find((option: DropdownOption) => option.id === id ));
+        return selectedIds.map((id: string) => {
+
+          return this.field.dropdownDataset.options.find((option: DropdownOption) => {
+
+            // We're explicitly using a double equals here because at this stage the ID may be either a number or string
+            return option.id == id;
+          });
+        });
       }
     }
 

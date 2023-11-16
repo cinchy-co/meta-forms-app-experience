@@ -416,25 +416,81 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  async openChildForm(
-      data: {
-        childForm: Form,
-        presetValues?: { [key: string]: any },
-        useLimitedFields?: boolean,
-        title: string
-      }
-  ): Promise<void> {
-
-    if (!this.form.isClone && !this.rowId) {
-      const formValidation = this.form.checkFormValidation();
-
-      if (formValidation?.isValid) {
-        await this.saveForm(this.form, null, data);
-      }
+  openChildFormDialog(
+    data: {
+      childForm: Form,
+      presetValues?: { [key: string]: any },
+      useLimitedFields?: boolean,
+      title: string
     }
-    else {
-      this._openChildFormDialog(data);
+  ): void {
+
+    if (data.presetValues["Cinchy ID"]) {
+      data.childForm.rowId = data.presetValues["Cinchy ID"];
     }
+
+    data.useLimitedFields = true;
+
+    const dialogRef = this._dialog.open(
+      ChildFormComponent,
+      {
+        width: "500px",
+        data: data
+      }
+    );
+
+    dialogRef.afterClosed().subscribe((resultId: number) => {
+
+      if (!isNullOrUndefined(resultId)) {
+        const targetChildForm = this.form.findChildForm(data.childForm.id);
+
+        let childFormRowValues = targetChildForm.childForm.childFormRowValues || [];
+
+        const newValues: { [key: string]: any } = {};
+        const childFormLinkName = data.childForm.getChildFormLinkName(data.childForm.childFormLinkId);
+
+        data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
+
+          section.fields.forEach((field: FormField, fieldIndex: number) => {
+
+            if (
+              field.cinchyColumn.hasChanged ||
+              (data.presetValues && data.presetValues["Cinchy ID"] > 0) ||
+              (field.label === childFormLinkName)
+            ) {
+              newValues[field.cinchyColumn.name] = field.value;
+            }
+          });
+        });
+
+        const rowDataIndex = childFormRowValues.findIndex((rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
+
+        if (rowDataIndex > -1) {
+          newValues["Cinchy ID"] = resultId;
+          childFormRowValues.splice(rowDataIndex, 1, newValues);
+        }
+        else {
+          childFormRowValues.push(
+            Object.assign(newValues, { "Cinchy ID": this._lastTemporaryCinchyId-- })
+          );
+        }
+
+        // TODO: this only works because the presetValues are directly mutated in the ChildFormComponent, which is not a pattern
+        //       that we want to keep moving forward. This will need to be refactored.
+        this.form.updateChildFormProperty(
+          targetChildForm.sectionIndex,
+          targetChildForm.fieldIndex,
+          {
+            propertyName: "childFormRowValues",
+            propertyValue: childFormRowValues
+          }
+        );
+
+        this._appStateService.childRecordUpdated$.next();
+
+        this.afterChildFormEdit(resultId, data.childForm);
+      }
+    });
   }
 
 
@@ -470,7 +526,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   async saveChildForm(rowId: number, recursionCounter: number): Promise<void> {
 
-    if (!this._pendingChildFormQueries.length && !isNullOrUndefined(this.rowId)) {
+    if (!this._pendingChildFormQueries.length && !isNullOrUndefined(rowId)) {
       await this.loadForm();
     }
     else if (this._pendingChildFormQueries.length > recursionCounter) {
@@ -617,79 +673,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  private _openChildFormDialog(
-    data: {
-      childForm: Form,
-      presetValues?: { [key: string]: any },
-      useLimitedFields?: boolean,
-      title: string
-    }
-  ): void {
-
-    if (data.presetValues["Cinchy ID"]) {
-      data.childForm.rowId = data.presetValues["Cinchy ID"];
-    }
-
-    data.useLimitedFields = true;
-
-    const dialogRef = this._dialog.open(
-      ChildFormComponent,
-      {
-        width: "500px",
-        data: data
-      }
-    );
-
-    dialogRef.afterClosed().subscribe((resultId: number) => {
-
-      if (!isNullOrUndefined(resultId)) {
-        const targetChildForm = this.form.findChildForm(data.childForm.id);
-
-        let childFormRowValues = targetChildForm.childForm.childFormRowValues || [];
-
-        const newValues: { [key: string]: any } = {};
-
-        data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
-
-          section.fields.forEach((field: FormField, fieldIndex: number) => {
-
-            if (!isNullOrUndefined(field.value) || (data.presetValues && data.presetValues["Cinchy ID"] > 0)) {
-              newValues[field.cinchyColumn.name] = field.value;
-            }
-          });
-        });
-
-        const rowDataIndex = childFormRowValues.findIndex((rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
-
-        if (rowDataIndex > -1) {
-          newValues["Cinchy ID"] = resultId;
-          childFormRowValues.splice(rowDataIndex, 1, newValues);
-        }
-        else {
-          childFormRowValues.push(
-            Object.assign(newValues, { "Cinchy ID": this._lastTemporaryCinchyId-- })
-          );
-        }
-
-        // TODO: this only works because the presetValues are directly mutated in the ChildFormComponent, which is not a pattern
-        //       that we want to keep moving forward. This will need to be refactored.
-        this.form.updateChildFormProperty(
-          targetChildForm.sectionIndex,
-          targetChildForm.fieldIndex,
-          {
-            propertyName: "childFormRowValues",
-            propertyValue: childFormRowValues
-          }
-        );
-
-        this._appStateService.childRecordUpdated$.next();
-
-        this.afterChildFormEdit(resultId, data.childForm);
-      }
-    });
-  }
-
-
   /**
    * Runs after a save has been completed. Will complete any pending queries relevant to child forms in this view
    * and, if relevant, load the provided child form
@@ -708,7 +691,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     if (this._pendingChildFormQueries?.length) {
       await this.saveChildForm(this.rowId, 0);
-    } else {
+    }
+    else {
       await this._spinner.hide();
 
       if (!isNullOrUndefined(this.rowId) && childData) {

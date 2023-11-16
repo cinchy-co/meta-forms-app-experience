@@ -60,19 +60,33 @@ export class ChildFormComponent {
           else if (this.childFormData.presetValues) {
             // bind dropdown values
             if (field.cinchyColumn.dataType === "Link") {
-              if (!this.childFormData.presetValues[field.cinchyColumn.name]) {
+              if (
+                  !this.childFormData.presetValues[field.cinchyColumn.name] &&
+                  !this.childFormData.presetValues[field.cinchyColumn.name]?.length &&
+                  field.label === childFormLinkName
+              ) {
                 // Prefill child linked column value with parent id if the target table id matches parent form table id
-                const parentRowId = field.label === childFormLinkName ? this.childFormData.childForm.parentForm.rowId : null;
-                this.childFormData.childForm.updateFieldValue(
-                  sectionIndex,
-                  fieldIndex,
-                  parentRowId ?? null
-                );
+                let parentRowId: number =  this.childFormData.childForm.parentForm.rowId;
+
+                if (field.cinchyColumn.isMultiple) {
+                  this.childFormData.childForm.updateFieldValue(
+                    sectionIndex,
+                    fieldIndex,
+                    parentRowId ? [parentRowId.toString()] : []
+                  );
+                }
+                else {
+                  this.childFormData.childForm.updateFieldValue(
+                    sectionIndex,
+                    fieldIndex,
+                    parentRowId?.toString() ?? null
+                  );
+                }
               }
               else if (field.dropdownDataset?.options?.length) {
                 if (field.cinchyColumn.isMultiple) {
 
-                  const linkIds = this.childFormData.presetValues[field.cinchyColumn.name];
+                  const linkIds = this.childFormData.presetValues[field.cinchyColumn.name] ?? [];
 
                   // Search by ID, then label
                   let result = field.dropdownDataset.options.filter((option: DropdownOption) => {
@@ -91,7 +105,7 @@ export class ChildFormComponent {
                   let result = field.dropdownDataset.options.find((option: DropdownOption) => {
 
                     // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
-                    //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
+                    //       populated. In the future we'll need to figure out which is correct and make sure we're using it consistently
                     return (
                       (option.id == this.childFormData.presetValues[field.cinchyColumn.name]) ||
                       (option.label === this.childFormData.presetValues[field.cinchyColumn.name])
@@ -295,7 +309,8 @@ export class ChildFormComponent {
 
     if (formValidation.isValid) {
       this.dialogRef.close((!this.childFormData.presetValues || !this.childFormData.presetValues["Cinchy ID"]) ? -1 : this.childFormData.presetValues["Cinchy ID"]);
-    } else {
+    }
+    else {
       // TODO: this should be a toast, which means that we'd need to either dynamically inject the ToastrService or create a
       //       NotificationService with static functions to display this sort of thing
       console.error("Child form was invalid:", formValidation.message);

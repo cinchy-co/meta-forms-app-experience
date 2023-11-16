@@ -1,6 +1,7 @@
 import { Observable } from "rxjs";
-import { map, startWith, isEmpty } from "rxjs/operators";
+import { map, startWith } from "rxjs/operators";
 
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { FormControl } from "@angular/forms";
 
 import { CinchyColumn } from "./cinchy-column.model";
@@ -12,7 +13,6 @@ import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropd
 import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 import { isNullOrUndefined } from "util";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
 export class FormField {
@@ -27,6 +27,22 @@ export class FormField {
 
   // This is initialized to null to prevent false positives for change detection
   value: any = null;
+
+
+  /**
+   * Determines whether or not this field has what the app considers to be a value. Empty arrays
+   * in multi-select controls are considered to be non-values.
+   */
+  get hasValue(): boolean {
+
+    if (Array.isArray(this.value)) {
+
+      return coerceBooleanProperty(this.value?.length);
+    }
+
+    return (!!this.value || this.value === 0);
+  }
+
 
   constructor(
       public id: number,
