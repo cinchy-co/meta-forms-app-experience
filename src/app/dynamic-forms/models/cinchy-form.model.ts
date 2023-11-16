@@ -597,14 +597,6 @@ export class Form {
                 if (field.value === "DELETE") {
                   params[paramName] = "";
                 }
-                else if (currentFieldIsLinkedColumn) {
-                  if (field.cinchyColumn.isMultiple && !field.hasValue) {
-                    params[paramName] = "[{parentId}]";
-                  }
-                  else {
-                    params[paramName] = field.value || "{parentId}";
-                  }
-                }
                 else {
                   params[paramName] = field.value?.toString();
                 }
