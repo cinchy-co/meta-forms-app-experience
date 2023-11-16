@@ -36,8 +36,7 @@ export class FormField {
   get hasValue(): boolean {
 
     if (Array.isArray(this.value)) {
-
-      return coerceBooleanProperty(this.value?.length);
+      return !!(this.value && this.value.length);
     }
 
     return (!!this.value || this.value === 0);

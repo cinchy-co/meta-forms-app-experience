@@ -535,8 +535,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       const pendingItem = this._pendingChildFormQueries[recursionCounter];
 
       if (pendingItem.query.query) {
-        const queryToExecute = pendingItem.query.query.replace("{sourceid}", rowId.toString());
-        const params = JSON.parse(JSON.stringify(pendingItem.query.params).replace("{sourceId}", rowId.toString()));
+        const queryToExecute = pendingItem.query.query.replace("{parentId}", rowId.toString());
+        const params = JSON.parse(JSON.stringify(pendingItem.query.params).replace("{parentId}", rowId.toString()));
 
         this._cinchyService.executeCsql(queryToExecute, params).subscribe(
           async () => {

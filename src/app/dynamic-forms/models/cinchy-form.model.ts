@@ -18,6 +18,7 @@ import { isNullOrUndefined } from "util";
 
 import * as moment from "moment";
 import * as R from "ramda";
+import {Item} from "angular2-multiselect-dropdown";
 
 
 export class Form {
@@ -393,7 +394,7 @@ export class Form {
 
               break;
             case "Binary":
-              if (field.value && isNullOrUndefined(this.rowId)) {
+              if (field.hasValue && isNullOrUndefined(this.rowId)) {
                 params[paramName] = field.value ?? "";
 
                 assignmentColumns.push(`[${field.cinchyColumn.name}]`);
@@ -541,6 +542,11 @@ export class Form {
 
       section.fields.forEach((field: FormField) => {
 
+        // If the field being processed is the field which links this child form to the parent form,
+        // it needs to be specifically processed. If there is a rowId for the parent form, then it
+        // will have been injected when the child form dialog was executed. If there is not a rowId
+        // for the parent form, then we need to ensure that there is a placeholder available which
+        // can be replaced with the ID that gets generated when the parent form is saved
         currentFieldIsLinkedColumn = field.label === childFormLinkName;
 
         const isLinkedColumnForInsert = coerceBooleanProperty(
@@ -583,23 +589,38 @@ export class Form {
 
               break;
             case "Link":
-              if (field.value && field.cinchyColumn.isMultiple) {
+              if (field.value === "DELETE") {
+                params[paramName] = null;
+              }
+              else if (field.hasValue && field.cinchyColumn.isMultiple) {
                 let stringLinkArray = [];
 
+                // In the case that the user has selected values in a multi-select field which
+                // is used as the link to the parent form but has not selected to parent record
+                // as part of setting that value, we need to inject the parent record's rowId
+                // or the placeholder into the field's value
+                let foundParentId = false;
+
                 field.value?.forEach((itemValue: string) => {
+
+                  if (this.rowId && itemValue === this.rowId.toString()) {
+                    foundParentId = true;
+                  }
 
                   stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue)
                 });
 
+                if (!foundParentId && currentFieldIsLinkedColumn) {
+                  this._addLinkArrayItem(stringLinkArray, this.rowId?.toString() || "{parentId}");
+                }
+
                 params[paramName] = stringLinkArray.join(",") || null;
               }
+              else if (currentFieldIsLinkedColumn && !field.hasValue) {
+                params[paramName] = "{parentId}";
+              }
               else {
-                if (field.value === "DELETE") {
-                  params[paramName] = "";
-                }
-                else {
-                  params[paramName] = field.value?.toString();
-                }
+                params[paramName] = field.value?.toString() ?? null;
               }
 
               break;
