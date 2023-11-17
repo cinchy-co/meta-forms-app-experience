@@ -61,7 +61,6 @@ export class ChildFormComponent {
             // bind dropdown values
             if (field.cinchyColumn.dataType === "Link") {
               if (
-                  !this.childFormData.presetValues[field.cinchyColumn.name] &&
                   !this.childFormData.presetValues[field.cinchyColumn.name]?.length &&
                   field.label === childFormLinkName
               ) {
