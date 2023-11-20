@@ -1,0 +1,36 @@
+<div class="export-settings-link-dialog">
+  <h1 mat-dialog-title>
+    Export Settings
+  </h1>
+
+  <div mat-dialog-content>
+    <form>
+      <div class="export-settings-wrapper orientation">
+        <h2>Orientation</h2>
+
+        <div class="export-settings-options-wrapper">
+          <div class="export-settings-option" [class.selected]="isPortrait" (click)="setPortrait()">
+            <span class="orientation-placeholder portrait"></span>
+            <label class="orientation-label">Portrait</label>
+          </div>
+
+          <div class="export-settings-option" [class.selected]="!isPortrait" (click)="setLandscape()">
+            <span class="orientation-placeholder landscape"></span>
+            <label class="orientation-label">Landscape</label>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div mat-dialog-actions>
+    <button type="submit"
+            mat-button
+            color="primary"
+            (click)="confirm()">
+      Confirm
+    </button>
+
+    <button type="button" mat-button color="warn" (click)="cancel()">Cancel</button>
+  </div>
+</div>

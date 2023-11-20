@@ -44,6 +44,8 @@ import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
 import { table } from "console";
+import {ExportSettingsDialogComponent} from "./dialogs/export-settings/export-settings.component";
+import {IExportSettings} from "./interface/export-settings";
 
 
 const INITIAL_TEMPORARY_CINCHY_ID = -2;
@@ -254,6 +256,27 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
+  exportToPdf(): void {
+
+    const dialogRef = this._dialog.open(
+      ExportSettingsDialogComponent,
+      {
+        width: "500px",
+        data: {}
+      }
+    );
+
+    dialogRef.afterClosed().subscribe({
+      next: async (settings: IExportSettings) => {
+
+        if (settings) {
+          await this._printService.generatePdf(this.form, this.currentRow, settings);
+        }
+      }
+    });
+  }
+
+
   /**
    * When a field has been updated, consume the event, update that field on the form, and then redistribute the form to this component's
    * ancestors.
@@ -451,12 +474,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       return query.rowId !== data.rowId;
     });
-  }
-
-
-  async printCurrentForm(): Promise<void> {
-
-    await this._printService.generatePdf(this.form, this.currentRow);
   }
 
 

@@ -3,7 +3,7 @@ import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { Cinchy, CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 
-import { DataFormatType } from "../../enums/data-format-type";
+import { DataFormatType } from "../../enums/data-format-type.enum";
 
 import { CinchyColumn } from "../../models/cinchy-column.model";
 import { FormField } from "../../models/cinchy-form-field.model";
