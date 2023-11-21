@@ -16,10 +16,10 @@ export class ExportSettingsDialogComponent {
   settings: IExportSettings;
 
 
-  get isPortrait(): boolean {
-
-    return (this.settings.pageOrientation === PageOrientation.Portrait);
-  }
+  /**
+   * Making the enum accessible to the template
+   */
+  PageOrientation = PageOrientation;
 
 
   constructor(
@@ -49,23 +49,5 @@ export class ExportSettingsDialogComponent {
   confirm(): void {
 
     this.dialogRef.close(this.settings);
-  }
-
-
-  /**
-   * Sets the print mode to landscape
-   */
-  setLandscape(): void {
-
-    this.settings.pageOrientation = PageOrientation.Landscape;
-  }
-
-
-  /**
-   * Sets the print mode to portrait
-   */
-  setPortrait(): void {
-
-    this.settings.pageOrientation = PageOrientation.Portrait;
   }
 }

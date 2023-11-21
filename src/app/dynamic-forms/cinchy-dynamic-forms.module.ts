@@ -1,24 +1,6 @@
 import { ScrollingModule } from "@angular/cdk/scrolling";
 import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { MatAutocompleteModule } from "@angular/material/autocomplete";
-import { MatButtonModule } from "@angular/material/button";
-import { MatCardModule } from "@angular/material/card";
-import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatNativeDateModule } from "@angular/material/core";
-import { MatDatepickerModule } from "@angular/material/datepicker";
-import { MatDialogModule } from "@angular/material/dialog";
-import { MatExpansionModule } from "@angular/material/expansion";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatIconModule } from "@angular/material/icon";
-import { MatInputModule } from "@angular/material/input";
-import { MatMenuModule } from "@angular/material/menu";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatPaginatorModule } from "@angular/material/paginator";
-import { MatSelectModule } from "@angular/material/select";
-import { MatTabsModule } from "@angular/material/tabs";
-import { MatTableModule } from "@angular/material/table";
-import { MatTooltipModule } from "@angular/material/tooltip";
 import { BrowserModule } from "@angular/platform-browser";
 import { DatePipe } from "@angular/common";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
@@ -77,6 +59,7 @@ import "brace/snippets/sql";
 import "brace/snippets/sqlserver";
 import "ace-builds/webpack-resolver";
 import "brace/snippets/xml";
+import {CustomMaterialModule} from "../custom-material.module";
 
 window["ace"]["require"] = window["ace"]["acequire"];
 
@@ -92,17 +75,17 @@ window["ace"]["require"] = window["ace"]["acequire"];
     ChoiceComponent,
     CinchyDynamicFormsComponent,
     DatetimeComponent,
+    ExportSettingsDialogComponent,
     FieldsWrapperComponent,
+    KeysPipe,
     LinkComponent,
     LinkMultichoiceComponent,
     MessageDialogComponent,
     MultichoiceComponent,
     NumberComponent,
-    ExportSettingsDialogComponent,
     RichTextComponent,
     TextareaComponent,
-    TextboxComponent,
-    KeysPipe
+    TextboxComponent
   ],
   imports: [
     CinchyModule.forRoot(),
@@ -110,28 +93,11 @@ window["ace"]["require"] = window["ace"]["acequire"];
     AngularMultiSelectModule,
     BrowserAnimationsModule,
     BrowserModule,
+    CustomMaterialModule,
     DigitOnlyModule,
     FilterPipeModule,
     FontAwesomeModule,
     FormsModule,
-    MatAutocompleteModule,
-    MatButtonModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatDatepickerModule,
-    MatDialogModule,
-    MatExpansionModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatMenuModule,
-    MatNativeDateModule,
-    MatPaginatorModule,
-    MatProgressSpinnerModule,
-    MatSelectModule,
-    MatTableModule,
-    MatTabsModule,
-    MatTooltipModule,
     NgbModule,
     NgxMatSelectSearchModule,
     NgxSpinnerModule,

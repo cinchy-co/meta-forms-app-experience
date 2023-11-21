@@ -20,6 +20,7 @@ import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
 
 import { ChildFormComponent } from "./fields/child-form/child-form.component";
+import { ExportSettingsDialogComponent } from "./dialogs/export-settings/export-settings.component";
 
 import { Form } from "./models/cinchy-form.model";
 import { FormField } from "./models/cinchy-form-field.model";
@@ -32,6 +33,7 @@ import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 import { ILookupRecord } from "../models/lookup-record.model";
 
 import { IChildFormQuery } from "./interface/child-form-query";
+import { IExportSettings } from "./interface/export-settings";
 import { IFieldChangedEvent } from "./interface/field-changed-event";
 import { INewEntityDialogResponse } from "./interface/new-entity-dialog-response";
 
@@ -43,9 +45,6 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
-import { table } from "console";
-import {ExportSettingsDialogComponent} from "./dialogs/export-settings/export-settings.component";
-import {IExportSettings} from "./interface/export-settings";
 
 
 const INITIAL_TEMPORARY_CINCHY_ID = -2;

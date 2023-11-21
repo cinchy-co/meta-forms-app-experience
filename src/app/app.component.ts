@@ -65,6 +65,7 @@ export class AppComponent implements OnDestroy, OnInit {
   getQueryStringValue(key: string, uri: string): string {
 
     const value = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+
     return (value && value !== "null") ? value : null;
   }
 
@@ -101,25 +102,27 @@ export class AppComponent implements OnDestroy, OnInit {
     this.appStateService.setRecordSelected(this.getRowIdFromUri(uri, "rowId"), false);
   }
 
+
   getRowIdFromUri(uri: string, key: string): number {
 
     let idAsString: string;
     let idAsNumber: number;
-  
+
     if (uri) {
       idAsString = this.getQueryStringValue("rowId", uri);
     }
-  
+
     if (idAsString) {
       try {
         idAsNumber = parseInt(idAsString);
+
         return idAsNumber;
       }
       catch {
         return null;
       }
     }
-  
+
     return null;
   }
 }

@@ -1,36 +1,32 @@
-<div class="export-settings-link-dialog">
+<div class="export-settings-dialog">
   <h1 mat-dialog-title>
     Export Settings
   </h1>
 
   <div mat-dialog-content>
     <form>
-      <div class="export-settings-wrapper orientation">
-        <h2>Orientation</h2>
+      <div class="option-wrapper orientation">
+        <h2>Page Orientation</h2>
 
-        <div class="export-settings-options-wrapper">
-          <div class="export-settings-option" [class.selected]="isPortrait" (click)="setPortrait()">
-            <span class="orientation-placeholder portrait"></span>
-            <label class="orientation-label">Portrait</label>
-          </div>
-
-          <div class="export-settings-option" [class.selected]="!isPortrait" (click)="setLandscape()">
-            <span class="orientation-placeholder landscape"></span>
-            <label class="orientation-label">Landscape</label>
-          </div>
-        </div>
+        <mat-radio-group [(ngModel)]="settings.pageOrientation" name="pageOrientation" aria-label="Select an option">
+          <mat-radio-button class="full-width-element" [value]="PageOrientation.Portrait">
+            Portrait
+          </mat-radio-button>
+          <mat-radio-button class="full-width-element" [value]="PageOrientation.Landscape">
+            Landscape
+          </mat-radio-button>
+        </mat-radio-group>
       </div>
     </form>
   </div>
 
   <div mat-dialog-actions>
-    <button type="submit"
-            mat-button
-            color="primary"
-            (click)="confirm()">
-      Confirm
+    <button mat-button type="button" color="warn" (click)="cancel()">
+      Cancel
     </button>
 
-    <button type="button" mat-button color="warn" (click)="cancel()">Cancel</button>
+    <button mat-button type="submit" color="primary" (click)="confirm()">
+      Export
+    </button>
   </div>
 </div>
