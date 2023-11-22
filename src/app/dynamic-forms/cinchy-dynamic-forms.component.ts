@@ -45,6 +45,7 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import { table } from "console";
 
 
 const INITIAL_TEMPORARY_CINCHY_ID = -2;

@@ -2,7 +2,7 @@ import { Inject, Injectable, LOCALE_ID } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { DatePipe } from "@angular/common";
 
-import { DataFormatType } from "../../enums/data-format-type.enum";
+import { DataFormatType } from "../../enums/data-format-type";
 
 import { DropdownOption } from "../cinchy-dropdown-dataset/cinchy-dropdown-options";
 

@@ -208,6 +208,9 @@
   border-top: 1px solid gray;
 }
 
+.ngx-select__item_active[_ngcontent-c6] {
+  background-color: gray;
+}
 
 .mat-checkbox-checked.mat-accent .mat-checkbox-background, .mat-checkbox-indeterminate.mat-accent .mat-checkbox-background {
   background-color: gray;

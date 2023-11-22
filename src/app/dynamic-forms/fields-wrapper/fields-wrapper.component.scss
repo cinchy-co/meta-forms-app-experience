@@ -27,20 +27,30 @@
   }
 }
 
+
 .section-flex {
+  &--1 {
+    .mat-expansion-panel-body {
+      & > * {
+        flex-basis: 100%;
+        margin-top: 5px;
+      }
+    }
+  }
+
   &--4 {
-    @include flexStyle(25%);
+    @include flexStyle(25%)
   }
 
   &--3 {
-    @include flexStyle(33%);
+    @include flexStyle(33%)
   }
 
   &--2 {
-    @include flexStyle(50%);
+    @include flexStyle(50%)
   }
 
   &--1 {
-   @include flexStyle(100%);
+    @include flexStyle(100%)
   }
 }

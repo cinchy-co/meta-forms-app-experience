@@ -6,6 +6,7 @@ import { DatePipe } from "@angular/common";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
 import { CinchyModule } from "@cinchy-co/angular-sdk";
+import { CustomMaterialModule } from "../custom-material.module";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 
@@ -19,6 +20,7 @@ import { AceEditorModule } from "ng2-ace-editor";
 
 import { FilterPipeModule } from "ngx-filter-pipe";
 import { NgxMatSelectSearchModule } from "ngx-mat-select-search";
+import { NgxSelectModule, INgxSelectOptions } from "ngx-select-ex";
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ToastrModule } from "ngx-toastr";
 
@@ -59,9 +61,19 @@ import "brace/snippets/sql";
 import "brace/snippets/sqlserver";
 import "ace-builds/webpack-resolver";
 import "brace/snippets/xml";
-import {CustomMaterialModule} from "../custom-material.module";
 
 window["ace"]["require"] = window["ace"]["acequire"];
+
+
+//#region Select Dropdownlist options
+// Check the interface for more options
+const CustomSelectOptions: INgxSelectOptions = {
+  optionValueField : "id",
+  optionTextField  : "label",
+  keepSelectedItems: true
+};
+//#endregion
+
 
 
 @NgModule({
@@ -100,6 +112,7 @@ window["ace"]["require"] = window["ace"]["acequire"];
     FormsModule,
     NgbModule,
     NgxMatSelectSearchModule,
+    NgxSelectModule.forRoot(CustomSelectOptions),
     NgxSpinnerModule,
     ReactiveFormsModule,
     ScrollingModule,

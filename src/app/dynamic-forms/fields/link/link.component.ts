@@ -26,7 +26,7 @@ import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
 import { ChildFormComponent } from "../child-form/child-form.component";
 
-import { DataFormatType } from "../../enums/data-format-type.enum";
+import { DataFormatType } from "../../enums/data-format-type";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 import { INewEntityDialogResponse } from "../../interface/new-entity-dialog-response";

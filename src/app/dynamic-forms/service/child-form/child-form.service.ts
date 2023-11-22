@@ -4,7 +4,7 @@ import { DatePipe } from "@angular/common";
 
 import { DropdownOption } from "../cinchy-dropdown-dataset/cinchy-dropdown-options";
 
-import { DataFormatType } from "../../enums/data-format-type.enum";
+import { DataFormatType } from "../../enums/data-format-type";
 
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";

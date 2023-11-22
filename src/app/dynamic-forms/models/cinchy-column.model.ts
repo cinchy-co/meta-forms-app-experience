@@ -1,4 +1,4 @@
-import { DataFormatType } from "../enums/data-format-type.enum";
+import { DataFormatType } from "../enums/data-format-type";
 import { TextFormatType } from "../enums/text-format-type.enum";
 
 

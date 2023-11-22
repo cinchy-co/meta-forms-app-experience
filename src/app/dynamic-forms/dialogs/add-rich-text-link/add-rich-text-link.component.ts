@@ -2,6 +2,9 @@ import { Component, Inject } from "@angular/core";
 
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
+import { faSquareCheck } from "@fortawesome/free-regular-svg-icons";
+import { faFont, faLink } from "@fortawesome/free-solid-svg-icons";
+
 import { IRichTextLink } from "../../interface/rich-text-link";
 
 import { isNullOrUndefined } from "util";

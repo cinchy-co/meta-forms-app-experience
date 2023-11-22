@@ -12,7 +12,7 @@ import {
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
-import { DataFormatType } from "../../enums/data-format-type.enum";
+import { DataFormatType } from "../../enums/data-format-type";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
