@@ -27,11 +27,11 @@
   </mat-sidenav-container>
 
   <ng-template #sideMainContent>
-    <app-sidenav *ngIf="formSectionsMetadata"
+    <sidenav *ngIf="formSectionsMetadata"
                  [tableId]="formMetadata.tableId"
                  [formMetadata]="formMetadata"
                  (closeSideBar)=sidenav.toggle()>
-    </app-sidenav>
+    </sidenav>
   </ng-template>
 
   <ng-template #mainContent>

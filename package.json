@@ -61,7 +61,6 @@
     "ngx-filter-pipe": "^2.1.2",
     "ngx-mat-select-search": "^4.2.1",
     "ngx-numeral": "^1.0.0",
-    "ngx-select-ex": "^3.6.8",
     "ngx-spinner": "^7.0.0",
     "ngx-toastr": "^10.0.2",
     "pdfmake": "^0.1.70",

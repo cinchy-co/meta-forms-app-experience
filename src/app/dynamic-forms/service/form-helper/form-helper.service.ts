@@ -3,7 +3,7 @@ import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { Cinchy, CinchyService, QueryType } from "@cinchy-co/angular-sdk";
 
-import { DataFormatType } from "../../enums/data-format-type";
+import { DataFormatType } from "../../enums/data-format-type.enum";
 
 import { CinchyColumn } from "../../models/cinchy-column.model";
 import { FormField } from "../../models/cinchy-form-field.model";
@@ -191,8 +191,8 @@ export class FormHelperService {
           columnMetadata?.minValue ?? 0,
           (isNullOrUndefined(columnEntitlements) || cellEntitlements && cellEntitlements[columnEntitlementKey] === 0) ? false : columnEntitlements.canEdit,
           columnEntitlements?.canView ?? false,
-          formFields[i].createlinkOptionFormId || null,
-          formFields[i].createlinkOptionName || null,
+          formFields[i].createLinkOptionFormId || null,
+          formFields[i].createLinkOptionName || null,
           formFields[i].linkTargetTableId || null,
           formFields[i].linkTargetTableName || null,
           formFields[i].linkTableDomainName || null,

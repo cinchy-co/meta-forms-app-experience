@@ -26,7 +26,7 @@ import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
 import { ChildFormComponent } from "../child-form/child-form.component";
 
-import { DataFormatType } from "../../enums/data-format-type";
+import { DataFormatType } from "../../enums/data-format-type.enum";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 import { INewEntityDialogResponse } from "../../interface/new-entity-dialog-response";
@@ -131,7 +131,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
   get canAdd(): boolean {
 
-    return coerceBooleanProperty(this.field.cinchyColumn.createlinkOptionFormId);
+    return coerceBooleanProperty(this.field.cinchyColumn.createLinkOptionFormId);
   }
 
 
@@ -495,13 +495,13 @@ export class LinkComponent implements OnChanges, OnInit {
 
   async openNewOptionDialog(): Promise<void> {
 
-    const form: Form = await this._formHelperService.getFormById(this.field.cinchyColumn.createlinkOptionFormId);
+    const form: Form = await this._formHelperService.getFormById(this.field.cinchyColumn.createLinkOptionFormId);
 
     const newOptionDialogRef = this._dialogService.openDialog(
       ChildFormComponent,
       {
         childForm: form,
-        title: this.field.cinchyColumn.createlinkOptionName
+        title: this.field.cinchyColumn.createLinkOptionName
       }
     );
 
