@@ -260,7 +260,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     const dialogRef = this._dialog.open(
       ExportSettingsDialogComponent,
       {
-        width: "500px",
+        width: "260px",
         data: {}
       }
     );
