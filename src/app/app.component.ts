@@ -105,11 +105,11 @@ export class AppComponent implements OnDestroy, OnInit {
 
     let idAsString: string;
     let idAsNumber: number;
-  
+
     if (uri) {
       idAsString = this.getQueryStringValue("rowId", uri);
     }
-  
+
     if (idAsString) {
       try {
         idAsNumber = parseInt(idAsString);
@@ -119,7 +119,7 @@ export class AppComponent implements OnDestroy, OnInit {
         return null;
       }
     }
-  
+
     return null;
   }
 }

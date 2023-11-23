@@ -1,0 +1,32 @@
+<div class="export-settings-dialog">
+  <h1 mat-dialog-title>
+    Export Settings
+  </h1>
+
+  <div mat-dialog-content>
+    <form>
+      <div class="option-wrapper orientation">
+        <label class="option-label">Page Orientation</label>
+
+        <mat-radio-group [(ngModel)]="settings.pageOrientation" name="pageOrientation" aria-label="Select an option">
+          <mat-radio-button class="full-width-element" [value]="PageOrientation.Portrait">
+            Portrait
+          </mat-radio-button>
+          <mat-radio-button class="full-width-element" [value]="PageOrientation.Landscape">
+            Landscape
+          </mat-radio-button>
+        </mat-radio-group>
+      </div>
+    </form>
+  </div>
+
+  <div mat-dialog-actions>
+    <button mat-button type="button" color="warn" (click)="cancel()">
+      Cancel
+    </button>
+
+    <button mat-button type="submit" color="primary" (click)="confirm()">
+      Export
+    </button>
+  </div>
+</div>
