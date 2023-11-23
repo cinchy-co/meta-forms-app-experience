@@ -51,7 +51,6 @@ export class PrintService {
   styles = {
     anchor: {
       color: "#007bff",
-      fontSize: 8,
       italics: false
     },
     formHeader: {
