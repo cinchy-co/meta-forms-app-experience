@@ -7,15 +7,15 @@ import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
 import { CinchyModule } from "@cinchy-co/angular-sdk";
 
-import { AngularMultiSelectModule } from "angular2-multiselect-dropdown";
-
-import { AceEditorModule } from "ng2-ace-editor";
+import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 
 import { NgbModule } from "@ng-bootstrap/ng-bootstrap";
 
-import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
-
 import { DigitOnlyModule } from "@uiowa/digit-only";
+
+import { AngularMultiSelectModule } from "angular2-multiselect-dropdown";
+
+import { AceEditorModule } from "ng2-ace-editor";
 
 import { FilterPipeModule } from "ngx-filter-pipe";
 import { NgxMatSelectSearchModule } from "ngx-mat-select-search";
@@ -29,6 +29,7 @@ import { CinchyDynamicFormsComponent } from "./cinchy-dynamic-forms.component";
 
 import { AddRichTextImageDialogComponent } from "./dialogs/add-rich-text-image/add-rich-text-image.component";
 import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
+import { ExportSettingsDialogComponent } from "./dialogs/export-settings/export-settings.component";
 import { MessageDialogComponent } from "./dialogs/message/message.component";
 
 import { FieldsWrapperComponent } from "./fields-wrapper/fields-wrapper.component";
@@ -75,7 +76,9 @@ window["ace"]["require"] = window["ace"]["acequire"];
     ChoiceComponent,
     CinchyDynamicFormsComponent,
     DatetimeComponent,
+    ExportSettingsDialogComponent,
     FieldsWrapperComponent,
+    KeysPipe,
     LinkComponent,
     LinkMultichoiceComponent,
     MessageDialogComponent,
@@ -83,8 +86,7 @@ window["ace"]["require"] = window["ace"]["acequire"];
     NumberComponent,
     RichTextComponent,
     TextareaComponent,
-    TextboxComponent,
-    KeysPipe
+    TextboxComponent
   ],
   imports: [
     CinchyModule.forRoot(),
