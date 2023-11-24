@@ -416,6 +416,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
               if (childData) {
                 setTimeout(() => {
+
                   this._appStateService.parentFormSavedFromChild$.next(childData);
                 }, 500);
               }
@@ -673,6 +674,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     if (this.rowId) {
       this.setLookupRecords(this.lookupRecordsList);
+
       this.currentRow = this.lookupRecordsList?.find(item => item.id === this.rowId) ?? this.currentRow ?? null;
     }
     else {
@@ -703,7 +705,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     if (this._pendingChildFormQueries?.length) {
       await this.saveChildForm(this.rowId, 0);
-    } else {
+    }
+    else {
       await this._spinner.hide();
 
       if (!isNullOrUndefined(this.rowId) && childData) {
@@ -766,6 +769,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Adds the current row information to the querystring of the table URL
    */
   private _updateFilteredTableUrl(): void {
+
     this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : "";
   }
 }
