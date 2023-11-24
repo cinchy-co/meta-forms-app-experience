@@ -97,9 +97,9 @@ export class AppComponent implements OnDestroy, OnInit {
     // If the app is embedded, it's possible that the querystring can be passed in through the parent's queryParams, so we need to check to
     // see if the formId is present there, and then use those if that is the case. If the app is not embedded, or if the parent instead sets
     // the embedded frame's target using the querystring, then we use this window's queryParams instead
-    const resolvedUri = parentUri?.includes("formId") ? parentUri : uri;
+    const resolvedUri = parentUri?.toLowerCase().includes("formid") ? parentUri : uri;
 
-    this.appStateService.setRootFormId(this.getQueryStringValue("formId", resolvedUri));
+    this.appStateService.setRootFormId(this.getQueryStringValue("formid", resolvedUri));
     this.appStateService.setRecordSelected(this.getRowIdFromUri(uri), false);
   }
 
@@ -114,7 +114,7 @@ export class AppComponent implements OnDestroy, OnInit {
     let idAsNumber: number;
 
     if (uri) {
-      idAsString = this.getQueryStringValue("rowId", uri);
+      idAsString = this.getQueryStringValue("rowid", uri);
     }
 
     if (idAsString) {
