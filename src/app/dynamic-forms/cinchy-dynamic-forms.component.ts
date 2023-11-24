@@ -20,6 +20,7 @@ import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
 
 import { ChildFormComponent } from "./fields/child-form/child-form.component";
+import { ExportSettingsDialogComponent } from "./dialogs/export-settings/export-settings.component";
 
 import { Form } from "./models/cinchy-form.model";
 import { FormField } from "./models/cinchy-form-field.model";
@@ -32,6 +33,7 @@ import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 import { ILookupRecord } from "../models/lookup-record.model";
 
 import { IChildFormQuery } from "./interface/child-form-query";
+import { IExportSettings } from "./interface/export-settings";
 import { IFieldChangedEvent } from "./interface/field-changed-event";
 import { INewEntityDialogResponse } from "./interface/new-entity-dialog-response";
 
@@ -254,6 +256,27 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
+  exportToPdf(): void {
+
+    const dialogRef = this._dialog.open(
+      ExportSettingsDialogComponent,
+      {
+        width: "260px",
+        data: {}
+      }
+    );
+
+    dialogRef.afterClosed().subscribe({
+      next: async (settings: IExportSettings) => {
+
+        if (settings) {
+          await this._printService.generatePdf(this.form, this.currentRow, settings);
+        }
+      }
+    });
+  }
+
+
   /**
    * When a field has been updated, consume the event, update that field on the form, and then redistribute the form to this component's
    * ancestors.
@@ -393,6 +416,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
               if (childData) {
                 setTimeout(() => {
+
                   this._appStateService.parentFormSavedFromChild$.next(childData);
                 }, 500);
               }
@@ -416,14 +440,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  openChildFormDialog(
-    data: {
-      childForm: Form,
-      presetValues?: { [key: string]: any },
-      useLimitedFields?: boolean,
-      title: string
-    }
-  ): void {
+  async openChildFormDialog(
+      data: {
+        childForm: Form,
+        presetValues?: { [key: string]: any },
+        useLimitedFields?: boolean,
+        title: string
+      }
+  ): Promise<void> {
 
     if (data.presetValues["Cinchy ID"]) {
       data.childForm.rowId = data.presetValues["Cinchy ID"];
@@ -507,12 +531,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       return query.rowId !== data.rowId;
     });
-  }
-
-
-  async printCurrentForm(): Promise<void> {
-
-    await this._printService.generatePdf(this.form, this.currentRow);
   }
 
 
@@ -661,6 +679,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     if (this.rowId) {
       this.setLookupRecords(this.lookupRecordsList);
+
       this.currentRow = this.lookupRecordsList?.find(item => item.id === this.rowId) ?? this.currentRow ?? null;
     }
     else {
@@ -755,6 +774,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Adds the current row information to the querystring of the table URL
    */
   private _updateFilteredTableUrl(): void {
+
     this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : "";
   }
 }

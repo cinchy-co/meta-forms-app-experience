@@ -27,6 +27,7 @@
   }
 }
 
+
 .section-flex {
   &--1 {
     .mat-expansion-panel-body {
@@ -50,6 +51,6 @@
   }
 
   &--1 {
-   @include flexStyle(100%)
+    @include flexStyle(100%)
   }
 }

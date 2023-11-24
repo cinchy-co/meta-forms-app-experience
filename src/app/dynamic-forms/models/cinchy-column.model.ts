@@ -41,7 +41,7 @@ export class CinchyColumn {
     public attachmentUrl?: string,
     public uploadUrl?: string,
     public childFormParentId?: string,
-    public childFormLinkId?: string, 
+    public childFormLinkId?: string,
     public doNotWrap?: boolean,
     public displayFormat?: string,
     public textFormat?: TextFormatType,

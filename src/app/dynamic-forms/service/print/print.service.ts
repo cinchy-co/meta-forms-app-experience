@@ -8,6 +8,11 @@ import { DropdownOption } from "../cinchy-dropdown-dataset/cinchy-dropdown-optio
 
 import { ChildFormService } from "../child-form/child-form.service";
 
+import { PageOrientation } from "../../enums/page-orientation.enum";
+import { PageSize } from "../../enums/page-size.enum";
+
+import { IExportSettings } from "../../interface/export-settings";
+
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { FormSection } from "../../models/cinchy-form-section.model";
@@ -46,7 +51,6 @@ export class PrintService {
   styles = {
     anchor: {
       color: "#007bff",
-      fontSize: 8,
       italics: false
     },
     formHeader: {
@@ -158,9 +162,10 @@ export class PrintService {
   ) {}
 
 
-  async generatePdf(form: Form, currentRow: ILookupRecord): Promise<void> {
+  async generatePdf(form: Form, currentRow: ILookupRecord, settings: IExportSettings): Promise<void> {
 
-    this._spinner.show();
+    await this._spinner.show();
+
     this.content = [
       {
         text: this._appStateService.formMetadata.formName,
@@ -170,7 +175,7 @@ export class PrintService {
 
     currentRow?.label && this.content.push({ text: currentRow.label, style: "formSubHeader" });
 
-    const documentDefinition = await this._getDocDefFromForm(form);
+    const documentDefinition = await this._getDocDefFromForm(form, settings);
 
     if (documentDefinition) {
       const fileName = currentRow?.label ? `${this._appStateService.formMetadata.formName}-${currentRow.label}.pdf` : `${this._appStateService.formMetadata.formName}.pdf`;
@@ -369,10 +374,7 @@ export class PrintService {
 
       table.body = tbody.slice();
 
-      table.widths = fieldKeys.map((key: string) => {
-
-        return "auto";
-      });
+      table.widths = new Array<string>(fieldKeys.length).fill("auto");
 
       return {
         table: table,
@@ -408,7 +410,7 @@ export class PrintService {
   /**
    * Builds the PDF structure for PDFMake
    */
-  private async _getDocDefFromForm(form: Form): Promise<any> {
+  private async _getDocDefFromForm(form: Form, settings: IExportSettings): Promise<any> {
 
     if (form?.sections?.length) {
       form.sections.forEach((section: FormSection) => {
@@ -424,16 +426,20 @@ export class PrintService {
         header: this.header,
         content: resolvedContent,
         styles: this.styles,
-        pageSize: "LETTER",
+        pageSize: PageSize.Letter,
         pageMargins: [30, 62, 62, 30],
-        footer: function (currentPage, pageCount) {
-          return { text: currentPage.toString() + " of " + pageCount, style: "footer" }
+        pageOrientation: settings.pageOrientation ?? PageOrientation.Portrait,
+        footer: function (currentPage: number, pageCount: number) {
+
+          return {
+            text: `${currentPage.toString()} of ${pageCount}`,
+            style: "footer"
+          }
         }
       };
     }
-    else {
-      return null;
-    }
+
+    return null;
   }
 
 

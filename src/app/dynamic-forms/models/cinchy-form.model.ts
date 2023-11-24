@@ -18,7 +18,6 @@ import { isNullOrUndefined } from "util";
 
 import * as moment from "moment";
 import * as R from "ramda";
-import {Item} from "angular2-multiselect-dropdown";
 
 
 export class Form {
