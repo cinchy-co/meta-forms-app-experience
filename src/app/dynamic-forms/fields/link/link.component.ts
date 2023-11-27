@@ -232,9 +232,6 @@ export class LinkComponent implements OnChanges, OnInit {
       next: (value: string) => {
 
         this.filteredOptions = this._filter(value);
-
-        // DEBUG
-        console.log("Filter changed:", value, this.filteredOptions);
       }
     });
   }
@@ -486,9 +483,6 @@ export class LinkComponent implements OnChanges, OnInit {
    */
   onOptionSelected(event: MatSelectChange, option: DropdownOption): void {
 
-    // DEBUG
-    console.log("ping", event, option);
-
     // This function will also be called on the previously-selected value, if any, so we're just
     // checking to see if the given option is the one we care about
     if (event.source.selected) {
@@ -631,9 +625,6 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   private _filter(value: string): DropdownOption[] {
-
-    // DEBUG
-    console.log("_filter", value);
 
     if (this.field.dropdownDataset?.options?.length && this.searchCharacterLimitMet) {
       if (value) {
