@@ -232,6 +232,9 @@ export class LinkComponent implements OnChanges, OnInit {
       next: (value: string) => {
 
         this.filteredOptions = this._filter(value);
+
+        // DEBUG
+        console.log("Filter changed:", value, this.filteredOptions);
       }
     });
   }
@@ -276,7 +279,7 @@ export class LinkComponent implements OnChanges, OnInit {
     this._changeDetectorRef.detectChanges();
 
     if (key === "Delete" || (key === "Backspace" && this.autocompleteText?.length === 0)) {
-      this.autocompleteText = '';
+      this.autocompleteText = "";
       this.selectedValue = this.clearOption;
 
       this.valueChanged();
@@ -478,9 +481,13 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   /**
-   * Resolves the selectedValue when the user selects an option from the autocomplete
+   * Resolves the selectedValue when the user selects an option from the autocomplete. If the user uses the keyboard,
+   * then a MatSelectChange event will be provided.
    */
   onOptionSelected(event: MatSelectChange, option: DropdownOption): void {
+
+    // DEBUG
+    console.log("ping", event, option);
 
     // This function will also be called on the previously-selected value, if any, so we're just
     // checking to see if the given option is the one we care about
@@ -546,9 +553,17 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
+  /**
+   * Resets the label to the selected value when the user blurs the input. The delay allows for dropdowns representing
+   * large datasets to resolve their value before adjusting the text in the case that the user selects a value by
+   * clicking, which would otherwise fire the blur event before the selection is saved.
+   */
   setToLastValueSelected(): void {
 
-    this.autocompleteText = this.selectedValue?.label || "";
+    setTimeout(() => {
+
+      this.autocompleteText = this.selectedValue?.label || "";
+    }, 100);
   }
 
 
@@ -616,6 +631,9 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   private _filter(value: string): DropdownOption[] {
+
+    // DEBUG
+    console.log("_filter", value);
 
     if (this.field.dropdownDataset?.options?.length && this.searchCharacterLimitMet) {
       if (value) {
