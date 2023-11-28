@@ -8,7 +8,7 @@
         &nbsp;
         <label class="cinchy-label" [title]="field.caption || ''">
           {{field.label}}
-          {{(field.cinchyColumn.isMandatory && !field.value) ? "*" : ""}}
+          {{(field.cinchyColumn.isMandatory && !field.hasValue) ? "*" : ""}}
         </label>
 
         <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId !== field.cinchyColumn.linkTargetTableId" class="info-icon"
@@ -135,7 +135,7 @@
         </ng-container>
       </mat-select>
 
-      <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.value">
+      <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.hasValue">
         *{{field.label}} is Required.
       </mat-error>
 

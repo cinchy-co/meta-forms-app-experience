@@ -415,6 +415,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
               if (childData) {
                 setTimeout(() => {
+
                   this._appStateService.parentFormSavedFromChild$.next(childData);
                 }, 500);
               }
@@ -438,7 +439,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  async openChildForm(
+  async openChildFormDialog(
       data: {
         childForm: Form,
         presetValues?: { [key: string]: any },
@@ -447,16 +448,72 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       }
   ): Promise<void> {
 
-    if (!this.form.isClone && !this.rowId) {
-      const formValidation = this.form.checkFormValidation();
+    if (data.presetValues["Cinchy ID"]) {
+      data.childForm.rowId = data.presetValues["Cinchy ID"];
+    }
 
-      if (formValidation?.isValid) {
-        await this.saveForm(this.form, null, data);
+    data.useLimitedFields = true;
+
+    const dialogRef = this._dialog.open(
+      ChildFormComponent,
+      {
+        width: "500px",
+        data: data
       }
-    }
-    else {
-      this._openChildFormDialog(data);
-    }
+    );
+
+    dialogRef.afterClosed().subscribe((resultId: number) => {
+
+      if (!isNullOrUndefined(resultId)) {
+        const targetChildForm = this.form.findChildForm(data.childForm.id);
+
+        let childFormRowValues = targetChildForm.childForm.childFormRowValues || [];
+
+        const newValues: { [key: string]: any } = {};
+        const childFormLinkName = data.childForm.getChildFormLinkName(data.childForm.childFormLinkId);
+
+        data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
+
+          section.fields.forEach((field: FormField, fieldIndex: number) => {
+
+            if (
+              field.cinchyColumn.hasChanged ||
+              (data.presetValues && data.presetValues["Cinchy ID"] > 0) ||
+              (field.label === childFormLinkName)
+            ) {
+              newValues[field.cinchyColumn.name] = field.value;
+            }
+          });
+        });
+
+        const rowDataIndex = childFormRowValues.findIndex((rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
+
+        if (rowDataIndex > -1) {
+          newValues["Cinchy ID"] = resultId;
+          childFormRowValues.splice(rowDataIndex, 1, newValues);
+        }
+        else {
+          childFormRowValues.push(
+            Object.assign(newValues, { "Cinchy ID": this._lastTemporaryCinchyId-- })
+          );
+        }
+
+        // TODO: this only works because the presetValues are directly mutated in the ChildFormComponent, which is not a pattern
+        //       that we want to keep moving forward. This will need to be refactored.
+        this.form.updateChildFormProperty(
+          targetChildForm.sectionIndex,
+          targetChildForm.fieldIndex,
+          {
+            propertyName: "childFormRowValues",
+            propertyValue: childFormRowValues
+          }
+        );
+
+        this._appStateService.childRecordUpdated$.next();
+
+        this.afterChildFormEdit(resultId, data.childForm);
+      }
+    });
   }
 
 
@@ -486,7 +543,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   async saveChildForm(rowId: number, recursionCounter: number): Promise<void> {
 
-    if (!this._pendingChildFormQueries.length && !isNullOrUndefined(this.rowId)) {
+    if (!this._pendingChildFormQueries.length && !isNullOrUndefined(rowId)) {
       await this.loadForm();
     }
     else if (this._pendingChildFormQueries.length > recursionCounter) {
@@ -495,8 +552,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       const pendingItem = this._pendingChildFormQueries[recursionCounter];
 
       if (pendingItem.query.query) {
-        const queryToExecute = pendingItem.query.query.replace("{sourceid}", rowId.toString());
-        const params = JSON.parse(JSON.stringify(pendingItem.query.params).replace("{sourceId}", rowId.toString()));
+        const queryToExecute = pendingItem.query.query.replace("{parentId}", rowId.toString());
+        const params = JSON.parse(JSON.stringify(pendingItem.query.params).replace("{parentId}", rowId.toString()));
 
         this._cinchyService.executeCsql(queryToExecute, params).subscribe(
           async () => {
@@ -621,6 +678,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     if (this.rowId) {
       this.setLookupRecords(this.lookupRecordsList);
+
       this.currentRow = this.lookupRecordsList?.find(item => item.id === this.rowId) ?? this.currentRow ?? null;
     }
     else {
@@ -630,79 +688,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     if (!record?.doNotReloadForm) {
       await this.loadForm();
     }
-  }
-
-
-  private _openChildFormDialog(
-    data: {
-      childForm: Form,
-      presetValues?: { [key: string]: any },
-      useLimitedFields?: boolean,
-      title: string
-    }
-  ): void {
-
-    if (data.presetValues["Cinchy ID"]) {
-      data.childForm.rowId = data.presetValues["Cinchy ID"];
-    }
-
-    data.useLimitedFields = true;
-
-    const dialogRef = this._dialog.open(
-      ChildFormComponent,
-      {
-        width: "500px",
-        data: data
-      }
-    );
-
-    dialogRef.afterClosed().subscribe((resultId: number) => {
-
-      if (!isNullOrUndefined(resultId)) {
-        const targetChildForm = this.form.findChildForm(data.childForm.id);
-
-        let childFormRowValues = targetChildForm.childForm.childFormRowValues || [];
-
-        const newValues: { [key: string]: any } = {};
-
-        data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
-
-          section.fields.forEach((field: FormField, fieldIndex: number) => {
-
-            if (!isNullOrUndefined(field.value) || (data.presetValues && data.presetValues["Cinchy ID"] > 0)) {
-              newValues[field.cinchyColumn.name] = field.value;
-            }
-          });
-        });
-
-        const rowDataIndex = childFormRowValues.findIndex((rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
-
-        if (rowDataIndex > -1) {
-          newValues["Cinchy ID"] = resultId;
-          childFormRowValues.splice(rowDataIndex, 1, newValues);
-        }
-        else {
-          childFormRowValues.push(
-            Object.assign(newValues, { "Cinchy ID": this._lastTemporaryCinchyId-- })
-          );
-        }
-
-        // TODO: this only works because the presetValues are directly mutated in the ChildFormComponent, which is not a pattern
-        //       that we want to keep moving forward. This will need to be refactored.
-        this.form.updateChildFormProperty(
-          targetChildForm.sectionIndex,
-          targetChildForm.fieldIndex,
-          {
-            propertyName: "childFormRowValues",
-            propertyValue: childFormRowValues
-          }
-        );
-
-        this._appStateService.childRecordUpdated$.next();
-
-        this.afterChildFormEdit(resultId, data.childForm);
-      }
-    });
   }
 
 
@@ -724,7 +709,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     if (this._pendingChildFormQueries?.length) {
       await this.saveChildForm(this.rowId, 0);
-    } else {
+    }
+    else {
       await this._spinner.hide();
 
       if (!isNullOrUndefined(this.rowId) && childData) {
@@ -787,6 +773,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Adds the current row information to the querystring of the table URL
    */
   private _updateFilteredTableUrl(): void {
+
     this.filteredTableUrl = this._appStateService.rowId ? `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` : "";
   }
 }

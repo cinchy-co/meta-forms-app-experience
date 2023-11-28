@@ -511,7 +511,7 @@ export class PrintService {
         }
       );
     }
-    else if (!field.value) {
+    else if (!field.hasValue) {
       returnValues.push({
         text: "-",
         style: "fieldValue"
@@ -551,7 +551,7 @@ export class PrintService {
     if (this._isHtmlAnchor(field.value)) {
       returnValues.push(this._generateAnchorArrayItemFromHtml(field.value, null, "Open"));
     }
-    else if (!field.value) {
+    else if (!field.hasValue) {
       returnValues.push(
         {
           text: "-",

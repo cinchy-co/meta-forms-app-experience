@@ -15,13 +15,13 @@
              id="file"
              (change)="onFileSelected($event)">
 
-      <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.value">
+      <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.hasValue">
         *{{field.label}} is Required.
       </mat-error>
     </div>
   </div>
 
-  <div *ngIf="field.value">
+  <div *ngIf="field.hasValue">
     <div *ngIf="fileName" style="margin: 5px;">
       <a class="download-link" (click)="downloadDocument()">
         Existing file: <strong>{{fileName}}</strong>
