@@ -335,7 +335,12 @@ export class Form {
     return null;
   }
 
+
+  /**
+   * Gets the column name associated with the child form link ID, if set
+   */
   getChildFormLinkName(childFormLinkId: string): string {
+
     // We only need the first segment since the linkFieldId can have a value like "[Field].[Cinchy Id]"
     return childFormLinkId?.replace(/[\[\]]+/g, "").split(".")[0];
   }
@@ -388,7 +393,7 @@ export class Form {
 
               break;
             case "Binary":
-              if (field.value && isNullOrUndefined(this.rowId)) {
+              if (field.hasValue && isNullOrUndefined(this.rowId)) {
                 params[paramName] = field.value ?? "";
 
                 assignmentColumns.push(`[${field.cinchyColumn.name}]`);
@@ -433,7 +438,7 @@ export class Form {
             assignmentColumns.push(`[${field.cinchyColumn.name}]`);
 
             if (isNullOrUndefined(field.cinchyColumn.linkTargetColumnName)) {
-              if ((field.cinchyColumn.dataType === "Text") && !field.value) {
+              if ((field.cinchyColumn.dataType === "Text") && !field.hasValue) {
                 assignmentValues.push((params[paramName] !== "") ? `cast(${paramName} as nvarchar(100))` : paramName);
               }
               else {
@@ -442,7 +447,7 @@ export class Form {
             }
             else {
               if (field.value instanceof Array || field.cinchyColumn.isMultiple) {
-                if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
+                if (field.cinchyColumn.dataType === "Link" && !field.hasValue) {
                   assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 }
                 else {
@@ -546,7 +551,7 @@ export class Form {
         const isLinkedColumnForInsert = coerceBooleanProperty(
           !this.rowId &&
           (
-            (field.cinchyColumn.dataType === "Link" && field.value) ||
+            (field.cinchyColumn.dataType === "Link" && field.hasValue) ||
             currentFieldIsLinkedColumn
           )
         );
@@ -558,7 +563,7 @@ export class Form {
           (field.cinchyColumn.hasChanged || isLinkedColumnForInsert)
         ) {
           paramName = `@p${paramNumber++}`;
-          foundLinkedColumn ||= field.label === childFormLinkName;
+          foundLinkedColumn ||= currentFieldIsLinkedColumn;
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
@@ -584,9 +589,9 @@ export class Form {
               break;
             case "Link":
               if (field.value === "DELETE") {
-                params[paramName] = "";
+                params[paramName] = null;
               }
-              else if (field.value?.length && field.cinchyColumn.isMultiple) {
+              else if (field.hasValue && field.cinchyColumn.isMultiple) {
                 let stringLinkArray = [];
 
                 // In the case that the user has selected values in a multi-select field which
@@ -610,7 +615,7 @@ export class Form {
 
                 params[paramName] = stringLinkArray.join(",") || null;
               }
-              else if (currentFieldIsLinkedColumn && !field.value) {
+              else if (currentFieldIsLinkedColumn && !field.hasValue) {
                 params[paramName] = "{parentId}";
               }
               else {
@@ -633,7 +638,7 @@ export class Form {
               if (isNullOrUndefined(this.rowId)) {
                 assignmentValues.push(`${paramName}`);
               }
-              else if ((field.cinchyColumn.dataType === "Text") && !field.value) {
+              else if ((field.cinchyColumn.dataType === "Text") && !field.hasValue) {
                 assignmentValues.push((params[paramName] !== "") ? `cast(${paramName} as nvarchar(100))` : paramName);
               }
               else {
@@ -641,8 +646,8 @@ export class Form {
               }
             }
             else {
-              if (field.value && field.cinchyColumn.isMultiple) {
-                if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
+              if (field.hasValue && field.cinchyColumn.isMultiple) {
+                if (field.cinchyColumn.dataType === "Link" && !field.hasValue) {
                   assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 }
                 else {
@@ -702,6 +707,7 @@ export class Form {
     // If linked field is NOT DISPLAYED, link child record to parent table by matching the childFormLinkName
     if (!foundLinkedColumn) {
       this.tableMetadata["Columns"]?.forEach((column: { columnType: string, linkedTableId: number, name: string }) => {
+
         if (column.name === childFormLinkName) {
           paramName = `@p${paramNumber++}`;
           assignmentColumns.push(`[${column.name}]`);
@@ -709,8 +715,10 @@ export class Form {
 
           if (column.columnType === "Link") {
             params[paramName] = this.parentForm.rowId.toString();
-          } else {
+          }
+          else {
             const parentFormLinkName = this.childFormParentId?.split("].[")[0]?.replace(/[\[\]]+/g, "");
+
             params[paramName] = this.parentForm.fieldsByColumnName[parentFormLinkName].value
           }
         }
@@ -1101,7 +1109,24 @@ export class Form {
     if (this._sections?.length > sectionIndex && this._sections[sectionIndex].fields?.length > fieldIndex) {
       // Since we don't store the field's original value, we will mark it as changed if the current value is different from the
       // value immediately prior, or if the field has already been marked as changed
-      const valueIsDifferent = (newValue !== this._sections[sectionIndex].fields[fieldIndex].value);
+      let valueIsDifferent: boolean;
+
+      if (Array.isArray(newValue)) {
+        valueIsDifferent = (newValue?.length !== this._sections[sectionIndex].fields[fieldIndex].value?.length);
+
+        if (!valueIsDifferent) {
+          for (let index = 0; index < newValue?.length; index++) {
+            if (newValue[index] !== this._sections[sectionIndex].fields[fieldIndex].value[index]) {
+              valueIsDifferent = true;
+
+              break;
+            }
+          }
+        }
+      }
+      else {
+        valueIsDifferent = (newValue !== this._sections[sectionIndex].fields[fieldIndex].value);
+      }
 
       this.hasChanged = this.hasChanged || valueIsDifferent;
 

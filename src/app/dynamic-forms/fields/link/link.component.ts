@@ -276,7 +276,7 @@ export class LinkComponent implements OnChanges, OnInit {
     this._changeDetectorRef.detectChanges();
 
     if (key === "Delete" || (key === "Backspace" && this.autocompleteText?.length === 0)) {
-      this.autocompleteText = '';
+      this.autocompleteText = "";
       this.selectedValue = this.clearOption;
 
       this.valueChanged();
@@ -478,7 +478,8 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   /**
-   * Resolves the selectedValue when the user selects an option from the autocomplete
+   * Resolves the selectedValue when the user selects an option from the autocomplete. If the user uses the keyboard,
+   * then a MatSelectChange event will be provided.
    */
   onOptionSelected(event: MatSelectChange, option: DropdownOption): void {
 
@@ -546,9 +547,17 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
+  /**
+   * Resets the label to the selected value when the user blurs the input. The delay allows for dropdowns representing
+   * large datasets to resolve their value before adjusting the text in the case that the user selects a value by
+   * clicking, which would otherwise fire the blur event before the selection is saved.
+   */
   setToLastValueSelected(): void {
 
-    this.autocompleteText = this.selectedValue?.label || "";
+    setTimeout(() => {
+
+      this.autocompleteText = this.selectedValue?.label || "";
+    }, 100);
   }
 
 
@@ -651,7 +660,7 @@ export class LinkComponent implements OnChanges, OnInit {
       this.getListItems(true, true);
     }
     else {
-      if (this.field.value) {
+      if (this.field.hasValue) {
         // Handles the case where there is a placeholder element (e.g. "Loading...")
         if (dataset?.length === 1) {
           this.selectedValue = { ...dataset[0] };
@@ -660,8 +669,7 @@ export class LinkComponent implements OnChanges, OnInit {
         else if (dataset?.length > 1) {
           this.selectedValue = dataset.find((option: DropdownOption) => {
 
-            // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
-            //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
+            // We're explicitly using a double equals here because at this stage the ID may be either a number or string
             return (option.id == this.field.value);
           });
         }

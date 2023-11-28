@@ -440,7 +440,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }
 
 
-  async openChildForm(
+  async openChildFormDialog(
       data: {
         childForm: Form,
         presetValues?: { [key: string]: any },
@@ -471,12 +471,17 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         let childFormRowValues = targetChildForm.childForm.childFormRowValues || [];
 
         const newValues: { [key: string]: any } = {};
+        const childFormLinkName = data.childForm.getChildFormLinkName(data.childForm.childFormLinkId);
 
         data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
 
           section.fields.forEach((field: FormField, fieldIndex: number) => {
 
-            if (!isNullOrUndefined(field.value) || (data.presetValues && data.presetValues["Cinchy ID"] > 0)) {
+            if (
+              field.cinchyColumn.hasChanged ||
+              (data.presetValues && data.presetValues["Cinchy ID"] > 0) ||
+              (field.label === childFormLinkName)
+            ) {
               newValues[field.cinchyColumn.name] = field.value;
             }
           });
@@ -548,7 +553,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       const pendingItem = this._pendingChildFormQueries[recursionCounter];
 
       if (pendingItem.query.query) {
-        const queryToExecute = pendingItem.query.query.replace("{parentId}", this.rowId.toString());
+        const queryToExecute = pendingItem.query.query.replace("{parentId}", rowId.toString());
         const params = JSON.parse(JSON.stringify(pendingItem.query.params).replace("{parentId}", rowId.toString()));
 
         this._cinchyService.executeCsql(queryToExecute, params).subscribe(

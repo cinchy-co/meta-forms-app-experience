@@ -7,7 +7,7 @@
     &nbsp;
     <label class="cinchy-label" [title]="field.caption || ''">
       {{field.label}}
-      {{(field.cinchyColumn.isMandatory && !field.value) ? '*' : ''}}
+      {{(field.cinchyColumn.isMandatory && !field.hasValue) ? '*' : ''}}
     </label>
     <mat-icon *ngIf="field.caption" class="info-icon"
               ngbTooltip="{{field.caption}}"

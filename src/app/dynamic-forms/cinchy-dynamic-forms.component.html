@@ -59,7 +59,7 @@
                           [fieldsWithErrors]="fieldsWithErrors"
                           [formHasDataLoaded]="formHasDataLoaded"
                           (childRowDeleted)="onChildRowDeleted($event)"
-                          (childFormOpened)="openChildForm($event)"
+                          (childFormOpened)="openChildFormDialog($event)"
                           (onChange)="handleFieldsEvent($event)">
       </app-fields-wrapper>
     </mat-accordion>
@@ -69,7 +69,7 @@
                           [fieldsWithErrors]="fieldsWithErrors"
                           [formHasDataLoaded]="formHasDataLoaded"
                           (childRowDeleted)="onChildRowDeleted($event)"
-                          (childFormOpened)="openChildForm($event)"
+                          (childFormOpened)="openChildFormDialog($event)"
                           (onChange)="handleFieldsEvent($event)">
       </app-fields-wrapper>
     </ng-template>

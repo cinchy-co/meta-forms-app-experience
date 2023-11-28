@@ -7,7 +7,7 @@
       &nbsp;
       <label class="cinchy-label" [title]="field.caption ?? ' '">
         {{field.label}}
-        {{(field.cinchyColumn.isMandatory && !field.value) ? "*" : ""}}
+        {{(field.cinchyColumn.isMandatory && !field.hasValue) ? "*" : ""}}
       </label>
       <span *ngIf="canAdd">
         <a (click)="openNewOptionDialog()">
@@ -168,7 +168,7 @@
            style="margin-top: -10px">
   </ng-container>
   <mat-error class="mat-error-move-up-10"
-             *ngIf="showError && field.cinchyColumn.isMandatory && !field.value">
+             *ngIf="showError && field.cinchyColumn.isMandatory && !field.hasValue">
     *{{field.label}} is Required.
   </mat-error>
 </div>
