@@ -94,9 +94,6 @@ export class AppStateService {
 
     const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
 
-    // DEBUG
-    console.log("delete", window.location.href, baseUrl, queryParams);
-
     window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}`);
   }
 
