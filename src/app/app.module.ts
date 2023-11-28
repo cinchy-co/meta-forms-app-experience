@@ -15,7 +15,6 @@ import { AppRoutingModule } from "./app-routing.module";
 import { CinchyDynamicFormsModule } from "./dynamic-forms/cinchy-dynamic-forms.module";
 import { CoreModule } from "./core/core.module";
 import { CustomMaterialModule } from "./custom-material.module";
-import { DialogsModule } from "./dialogs/dialogs.module";
 import { PagesModule } from "./pages/pages.module";
 
 import { ConfigService } from "./services/config.service";
@@ -28,10 +27,12 @@ export function appLoadFactory(config: ConfigService) {
   return () => config.loadConfig().toPromise();
 }
 
+
 export function getBaseUrl() {
 
   return document.getElementsByTagName("base")[0].href;
 }
+
 
 @NgModule({
   declarations: [
@@ -44,7 +45,6 @@ export function getBaseUrl() {
     HttpClientModule,
     CoreModule,
     PagesModule,
-    DialogsModule,
     CustomMaterialModule,
     CinchyDynamicFormsModule,
     CinchyModule.forRoot(),
@@ -68,10 +68,14 @@ export function getBaseUrl() {
       useFactory: (config: ConfigService) => {
         return config.envConfig;
       },
-      deps: [ConfigService]
+      deps: [
+        ConfigService
+      ]
     },
     { provide: "BASE_URL", useFactory: getBaseUrl },
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [
+    AppComponent
+  ]
 })
 export class AppModule {}

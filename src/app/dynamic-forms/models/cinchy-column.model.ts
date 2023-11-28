@@ -1,4 +1,4 @@
-import { DataFormatType } from "../enums/data-format-type";
+import { DataFormatType } from "../enums/data-format-type.enum";
 import { TextFormatType } from "../enums/text-format-type.enum";
 
 
@@ -21,8 +21,8 @@ export class CinchyColumn {
     public minValue?: number,
     public canEdit?: boolean,
     public canView?: boolean,
-    public createlinkOptionFormId?: string,
-    public createlinkOptionName?: string,
+    public createLinkOptionFormId?: string,
+    public createLinkOptionName?: string,
     public linkTargetTableId?: number,
     public linkTargetTableName?: string,
     public linkTableDomainName?: string,

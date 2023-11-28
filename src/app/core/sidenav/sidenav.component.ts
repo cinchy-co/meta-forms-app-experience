@@ -18,7 +18,7 @@ import { NgxSpinnerService } from "ngx-spinner";
 
 
 @Component({
-  selector: "app-sidenav",
+  selector: "sidenav",
   templateUrl: "./sidenav.component.html",
   styleUrls: ["./sidenav.component.scss"]
 })

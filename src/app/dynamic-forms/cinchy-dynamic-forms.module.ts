@@ -1,12 +1,11 @@
-import { ScrollingModule } from "@angular/cdk/scrolling";
 import { NgModule } from "@angular/core";
+import { ScrollingModule } from "@angular/cdk/scrolling";
+import { DatePipe } from "@angular/common";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
-import { DatePipe } from "@angular/common";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
 import { CinchyModule } from "@cinchy-co/angular-sdk";
-import { CustomMaterialModule } from "../custom-material.module";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 
@@ -20,13 +19,18 @@ import { AceEditorModule } from "ng2-ace-editor";
 
 import { FilterPipeModule } from "ngx-filter-pipe";
 import { NgxMatSelectSearchModule } from "ngx-mat-select-search";
-import { NgxSelectModule, INgxSelectOptions } from "ngx-select-ex";
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ToastrModule } from "ngx-toastr";
+
+import { CustomMaterialModule } from "../custom-material.module";
+import { SharedModule } from "../shared/shared.module";
+
+import { CinchyDynamicFormsComponent } from "./cinchy-dynamic-forms.component";
 
 import { AddRichTextImageDialogComponent } from "./dialogs/add-rich-text-image/add-rich-text-image.component";
 import { AddRichTextLinkDialogComponent } from "./dialogs/add-rich-text-link/add-rich-text-link.component";
 import { ExportSettingsDialogComponent } from "./dialogs/export-settings/export-settings.component";
+import { MessageDialogComponent } from "./dialogs/message/message.component";
 
 import { FieldsWrapperComponent } from "./fields-wrapper/fields-wrapper.component";
 import { AttachFileComponent } from "./fields/attach-file/attach-file.component";
@@ -42,14 +46,11 @@ import { NumberComponent } from "./fields/number/number.component";
 import { RichTextComponent } from "./fields/rich-text/rich-text.component";
 import { TextboxComponent } from "./fields/textbox/textbox.component";
 import { TextareaComponent } from "./fields/textarea/textarea.component";
-import { CinchyDynamicFormsComponent } from "./cinchy-dynamic-forms.component";
 
 import { KeysPipe } from "./pipes/cinchy-column-key.pipe";
 
-import { SharedModule } from "../shared/shared.module";
 
-import { MessageDialogComponent } from "./message-dialog/message-dialog.component";
-
+import "ace-builds/webpack-resolver";
 import "brace";
 import "brace/index";
 import "brace/ext/language_tools";
@@ -59,21 +60,9 @@ import "brace/snippets/javascript";
 import "brace/snippets/json";
 import "brace/snippets/sql";
 import "brace/snippets/sqlserver";
-import "ace-builds/webpack-resolver";
 import "brace/snippets/xml";
 
 window["ace"]["require"] = window["ace"]["acequire"];
-
-
-//#region Select Dropdownlist options
-// Check the interface for more options
-const CustomSelectOptions: INgxSelectOptions = {
-  optionValueField : "id",
-  optionTextField  : "label",
-  keepSelectedItems: true
-};
-//#endregion
-
 
 
 @NgModule({
@@ -112,7 +101,6 @@ const CustomSelectOptions: INgxSelectOptions = {
     FormsModule,
     NgbModule,
     NgxMatSelectSearchModule,
-    NgxSelectModule.forRoot(CustomSelectOptions),
     NgxSpinnerModule,
     ReactiveFormsModule,
     ScrollingModule,

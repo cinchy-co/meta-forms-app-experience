@@ -1,13 +1,13 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject } from "@angular/core";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
-import { IRichTextImage } from '../../interface/rich-text-image';
+import { IRichTextImage } from "../../interface/rich-text-image";
 
 
 @Component({
-  selector: 'app-add-rich-text-image',
-  templateUrl: './add-rich-text-image.component.html',
-  styleUrls: ['./add-rich-text-image.component.scss']
+  selector: "add-rich-text-image-dialog",
+  templateUrl: "./add-rich-text-image.component.html",
+  styleUrls: ["./add-rich-text-image.component.scss"]
 })
 export class AddRichTextImageDialogComponent {
 

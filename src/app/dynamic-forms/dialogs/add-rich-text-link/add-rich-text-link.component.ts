@@ -1,9 +1,5 @@
 import { Component, Inject } from "@angular/core";
-
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
-
-import { faSquareCheck } from "@fortawesome/free-regular-svg-icons";
-import { faFont, faLink } from "@fortawesome/free-solid-svg-icons";
 
 import { IRichTextLink } from "../../interface/rich-text-link";
 
@@ -21,9 +17,12 @@ export class AddRichTextLinkDialogComponent {
 
   href: string;
 
-  targetBlank = true;
+  targetBlank: boolean = true;
 
 
+  /**
+   * Determines whether or not the dialog is in a state where it can be saved
+   */
   get canSave(): boolean {
 
     return !isNullOrUndefined(this.href && this.content);
@@ -39,12 +38,18 @@ export class AddRichTextLinkDialogComponent {
   }
 
 
+  /**
+   * Closes the dialog without saving
+   */
   cancel(): void {
 
     this.dialogRef.close();
   }
 
 
+  /**
+   * Passes the entered data back to the parent component for processing
+   */
   saveLinkDetails(): void {
 
     if (this.canSave) {

@@ -1,37 +1,35 @@
-import {BrowserModule} from '@angular/platform-browser';
-import {NgModule} from '@angular/core';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {SharedModule} from '../shared/shared.module';
-import {CustomMaterialModule} from '../custom-material.module';
-import {FormWrapperComponent} from './form-wrapper/form-wrapper.component';
-import {CinchyDynamicFormsModule} from "../dynamic-forms/cinchy-dynamic-forms.module";
-import {FontAwesomeModule} from "@fortawesome/angular-fontawesome";
-import {NgxSpinnerModule} from "ngx-spinner";
-import {CoreModule} from "../core/core.module";
-import {SaveSuccessComponent} from './save-success/save-success.component';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatInputModule} from '@angular/material/input';
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
+import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
+
+import { CinchyDynamicFormsModule } from "../dynamic-forms/cinchy-dynamic-forms.module";
+import { CoreModule } from "../core/core.module";
+import { CustomMaterialModule } from '../custom-material.module';
+import { SharedModule } from '../shared/shared.module';
+
+import { FormWrapperComponent } from './form-wrapper/form-wrapper.component';
+
+import { NgxSpinnerModule } from "ngx-spinner";
+
 
 @NgModule({
   declarations: [
-    FormWrapperComponent,
-    SaveSuccessComponent
+    FormWrapperComponent
   ],
   imports: [
     BrowserModule,
-    FormsModule,
-    ReactiveFormsModule,
+    CoreModule,
     SharedModule,
-    CustomMaterialModule,
     CinchyDynamicFormsModule,
+    CustomMaterialModule,
     FontAwesomeModule,
+    FormsModule,
     NgxSpinnerModule,
-    MatDatepickerModule,
-    MatInputModule,
-    CoreModule
+    ReactiveFormsModule
   ],
   exports: [],
   providers: []
 })
-export class PagesModule {
-}
+export class PagesModule {}

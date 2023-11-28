@@ -20,16 +20,16 @@ import { CinchyService } from "@cinchy-co/angular-sdk";
 
 import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 
-import { MessageDialogComponent } from "../../message-dialog/message-dialog.component";
+import { MessageDialogComponent } from "../../dialogs/message/message.component";
 
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { FormSection } from "../../models/cinchy-form-section.model";
 
 import { AppStateService } from "../../../services/app-state.service";
+import { ChildFormService } from "../../service/child-form/child-form.service";
 
 import { ToastrService } from "ngx-toastr";
-import { ChildFormService } from "../../service/child-form/child-form.service";
 
 
 /**
