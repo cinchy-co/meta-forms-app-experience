@@ -557,7 +557,7 @@ export class LinkComponent implements OnChanges, OnInit {
     setTimeout(() => {
 
       this.autocompleteText = this.selectedValue?.label || "";
-    }, 100);
+    }, 300);
   }
 
 
