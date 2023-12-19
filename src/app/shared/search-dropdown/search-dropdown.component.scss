@@ -1,11 +1,14 @@
-:host ::ng-deep .mat-select-arrow-wrapper {
+:host ::ng-deep {
+  .mat-select-arrow-wrapper {
     visibility: hidden;
+  }
+
+  mat-form-field {
+      width: 470px;
+
+      .mat-form-field-infix {
+          margin: -5.5px auto;
+      }
+  }
 }
 
-mat-form-field {
-    width: 470px;
-
-    ::ng-deep .mat-form-field-infix {
-        margin: -5.5px auto;
-    }
-}

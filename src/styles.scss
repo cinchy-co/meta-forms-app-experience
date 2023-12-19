@@ -92,11 +92,6 @@
   width: 100%;
 }
 
-.date-picker {
-  padding: 10px 5px;
-  width: 100%;
-}
-
 .max-350 {
   width: 350px;
 }
@@ -325,13 +320,6 @@ app-fields-wrapper {
     align-items: center;
     justify-content: flex-start;
   }
-}
-
-.hide-date{
-  height: 0rem;
-  width: 0rem;
-  visibility: hidden;
-  display: block !important;
 }
 
 .mat-spinner.inside {
