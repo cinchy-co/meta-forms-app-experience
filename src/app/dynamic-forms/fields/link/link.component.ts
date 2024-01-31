@@ -633,7 +633,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
         return this.field.dropdownDataset.options.filter((option: DropdownOption) => {
 
-          return option.label?.toLowerCase()?.includes(lowercaseFilterValue);
+          return (option.displayOnlyLabel || option.label)?.toLowerCase()?.includes(lowercaseFilterValue);
         });
       }
       else {
