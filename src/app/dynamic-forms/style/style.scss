@@ -208,10 +208,6 @@
   border-top: 1px solid gray;
 }
 
-.ngx-select__item_active[_ngcontent-c6] {
-  background-color: gray;
-}
-
 .mat-checkbox-checked.mat-accent .mat-checkbox-background, .mat-checkbox-indeterminate.mat-accent .mat-checkbox-background {
   background-color: gray;
 }
@@ -260,6 +256,7 @@ article label {
 }
 
 .mat-dialog-actions {
+  justify-content: flex-end;
   padding-top: 10px;
   padding-bottom: 24px;
 }
@@ -513,24 +510,10 @@ button.btnSave.mat-raised-button {
   margin-top: 5px;
 }
 
-.mat-form-field-appearance-legacy .mat-form-field-prefix .mat-datepicker-toggle-default-icon,
-.mat-form-field-appearance-legacy .mat-form-field-suffix .mat-datepicker-toggle-default-icon {
-  width: 2rem !important;
-}
-
 .mat-form-field-prefix .mat-icon-button,
 .mat-form-field-suffix .mat-icon-button {
   height: 2em;
   width: 2.5em !important;
-}
-
-.mat-select-trigger {
-  // display: block !important;
-
-  .mat-select-value {
-    // display: block;
-    // max-width: 100%;
-  }
 }
 
 .svg-inline--fa{

@@ -40,6 +40,10 @@ import { ToastrService } from "ngx-toastr";
 import * as R from "ramda";
 
 
+/**
+ * As the LinkComponent, but allows the user to select multiple entities. The selected entities
+ * will be saved to the table as a comma-delimited list of IDs.
+ */
 @Component({
   selector: "cinchy-link-multichoice",
   templateUrl: "./link-multichoice.component.html",
@@ -72,6 +76,9 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   };
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
+
+
+  DROPDOWN_OPTION_SIZE = 42;
 
   multiFilterCtrl: FormControl = new FormControl();
 
@@ -107,6 +114,17 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   get rowIdIsValid(): boolean {
 
     return (this.form.rowId && this.form.rowId > -1);
+  }
+
+
+  /**
+   * Determines the height of the expanded option set. Scales up to at most four options
+   */
+  get scrollViewportHeight(): number {
+
+    const itemCount = Math.min(4, this.filteredListMulti?.value.length ?? 1);
+
+    return (itemCount * this.DROPDOWN_OPTION_SIZE);
   }
 
 
@@ -149,7 +167,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
     if (!this.dropdownListFromLinkedTable) {
       this.isLoading = true;
       let dropdownDataset: DropdownDataset;
-      let currentFieldJson;
+      let currentFieldJson: any;
 
       let tableColumnQuery: string = `
         SELECT
@@ -197,7 +215,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
             return item.id;
           }, this.dropdownSetOptions)
 
-          this.filteredListMulti.next(this.dropdownSetOptions.slice());
+          this.filteredListMulti.next(this.dropdownSetOptions);
         }
 
         this.checkForAttachmentUrl();
@@ -242,6 +260,15 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   /**
+   * The function used to determine whether or not dropdown options represent the same entity
+   */
+  compareFn(a: DropdownOption, b: DropdownOption): boolean {
+
+    return (a?.id === b?.id);
+  }
+
+
+  /**
    * Generates a tooltip for the given link
    */
   downloadableLinkTooltip(link: { fileName: string, fileUrl: string, fileId: string }): string {
@@ -269,8 +296,9 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       let search = this.multiFilterCtrl.value;
 
       if (!search) {
-        this.filteredListMulti.next(this.dropdownSetOptions.slice());
-      } else {
+        this.filteredListMulti.next(this.dropdownSetOptions);
+      }
+      else {
         search = search.toLowerCase();
 
         // filter the list
@@ -288,8 +316,10 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       let selectedIds: Array<string>;
 
       // Fallback for legacy logic
-      if (this.field.dropdownDataset.options.length === 1 &&
-          this.field.dropdownDataset.options[0].id.includes(",")) {
+      if (
+          this.field.dropdownDataset.options.length === 1 &&
+          this.field.dropdownDataset.options[0].id.includes(",")
+      ) {
 
         selectedIds = this.field.dropdownDataset.options[0].id?.split(",").map((id: string) => id.trim());
 
@@ -301,7 +331,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         });
       }
 
-      if (this.field.value) {
+      if (this.field.hasValue) {
         // Fallback for legacy logic
         if (typeof this.field.value === "string") {
           selectedIds = this.field.value.split(",").map((id: string) => id.trim() );
@@ -312,7 +342,14 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       }
 
       if (selectedIds?.length) {
-        return selectedIds.map((id: string) => this.field.dropdownDataset.options.find((option: DropdownOption) => option.id === id ));
+        return selectedIds.map((id: string) => {
+
+          return this.field.dropdownDataset.options.find((option: DropdownOption) => {
+
+            // We're explicitly using a double equals here because at this stage the ID may be either a number or string
+            return option.id == id;
+          });
+        });
       }
     }
 
@@ -494,6 +531,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
 
   private _setValue(): void {
+
     if (this.field.dropdownDataset?.options?.length || this.isInChildForm) {
       this.selectedValues = this.generateMultipleOptionsFromSingle();
     }

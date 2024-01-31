@@ -8,7 +8,7 @@
         &nbsp;
         <label class="cinchy-label" [title]="field.caption || ''">
           {{field.label}}
-          {{(field.cinchyColumn.isMandatory && !field.value) ? "*" : ""}}
+          {{(field.cinchyColumn.isMandatory && !field.hasValue) ? "*" : ""}}
         </label>
 
         <mat-icon *ngIf="field.caption && field.cinchyColumn.tableId !== field.cinchyColumn.linkTargetTableId" class="info-icon"
@@ -92,6 +92,7 @@
       <mat-select class="form-control" multiple #multiSelect
                   *ngIf="!isLoading && !downloadLink"
                   [(ngModel)]="selectedValues" [ngModelOptions]="{standalone: true}"
+                  [compareWith]="compareFn"
                   [disabled]="!canEdit"
                   (selectionChange)="valueChanged()"
                   disableOptionCentering>
@@ -105,30 +106,36 @@
             </ngx-mat-select-search>
           </mat-option>
 
-          <ng-container *ngIf="filteredListMulti | async; let list">
-            <ng-container *ngIf="list.length < maxLimitForMaterialSelect; else cdkOptions">
-              <mat-option class="all-options" *ngFor="let dropdownOption of list"
-                          [value]="dropdownOption"
-                          [title]="dropdownOption.label">
-                {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
-              </mat-option>
-            </ng-container>
+          <cdk-virtual-scroll-viewport
+              [itemSize]="DROPDOWN_OPTION_SIZE"
+              [style.height.px]="scrollViewportHeight"
+              [minBufferPx]="300"
+              [maxBufferPx]="600"
+          >
+            <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
+                        [value]="dropdownOption"
+                        [title]="dropdownOption.label">
+              {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
+            </mat-option>
 
-            <ng-template #cdkOptions>
-              <cdk-virtual-scroll-viewport [itemSize]="48" [style.height.px]=4*48 [minBufferPx]="300"
-                                           [maxBufferPx]="600">
-                <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
-                            [value]="dropdownOption"
-                            [title]="dropdownOption.label">
-                  {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
-                </mat-option>
-              </cdk-virtual-scroll-viewport>
-            </ng-template>
-          </ng-container>
+            <!--
+              We need to ensure that values which were previously selected still render within the
+              viewport even if they are out of the current view, because otherwise they will be
+              deselected when the value changes. This hack forces them to be present.
+
+              See: https://github.com/angular/components/issues/13087#issuecomment-422188788
+            -->
+            <mat-option *ngFor="let selectedValue of selectedValues"
+                        style="position: absolute; visibility: hidden;"
+                        [value]="selectedValue"
+            >
+              {{selectedValue.label}}
+            </mat-option>
+          </cdk-virtual-scroll-viewport>
         </ng-container>
       </mat-select>
 
-      <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.value">
+      <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !field.hasValue">
         *{{field.label}} is Required.
       </mat-error>
 

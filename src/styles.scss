@@ -1,11 +1,8 @@
-/* You can add global styles to this file, and also import other style files */
-@import "~ng-pick-datetime/assets/style/picker.min.css";
 @import "global-styles/variables";
 @import '~ngx-toastr/toastr.css';
 
 
 // COMMON STYLES
-
 .two-children-flex {
   display: flex;
   min-width: 500px;
@@ -28,8 +25,8 @@
 
 /**
  * The positional 50% is relative to the container, while the transform 50% is relative to its own height, so this pushes
- * the element down to the bottom half of the container, then nudges it back up so the element's center aligns with the container's
- * center
+ * the element down to the bottom half of the container, then nudges it back up so the element's center aligns with the
+ * container's center
  */
 .center-vertical {
     position: relative;
@@ -92,11 +89,6 @@
 
 .text-center {
   text-align: center;
-  width: 100%;
-}
-
-.date-picker {
-  padding: 10px 5px;
   width: 100%;
 }
 
@@ -201,6 +193,10 @@ body {
 
 h1, h2 {
   font-weight: 300;
+}
+
+h2 {
+  font-size: 28px;
 }
 
 p {
@@ -324,13 +320,6 @@ app-fields-wrapper {
     align-items: center;
     justify-content: flex-start;
   }
-}
-
-.hide-date{
-  height: 0rem;
-  width: 0rem;
-  visibility: hidden;
-  display: block !important;
 }
 
 .mat-spinner.inside {

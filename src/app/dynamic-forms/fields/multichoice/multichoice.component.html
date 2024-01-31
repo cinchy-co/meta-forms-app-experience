@@ -9,7 +9,7 @@
         {{ field.label }}
         {{ (field.cinchyColumn.isMandatory && !value) ? '*' :'' }}
       </label>
-      <mat-icon *ngIf="field.caption" 
+      <mat-icon *ngIf="field.caption"
         class="info-icon"
         ngbTooltip="{{field.caption}}"
         placement="auto"
@@ -20,25 +20,25 @@
       </mat-icon>
     </div>
     <div class="full-width-element divMarginBottom" *ngIf="canEdit">
-      <mat-select multiple 
+      <mat-select multiple
           class="form-control"
           [(ngModel)]="value"
           [ngModelOptions]="{ standalone: true }"
           (openedChange)="resetFilter()"
           (selectionChange)="valueChanged()">
         <mat-option>
-          <ngx-mat-select-search 
+          <ngx-mat-select-search
             class="multi-search"
             [(ngModel)]="choiceFilter"
             [ngModelOptions]="{ standalone: true }"
-            [showToggleAllCheckbox]="true" 
+            [showToggleAllCheckbox]="true"
             (toggleAll)="toggleSelectAll($event)"
             placeholderLabel="Search {{ field.label }}"
             noEntriesFoundLabel="No entries matched your search">
           </ngx-mat-select-search>
         </mat-option>
 
-        <mat-option 
+        <mat-option
           *ngFor="let opt of options | filterBy: choiceFilter"
           [value]="opt">
           {{ opt }}
@@ -53,7 +53,7 @@
 
   <!-- isMandatory Validator-->
   <mat-error class="mat-error-move-up-19"
-             *ngIf="showError && (field.cinchyColumn.isMandatory && !field.value)">
+             *ngIf="showError && (field.cinchyColumn.isMandatory && !field.hasValue)">
     *{{field.label}} is Required.
   </mat-error>
 </div>

@@ -16,6 +16,7 @@ import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdo
 
 import { isNullOrUndefined } from "util";
 
+import * as moment from "moment";
 import * as R from "ramda";
 
 
@@ -334,7 +335,12 @@ export class Form {
     return null;
   }
 
+
+  /**
+   * Gets the column name associated with the child form link ID, if set
+   */
   getChildFormLinkName(childFormLinkId: string): string {
+
     // We only need the first segment since the linkFieldId can have a value like "[Field].[Cinchy Id]"
     return childFormLinkId?.replace(/[\[\]]+/g, "").split(".")[0];
   }
@@ -342,31 +348,27 @@ export class Form {
 
   generateDeleteQuery(): IQuery {
 
-    let query: IQuery = new Query(
+    return new Query(
       `DELETE
         FROM [${this.targetTableDomain}].[${this.targetTableName}]
         WHERE [Cinchy ID] = ${this.rowId}
           AND [Deleted] IS NULL`,
       null
     );
-
-    return query;
   }
 
 
-  generateSaveQuery(rowID: number, cinchyVersion?: string, forClonedForm?: boolean): IQuery {
+  generateSaveQuery(rowId: number, cinchyVersion?: string, forClonedForm?: boolean): IQuery {
 
     let query: IQuery = null;
 
-    let assignmentColumns: string[] = [];
-    let assignmentValues: string[] = [];
-    let attachedFilesInfo = [];
+    let assignmentColumns: string[] = new Array<string>();
+    let assignmentValues: string[] = new Array<string>();
+    let attachedFilesInfo: Array<any> = new Array<any>();
 
     let paramName: string;
     let paramNumber: number = 0;
     let params: { [key: string]: any } = {};
-
-    this.rowId = rowID;
 
     this.sections.forEach((section: FormSection) => {
 
@@ -383,13 +385,7 @@ export class Form {
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
-              let elementValue: any = null;
-
-              if (!isNullOrUndefined(field.value)) {
-                elementValue = field.value instanceof Date ? field.value.toLocaleDateString() : field.value;
-              }
-
-              params[paramName] = elementValue ?? "";
+              params[paramName] = this._getISOStringFromDateString(field.value, field.cinchyColumn.displayFormat);
 
               break;
             case "Choice":
@@ -397,11 +393,11 @@ export class Form {
 
               break;
             case "Binary":
-              if (field.value && isNullOrUndefined(this.rowId)) {
+              if (field.hasValue && isNullOrUndefined(this.rowId)) {
                 params[paramName] = field.value ?? "";
 
                 assignmentColumns.push(`[${field.cinchyColumn.name}]`);
-                assignmentValues.push(`'${params[paramName]}'`);
+                assignmentValues.push(paramName);
                 attachedFilesInfo.push(this.getFileNameAndItsTable(field));
               }
               else if (this.rowId) {
@@ -413,9 +409,9 @@ export class Form {
               if (field.value instanceof Array || field.cinchyColumn.isMultiple) {
                 let stringLinkArray = [];
 
-                field.value.forEach(itemVal => {
+                field.value?.forEach((itemValue: string) => {
 
-                  stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
+                  stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue)
                 });
 
                 params[paramName] = stringLinkArray.join(",") || null;
@@ -442,10 +438,7 @@ export class Form {
             assignmentColumns.push(`[${field.cinchyColumn.name}]`);
 
             if (isNullOrUndefined(field.cinchyColumn.linkTargetColumnName)) {
-              if (isNullOrUndefined(this.rowId)) {
-                assignmentValues.push(`'${params[paramName]}'`);
-              }
-              else if ((field.cinchyColumn.dataType === "Text") && !field.value) {
+              if ((field.cinchyColumn.dataType === "Text") && !field.hasValue) {
                 assignmentValues.push((params[paramName] !== "") ? `cast(${paramName} as nvarchar(100))` : paramName);
               }
               else {
@@ -454,17 +447,7 @@ export class Form {
             }
             else {
               if (field.value instanceof Array || field.cinchyColumn.isMultiple) {
-                if (isNullOrUndefined(this.rowId)) {
-                  let stringLinkArray = [];
-
-                  field.value.forEach(itemVal => {
-
-                    stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal);
-                  });
-
-                  assignmentValues.push(`'${stringLinkArray.join(",")}'`);
-                }
-                else if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
+                if (field.cinchyColumn.dataType === "Link" && !field.hasValue) {
                   assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 }
                 else {
@@ -473,7 +456,7 @@ export class Form {
               }
               else {
                 if (field.cinchyColumn.dataType === "Link") {
-                  assignmentValues.push(`ResolveLink(${isNullOrUndefined(this.rowId) ? params[paramName] : paramName},'Cinchy ID')`);
+                  assignmentValues.push(`ResolveLink(${paramName},'Cinchy ID')`);
                 }
                 else if (isNullOrUndefined(field.childForm)) {
                   assignmentValues.push(paramName);
@@ -488,7 +471,7 @@ export class Form {
     const ifUpdateAttachedFilePresent = attachedFilesInfo.find(fileInfo => fileInfo.query);
 
     if (assignmentValues?.length) {
-      if (!this.rowId) {
+      if (!rowId) {
         let queryString: string;
 
         if (isNullOrUndefined(cinchyVersion) || cinchyVersion.startsWith("4.")) {
@@ -550,16 +533,27 @@ export class Form {
     let params: { [key: string]: any } = {};
 
     this.rowId = rowId;
+
     const childFormLinkName = this.getChildFormLinkName(this.childFormLinkId);
+    let currentFieldIsLinkedColumn: boolean;
 
     this.sections.forEach((section: FormSection) => {
 
       section.fields.forEach((field: FormField) => {
 
+        // If the field being processed is the field which links this child form to the parent form,
+        // it needs to be specifically processed. If there is a rowId for the parent form, then it
+        // will have been injected when the child form dialog was executed. If there is not a rowId
+        // for the parent form, then we need to ensure that there is a placeholder available which
+        // can be replaced with the ID that gets generated when the parent form is saved
+        currentFieldIsLinkedColumn = field.label === childFormLinkName;
+
         const isLinkedColumnForInsert = coerceBooleanProperty(
           !this.rowId &&
-          (field.cinchyColumn.dataType === "Link" ||
-            field.label === childFormLinkName)
+          (
+            (field.cinchyColumn.dataType === "Link" && field.hasValue) ||
+            currentFieldIsLinkedColumn
+          )
         );
 
         if (
@@ -569,18 +563,11 @@ export class Form {
           (field.cinchyColumn.hasChanged || isLinkedColumnForInsert)
         ) {
           paramName = `@p${paramNumber++}`;
-          foundLinkedColumn ||= field.label === childFormLinkName;
+          foundLinkedColumn ||= currentFieldIsLinkedColumn;
 
           switch (field.cinchyColumn.dataType) {
             case "Date and Time":
-              try {
-                params[paramName] = field.value ?
-                  (((field.value instanceof Date) ? field.value : new Date(field.value))?.toLocaleString() ?? null) :
-                  null;
-              }
-              catch (error) {
-                // Do nothing
-              }
+              params[paramName] = this._getISOStringFromDateString(field.value, field.cinchyColumn.displayFormat);
 
               break;
             case "Choice":
@@ -592,7 +579,7 @@ export class Form {
                 params[paramName] = field.value ?? "";
 
                 assignmentColumns.push(`[${field.cinchyColumn.name}]`);
-                assignmentValues.push(`'${params[paramName]}'`);
+                assignmentValues.push(paramName);
                 attachedFilesInfo.push(this.getFileNameAndItsTable(field));
               }
               else if (this.rowId) {
@@ -601,23 +588,38 @@ export class Form {
 
               break;
             case "Link":
-              if (field.value && field.cinchyColumn.isMultiple) {
+              if (field.value === "DELETE") {
+                params[paramName] = null;
+              }
+              else if (field.hasValue && field.cinchyColumn.isMultiple) {
                 let stringLinkArray = [];
 
-                field.value.forEach(itemVal => {
+                // In the case that the user has selected values in a multi-select field which
+                // is used as the link to the parent form but has not selected to parent record
+                // as part of setting that value, we need to inject the parent record's rowId
+                // or the placeholder into the field's value
+                let foundParentId = false;
 
-                  stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal)
+                field.value?.forEach((itemValue: string) => {
+
+                  if (this.rowId && itemValue === this.rowId.toString()) {
+                    foundParentId = true;
+                  }
+
+                  stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemValue?.trim ? itemValue.trim() : itemValue)
                 });
+
+                if (!foundParentId && currentFieldIsLinkedColumn) {
+                  this._addLinkArrayItem(stringLinkArray, this.rowId?.toString() || "{parentId}");
+                }
 
                 params[paramName] = stringLinkArray.join(",") || null;
               }
+              else if (currentFieldIsLinkedColumn && !field.hasValue) {
+                params[paramName] = "{parentId}";
+              }
               else {
-                if (field.value === "DELETE") {
-                  params[paramName] = "";
-                }
-                else {
-                  params[paramName] = field.value?.toString();
-                }
+                params[paramName] = field.value?.toString() ?? null;
               }
 
               break;
@@ -636,7 +638,7 @@ export class Form {
               if (isNullOrUndefined(this.rowId)) {
                 assignmentValues.push(`${paramName}`);
               }
-              else if ((field.cinchyColumn.dataType === "Text") && !field.value) {
+              else if ((field.cinchyColumn.dataType === "Text") && !field.hasValue) {
                 assignmentValues.push((params[paramName] !== "") ? `cast(${paramName} as nvarchar(100))` : paramName);
               }
               else {
@@ -644,18 +646,8 @@ export class Form {
               }
             }
             else {
-              if (field.value && field.cinchyColumn.isMultiple) {
-                if (isNullOrUndefined(this.rowId)) {
-                  let stringLinkArray = [];
-
-                  field.value.forEach(itemVal => {
-
-                    stringLinkArray = this._addLinkArrayItem(stringLinkArray, itemVal?.trim ? itemVal.trim() : itemVal);
-                  });
-
-                  assignmentValues.push(`'${stringLinkArray.join(",")}'`);
-                }
-                else if (field.cinchyColumn.dataType === "Link" && !field.value?.length) {
+              if (field.hasValue && field.cinchyColumn.isMultiple) {
+                if (field.cinchyColumn.dataType === "Link" && !field.hasValue) {
                   assignmentValues.push(`cast(${paramName} as nvarchar(100))`);
                 }
                 else {
@@ -715,6 +707,7 @@ export class Form {
     // If linked field is NOT DISPLAYED, link child record to parent table by matching the childFormLinkName
     if (!foundLinkedColumn) {
       this.tableMetadata["Columns"]?.forEach((column: { columnType: string, linkedTableId: number, name: string }) => {
+
         if (column.name === childFormLinkName) {
           paramName = `@p${paramNumber++}`;
           assignmentColumns.push(`[${column.name}]`);
@@ -722,8 +715,10 @@ export class Form {
 
           if (column.columnType === "Link") {
             params[paramName] = this.parentForm.rowId.toString();
-          } else {
+          }
+          else {
             const parentFormLinkName = this.childFormParentId?.split("].[")[0]?.replace(/[\[\]]+/g, "");
+
             params[paramName] = this.parentForm.fieldsByColumnName[parentFormLinkName].value
           }
         }
@@ -809,32 +804,28 @@ export class Form {
     fields.push("[Cinchy ID]");
 
     if (this.isChild) {
-      
         if (!this.childFormLinkId) {
           return null;
         }
- 
+
         const defaultWhere = `where t.${this.childFormLinkId} = @parentCinchyIdMatch and t.[Deleted] IS NULL`;
 
         const whereConditionWithFilter = this.childFormFilter ?
         `${defaultWhere} AND (${this.childFormFilter})` : defaultWhere;
-  
+
         const whereWithOrder = this.childFormSort ? `${whereConditionWithFilter} ${this.childFormSort}` : `${whereConditionWithFilter} Order by t.[Cinchy ID]`;
-  
-        let query: IQuery = new Query(
+
+        return new Query(
           `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t ${whereWithOrder}`,
           null,
           null
         );
-        return query;
-
-    } else {
-      let query: IQuery = new Query(
+    }
+    else {
+      return new Query(
         `SELECT ${fields.join(",")} FROM [${this.targetTableDomain}].[${this.targetTableName}] t where t.[Cinchy ID] = ${rowId} and t.[Deleted] IS NULL Order by t.[Cinchy ID]`,
         null
       );
-
-      return query;
     }
   }
 
@@ -1053,14 +1044,12 @@ export class Form {
 
     this._sections = metadata.map((sectionMetadata: IFormSectionMetadata) => {
 
-      let result = new FormSection(
+      return new FormSection(
         sectionMetadata.id,
         sectionMetadata.name,
         sectionMetadata.autoExpand,
         sectionMetadata.columnsInRow
       );
-
-      return result;
     });
   }
 
@@ -1120,7 +1109,24 @@ export class Form {
     if (this._sections?.length > sectionIndex && this._sections[sectionIndex].fields?.length > fieldIndex) {
       // Since we don't store the field's original value, we will mark it as changed if the current value is different from the
       // value immediately prior, or if the field has already been marked as changed
-      const valueIsDifferent = (newValue !== this._sections[sectionIndex].fields[fieldIndex].value);
+      let valueIsDifferent: boolean;
+
+      if (Array.isArray(newValue)) {
+        valueIsDifferent = (newValue?.length !== this._sections[sectionIndex].fields[fieldIndex].value?.length);
+
+        if (!valueIsDifferent) {
+          for (let index = 0; index < newValue?.length; index++) {
+            if (newValue[index] !== this._sections[sectionIndex].fields[fieldIndex].value[index]) {
+              valueIsDifferent = true;
+
+              break;
+            }
+          }
+        }
+      }
+      else {
+        valueIsDifferent = (newValue !== this._sections[sectionIndex].fields[fieldIndex].value);
+      }
 
       this.hasChanged = this.hasChanged || valueIsDifferent;
 
@@ -1166,6 +1172,42 @@ export class Form {
     }
 
     return set;
+  }
+
+
+  /**
+   * Generates a datetime string in the ISO format that is consistent for back-end storage regardless
+   * of the display settings on the original value.
+   *
+   * @param value Either a Date or a string representing one.
+   * @param originalFormat The ISO date format that the input value is expected to be in. In the case of
+   *                       irregular or incomplete values, this can help the parser resolve a complete
+   *                       string
+   * @private
+   */
+  private _getISOStringFromDateString(value: string | Date, originalFormat?: string): string {
+
+    if (!value) {
+      return null;
+    }
+
+    let valueAsMoment: moment.Moment = moment(value, originalFormat);
+
+    if (!valueAsMoment.isValid()) {
+      return null;
+    }
+
+    // Since we don't have any explicit time selection built into our controls, setting the
+    // default time to mid-day mitigates issues related to the browser's understanding of
+    // the actual timezone offset.
+    valueAsMoment.set({
+      hour: 12,
+      minute: 0,
+      second: 0,
+      millisecond: 0
+    });
+
+    return valueAsMoment.toISOString();
   }
 }
 

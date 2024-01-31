@@ -12,7 +12,7 @@ import * as moment from "moment";
 
 
 /**
- * This section is used to create dynamic DateTime field for the cinchy.
+ * A field representing a DateTime value
  */
 @Component({
   selector: "cinchy-datetime",
@@ -40,10 +40,13 @@ export class DatetimeComponent implements OnChanges, OnInit {
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
+
+  datePickerValue: string;  // Stores the raw unformatted value from the date picker
   showError: boolean;
   value: string;            // Stores the value for the actual form field with the correctly formatted date
-  datePickerValue: string;  // Stores the raw unformatted value from the date picker
+
   faCalendar = faCalendar;
+
 
   get canEdit(): boolean {
 
@@ -66,6 +69,7 @@ export class DatetimeComponent implements OnChanges, OnInit {
 
 
   valueChanged(): void {
+
     this.value = this.datePickerValue ? moment(this.datePickerValue).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : null;
 
     this.onChange.emit({
@@ -80,6 +84,8 @@ export class DatetimeComponent implements OnChanges, OnInit {
 
 
   private _setValue(): void {
-    this.value = this.field?.value ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : "";
+
+    this.datePickerValue = this.field.value;
+    this.value = this.field?.hasValue ? moment(this.field.value).format(this.field.cinchyColumn.displayFormat || "MM/DD/yyyy") : "";
   }
 }

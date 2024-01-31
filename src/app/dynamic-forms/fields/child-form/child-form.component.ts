@@ -15,7 +15,8 @@ import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 
 /**
- * This section is used to create cinchy child form.
+ * This dialog is used to display a nested form outside the context of the active form. Typically, this
+ * is used to add an additional record to a table that populates a field on the active form
  */
 @Component({
   selector: "cinchy-child-form",
@@ -30,12 +31,14 @@ export class ChildFormComponent {
     @Inject(MAT_DIALOG_DATA) public childFormData: {
       childForm: Form,
       presetValues?: { [key: string]: any },
+      useLimitedFields: boolean,
       title: string
     }
   ) {}
 
 
   ngOnInit(): void {
+
     const childFormLinkName = this.childFormData.childForm?.getChildFormLinkName(this.childFormData.childForm?.childFormLinkId);
 
     // TODO: atomize this function
@@ -45,7 +48,6 @@ export class ChildFormComponent {
 
         if (!field.cinchyColumn.isDisplayColumn) {
           if (field.linkedColumn?.linkLabel === field.label) {
-
             this.childFormData.childForm.updateFieldValue(
               sectionIndex,
               fieldIndex,
@@ -58,19 +60,32 @@ export class ChildFormComponent {
           else if (this.childFormData.presetValues) {
             // bind dropdown values
             if (field.cinchyColumn.dataType === "Link") {
-              if (!this.childFormData.presetValues[field.cinchyColumn.name]) {
+              if (
+                  !this.childFormData.presetValues[field.cinchyColumn.name]?.length &&
+                  field.label === childFormLinkName
+              ) {
                 // Prefill child linked column value with parent id if the target table id matches parent form table id
-                const parentRowId = field.label === childFormLinkName ? this.childFormData.childForm.parentForm.rowId : null;
-                this.childFormData.childForm.updateFieldValue(
-                  sectionIndex,
-                  fieldIndex,
-                  parentRowId ?? null
-                );
+                let parentRowId: number =  this.childFormData.childForm.parentForm.rowId;
+
+                if (field.cinchyColumn.isMultiple) {
+                  this.childFormData.childForm.updateFieldValue(
+                    sectionIndex,
+                    fieldIndex,
+                    parentRowId ? [parentRowId.toString()] : []
+                  );
+                }
+                else {
+                  this.childFormData.childForm.updateFieldValue(
+                    sectionIndex,
+                    fieldIndex,
+                    parentRowId?.toString() ?? null
+                  );
+                }
               }
               else if (field.dropdownDataset?.options?.length) {
                 if (field.cinchyColumn.isMultiple) {
 
-                  const linkIds = this.childFormData.presetValues[field.cinchyColumn.name];
+                  const linkIds = this.childFormData.presetValues[field.cinchyColumn.name] ?? [];
 
                   // Search by ID, then label
                   let result = field.dropdownDataset.options.filter((option: DropdownOption) => {
@@ -89,7 +104,7 @@ export class ChildFormComponent {
                   let result = field.dropdownDataset.options.find((option: DropdownOption) => {
 
                     // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
-                    //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
+                    //       populated. In the future we'll need to figure out which is correct and make sure we're using it consistently
                     return (
                       (option.id == this.childFormData.presetValues[field.cinchyColumn.name]) ||
                       (option.label === this.childFormData.presetValues[field.cinchyColumn.name])
@@ -293,7 +308,8 @@ export class ChildFormComponent {
 
     if (formValidation.isValid) {
       this.dialogRef.close((!this.childFormData.presetValues || !this.childFormData.presetValues["Cinchy ID"]) ? -1 : this.childFormData.presetValues["Cinchy ID"]);
-    } else {
+    }
+    else {
       // TODO: this should be a toast, which means that we'd need to either dynamically inject the ToastrService or create a
       //       NotificationService with static functions to display this sort of thing
       console.error("Child form was invalid:", formValidation.message);

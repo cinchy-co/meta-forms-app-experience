@@ -20,20 +20,23 @@ import { CinchyService } from "@cinchy-co/angular-sdk";
 
 import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 
-import { MessageDialogComponent } from "../../message-dialog/message-dialog.component";
+import { MessageDialogComponent } from "../../dialogs/message/message.component";
 
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { FormSection } from "../../models/cinchy-form-section.model";
 
 import { AppStateService } from "../../../services/app-state.service";
+import { ChildFormService } from "../../service/child-form/child-form.service";
 
 import { ToastrService } from "ngx-toastr";
-import { ChildFormService } from "../../service/child-form/child-form.service";
 
 
 /**
- * Displays the records of a non-flattened child form
+ * A tabular view of the records in a linked table that are represented by a child form
+ * field on the active form. Only records whose keyed attribute matches the selected
+ * record will be displayed, but records can be added, removed, or updated if the user
+ * has sufficient permissions to do so.
  */
 @Component({
   selector: "cinchy-childform-table",

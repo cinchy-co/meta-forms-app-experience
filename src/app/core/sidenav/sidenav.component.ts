@@ -1,11 +1,12 @@
 import { debounceTime } from "rxjs/operators";
 
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
-import { AddNewEntityDialogComponent } from "../../dialogs/add-new-entity-dialog/add-new-entity-dialog.component";
+import { ChildFormComponent } from "../../dynamic-forms/fields/child-form/child-form.component";
 
-import { INewEntityDialogResponse } from "../../dynamic-forms/interface/new-entity-dialog-response";
+import { Form } from "../../dynamic-forms/models/cinchy-form.model";
+
+import { FormHelperService } from "../../dynamic-forms/service/form-helper/form-helper.service";
 
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
 import { IFormMetadata } from "../../models/form-metadata-model";
@@ -13,14 +14,11 @@ import { IFormMetadata } from "../../models/form-metadata-model";
 import { AppStateService } from "../../services/app-state.service";
 import { DialogService } from "../../services/dialog.service";
 
-import { CinchyService } from "@cinchy-co/angular-sdk";
-
 import { NgxSpinnerService } from "ngx-spinner";
-import { debounce } from "rxjs/operators";
 
 
 @Component({
-  selector: "app-sidenav",
+  selector: "sidenav",
   templateUrl: "./sidenav.component.html",
   styleUrls: ["./sidenav.component.scss"]
 })
@@ -30,24 +28,11 @@ export class SidenavComponent implements OnInit {
   @Input() formMetadata: IFormMetadata;
 
 
-  @Input()
-  get tableUrl() {
-
-    return this._tableUrl;
-  }
-  set tableUrl(value: string) {
-
-    this._tableUrl = value
-
-  };
-  private _tableUrl: string;
-
   @Output() closeSideBar = new EventEmitter<any>();
 
 
   formSectionsMetadata: IFormSectionMetadata[] = [];
   selectedSection: string;
-  showNewContactLink: boolean;
   toggleMenu: boolean;
 
 
@@ -63,9 +48,9 @@ export class SidenavComponent implements OnInit {
   constructor(
     private _appStateService: AppStateService,
     private _dialogService: DialogService,
-    private _cinchyService: CinchyService,
+    private _formHelperService: FormHelperService,
     private _spinner: NgxSpinnerService
-  ) { }
+  ) {}
 
 
   ngOnInit(): void {
@@ -79,6 +64,7 @@ export class SidenavComponent implements OnInit {
     });
 
 
+    // When the section metadata is loaded, save it and expand the first section by default
     this._appStateService.latestRenderedSections$.pipe(
       debounceTime(300)
     ).subscribe((sectionMetadata: Array<IFormSectionMetadata>) => {
@@ -92,32 +78,54 @@ export class SidenavComponent implements OnInit {
   }
 
 
+  /**
+   * Determines whether or not the given section is the active section
+   *
+   * @param targetSection The name of the given section
+   */
   isSelected(targetSection: string): boolean {
 
     return (this.selectedSection === targetSection);
   }
 
-  openAddNewOptionDialog(): void {
+
+  /**
+   * Opens a dialog which allows the user to add a record to a child table which is linked to the active form
+   */
+  async openAddNewOptionDialog(): Promise<void> {
+
+    const form: Form = await this._formHelperService.getFormById(this.formMetadata.createNewOptionFormId);
 
     const newOptionDialogRef = this._dialogService.openDialog(
-      AddNewEntityDialogComponent,
+      ChildFormComponent,
       {
-        createNewOptionFormId: this._appStateService.formId,
-        createNewOptionName: this.formMetadata.createNewOptionName
+        childForm: form,
+        title: this.formMetadata.createNewOptionName
       }
     );
 
-    this._spinner.hide();
+    await this._spinner.hide();
 
-    newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
+    newOptionDialogRef.afterClosed().subscribe(async (resultId: number): Promise<void> => {
 
-      if (value) {
-        this._appStateService.addNewEntityDialogClosed$.next(value);
+      // This check only exists to confirm that the dialog was closed by a save operation. If it was cancelled
+      // or closed by clicking the backdrop, it will be nullish
+      if (resultId) {
+        await this._spinner.show();
+
+        await this._formHelperService.addOptionToLinkedTable(form);
+
+        await this._spinner.hide();
       }
     });
   }
 
 
+  /**
+   * Handles the expansion of a selected section
+   *
+   * @param section the metadata of the clicked section
+   */
   sectionClicked(section: IFormSectionMetadata): void {
 
     this.selectedSection = section.name;

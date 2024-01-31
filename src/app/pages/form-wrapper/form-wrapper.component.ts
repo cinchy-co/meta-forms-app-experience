@@ -128,11 +128,11 @@ export class FormWrapperComponent implements OnInit {
     }
   }
 
-  async loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): Promise<void> {
+  loadLookupRecords(formMetadata: IFormMetadata, filter?: string, limitResults?: boolean): void {
 
     this._cinchyQueryService.resetLookupRecords.next();
 
-    await this._cinchyQueryService.getLookupRecords(
+    this._cinchyQueryService.getLookupRecords(
       formMetadata.subTitleColumn,
       formMetadata.domainName,
       formMetadata.tableName,

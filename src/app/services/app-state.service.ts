@@ -20,7 +20,6 @@ import { IFormSectionMetadata } from "../models/form-section-metadata.model";
 export class AppStateService {
 
   formMetadata: IFormMetadata;
-  selectedOpportunityId: number;
 
   addNewEntityDialogClosed$ = new Subject<INewEntityDialogResponse>();
   childRecordUpdated$ = new Subject<void>();
@@ -81,19 +80,19 @@ export class AppStateService {
         ]
     });
 
-    window.parent.postMessage(message, '*');
+    window.parent.postMessage(message, "*");
 
-    // Modifies the app's URL
+    // Modifies the app"s URL
     const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
 
       const [key, value] = paramString.split("=");
 
-      if (key != "rowId") {
+      if (key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
     }).join("");
 
-    const baseUrl = window.location.href.substr(0, window.location.href.indexOf("&"));
+    const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
 
     window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}`);
   }
@@ -145,18 +144,18 @@ export class AppStateService {
 
     const message = JSON.stringify(messageJSON);
 
-    window.parent.postMessage(message, '*');
+    window.parent.postMessage(message, "*");
 
-    const rowIdQueryParams = messageJSON['updateCinchyURLParams'];
+    const rowIdQueryParams = messageJSON["updateCinchyURLParams"];
     const rowIdQueryString = Object.keys(rowIdQueryParams)
       .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(rowIdQueryParams[key])}`)
-      .join('&');
+      .join("&");
 
     const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
 
       const [key, value] = paramString.split("=");
 
-      if (key != "rowId") {
+      if (key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
     }).join("");

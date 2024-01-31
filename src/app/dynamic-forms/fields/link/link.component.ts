@@ -14,6 +14,7 @@ import {
   ViewChild
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { MatSelectChange } from "@angular/material/select";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
@@ -23,9 +24,9 @@ import { faSitemap } from "@fortawesome/free-solid-svg-icons";
 
 import { NgbTooltip } from "@ng-bootstrap/ng-bootstrap";
 
-import { AddNewEntityDialogComponent } from "../../../dialogs/add-new-entity-dialog/add-new-entity-dialog.component";
+import { ChildFormComponent } from "../child-form/child-form.component";
 
-import { DataFormatType } from "../../enums/data-format-type";
+import { DataFormatType } from "../../enums/data-format-type.enum";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 import { INewEntityDialogResponse } from "../../interface/new-entity-dialog-response";
@@ -41,6 +42,7 @@ import { DialogService } from "../../../services/dialog.service";
 import { DropdownDatasetService } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
 import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
+import { FormHelperService } from "../../service/form-helper/form-helper.service";
 
 import { isNullOrUndefined } from "util";
 
@@ -50,8 +52,8 @@ import { ToastrService } from "ngx-toastr";
 
 
 /**
- * This section is used to create Link field for the cinchy.
- * Lazy loading of the dropdown is used here. Bind dropdown on click
+ * A field representing a linked value. The component itself will internally store a model of
+ * the linked entity, but only the ID of that entity will be saved to the table
  */
 @Component({
   selector: "cinchy-link",
@@ -86,6 +88,8 @@ export class LinkComponent implements OnChanges, OnInit {
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   @Output() childForm = new EventEmitter<any>();
 
+
+  DROPDOWN_OPTION_SIZE = 48;
 
   // TODO: Add proper type
   metadataQueryResult;
@@ -127,7 +131,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
   get canAdd(): boolean {
 
-    return coerceBooleanProperty(this.field.cinchyColumn.createlinkOptionFormId);
+    return coerceBooleanProperty(this.field.cinchyColumn.createLinkOptionFormId);
   }
 
 
@@ -140,6 +144,17 @@ export class LinkComponent implements OnChanges, OnInit {
   get rowIdIsValid(): boolean {
 
     return (this.form.rowId && this.form.rowId > -1);
+  }
+
+
+  /**
+   * Determines the height of the expanded option set. Scales up to at most four options
+   */
+  get scrollViewportHeight(): number {
+
+    const itemCount = Math.min(4, this.filteredOptions?.length ?? 1);
+
+    return (itemCount * this.DROPDOWN_OPTION_SIZE);
   }
 
 
@@ -162,12 +177,13 @@ export class LinkComponent implements OnChanges, OnInit {
 
   constructor(
     private _appStateService: AppStateService,
+    private _changeDetectorRef: ChangeDetectorRef,
     private _cinchyQueryService: CinchyQueryService,
     private _cinchyService: CinchyService,
     private _configService: ConfigService,
     private _dialogService: DialogService,
     private _dropdownDatasetService: DropdownDatasetService,
-    private _changeDetectorRef: ChangeDetectorRef,
+    private _formHelperService: FormHelperService,
     private _spinner: NgxSpinnerService,
     private _toastr: ToastrService
   ) {}
@@ -260,7 +276,7 @@ export class LinkComponent implements OnChanges, OnInit {
     this._changeDetectorRef.detectChanges();
 
     if (key === "Delete" || (key === "Backspace" && this.autocompleteText?.length === 0)) {
-      this.autocompleteText = '';
+      this.autocompleteText = "";
       this.selectedValue = this.clearOption;
 
       this.valueChanged();
@@ -462,30 +478,46 @@ export class LinkComponent implements OnChanges, OnInit {
 
 
   /**
-   * Resolves the selectedValue when the user selects an option from the autocomplete
+   * Resolves the selectedValue when the user selects an option from the autocomplete. If the user uses the keyboard,
+   * then a MatSelectChange event will be provided.
    */
-  onOptionSelected(option: DropdownOption): void {
+  onOptionSelected(event: MatSelectChange, option: DropdownOption): void {
 
-    // We don't need to explicitly set autocompleteText because the value of the selected option already does that
-    this.selectedValue = option;
+    // This function will also be called on the previously-selected value, if any, so we're just
+    // checking to see if the given option is the one we care about
+    if (event.source.selected) {
+      // We don't need to explicitly set autocompleteText because the value of the selected option already does that
+      this.selectedValue = option;
 
-    this.valueChanged();
+      this.valueChanged();
+    }
   }
 
 
   async openNewOptionDialog(): Promise<void> {
 
-    const newOptionDialogRef = this._dialogService.openDialog(AddNewEntityDialogComponent, {
-      createLinkOptionFormId: this.field.cinchyColumn.createlinkOptionFormId,
-      createLinkOptionName: this.field.cinchyColumn.createlinkOptionName
-    });
+    const form: Form = await this._formHelperService.getFormById(this.field.cinchyColumn.createLinkOptionFormId);
+
+    const newOptionDialogRef = this._dialogService.openDialog(
+      ChildFormComponent,
+      {
+        childForm: form,
+        title: this.field.cinchyColumn.createLinkOptionName
+      }
+    );
 
     await this._spinner.hide();
 
-    newOptionDialogRef.afterClosed().subscribe((value: INewEntityDialogResponse) => {
+    newOptionDialogRef.afterClosed().subscribe(async (resultId: number): Promise<void> => {
 
-      if (value) {
-        this._appStateService.addNewEntityDialogClosed$.next(value);
+      // This check only exists to confirm that the dialog was closed by a save operation. If it was cancelled
+      // or closed by clicking the backdrop, it will be nullish
+      if (resultId) {
+        await this._spinner.show();
+
+        await this._formHelperService.addOptionToLinkedTable(form);
+
+        await this._spinner.hide();
       }
     });
   }
@@ -515,9 +547,17 @@ export class LinkComponent implements OnChanges, OnInit {
   }
 
 
+  /**
+   * Resets the label to the selected value when the user blurs the input. The delay allows for dropdowns representing
+   * large datasets to resolve their value before adjusting the text in the case that the user selects a value by
+   * clicking, which would otherwise fire the blur event before the selection is saved.
+   */
   setToLastValueSelected(): void {
 
-    this.autocompleteText = this.selectedValue?.label || "";
+    setTimeout(() => {
+
+      this.autocompleteText = this.selectedValue?.label || "";
+    }, 300);
   }
 
 
@@ -620,7 +660,7 @@ export class LinkComponent implements OnChanges, OnInit {
       this.getListItems(true, true);
     }
     else {
-      if (this.field.value) {
+      if (this.field.hasValue) {
         // Handles the case where there is a placeholder element (e.g. "Loading...")
         if (dataset?.length === 1) {
           this.selectedValue = { ...dataset[0] };
@@ -629,8 +669,7 @@ export class LinkComponent implements OnChanges, OnInit {
         else if (dataset?.length > 1) {
           this.selectedValue = dataset.find((option: DropdownOption) => {
 
-            // TODO: We're explicitly using a double equals here because at this stage the ID may be either a number or string depending on where it was
-            //       populated. In the future we'll need to figure out which is correct and make sunre we're using it consistently
+            // We're explicitly using a double equals here because at this stage the ID may be either a number or string
             return (option.id == this.field.value);
           });
         }

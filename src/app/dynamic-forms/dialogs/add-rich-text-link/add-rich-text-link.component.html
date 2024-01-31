@@ -38,9 +38,9 @@
           </label>
         </div>
         <mat-checkbox id="linkTargetBlank"
-                      type="text"
                       name="link-target-blank"
-                      [(ngModel)]="targetBlank">
+                      [(ngModel)]="targetBlank"
+        >
         </mat-checkbox>
       </div>
     </form>
@@ -52,7 +52,8 @@
             cdkFocusInitial
             color="primary"
             [disabled]="!canSave"
-            (click)="saveLinkDetails()">
+            (click)="saveLinkDetails()"
+    >
       Confirm
     </button>
 

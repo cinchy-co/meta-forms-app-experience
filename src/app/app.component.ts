@@ -65,6 +65,7 @@ export class AppComponent implements OnDestroy, OnInit {
   getQueryStringValue(key: string, uri: string): string {
 
     const value = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+
     return (value && value !== "null") ? value : null;
   }
 
@@ -96,30 +97,37 @@ export class AppComponent implements OnDestroy, OnInit {
     // If the app is embedded, it's possible that the querystring can be passed in through the parent's queryParams, so we need to check to
     // see if the formId is present there, and then use those if that is the case. If the app is not embedded, or if the parent instead sets
     // the embedded frame's target using the querystring, then we use this window's queryParams instead
-    const resolvedUri = parentUri?.includes("formId") ? parentUri : uri;
-    this.appStateService.setRootFormId(this.getQueryStringValue("formId", resolvedUri));
-    this.appStateService.setRecordSelected(this.getRowIdFromUri(uri, "rowId"), false);
+    const resolvedUri = parentUri?.toLowerCase().includes("formid") ? parentUri : uri;
+
+    this.appStateService.setRootFormId(this.getQueryStringValue("formid", resolvedUri));
+    this.appStateService.setRecordSelected(this.getRowIdFromUri(uri), false);
   }
 
-  getRowIdFromUri(uri: string, key: string): number {
+
+  /**
+   * @returns The value of the "rowId" query parameter from the given URI as a number. If the rowId
+   *          is invalid or unset, will will return null instead.
+   */
+  getRowIdFromUri(uri: string): number {
 
     let idAsString: string;
     let idAsNumber: number;
-  
+
     if (uri) {
-      idAsString = this.getQueryStringValue("rowId", uri);
+      idAsString = this.getQueryStringValue("rowid", uri);
     }
-  
+
     if (idAsString) {
       try {
         idAsNumber = parseInt(idAsString);
+
         return idAsNumber;
       }
       catch {
         return null;
       }
     }
-  
+
     return null;
   }
 }

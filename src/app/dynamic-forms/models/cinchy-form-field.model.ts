@@ -1,6 +1,7 @@
 import { Observable } from "rxjs";
-import { map, startWith, isEmpty } from "rxjs/operators";
+import { map, startWith } from "rxjs/operators";
 
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { FormControl } from "@angular/forms";
 
 import { CinchyColumn } from "./cinchy-column.model";
@@ -12,7 +13,6 @@ import { DropdownDataset } from "../service/cinchy-dropdown-dataset/cinchy-dropd
 import { DropdownOption } from "../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 import { isNullOrUndefined } from "util";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 
 export class FormField {
@@ -25,7 +25,23 @@ export class FormField {
 
   linkedColumn: ILinkedColumnDetails;
 
-  value: any;
+  // This is initialized to null to prevent false positives for change detection
+  value: any = null;
+
+
+  /**
+   * Determines whether or not this field has what the app considers to be a value. Empty arrays
+   * in multi-select controls are considered to be non-values.
+   */
+  get hasValue(): boolean {
+
+    if (Array.isArray(this.value)) {
+      return !!(this.value && this.value.length);
+    }
+
+    return (!!this.value || this.value === 0);
+  }
+
 
   constructor(
       public id: number,
@@ -39,21 +55,12 @@ export class FormField {
   ) {
 
     if (cinchyColumn.dataType === "Link" && dropdownDataset) {
-      this.formControl = new FormControl();
+      this.formControl = new FormControl(null);
       this.filteredValues = this.formControl.valueChanges.pipe(startWith(""), map(value => this._filter(value)));
     }
 
     this.linkedColumn = linkedColumnDetails;
   }
-
-
-  autoCompleteValueMapper = (id) => {
-
-    let selection = this.dropdownDataset?.options.find(e => e.id === id);
-
-    if (selection)
-      return selection.label;
-  };
 
 
   clone(): FormField {
@@ -91,7 +98,7 @@ export class FormField {
       this.value = new Date(value);
     }
     else if (this.cinchyColumn.dataType === "Choice" && !isNullOrUndefined(value) && this.cinchyColumn.isMultiple) {
-      let multiChoiceData = new Array();
+      let multiChoiceData = new Array<any>();
 
       for (let selected of value) {
         multiChoiceData.push(selected.itemName);
