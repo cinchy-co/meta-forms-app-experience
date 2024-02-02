@@ -1,8 +1,7 @@
 ### STAGE 1: Build ###
 FROM node:14.20-alpine AS build
 WORKDIR /usr/src/app
-#COPY package.json package-lock.json ./
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN npm install
 COPY . .
 RUN npm run build:prod
