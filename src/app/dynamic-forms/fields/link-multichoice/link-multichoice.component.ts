@@ -271,11 +271,16 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       if (!search) {
         this.filteredListMulti.next(this.dropdownSetOptions.slice());
       } else {
-        search = search.toLowerCase();
+        search = search?.toLowerCase();
 
         // filter the list
         this.filteredListMulti.next(
-          this.dropdownSetOptions.filter(item => item.label.toLowerCase().indexOf(search) > -1)
+          this.dropdownSetOptions.filter(
+            (item: DropdownOption) => {
+
+              return ((item.displayOnlyLabel || item.label)?.toString().toLowerCase().includes(search));
+            }
+          )
         );
       }
     }
