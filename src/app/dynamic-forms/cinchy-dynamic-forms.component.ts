@@ -481,7 +481,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               (data.presetValues && data.presetValues["Cinchy ID"] > 0) ||
               (field.label === childFormLinkName)
             ) {
-              newValues[field.cinchyColumn.name] = field.value;
+              if (field.cinchyColumn.isDisplayColumn) {
+                const label = `${field.cinchyColumn.linkTargetColumnName} label`
+                newValues[label] = data.presetValues[label];
+              }
+              else {
+                newValues[field.cinchyColumn.name] = field.value;
+              }
             }
           });
         });
