@@ -18,6 +18,9 @@ import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
 import { NgxSpinnerService } from "ngx-spinner";
 import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
+import isEqual from "lodash/isEqual";
+import sortBy from "lodash/sortBy";
+import toString from "lodash/toString";
 
 import { ChildFormComponent } from "./fields/child-form/child-form.component";
 import { ExportSettingsDialogComponent } from "./dialogs/export-settings/export-settings.component";
@@ -482,8 +485,16 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               (field.label === childFormLinkName)
             ) {
               if (field.cinchyColumn.isDisplayColumn) {
-                const label = `${field.cinchyColumn.linkTargetColumnName} label`
-                newValues[label] = data.presetValues[label];
+                const columnLabel = `${field.cinchyColumn.linkTargetColumnName} label`;
+                // When a linked column value is changed, we are not able to update the display column,
+                // So if the linked column value has changed, update the display column values to "-". 
+                const linkedColumn = section.fields.find((f: FormField) => field.cinchyColumn.id === f.cinchyColumn.id && !f.cinchyColumn.isDisplayColumn);
+                if (isEqual(sortBy(toString(linkedColumn.value)), sortBy(toString(data.presetValues[linkedColumn.label])))) {
+                  newValues[columnLabel] = data.presetValues[columnLabel];
+                }
+                else {
+                  newValues[columnLabel] = "-";
+                }
               }
               else {
                 newValues[field.cinchyColumn.name] = field.value;
