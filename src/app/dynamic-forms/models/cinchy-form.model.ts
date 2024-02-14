@@ -963,8 +963,11 @@ export class Form {
           this.childFormRowValues.forEach((rowData: { [key: string]: any }) => {
             let linkColumnLabelKey = `${(field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name)} label`;
 
-            if (field.cinchyColumn.dataType === "Link" && field.cinchyColumn.isMultiple) {
-
+            if (
+              field.cinchyColumn.dataType === "Link" && 
+              field.cinchyColumn.isMultiple && 
+              !field.cinchyColumn.isDisplayColumn
+            ) {
               let linkIds: Array<string> = !isNullOrUndefined(rowData[field.cinchyColumn.name]) ?
                 rowData[field.cinchyColumn.name].split(",").map(x => x.trim()) :
                 [];
