@@ -485,7 +485,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               (field.label === childFormLinkName)
             ) {
               if (field.cinchyColumn.isDisplayColumn) {
-                const columnLabel = `${field.cinchyColumn.linkTargetColumnName} label`
+                const columnLabel = `${field.cinchyColumn.linkTargetColumnName} label`;
                 // When a linked column value is changed, we are not able to update the display column,
                 // So if the linked column value has changed, update the display column values to "-". 
                 const linkedColumn = section.fields.find((f: FormField) => field.cinchyColumn.id === f.cinchyColumn.id && !f.cinchyColumn.isDisplayColumn);
