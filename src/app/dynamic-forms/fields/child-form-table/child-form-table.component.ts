@@ -166,17 +166,17 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
     // Find lowest negative Cinchy ID (these are all new records) so that we can generate a new one
     let lowestCinchyId = 0;
+
     this.childForm.childFormRowValues?.forEach(rowVal => {
       if (rowVal["Cinchy ID"] < lowestCinchyId) {
         lowestCinchyId = rowVal["Cinchy ID"];
       }
     });
-    lowestCinchyId--;
 
     this.childFormOpened.emit(
       {
         childForm: this.childForm,
-        presetValues: { "Cinchy ID": lowestCinchyId },
+        presetValues: { "Cinchy ID": lowestCinchyId - 1 },
         title: dialogTitle
       }
     );
@@ -193,7 +193,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     }
 
     return coerceBooleanProperty(
-      (key !== "Cinchy ID") &&
+      (key.toLowerCase() !== "cinchy id") &&
       (!this.field.isLinkedColumn(key)) &&
       (this.childFieldDictionary[key]?.cinchyColumn?.dataType !== "Binary")
     );

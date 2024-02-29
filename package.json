@@ -1,6 +1,6 @@
 {
   "name": "meta-forms",
-  "version": "5.9.1",
+  "version": "5.9.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 3000 --ssl",
@@ -54,6 +54,7 @@
     "brace": "^0.11.1",
     "file-saver": "^2.0.2",
     "font-awesome": "^4.7.0",
+    "lodash": "^4.17.21",
     "lowlight": "^2.8.0",
     "moment": "^2.29.4",
     "ng-pick-datetime": "^7.0.0",

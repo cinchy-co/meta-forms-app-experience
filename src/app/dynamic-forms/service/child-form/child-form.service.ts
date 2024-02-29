@@ -92,7 +92,7 @@ export class ChildFormService {
           else if (currentField?.cinchyColumn.dataFormatType === "LinkUrl") {
             displayValueSet[rowIndex][key] = `<a href="${rowData[key]}" target="_blank">Open</a>`;
           }
-          else if (currentField?.cinchyColumn.dataType === "Link" && rowData[key]) {
+          else if (currentField?.cinchyColumn.dataType === "Link" && rowData[key] && !currentField.cinchyColumn.isDisplayColumn) {
             let linkDisplayValues = new Array<string>();
             let isFile = coerceBooleanProperty(currentField.cinchyColumn.attachmentUrl);
 

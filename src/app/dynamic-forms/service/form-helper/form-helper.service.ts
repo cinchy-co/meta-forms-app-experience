@@ -237,8 +237,8 @@ export class FormHelperService {
           if (!isNullOrUndefined(formFields[i].linkFieldId)) {
             let linkField = childFormFieldsMetadata.find(field => field.formFieldId == formFields[i].linkFieldId);
             if (linkField) {
-              parentColumnNameForLinkingToChild = "[Cinchy Id]";
-              childFormColumnNameForLinkingToParent = `[${linkField.columnName}].[Cinchy Id]`;
+              parentColumnNameForLinkingToChild = "[Cinchy ID]";
+              childFormColumnNameForLinkingToParent = `[${linkField.columnName}].[Cinchy ID]`;
             }
           }
 
