@@ -1,10 +1,9 @@
 <div *ngIf="field?.childForm" class="full-width-element">
-  <!-- Child form table header -->
   <span class="error-message" *ngIf="!childForm.tableEntitlements.accessIsDefinedForCurrentUser">
-    You don't have access to this table
+    You don't have permission to view the child form {{ childForm.name }}.
   </span>
   <div class="mat-header-child">
-    {{ childForm.sections[0].label }}
+    {{ childForm.name || childForm.sections[0].label }}
 
     <span class="text-left" *ngIf="childForm.tableEntitlements.canAddRows">
       <a (click)="addChildRecord(childForm.sections[0].label)">
@@ -12,45 +11,49 @@
       </a>
     </span>
   </div>
-  <!-- Child form table Row header -->
   <div class="table-responsive" *ngIf="childForm.childFormRowValues?.length">
     <table class="table child-table">
       <thead>
         <tr>
           <th class="mat-row-child">Action</th>
           <ng-container *ngFor="let key of fieldKeys">
-            <!-- Child form dynamic table Row header -->
             <th *ngIf="cellShouldBeDisplayed(key)">
               {{ getTableHeader(key) }}
             </th>
           </ng-container>
         </tr>
       </thead>
-      <!-- Child form dynamic table Row Data -->
       <tbody>
-        <tr *ngFor="let rowData of childForm.childFormRowValues; let rowIndex = index" class="pre-formatted">
-          <!-- Edit Child form  -->
-          <td class="action-width">
-            <a class="btn-dynamic-child primary btnForm" *ngIf="childForm.tableEntitlements.accessIsDefinedForCurrentUser" (click)="editChildRecord(childForm.sections[0].label, rowData)">
-              <fa-icon [icon]="faEdit"></fa-icon>
-            </a>
-            <a class="btn-dynamic-child warn btnForm" *ngIf="childForm.tableEntitlements.canDeleteRows"
-                (click)="deleteRow(rowData)">
-              <fa-icon [icon]="faTrash"></fa-icon>
-            </a>
-          </td>
-          <ng-container *ngFor="let key of fieldKeys">
-            <td *ngIf="cellShouldBeDisplayed(key)"
-                [ngStyle]="childFieldDictionary[key]?.cinchyColumn?.doNotWrap ? { 'white-space': 'nowrap' } : ''"
-                [innerHTML]="getDisplayValue(rowIndex, key)">
+        <ng-container *ngFor="let rowData of childForm.childFormRowValues; let rowIndex = index">
+          <tr class="pre-formatted">
+            <td class="action-width">
+              <a class="btn-dynamic-child primary btnForm"
+                  *ngIf="childForm.tableEntitlements.accessIsDefinedForCurrentUser"
+                  (click)="editChildRecord(childForm.sections[0].label, rowData)"
+              >
+                <fa-icon [icon]="faEdit"></fa-icon>
+              </a>
+              <a class="btn-dynamic-child warn btnForm"
+                  *ngIf="childForm.tableEntitlements.canDeleteRows"
+                  (click)="deleteRow(rowData)"
+              >
+                <fa-icon [icon]="faTrash"></fa-icon>
+              </a>
             </td>
-          </ng-container>
-        </tr>
+            <ng-container *ngFor="let key of fieldKeys">
+              <td *ngIf="cellShouldBeDisplayed(key)"
+                  [ngStyle]="childFieldDictionary[key]?.cinchyColumn?.doNotWrap ? { 'white-space': 'nowrap' } : ''"
+                  [innerHTML]="getDisplayValue(rowIndex, key)"
+              >
+              </td>
+            </ng-container>
+          </tr>
+        </ng-container>
       </tbody>
     </table>
   </div>
-  <p *ngIf="childForm.childFormLinkId == null || childForm.childFormParentId == null ;else noRecord"> 
-     The columns "Child Form Link Field" or both the "Child Form Parent ID" and the "Child Form Link ID" must be populated in your form fields table. 
+  <p *ngIf="childForm.childFormLinkId == null || childForm.childFormParentId == null ;else noRecord">
+     The columns "Child Form Link Field" or both the "Child Form Parent ID" and the "Child Form Link ID" must be populated in your form fields table.
   </p>
   <ng-template #noRecord>
     <p *ngIf="!childForm.childFormRowValues?.length">
