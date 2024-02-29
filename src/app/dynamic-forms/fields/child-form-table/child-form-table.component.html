@@ -1,9 +1,13 @@
 <div *ngIf="field?.childForm" class="full-width-element">
-  <span class="error-message" *ngIf="!childForm.tableEntitlements.accessIsDefinedForCurrentUser">
-    You don't have permission to view the child form {{ childForm.name }}.
-  </span>
+  <div class="error-message" *ngIf="!childForm.tableEntitlements.accessIsDefinedForCurrentUser">
+    You don't have permission to view the child form
+
+    <span *ngIf="childForm.sections[0]">
+      {{ childForm.sections[0].label }}
+    </span>
+  </div>
   <div class="mat-header-child">
-    {{ childForm.name || childForm.sections[0].label }}
+    {{ childForm.sections[0].label }}
 
     <span class="text-left" *ngIf="childForm.tableEntitlements.canAddRows">
       <a (click)="addChildRecord(childForm.sections[0].label)">
@@ -52,13 +56,14 @@
       </tbody>
     </table>
   </div>
-  <p *ngIf="childForm.childFormLinkId == null || childForm.childFormParentId == null ;else noRecord">
+
+  <p *ngIf="(!childForm.childFormLinkId || !childForm.childFormParentId); else noRecord">
      The columns "Child Form Link Field" or both the "Child Form Parent ID" and the "Child Form Link ID" must be populated in your form fields table.
   </p>
+
   <ng-template #noRecord>
     <p *ngIf="!childForm.childFormRowValues?.length">
       There is no data in this table. You can use the add button above to get started.
     </p>
   </ng-template>
-
 </div>
