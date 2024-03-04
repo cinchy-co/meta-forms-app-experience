@@ -82,12 +82,12 @@ export class AppStateService {
 
     window.parent.postMessage(message, "*");
 
-    // Modifies the app"s URL
+    // Modifies the app's URL
     const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
 
       const [key, value] = paramString.split("=");
 
-      if (key.toLowerCase() !== "rowid") {
+      if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
     }).join("");
@@ -124,6 +124,9 @@ export class AppStateService {
       doNotReloadForm: doNotReloadForm
     });
 
+    // Reverting session logic to triage first-load issues
+    sessionStorage.setItem("rowId", rowId ? rowId.toString() : "");
+
     if (rowId === null) {
       this.deleteRowIdInQueryParams();
     }
@@ -155,7 +158,7 @@ export class AppStateService {
 
       const [key, value] = paramString.split("=");
 
-      if (key.toLowerCase() !== "rowid") {
+      if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
     }).join("");
@@ -164,6 +167,9 @@ export class AppStateService {
       const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
 
       window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}&${rowIdQueryString}`);
+    }
+    else {
+      window.history.replaceState(window.history.state, document.title, `${window.location.href}?${rowIdQueryString}`);
     }
   }
 }

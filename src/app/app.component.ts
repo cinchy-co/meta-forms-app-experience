@@ -26,6 +26,16 @@ export class AppComponent implements OnDestroy, OnInit {
       private cinchyService: CinchyService,
       private appStateService: AppStateService
   ) {
+
+    this._routerEventSubscription = this.router.events.subscribe({
+      next: (event: RouterEvent) => {
+
+        // This is used if the incoming URL causes an immediate reload which would otherwise destroy the queryparams
+        if (event instanceof NavigationStart && !this.loginDone) {
+          this.setRowAndFormId();
+        }
+      }
+    });
   }
 
 
@@ -60,11 +70,49 @@ export class AppComponent implements OnDestroy, OnInit {
 
 
   /**
+   * @returns The value of the "rowId" query parameter from the given URI as a number. If the rowId
+   *          is invalid or unset, will will return null instead.
+   */
+  getRowIdFromUriOrSession(uri: string): number {
+
+    let idAsString: string;
+    let idAsNumber: number;
+
+    if (uri) {
+      idAsString = this.getQueryStringValue("rowId", uri);
+    }
+
+    // Reverting session logic to triage first-load issues
+    if (!idAsString && sessionStorage.getItem("rowId")) {
+      idAsString = sessionStorage.getItem("rowId");
+    }
+
+    if (idAsString) {
+      try {
+        idAsNumber = parseInt(idAsString);
+
+        return idAsNumber;
+      }
+      catch {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+
+  /**
    * Pulls the value with the target key out of the querystring
    */
   getQueryStringValue(key: string, uri: string): string {
 
     const value = decodeURIComponent(uri.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+
+    // Covers the case where there is an ID stored in the session but the queryString explicitly requests to clear it
+    if (value === "null") {
+      sessionStorage.removeItem(key);
+    }
 
     return (value && value !== "null") ? value : null;
   }
@@ -89,7 +137,7 @@ export class AppComponent implements OnDestroy, OnInit {
   /**
    * Retrieves the rowId and formId from the URL and ensures the session is up to date
    */
-  setRowAndFormId() {
+  setRowAndFormId(): void {
 
     const uri = window.location.search;
     const parentUri = (window.location === window.parent.location) ? window.location.search : window.parent.location.search;
@@ -99,35 +147,19 @@ export class AppComponent implements OnDestroy, OnInit {
     // the embedded frame's target using the querystring, then we use this window's queryParams instead
     const resolvedUri = parentUri?.toLowerCase().includes("formid") ? parentUri : uri;
 
-    this.appStateService.setRootFormId(this.getQueryStringValue("formid", resolvedUri));
-    this.appStateService.setRecordSelected(this.getRowIdFromUri(uri), false);
-  }
+    let formId: string = this.getQueryStringValue("formId", resolvedUri)?.toString();
 
+    // Reverting session logic to triage first-load issues
+    if (formId) {
+      sessionStorage.setItem("formId", formId);
+    }
+    else {
+      formId = sessionStorage.getItem("formId");
 
-  /**
-   * @returns The value of the "rowId" query parameter from the given URI as a number. If the rowId
-   *          is invalid or unset, will will return null instead.
-   */
-  getRowIdFromUri(uri: string): number {
-
-    let idAsString: string;
-    let idAsNumber: number;
-
-    if (uri) {
-      idAsString = this.getQueryStringValue("rowid", uri);
+      window.location.href += `${window.location.search?.length ? "&" : "?"}formId=${formId}`;
     }
 
-    if (idAsString) {
-      try {
-        idAsNumber = parseInt(idAsString);
-
-        return idAsNumber;
-      }
-      catch {
-        return null;
-      }
-    }
-
-    return null;
+    this.appStateService.setRootFormId(formId);
+    this.appStateService.setRecordSelected(this.getRowIdFromUriOrSession(resolvedUri), false);
   }
 }
