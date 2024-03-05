@@ -87,6 +87,8 @@ export class AppStateService {
 
       const [key, value] = paramString.split("=");
 
+      // Because the key here will be an empty string in the case the queryParams are empty or malformed,
+      // we explicitly need to check that it is truthy. Optional chaining would yield a false position
       if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
@@ -155,6 +157,8 @@ export class AppStateService {
 
       const [key, value] = paramString.split("=");
 
+      // Because the key here will be an empty string in the case the queryParams are empty or malformed,
+      // we explicitly need to check that it is truthy. Optional chaining would yield a false position
       if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
