@@ -124,9 +124,6 @@ export class AppStateService {
       doNotReloadForm: doNotReloadForm
     });
 
-    // Reverting session logic to triage first-load issues
-    sessionStorage.setItem("rowId", rowId ? rowId.toString() : "");
-
     if (rowId === null) {
       this.deleteRowIdInQueryParams();
     }
