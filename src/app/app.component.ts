@@ -1,7 +1,4 @@
-import { Subscription } from "rxjs";
-
-import { Component, OnDestroy, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
+import { Component, OnInit } from "@angular/core";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
@@ -13,25 +10,15 @@ import { AppStateService } from "./services/app-state.service";
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"]
 })
-export class AppComponent implements OnDestroy, OnInit {
+export class AppComponent implements OnInit {
 
   loginDone: boolean;
 
 
-  private _routerEventSubscription: Subscription
-
-
   constructor(
-      private router: Router,
       private cinchyService: CinchyService,
       private appStateService: AppStateService
   ) {}
-
-
-  ngOnDestroy(): void {
-
-    this._routerEventSubscription.unsubscribe();
-  }
 
 
   ngOnInit(): void {
