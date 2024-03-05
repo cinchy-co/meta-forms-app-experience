@@ -26,7 +26,7 @@ export class IframeUtil {
 
     IframeUtil._fullScreenHeight = value;
 
-    localStorage.setItem("fullScreenHeight", value || "");
+    localStorage.setItem("cinchy-fullScreenHeight", value || "");
 
     const elements = document.getElementsByClassName("full-height-element");
 
