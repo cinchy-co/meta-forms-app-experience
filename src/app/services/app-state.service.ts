@@ -82,12 +82,14 @@ export class AppStateService {
 
     window.parent.postMessage(message, "*");
 
-    // Modifies the app"s URL
+    // Modifies the app's URL
     const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
 
       const [key, value] = paramString.split("=");
 
-      if (key.toLowerCase() !== "rowid") {
+      // Because the key here will be an empty string in the case the queryParams are empty or malformed,
+      // we explicitly need to check that it is truthy. Optional chaining would yield a false position
+      if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
     }).join("");
@@ -155,7 +157,9 @@ export class AppStateService {
 
       const [key, value] = paramString.split("=");
 
-      if (key.toLowerCase() !== "rowid") {
+      // Because the key here will be an empty string in the case the queryParams are empty or malformed,
+      // we explicitly need to check that it is truthy. Optional chaining would yield a false position
+      if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
     }).join("");
@@ -164,6 +168,9 @@ export class AppStateService {
       const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
 
       window.history.replaceState(window.history.state, document.title, `${baseUrl}?${queryParams}&${rowIdQueryString}`);
+    }
+    else {
+      window.history.replaceState(window.history.state, document.title, `${window.location.href}?${rowIdQueryString}`);
     }
   }
 }

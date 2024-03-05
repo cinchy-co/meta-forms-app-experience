@@ -23,9 +23,9 @@ export class ConfigService {
 
   get envConfig(): CinchyConfig {
 
-    return this._enviornmentConfig;
+    return this._environmentConfig;
   }
-  private _enviornmentConfig: CinchyConfig;
+  private _environmentConfig: CinchyConfig;
 
 
   constructor(
@@ -35,8 +35,8 @@ export class ConfigService {
 
     window.addEventListener("message", this.receiveMessage, false);
 
-    if (localStorage.getItem("fullScreenHeight")) {
-      IframeUtil.setFrameHeight(localStorage.getItem("fullScreenHeight"));
+    if (localStorage.getItem("cinchy-fullScreenHeight")) {
+      IframeUtil.setFrameHeight(localStorage.getItem("cinchy-fullScreenHeight"));
     }
   }
 
@@ -56,7 +56,7 @@ export class ConfigService {
         tap(
           (configResponse) => {
 
-            this._enviornmentConfig = configResponse;
+            this._environmentConfig = configResponse;
           }
         ),
         concatMap(
