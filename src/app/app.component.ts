@@ -105,12 +105,10 @@ export class AppComponent implements OnDestroy, OnInit {
     // Ensure that the window's location is stable before trying to access the query params
     setTimeout(
       async () => {
+
         this.setRowAndFormId();
 
         this.loginDone = true;
-
-        await this.router.navigate(["/edit-form"], { queryParamsHandling: "merge" });
-
       },
       1
     );
