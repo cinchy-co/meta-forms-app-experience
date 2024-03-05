@@ -62,18 +62,13 @@ export class AppComponent implements OnDestroy, OnInit {
    * @returns The value of the "rowId" query parameter from the given URI as a number. If the rowId
    *          is invalid or unset, will will return null instead.
    */
-  getRowIdFromUriOrSession(uri: string): number {
+  getRowIdFromUri(uri: string): number {
 
     let idAsString: string;
     let idAsNumber: number;
 
     if (uri) {
       idAsString = this.getQueryStringValue("rowId", uri);
-    }
-
-    // Reverting session logic to triage first-load issues
-    if (!idAsString && localStorage.getItem("cinchy-rowId")) {
-      idAsString = localStorage.getItem("cinchy-rowId");
     }
 
     if (idAsString) {
@@ -136,6 +131,6 @@ export class AppComponent implements OnDestroy, OnInit {
     const resolvedUri: string = parentUri?.toLowerCase().includes("formid") ? parentUri : uri;
 
     this.appStateService.setRootFormId(this.getQueryStringValue("formId", resolvedUri));
-    this.appStateService.setRecordSelected(this.getRowIdFromUriOrSession(resolvedUri), false);
+    this.appStateService.setRecordSelected(this.getRowIdFromUri(resolvedUri), false);
   }
 }
