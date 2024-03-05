@@ -50,9 +50,6 @@ import { PrintService } from "./service/print/print.service";
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
 
 
-const INITIAL_TEMPORARY_CINCHY_ID: number = -2;
-
-
 @Component({
   selector: "cinchy-dynamic-forms",
   templateUrl: "./cinchy-dynamic-forms.component.html",
@@ -125,17 +122,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * set is cleared (as those queries are no longer pending)
    */
   private _pendingChildFormQueries = new Array<IChildFormQuery>();
-
-  /**
-   * In the event that we are adding a record to a child form, the query gets generated and then mapped to a temporary
-   * cinchy ID so that it can be referenced later if the newly-added record is modified before the form is saved. This
-   * temporary ID is sequential and increasingly-negative to avoid relying on something like Math.random() which could
-   * easily result in a duplicate.
-   *
-   * Since -1 is the initial placeholder ID that indicates that the incoming record is an add instead of an edit, we're
-   * starting this variable at -2.
-   */
-  private _lastTemporaryCinchyId: number = INITIAL_TEMPORARY_CINCHY_ID;
 
 
   constructor(
@@ -232,7 +218,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this.form = this.form.clone();
 
     this._pendingChildFormQueries = new Array<IChildFormQuery>();
-    this._lastTemporaryCinchyId = INITIAL_TEMPORARY_CINCHY_ID;
 
     this.form.restoreFormReferenceOnAllFields();
     this._appStateService.setRecordSelected(null, true);
@@ -472,7 +457,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
         let childFormRowValues = targetChildForm.childForm.childFormRowValues || [];
 
-        const newValues: { [key: string]: any } = {};
+        const newValues: { [key: string]: any } = {
+          "Cinchy ID": resultId
+        };
         const childFormLinkName = data.childForm.getChildFormLinkName(data.childForm.childFormLinkId);
 
         data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
@@ -488,8 +475,17 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 const columnLabel = `${field.cinchyColumn.linkTargetColumnName} label`;
                 // When a linked column value is changed, we are not able to update the display column,
                 // So if the linked column value has changed, update the display column values to "-".
-                const linkedColumn = section.fields.find((f: FormField) => field.cinchyColumn.id === f.cinchyColumn.id && !f.cinchyColumn.isDisplayColumn);
-                if (isEqual(sortBy(toString(linkedColumn.value)), sortBy(toString(data.presetValues[linkedColumn.label])))) {
+                const linkedColumnField: FormField = section.fields.find(
+                  (field: FormField) => {
+
+                    return (
+                      field.cinchyColumn.id === field.cinchyColumn.id &&
+                      !field.cinchyColumn.isDisplayColumn
+                    )
+                  }
+                );
+
+                if (isEqual(sortBy(toString(linkedColumnField.value)), sortBy(toString(data.presetValues[linkedColumnField.label])))) {
                   newValues[columnLabel] = data.presetValues[columnLabel];
                 }
                 else {
@@ -506,13 +502,10 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         const rowDataIndex = childFormRowValues.findIndex((rowData: { [key: string]: any }) => rowData["Cinchy ID"] === resultId);
 
         if (rowDataIndex > -1) {
-          newValues["Cinchy ID"] = resultId;
           childFormRowValues.splice(rowDataIndex, 1, newValues);
         }
         else {
-          childFormRowValues.push(
-            Object.assign(newValues, { "Cinchy ID": this._lastTemporaryCinchyId-- })
-          );
+          childFormRowValues.push(newValues);
         }
 
         // TODO: this only works because the presetValues are directly mutated in the ChildFormComponent, which is not a pattern
@@ -583,7 +576,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
             if (this._pendingChildFormQueries.length === (recursionCounter + 1)) {
               this._pendingChildFormQueries = new Array<IChildFormQuery>();
-              this._lastTemporaryCinchyId = INITIAL_TEMPORARY_CINCHY_ID;
 
               await this.loadForm();
               this._toastr.success("Child form saved successfully", "Success");

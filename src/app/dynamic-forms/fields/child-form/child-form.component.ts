@@ -1,4 +1,4 @@
-import { Component, Inject } from "@angular/core";
+import { Component, Inject, OnInit } from "@angular/core";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
 import { DropdownDatasetService } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
@@ -10,7 +10,6 @@ import { FormSection } from "../../models/cinchy-form-section.model";
 
 import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 
-import { isNullOrUndefined } from "util";
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
 
@@ -24,7 +23,7 @@ import { IFieldChangedEvent } from "../../interface/field-changed-event";
   styleUrls: ["./child-form.component.scss"],
   providers: [DropdownDatasetService]
 })
-export class ChildFormComponent {
+export class ChildFormComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<ChildFormComponent>,

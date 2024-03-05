@@ -323,12 +323,11 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       // Fallback for legacy logic
       if (
           this.field.dropdownDataset.options.length === 1 &&
-          this.field.dropdownDataset.options[0].id.includes(",")
+          this.field.dropdownDataset.options[0].id?.includes(",")
       ) {
-
         selectedIds = this.field.dropdownDataset.options[0].id?.split(",").map((id: string) => id.trim());
 
-        this.field.dropdownDataset.options = this.field.dropdownDataset.options[0].label.split(",").map((label: string, index: number) => {
+        this.field.dropdownDataset.options = this.field.dropdownDataset.options[0].label?.split(",").map((label: string, index: number) => {
           return new DropdownOption(
             selectedIds[index],
             label.trim()

@@ -107,7 +107,7 @@ export class Form {
 
     this._sections = value.slice();
   }
-  private _sections = new Array<FormSection>();
+  private _sections: Array<FormSection> = new Array<FormSection>();
 
 
   constructor(
@@ -128,7 +128,7 @@ export class Form {
     private _childFormRowValues?: Array<{ [key: string]: any }>
   ) {
 
-    this.childFormRowValues = _childFormRowValues?.slice();
+    this.childFormRowValues = this._childFormRowValues?.slice();
   }
 
 
@@ -711,7 +711,7 @@ export class Form {
         if (column.name === childFormLinkName) {
           paramName = `@p${paramNumber++}`;
           assignmentColumns.push(`[${column.name}]`);
-          assignmentValues.push(`ResolveLink(${paramName}, 'Cinchy Id')`);
+          assignmentValues.push(`ResolveLink(${paramName}, 'Cinchy ID')`);
 
           if (column.columnType === "Link") {
             params[paramName] = this.parentForm.rowId.toString();
@@ -964,8 +964,8 @@ export class Form {
             let linkColumnLabelKey = `${(field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name)} label`;
 
             if (
-              field.cinchyColumn.dataType === "Link" && 
-              field.cinchyColumn.isMultiple && 
+              field.cinchyColumn.dataType === "Link" &&
+              field.cinchyColumn.isMultiple &&
               !field.cinchyColumn.isDisplayColumn
             ) {
               let linkIds: Array<string> = !isNullOrUndefined(rowData[field.cinchyColumn.name]) ?
@@ -1112,28 +1112,20 @@ export class Form {
     if (this._sections?.length > sectionIndex && this._sections[sectionIndex].fields?.length > fieldIndex) {
       // Since we don't store the field's original value, we will mark it as changed if the current value is different from the
       // value immediately prior, or if the field has already been marked as changed
-      let valueIsDifferent: boolean;
+      const valueChanged: boolean = this._valuesAreDifferent(newValue, this._sections[sectionIndex].fields[fieldIndex].value);
 
-      if (Array.isArray(newValue)) {
-        valueIsDifferent = (newValue?.length !== this._sections[sectionIndex].fields[fieldIndex].value?.length);
+      this.hasChanged = this.hasChanged || valueChanged;
 
-        if (!valueIsDifferent) {
-          for (let index = 0; index < newValue?.length; index++) {
-            if (newValue[index] !== this._sections[sectionIndex].fields[fieldIndex].value[index]) {
-              valueIsDifferent = true;
-
-              break;
-            }
+      if (this.parentForm && this.hasChanged) {
+        this.parentForm.updateRootProperty(
+          {
+            propertyName: "hasChanged",
+            propertyValue: true
           }
-        }
-      }
-      else {
-        valueIsDifferent = (newValue !== this._sections[sectionIndex].fields[fieldIndex].value);
+        );
       }
 
-      this.hasChanged = this.hasChanged || valueIsDifferent;
-
-      this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged = this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged || valueIsDifferent;
+      this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged = this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged || valueChanged;
       this._sections[sectionIndex].fields[fieldIndex].value = newValue;
 
       additionalPropertiesToUpdate?.forEach((property: IAdditionalProperty) => {
@@ -1157,6 +1149,8 @@ export class Form {
    * Updates a specific property of a section
    */
   updateSectionProperty(sectionIndex: number, property: IAdditionalProperty): void {
+
+    this.hasChanged = this.hasChanged || this._valuesAreDifferent(property.propertyValue, this.sections[sectionIndex][property.propertyName]);
 
     if (this._sections?.length > sectionIndex) {
       this._sections[sectionIndex][property.propertyName] = property.propertyValue;
@@ -1211,6 +1205,31 @@ export class Form {
     });
 
     return valueAsMoment.toISOString();
+  }
+
+
+  private _valuesAreDifferent(newValue: any, originalValue: any): boolean {
+
+    let mismatch: boolean;
+
+    if (Array.isArray(newValue)) {
+      mismatch = (newValue?.length !== originalValue?.length);
+
+      if (!mismatch) {
+        for (let index = 0; index < newValue?.length; index++) {
+          if (newValue[index] !== originalValue[index]) {
+            mismatch = true;
+
+            break;
+          }
+        }
+      }
+    }
+    else {
+      mismatch = (newValue !== originalValue);
+    }
+
+    return mismatch;
   }
 }
 
