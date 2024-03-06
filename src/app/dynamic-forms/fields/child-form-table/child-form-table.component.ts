@@ -149,10 +149,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     this._appStateService.childRecordUpdated$.pipe(
       takeUntil(this._destroy$)
     ).subscribe({
-      next: () => {
-
-        // DEBUG
-        console.log("childRecordUpdated", this.childForm.id);
+      next: (): void => {
 
         this.loadFieldKeysAndPopulateDisplayValues();
       }
@@ -168,7 +165,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     await this._updateEntitlements();
 
     // Find lowest negative Cinchy ID (these are all new records) so that we can generate a new one
-    let lowestCinchyId = 0;
+    let lowestCinchyId: number = 0;
 
     this.childForm.childFormRowValues?.forEach(rowVal => {
       if (rowVal["Cinchy ID"] < lowestCinchyId) {

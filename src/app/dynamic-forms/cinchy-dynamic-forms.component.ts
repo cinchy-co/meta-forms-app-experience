@@ -543,9 +543,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       const pendingItem: IChildFormQuery = this._pendingChildFormQueries[recursionCounter];
 
-      // DEBUG
-      console.log(pendingItem);
-
       if (pendingItem.query.query) {
         const queryToExecute = pendingItem.query.query.replace("{parentId}", rowId.toString());
         const params = JSON.parse(JSON.stringify(pendingItem.query.params).replace("{parentId}", rowId.toString()));

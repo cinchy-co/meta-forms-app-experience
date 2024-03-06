@@ -322,9 +322,6 @@ export class Form {
 
       this.hasChanged = true;
 
-      // DEBUG
-      console.log(`deleted ${rowId} from`, this.childFormRowValues);
-
       return true;
     }
 
