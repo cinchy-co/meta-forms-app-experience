@@ -135,24 +135,20 @@ export class Form {
   /**
    * Modifies the flattened child form records by either updating an existing entry that matches the given rowId or adding a new entry if no match is present
    */
-  addOrModifyChildFormRowValue(sectionIndex: number, rowData: { [columnName: string]: any }): void {
+  addOrModifyChildFormRowValue(rowData: { [columnName: string]: any }): void {
 
-    if (rowData["Cinchy ID"] && rowData["Cinchy ID"] > 0) {
-      const existingRowIndex = this.childFormRowValues.findIndex((existingRecordData: { [columnName: string]: any }) => {
+    this.childFormRowValues = this.childFormRowValues ?? new Array<{ [key: string]: any }>();
 
-        return (existingRecordData.rowId === rowData["Cinchy ID"]);
-      });
+    const existingRowIndex: number = this.getChildFormRowIndexByRowId(rowData["Cinchy ID"]);
 
-      if (existingRowIndex !== -1) {
-        this.childFormRowValues.splice(existingRowIndex, 1, [rowData]);
-      }
-      else {
-        this.childFormRowValues.push(rowData);
-      }
+    if (existingRowIndex !== -1) {
+      this.childFormRowValues.splice(existingRowIndex, 1, rowData);
     }
     else {
       this.childFormRowValues.push(rowData);
     }
+
+    this.hasChanged = true;
   }
 
 
@@ -312,22 +308,40 @@ export class Form {
 
 
   /**
-   * Searches the form's fields to find a reference to a specific child forn
+   * Removes the record with the given rowId from the set of child form row values
+   *
+   * @param rowId The rowId of the record to remove
+   * @returns true if a record was successfully removed, false if the record was not found
+   */
+  deleteChildFormRowValue(rowId: number): boolean {
+
+    const existingRecordIndex: number = this.getChildFormRowIndexByRowId(rowId);
+
+    if (existingRecordIndex > -1) {
+      this.childFormRowValues.splice(existingRecordIndex, 1);
+
+      this.hasChanged = true;
+
+      return true;
+    }
+
+    return false;
+  }
+
+
+  /**
+   * Searches the form's fields to find a reference to a specific child form
    */
   findChildForm(targetChildFormId: string): IFindChildFormResponse {
 
-    if (this._sections?.length) {
-      for (let sectionIndex = 0; sectionIndex < this._sections.length; sectionIndex++) {
-        if (this._sections[sectionIndex].fields?.length) {
-          for (let fieldIndex = 0; fieldIndex < this._sections[sectionIndex].fields.length; fieldIndex++) {
-            if (this._sections[sectionIndex].fields[fieldIndex].childForm?.id === targetChildFormId) {
-              return {
-                childForm: this._sections[sectionIndex].fields[fieldIndex].childForm,
-                fieldIndex: fieldIndex,
-                sectionIndex: sectionIndex
-              };
-            }
-          }
+    for (let sectionIndex = 0; sectionIndex < this._sections?.length; sectionIndex++) {
+      for (let fieldIndex = 0; fieldIndex < this._sections[sectionIndex].fields?.length; fieldIndex++) {
+        if (this._sections[sectionIndex].fields[fieldIndex].childForm?.id === targetChildFormId) {
+          return {
+            childForm: this._sections[sectionIndex].fields[fieldIndex].childForm,
+            fieldIndex: fieldIndex,
+            sectionIndex: sectionIndex
+          };
         }
       }
     }
@@ -346,12 +360,12 @@ export class Form {
   }
 
 
-  generateDeleteQuery(): IQuery {
+  generateDeleteQuery(targetId?: number): IQuery {
 
     return new Query(
       `DELETE
         FROM [${this.targetTableDomain}].[${this.targetTableName}]
-        WHERE [Cinchy ID] = ${this.rowId}
+        WHERE [Cinchy ID] = ${targetId ?? this.rowId}
           AND [Deleted] IS NULL`,
       null
     );
@@ -830,6 +844,21 @@ export class Form {
   }
 
 
+  /**
+   * @param rowId The rowId of the target entity
+   * @returns The index of the childFormRowValues set with data matching the given rowId, or -1 if no such row exists
+   */
+  getChildFormRowIndexByRowId(rowId: number): number {
+
+    return this.childFormRowValues?.findIndex(
+      (rowData: { [columnName: string]: any }): boolean => {
+
+        return (rowData["Cinchy ID"] === rowId);
+      }
+    ) ?? -1;
+  }
+
+
   getFileNameAndItsTable(field: FormField, childCinchyId?: number): {
       childCinchyId: number,
       column: string,
@@ -1140,6 +1169,8 @@ export class Form {
    * Updates a specific property on the main form object. Should be used in place of directly assigning any value
    */
   updateRootProperty(property: IAdditionalProperty): void {
+
+    this.hasChanged = this.hasChanged || this._valuesAreDifferent(property.propertyValue, this[property.propertyName]);
 
     this[property.propertyName] = property.propertyValue;
   }
