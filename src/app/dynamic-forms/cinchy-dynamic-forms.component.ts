@@ -350,84 +350,97 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
 
         this._cinchyQueryService.getFormFieldsMetadata(this.formId).subscribe(
-          async (formFieldsMetadata: Array<IFormFieldMetadata>) => {
+          {
+            next: async (formFieldsMetadata: Array<IFormFieldMetadata>) => {
 
-            if (this.lookupRecordsListPopulated) {
-              const selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
+              if (this.lookupRecordsListPopulated) {
+                const selectedLookupRecord = this.lookupRecordsList.find((record: ILookupRecord) => {
 
-                return (record.id === this.rowId);
-              });
+                  return (record.id === this.rowId);
+                });
 
-              await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
+                await this._formHelperService.fillWithFields(form, this.rowId, this.formMetadata, formFieldsMetadata, selectedLookupRecord, tableEntitlements);
 
-              if (selectedLookupRecord){
-                const success = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
+                if (selectedLookupRecord){
+                  const success: boolean = await this._formHelperService.fillWithData(form, this.rowId, selectedLookupRecord, null, null);
 
-                if (success && form.childFieldsLinkedToColumnName?.length) {
-                  // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
-                  for (let parentColumnName in form.childFieldsLinkedToColumnName) {
-                    let linkedParentField = form.fieldsByColumnName[parentColumnName];
-                    let linkedChildFields = form.childFieldsLinkedToColumnName[parentColumnName] || [];
+                  if (success && form.childFieldsLinkedToColumnName?.length) {
+                    // Update the value of the child fields that are linked to a parent field (only for flattened child forms)
+                    for (let parentColumnName in form.childFieldsLinkedToColumnName) {
+                      let linkedParentField: FormField = form.fieldsByColumnName[parentColumnName];
+                      let linkedChildFields: Array<FormField> = form.childFieldsLinkedToColumnName[parentColumnName] || [];
 
-                    for (let linkedChildField of linkedChildFields) {
-                      // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
-                      if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
-                        continue;
+                      for (let linkedChildField of linkedChildFields) {
+                        // Skip non-flat child forms and skip if there's already a value or if it already matches the parent's value
+                        if (!linkedChildField.form.flatten || linkedChildField.value || linkedParentField.value === linkedChildField.value) {
+                          continue;
+                        }
+
+                        // Update the child form field's value
+                        const fieldIndex: number = form.sections[0].fields.findIndex((field: FormField) => {
+
+                          return (field.id === linkedChildField.id);
+                        });
+
+                        form.updateFieldValue(
+                          0,
+                          fieldIndex,
+                          linkedParentField.value
+                        );
+
+                        this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
                       }
-
-                      // Update the child form field's value
-                      const fieldIndex = form.sections[0].fields.findIndex((field: FormField) => {
-
-                        return (field.id === linkedChildField.id);
-                      });
-
-                      form.updateFieldValue(
-                        0,
-                        fieldIndex,
-                        linkedParentField.value
-                      );
-
-                      this.afterChildFormEdit(linkedChildField.form.rowId, linkedChildField.form);
                     }
                   }
                 }
+
+                this.form = form;
+
+                this.enableSaveBtn = true;
+
+                this._formIsLoading = false;
+                this.formHasDataLoaded = true;
+
+                await this._spinner.hide();
+
+                if (childData) {
+                  setTimeout(() => {
+
+                    this._appStateService.parentFormSavedFromChild$.next(childData);
+                  }, 500);
+                }
               }
+            },
+            error: (error: any) => {
 
-              this.form = form;
-
-              this.enableSaveBtn = true;
+              this._spinner.hide();
 
               this._formIsLoading = false;
-              this.formHasDataLoaded = true;
 
-              await this._spinner.hide();
-
-              if (childData) {
-                setTimeout(() => {
-
-                  this._appStateService.parentFormSavedFromChild$.next(childData);
-                }, 500);
-              }
+              console.error(error);
             }
-          },
-          error => {
-
-            this._spinner.hide();
-            this._formIsLoading = false;
-
-            console.error(error);
-          });
-      } catch (e) {
+          }
+        );
+      }
+      catch (error: any) {
         await this._spinner.hide();
 
         this._formIsLoading = false;
 
-        console.error(e);
+        console.error(error);
       }
     }
   }
 
 
+  /**
+   * Opens the dialog to add or edit a record in the context of a child form table. When the dialog is saved, the
+   * desired values are structured and inserted into the appropriate child form and passed along for post processing
+   *
+   * @param data Contains a reference to the target childForm, any previous values for the target record, a title for
+   *        the dialog, and whether or not the view should be restricted to only those fields specified by the form
+   *        field's metadata
+   */
   async openChildFormDialog(
       data: {
         childForm: Form,
@@ -436,10 +449,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         title: string
       }
   ): Promise<void> {
-
-    if (data.presetValues["Cinchy ID"]) {
-      data.childForm.rowId = data.presetValues["Cinchy ID"];
-    }
 
     data.useLimitedFields = true;
 
@@ -451,60 +460,64 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       }
     );
 
-    dialogRef.afterClosed().subscribe((resultId: number) => {
+    dialogRef.afterClosed().subscribe(
+      {
+        next: (resultId: number) => {
 
-      if (!isNullOrUndefined(resultId)) {
-        const targetChildForm: IFindChildFormResponse = this.form.findChildForm(data.childForm.id);
+          if (resultId) {
+            const targetChildForm: IFindChildFormResponse = this.form.findChildForm(data.childForm.id);
 
-        const newValues: { [key: string]: any } = {
-          "Cinchy ID": resultId
-        };
-        const childFormLinkName: string = data.childForm.getChildFormLinkName(data.childForm.childFormLinkId);
+            const newValues: { [key: string]: any } = {
+              "Cinchy ID": resultId
+            };
+            const childFormLinkName: string = data.childForm.getChildFormLinkName(data.childForm.childFormLinkId);
 
-        data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
+            data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
 
-          section.fields.forEach((field: FormField, fieldIndex: number) => {
+              section.fields.forEach((field: FormField, fieldIndex: number) => {
 
-            if (
-              field.cinchyColumn.hasChanged ||
-              (data.presetValues && data.presetValues["Cinchy ID"] > 0) ||
-              (field.label === childFormLinkName)
-            ) {
-              if (field.cinchyColumn.isDisplayColumn) {
-                const columnLabel = `${field.cinchyColumn.linkTargetColumnName} label`;
-                // When a linked column value is changed, we are not able to update the display column,
-                // So if the linked column value has changed, update the display column values to "-".
-                const linkedColumnField: FormField = section.fields.find(
-                  (field: FormField) => {
+                if (
+                  field.cinchyColumn.hasChanged ||
+                  (data.presetValues && data.presetValues["Cinchy ID"] > 0) ||
+                  (field.label === childFormLinkName)
+                ) {
+                  if (field.cinchyColumn.isDisplayColumn) {
+                    const columnLabel = `${field.cinchyColumn.linkTargetColumnName} label`;
+                    // When a linked column value is changed, we are not able to update the display column,
+                    // So if the linked column value has changed, update the display column values to "-".
+                    const linkedColumnField: FormField = section.fields.find(
+                      (field: FormField) => {
 
-                    return (
-                      field.cinchyColumn.id === field.cinchyColumn.id &&
-                      !field.cinchyColumn.isDisplayColumn
-                    )
+                        return (
+                          field.cinchyColumn.id === field.cinchyColumn.id &&
+                          !field.cinchyColumn.isDisplayColumn
+                        )
+                      }
+                    );
+
+                    if (isEqual(sortBy(toString(linkedColumnField.value)), sortBy(toString(data.presetValues[linkedColumnField.label])))) {
+                      newValues[columnLabel] = data.presetValues[columnLabel];
+                    }
+                    else {
+                      newValues[columnLabel] = "-";
+                    }
                   }
-                );
-
-                if (isEqual(sortBy(toString(linkedColumnField.value)), sortBy(toString(data.presetValues[linkedColumnField.label])))) {
-                  newValues[columnLabel] = data.presetValues[columnLabel];
+                  else {
+                    newValues[field.cinchyColumn.name] = field.value;
+                  }
                 }
-                else {
-                  newValues[columnLabel] = "-";
-                }
-              }
-              else {
-                newValues[field.cinchyColumn.name] = field.value;
-              }
-            }
-          });
-        });
+              });
+            });
 
-        targetChildForm.childForm.addOrModifyChildFormRowValue(newValues);
+            targetChildForm.childForm.addOrModifyChildFormRowValue(newValues);
 
-        this._appStateService.childRecordUpdated$.next();
+            this._appStateService.childRecordUpdated$.next();
 
-        this.afterChildFormEdit(resultId, data.childForm);
+            this.afterChildFormEdit(resultId, data.childForm);
+          }
+        }
       }
-    });
+    );
   }
 
 

@@ -200,6 +200,14 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
+  /**
+   * Removes the given row from the table. If the row is not temporary (i.e. has a valid Cinchy ID which corresponds to
+   * an existing record), then it is deleted immediately if the user confirms their intent to do so. Otherwise the
+   * target record will be spliced from the set of pending queries. In both cases, the deletion is broadcast to the
+   * parent components via the childRowDeleted emitter.
+   *
+   * @param rowData The whole data of the target row
+   */
   deleteRow(rowData: { [key: string]: any }): void {
 
     if (!rowData["Cinchy ID"]) {
@@ -281,6 +289,12 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
+  /**
+   * Returns the display value for the given column and the given record
+   *
+   * @param rowIndex The rowId of the target record
+   * @param key The target column
+   */
   getDisplayValue(rowIndex: number, key: string): string {
 
     return this.displayValueSet[rowIndex][key] ?? "--";
@@ -343,6 +357,11 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
+  /**
+   * Returns the label for the given column to be displayed in the table
+   *
+   * @param key The field key
+   */
   getTableHeader(key: string): string {
 
     let currentField: FormField = this._childFormService.getFieldByKey(this.fieldSet, key);
@@ -361,6 +380,13 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
+  /**
+   * Triggers the deletion of the given record, updates the table view, and then notifies the user that the operation
+   * was successful
+   *
+   * @param rowData Record data to be deleted
+   * @private
+   */
   private _deleteRowValue(rowData: { [key: string]: any }): void {
 
     this.childForm.deleteChildFormRowValue(rowData["Cinchy ID"]);
@@ -374,6 +400,11 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
+  /**
+   * Maps the cinchy column of each field to the FormField it represents
+   *
+   * @private
+   */
   private _setChildFieldDictionary(): void {
 
     this.form.sections.forEach((section: FormSection) => {

@@ -142,7 +142,7 @@ export class Form {
     const existingRowIndex: number = this.getChildFormRowIndexByRowId(rowData["Cinchy ID"]);
 
     if (existingRowIndex !== -1) {
-      this.childFormRowValues.splice(existingRowIndex, 1, [rowData]);
+      this.childFormRowValues.splice(existingRowIndex, 1, rowData);
     }
     else {
       this.childFormRowValues.push(rowData);
