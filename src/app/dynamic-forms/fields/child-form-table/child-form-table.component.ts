@@ -25,6 +25,7 @@ import { MessageDialogComponent } from "../../dialogs/message/message.component"
 import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 import { FormSection } from "../../models/cinchy-form-section.model";
+import { IQuery } from "../../models/cinchy-query.model";
 
 import { AppStateService } from "../../../services/app-state.service";
 import { ChildFormService } from "../../service/child-form/child-form.service";
@@ -59,8 +60,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }>();
   @Output() childRowDeleted = new EventEmitter<{
     childForm: Form,
-    rowId: number,
-    sectionIndex: number
+    rowId: number
   }>();
 
   fieldSet: Array<FormField> = new Array<FormField>();
@@ -68,7 +68,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
   displayValueSet: Array<{ [key: string]: string }>;
 
-  fileNameAndValueMap = {};
+  fileNameAndValueMap: { [name: string]: any } = {};
 
   /**
    * A map of the name of a column in the host table to the FormField that represents its current value
@@ -151,6 +151,9 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     ).subscribe({
       next: () => {
 
+        // DEBUG
+        console.log("childRecordUpdated", this.childForm.id);
+
         this.loadFieldKeysAndPopulateDisplayValues();
       }
     });
@@ -221,32 +224,36 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
         next: (confirmed: boolean) => {
 
           if (confirmed) {
-            const childFormReference = this.form.findChildForm(this.childForm.id);
-
             if (rowData["Cinchy ID"] > 0) {
-              let query = `delete
-                         from [${childFormReference.childForm.targetTableDomain}].[${childFormReference.childForm.targetTableName}]
-                         where
-                             [Cinchy ID] = ${rowData["Cinchy ID"]}
-                         and [Deleted] IS NULL`;
+              let query: IQuery = this.childForm.generateDeleteQuery(rowData["Cinchy ID"]);
 
-              this._cinchyService.executeCsql(query, null).subscribe(
+              this._cinchyService.executeCsql(query.query, null).subscribe(
                 {
                   next: () => {
 
                     this._deleteRowValue(rowData);
 
-                    this.childRowDeleted.emit({
-                      childForm: this.childForm,
-                      rowId: rowData["Cinchy ID"],
-                      sectionIndex: this.sectionIndex
-                    })
+                    // We still need to call this after deleting an existing record because it will clear out any
+                    // pending updates that the user may have performed
+                    this.childRowDeleted.emit(
+                      {
+                        childForm: this.childForm,
+                        rowId: rowData["Cinchy ID"]
+                      }
+                    );
                   }
                 }
               );
             }
             else {
               this._deleteRowValue(rowData);
+
+              this.childRowDeleted.emit(
+                {
+                  childForm: this.childForm,
+                  rowId: rowData["Cinchy ID"]
+                }
+              );
             }
           }
         }
@@ -359,37 +366,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
   private _deleteRowValue(rowData: { [key: string]: any }): void {
 
-    const childFormRowValues = this.childForm.childFormRowValues.filter((originalRowData: { [key: string]: any }) => {
-
-      if (originalRowData["Cinchy ID"] && rowData["Cinchy ID"]) {
-        return (originalRowData["Cinchy ID"] !== rowData["Cinchy ID"]);
-      }
-      else if (!originalRowData["Cinchy ID"] && !rowData["Cinchy ID"]) {
-        // Since we can't just compare the ID here, we need to compare everything else and see if there's a match
-        const keys = Object.keys(rowData);
-
-        for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
-          // We are intentionally using a weak comparison here in case there are some object references in the data
-          if (originalRowData[keys[keyIndex]] != rowData[keys[keyIndex]]) {
-            return true;
-          }
-        }
-
-        // If all properties match,
-        return false;
-      }
-
-      return true;
-    });
-
-    this.form.updateChildFormProperty(
-      this.sectionIndex,
-      this.fieldIndex,
-      {
-        propertyName: "childFormRowValues",
-        propertyValue: childFormRowValues
-      }
-    );
+    this.childForm.deleteChildFormRowValue(rowData["Cinchy ID"]);
 
     this.loadFieldKeysAndPopulateDisplayValues();
 
