@@ -38,6 +38,7 @@ import { ILookupRecord } from "../models/lookup-record.model";
 import { IChildFormQuery } from "./interface/child-form-query";
 import { IExportSettings } from "./interface/export-settings";
 import { IFieldChangedEvent } from "./interface/field-changed-event";
+import { IFindChildFormResponse } from "./interface/find-child-form-response";
 import { INewEntityDialogResponse } from "./interface/new-entity-dialog-response";
 
 import { AppStateService } from "../services/app-state.service";
@@ -48,7 +49,6 @@ import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
-import {IFindChildFormResponse} from "./interface/find-child-form-response";
 
 
 @Component({
