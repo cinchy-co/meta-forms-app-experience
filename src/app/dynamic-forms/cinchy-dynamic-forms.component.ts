@@ -462,7 +462,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     dialogRef.afterClosed().subscribe(
       {
-        next: (resultId: number) => {
+        next: (resultId: number): void => {
 
           if (resultId) {
             const targetChildForm: IFindChildFormResponse = this.form.findChildForm(data.childForm.id);
@@ -472,9 +472,9 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
             };
             const childFormLinkName: string = data.childForm.getChildFormLinkName(data.childForm.childFormLinkId);
 
-            data.childForm.sections.forEach((section: FormSection, sectionIndex: number) => {
+            data.childForm.sections.forEach((section: FormSection, sectionIndex: number): void => {
 
-              section.fields.forEach((field: FormField, fieldIndex: number) => {
+              section.fields.forEach((field: FormField, fieldIndex: number): void => {
 
                 if (
                   field.cinchyColumn.hasChanged ||
@@ -482,15 +482,16 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   (field.label === childFormLinkName)
                 ) {
                   if (field.cinchyColumn.isDisplayColumn) {
-                    const columnLabel = `${field.cinchyColumn.linkTargetColumnName} label`;
+                    const columnLabel: string = `${field.cinchyColumn.linkTargetColumnName} label`;
+
                     // When a linked column value is changed, we are not able to update the display column,
                     // So if the linked column value has changed, update the display column values to "-".
                     const linkedColumnField: FormField = section.fields.find(
-                      (field: FormField) => {
+                      (linkedField: FormField) => {
 
                         return (
-                          field.cinchyColumn.id === field.cinchyColumn.id &&
-                          !field.cinchyColumn.isDisplayColumn
+                          field.cinchyColumn.id === linkedField.cinchyColumn.id &&
+                          !linkedField.cinchyColumn.isDisplayColumn
                         )
                       }
                     );
@@ -530,7 +531,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   }): void {
 
     this._pendingChildFormQueries = this._pendingChildFormQueries.filter(
-      (query: IChildFormQuery) => {
+      (query: IChildFormQuery): boolean => {
 
         return ((query.childFormId !== data.childForm.id) || (query.rowId !== data.rowId));
       }
