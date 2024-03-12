@@ -6,23 +6,16 @@ import { FormWrapperComponent } from "./pages/form-wrapper/form-wrapper.componen
 
 const routes: Routes = [
   {
-    path: "",
-    redirectTo: "edit-form",
-    pathMatch: "full"
-  },
-  {
-    path: "edit-form",
+    path: "**",
     component: FormWrapperComponent
   }
 ];
 
+
 @NgModule({
   imports: [
     RouterModule.forRoot(
-      routes,
-      {
-        relativeLinkResolution: "legacy"
-      }
+      routes
     )
   ],
   exports: [

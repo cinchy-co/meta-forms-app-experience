@@ -54,8 +54,7 @@ export class FieldsWrapperComponent {
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
   @Output() childRowDeleted = new EventEmitter<{
     childForm: Form,
-    rowId: number,
-    sectionIndex: number
+    rowId: number
   }>();
   @Output() childFormOpened = new EventEmitter<any>();
 

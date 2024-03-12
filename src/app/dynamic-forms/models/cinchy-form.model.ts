@@ -107,7 +107,7 @@ export class Form {
 
     this._sections = value.slice();
   }
-  private _sections = new Array<FormSection>();
+  private _sections: Array<FormSection> = new Array<FormSection>();
 
 
   constructor(
@@ -128,31 +128,27 @@ export class Form {
     private _childFormRowValues?: Array<{ [key: string]: any }>
   ) {
 
-    this.childFormRowValues = _childFormRowValues?.slice();
+    this.childFormRowValues = this._childFormRowValues?.slice();
   }
 
 
   /**
    * Modifies the flattened child form records by either updating an existing entry that matches the given rowId or adding a new entry if no match is present
    */
-  addOrModifyChildFormRowValue(sectionIndex: number, rowData: { [columnName: string]: any }): void {
+  addOrModifyChildFormRowValue(rowData: { [columnName: string]: any }): void {
 
-    if (rowData["Cinchy ID"] && rowData["Cinchy ID"] > 0) {
-      const existingRowIndex = this.childFormRowValues.findIndex((existingRecordData: { [columnName: string]: any }) => {
+    this.childFormRowValues = this.childFormRowValues ?? new Array<{ [key: string]: any }>();
 
-        return (existingRecordData.rowId === rowData["Cinchy ID"]);
-      });
+    const existingRowIndex: number = this.getChildFormRowIndexByRowId(rowData["Cinchy ID"]);
 
-      if (existingRowIndex !== -1) {
-        this.childFormRowValues.splice(existingRowIndex, 1, [rowData]);
-      }
-      else {
-        this.childFormRowValues.push(rowData);
-      }
+    if (existingRowIndex !== -1) {
+      this.childFormRowValues.splice(existingRowIndex, 1, rowData);
     }
     else {
       this.childFormRowValues.push(rowData);
     }
+
+    this.hasChanged = true;
   }
 
 
@@ -312,22 +308,40 @@ export class Form {
 
 
   /**
-   * Searches the form's fields to find a reference to a specific child forn
+   * Removes the record with the given rowId from the set of child form row values
+   *
+   * @param rowId The rowId of the record to remove
+   * @returns true if a record was successfully removed, false if the record was not found
+   */
+  deleteChildFormRowValue(rowId: number): boolean {
+
+    const existingRecordIndex: number = this.getChildFormRowIndexByRowId(rowId);
+
+    if (existingRecordIndex > -1) {
+      this.childFormRowValues.splice(existingRecordIndex, 1);
+
+      this.hasChanged = true;
+
+      return true;
+    }
+
+    return false;
+  }
+
+
+  /**
+   * Searches the form's fields to find a reference to a specific child form
    */
   findChildForm(targetChildFormId: string): IFindChildFormResponse {
 
-    if (this._sections?.length) {
-      for (let sectionIndex = 0; sectionIndex < this._sections.length; sectionIndex++) {
-        if (this._sections[sectionIndex].fields?.length) {
-          for (let fieldIndex = 0; fieldIndex < this._sections[sectionIndex].fields.length; fieldIndex++) {
-            if (this._sections[sectionIndex].fields[fieldIndex].childForm?.id === targetChildFormId) {
-              return {
-                childForm: this._sections[sectionIndex].fields[fieldIndex].childForm,
-                fieldIndex: fieldIndex,
-                sectionIndex: sectionIndex
-              };
-            }
-          }
+    for (let sectionIndex = 0; sectionIndex < this._sections?.length; sectionIndex++) {
+      for (let fieldIndex = 0; fieldIndex < this._sections[sectionIndex].fields?.length; fieldIndex++) {
+        if (this._sections[sectionIndex].fields[fieldIndex].childForm?.id === targetChildFormId) {
+          return {
+            childForm: this._sections[sectionIndex].fields[fieldIndex].childForm,
+            fieldIndex: fieldIndex,
+            sectionIndex: sectionIndex
+          };
         }
       }
     }
@@ -346,12 +360,12 @@ export class Form {
   }
 
 
-  generateDeleteQuery(): IQuery {
+  generateDeleteQuery(targetId?: number): IQuery {
 
     return new Query(
       `DELETE
         FROM [${this.targetTableDomain}].[${this.targetTableName}]
-        WHERE [Cinchy ID] = ${this.rowId}
+        WHERE [Cinchy ID] = ${targetId ?? this.rowId}
           AND [Deleted] IS NULL`,
       null
     );
@@ -711,7 +725,7 @@ export class Form {
         if (column.name === childFormLinkName) {
           paramName = `@p${paramNumber++}`;
           assignmentColumns.push(`[${column.name}]`);
-          assignmentValues.push(`ResolveLink(${paramName}, 'Cinchy Id')`);
+          assignmentValues.push(`ResolveLink(${paramName}, 'Cinchy ID')`);
 
           if (column.columnType === "Link") {
             params[paramName] = this.parentForm.rowId.toString();
@@ -827,6 +841,21 @@ export class Form {
         null
       );
     }
+  }
+
+
+  /**
+   * @param rowId The rowId of the target entity
+   * @returns The index of the childFormRowValues set with data matching the given rowId, or -1 if no such row exists
+   */
+  getChildFormRowIndexByRowId(rowId: number): number {
+
+    return this.childFormRowValues?.findIndex(
+      (rowData: { [columnName: string]: any }): boolean => {
+
+        return (rowData["Cinchy ID"] === rowId);
+      }
+    ) ?? -1;
   }
 
 
@@ -964,8 +993,8 @@ export class Form {
             let linkColumnLabelKey = `${(field.cinchyColumn.isDisplayColumn ? field.cinchyColumn.linkTargetColumnName : field.cinchyColumn.name)} label`;
 
             if (
-              field.cinchyColumn.dataType === "Link" && 
-              field.cinchyColumn.isMultiple && 
+              field.cinchyColumn.dataType === "Link" &&
+              field.cinchyColumn.isMultiple &&
               !field.cinchyColumn.isDisplayColumn
             ) {
               let linkIds: Array<string> = !isNullOrUndefined(rowData[field.cinchyColumn.name]) ?
@@ -1112,28 +1141,20 @@ export class Form {
     if (this._sections?.length > sectionIndex && this._sections[sectionIndex].fields?.length > fieldIndex) {
       // Since we don't store the field's original value, we will mark it as changed if the current value is different from the
       // value immediately prior, or if the field has already been marked as changed
-      let valueIsDifferent: boolean;
+      const valueChanged: boolean = this._valuesAreDifferent(newValue, this._sections[sectionIndex].fields[fieldIndex].value);
 
-      if (Array.isArray(newValue)) {
-        valueIsDifferent = (newValue?.length !== this._sections[sectionIndex].fields[fieldIndex].value?.length);
+      this.hasChanged = this.hasChanged || valueChanged;
 
-        if (!valueIsDifferent) {
-          for (let index = 0; index < newValue?.length; index++) {
-            if (newValue[index] !== this._sections[sectionIndex].fields[fieldIndex].value[index]) {
-              valueIsDifferent = true;
-
-              break;
-            }
+      if (this.parentForm && this.hasChanged) {
+        this.parentForm.updateRootProperty(
+          {
+            propertyName: "hasChanged",
+            propertyValue: true
           }
-        }
-      }
-      else {
-        valueIsDifferent = (newValue !== this._sections[sectionIndex].fields[fieldIndex].value);
+        );
       }
 
-      this.hasChanged = this.hasChanged || valueIsDifferent;
-
-      this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged = this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged || valueIsDifferent;
+      this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged = this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged || valueChanged;
       this._sections[sectionIndex].fields[fieldIndex].value = newValue;
 
       additionalPropertiesToUpdate?.forEach((property: IAdditionalProperty) => {
@@ -1149,6 +1170,8 @@ export class Form {
    */
   updateRootProperty(property: IAdditionalProperty): void {
 
+    this.hasChanged = this.hasChanged || this._valuesAreDifferent(property.propertyValue, this[property.propertyName]);
+
     this[property.propertyName] = property.propertyValue;
   }
 
@@ -1157,6 +1180,8 @@ export class Form {
    * Updates a specific property of a section
    */
   updateSectionProperty(sectionIndex: number, property: IAdditionalProperty): void {
+
+    this.hasChanged = this.hasChanged || this._valuesAreDifferent(property.propertyValue, this.sections[sectionIndex][property.propertyName]);
 
     if (this._sections?.length > sectionIndex) {
       this._sections[sectionIndex][property.propertyName] = property.propertyValue;
@@ -1211,6 +1236,31 @@ export class Form {
     });
 
     return valueAsMoment.toISOString();
+  }
+
+
+  private _valuesAreDifferent(newValue: any, originalValue: any): boolean {
+
+    let mismatch: boolean;
+
+    if (Array.isArray(newValue)) {
+      mismatch = (newValue?.length !== originalValue?.length);
+
+      if (!mismatch) {
+        for (let index = 0; index < newValue?.length; index++) {
+          if (newValue[index] !== originalValue[index]) {
+            mismatch = true;
+
+            break;
+          }
+        }
+      }
+    }
+    else {
+      mismatch = (newValue !== originalValue);
+    }
+
+    return mismatch;
   }
 }
 
