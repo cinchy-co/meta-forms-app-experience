@@ -1,8 +1,9 @@
 import { Component, OnInit } from "@angular/core";
 
-import { CinchyService } from "@cinchy-co/angular-sdk";
+import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
 
 import { AppStateService } from "./services/app-state.service";
+import { UtilityService } from "./services/utility.service";
 
 
 @Component({
@@ -17,7 +18,8 @@ export class AppComponent implements OnInit {
 
   constructor(
       private cinchyService: CinchyService,
-      private appStateService: AppStateService
+      private appStateService: AppStateService,
+      private _utilityService: UtilityService
   ) {}
 
 
@@ -29,15 +31,18 @@ export class AppComponent implements OnInit {
         this.loadRoute();
       } else {
         this.cinchyService.login().then(
-          (success: boolean) => {
+          (success: boolean): void => {
 
             if (success) {
               this.loadRoute();
             }
+            else {
+              throw new Cinchy.CinchyException("Login failed");
+            }
           },
-          (error: any) => {
+          (error: any): void => {
 
-            console.error("Could not login: ", error)
+            this._utilityService.displayErrorMessage("Could not login", error);
           }
         );
       }
