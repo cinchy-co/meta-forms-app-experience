@@ -7,10 +7,9 @@ import {
   ViewChild
 } from "@angular/core";
 import { MediaMatcher } from "@angular/cdk/layout";
+import { MatSidenav } from "@angular/material/sidenav";
 
 import { NgxSpinnerService } from "ngx-spinner";
-
-import { SidenavComponent } from "../../core/sidenav/sidenav.component";
 
 import { CinchyQueryService } from "../../services/cinchy-query.service";
 import { AppStateService } from "../../services/app-state.service";
@@ -30,7 +29,7 @@ import { IframeUtil } from "../../util/iframe-util";
 })
 export class FormWrapperComponent implements OnInit {
 
-  @ViewChild("sidenav") sidenav: SidenavComponent;
+  @ViewChild("sidenav") sidenav: MatSidenav;
 
   formMetadata: IFormMetadata;
   formSectionsMetadata: IFormSectionMetadata[];

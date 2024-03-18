@@ -21,6 +21,7 @@ export class UtilityService {
     this._toastrService.error(`${message}. ${this.getErrorMessage(error)}`, "Error");
   }
 
+
   /**
    * Gets the most descriptive error message available in the given error
    */
