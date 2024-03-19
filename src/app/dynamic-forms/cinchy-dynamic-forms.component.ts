@@ -16,7 +16,6 @@ import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
 
 import { NgxSpinnerService } from "ngx-spinner";
-import { ToastrService } from "ngx-toastr";
 import { isNullOrUndefined } from "util";
 import isEqual from "lodash/isEqual";
 import sortBy from "lodash/sortBy";
@@ -44,12 +43,13 @@ import { INewEntityDialogResponse } from "./interface/new-entity-dialog-response
 import { AppStateService } from "../services/app-state.service";
 import { ConfigService } from "../services/config.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
-import { UtilityService } from "../services/utility.service";
+import { ErrorService } from "../services/error.service";
 
 import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
+import {NotificationService} from "../services/notification.service";
 
 
 @Component({
@@ -132,11 +132,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     private _cinchyService: CinchyService,
     private _configService: ConfigService,
     private _dialog: MatDialog,
+    private _errorService: ErrorService,
     private _formHelperService: FormHelperService,
+    private _notificationService: NotificationService,
     private _printService: PrintService,
-    private _spinner: NgxSpinnerService,
-    private _toastr: ToastrService,
-    private _utilityService: UtilityService
+    private _spinnerService: NgxSpinnerService
   ) {}
 
 
@@ -227,15 +227,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     this.form.restoreFormReferenceOnAllFields();
     this._appStateService.setRecordSelected(null, true);
-    this._toastr.info(
+
+    this._notificationService.displayInfoMessage(
       "The record was cloned, please save in order to create it. If this field contained any child records, " +
         "please ensure the field used to link them is updated accordingly.",
-      "Info",
-      {
-        timeOut: 15000,
-        extendedTimeOut: 15000
-      }
-    );
+      null,
+      15000
+    )
   }
 
 
@@ -246,9 +244,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         (window.location === window.parent.location) ? window.location.href : window.parent.location.href
       );
 
-      this._toastr.success("Copied", "Success");
-    } catch (error: any) {
-      this._utilityService.displayErrorMessage("Unable to copy the window's URL", error);
+      this._notificationService.displaySuccessMessage("Copied");
+    }
+    catch (error: any) {
+      this._notificationService.displayErrorMessage(
+        `Unable to copy the window's URL. ${this._errorService.getErrorMessage(error)}`
+      );
     }
   }
 
@@ -359,6 +360,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   ): Promise<void> {
 
     if (!this._formIsLoading) {
+      await this._spinnerService.show();
+
       this._formIsLoading = true;
 
       if (this.form?.isClone) {
@@ -376,7 +379,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
         this.canInsert = tableEntitlements.canAddRows;
 
-        const form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
+        const form: Form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
 
         form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
 
@@ -453,7 +456,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 this._formIsLoading = false;
                 this.formHasDataLoaded = true;
 
-                await this._spinner.hide();
+                await this._spinnerService.hide();
 
                 if (childData) {
                   setTimeout((): void => {
@@ -465,22 +468,29 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
             },
             error: (error: any): void => {
 
-              this._spinner.hide();
+              this._spinnerService.hide();
 
               this._formIsLoading = false;
 
-              this._utilityService.displayErrorMessage("Unable to load form", error);
+              this._notificationService.displayErrorMessage(
+                `Unable to load form. ${this._errorService.getErrorMessage(error)}`
+              );
             }
           }
         );
       }
       catch (error: any) {
-        await this._spinner.hide();
+        await this._spinnerService.hide();
 
         this._formIsLoading = false;
 
-        this._utilityService.displayErrorMessage("Unable to load form", error);
+        this._notificationService.displayErrorMessage(
+          `Unable to load form. ${this._errorService.getErrorMessage(error)}`
+        );
       }
+    }
+    else {
+      await this._spinnerService.hide();
     }
   }
 
@@ -605,7 +615,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       await this.loadForm();
     }
     else if (this._pendingChildFormQueries.length > recursionCounter) {
-      await this._spinner.show();
+      await this._spinnerService.show();
 
       const pendingItem: IChildFormQuery = this._pendingChildFormQueries[recursionCounter];
 
@@ -617,7 +627,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           {
             next: async (): Promise<void> => {
 
-              await this._spinner.hide();
+              await this._spinnerService.hide();
 
               await this.saveChildForm(rowId, recursionCounter + 1);
 
@@ -628,14 +638,16 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
                 await this.loadForm();
 
-                this._toastr.success("Child form saved successfully", "Success");
+                this._notificationService.displaySuccessMessage("Child form saved successfully");
               }
             },
             error: (error): void => {
 
-              this._spinner.hide();
+              this._spinnerService.hide();
 
-              this._utilityService.displayErrorMessage("Error while saving child form", error);
+              this._notificationService.displayErrorMessage(
+                `Error while saving child form. ${this._errorService.getErrorMessage(error)}`
+              );
             }
           }
         );
@@ -663,7 +675,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
       if (formValidation.isValid) {
         // Generate dynamic query using dynamic form meta data
-        await this._spinner.show();
+        await this._spinnerService.show();
+
         const insertQuery: IQuery = formData.generateSaveQuery(
           rowId, this._configService.cinchyVersion,
           this.form.isClone
@@ -679,7 +692,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   callbackState?: any
                 }): void => {
 
-                  this._spinner.hide();
+                  this._spinnerService.hide();
 
                   if (isNullOrUndefined(this.rowId)) {
                     // Technically this will also be done by the setRecordSelected handlers, but by doing it manually now we can use this immediately and won't
@@ -698,7 +711,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                   this._saveMethodLogic(response, childData);
                   this._updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
 
-                  this._toastr.success("Data Saved Successfully", "Success");
+                  this._notificationService.displaySuccessMessage("Data Saved Successfully");
 
                   formData.updateRootProperty(
                     {
@@ -709,14 +722,18 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 },
                 error: (error: any): void => {
 
-                  this._spinner.hide();
+                  this._spinnerService.hide();
 
-                  this._utilityService.displayErrorMessage("Error while saving form", error);
+                  this._notificationService.displayErrorMessage(
+                    `Error while saving form. ${this._errorService.getErrorMessage(error)}`
+                  );
                 }
               }
             );
           }
           else if (insertQuery.attachedFilesInfo?.length) {
+            await this._spinnerService.hide();
+
             this._updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
           }
         }
@@ -725,9 +742,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         }
       }
       else {
+        await this._spinnerService.hide();
+
         this.fieldsWithErrors = formData.errorFields;
 
-        this._toastr.warning(formValidation.message, "Warning");
+        this._notificationService.displayWarningMessage(formValidation.message);
       }
     }
   }
@@ -786,14 +805,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       await this.saveChildForm(this.rowId, 0);
     }
     else {
-      await this._spinner.hide();
+      await this._spinnerService.hide();
 
       if (!isNullOrUndefined(this.rowId) && childData) {
         await this.loadForm(childData);
       }
 
       if (!response) {
-        this._toastr.warning("No changes were made", "Warning");
+        this._notificationService.displayWarningMessage("No changes were made");
       }
     }
   }
@@ -805,7 +824,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       const params: any = {
         "@p0": fileDetails.fileName
       };
-
 
       try {
         if (fileDetails.query) {
@@ -821,12 +839,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
             "@rowId": childCinchyId ? childCinchyId : this.rowId,
             "@fieldValue": fileDetails.value
           };
-            await this._cinchyService.executeCsql(fileDetails.query, updateParams).toPromise();
-            await this._cinchyService.executeCsql(fileQuery, params).toPromise();
 
-            this._toastr.success("Saved successfully", "Success");
+          await this._cinchyService.executeCsql(fileDetails.query, updateParams).toPromise();
+          await this._cinchyService.executeCsql(fileQuery, params).toPromise();
 
-            await this._spinner.hide();
+          this._notificationService.displaySuccessMessage("Saved successfully");
+
+          await this._spinnerService.hide();
         }
         else {
           const query: string = `UPDATE t
@@ -836,11 +855,16 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                           AND t.[Deleted] IS NULL;`;
 
           await this._cinchyService.executeCsql(query, params).toPromise();
-        }
-      } catch (error: any) {
-        await this._spinner.hide();
 
-        this._utilityService.displayErrorMessage("Error while updating file data", error);
+          await this._spinnerService.hide();
+        }
+      }
+      catch (error: any) {
+        await this._spinnerService.hide();
+
+        this._notificationService.displayErrorMessage(
+          `Error while updating file data. ${this._errorService.getErrorMessage(error)}`
+        );
       }
     });
   }

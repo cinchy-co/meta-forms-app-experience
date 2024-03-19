@@ -11,9 +11,10 @@ import { MatSidenav } from "@angular/material/sidenav";
 
 import { NgxSpinnerService } from "ngx-spinner";
 
-import { CinchyQueryService } from "../../services/cinchy-query.service";
 import { AppStateService } from "../../services/app-state.service";
-import { UtilityService } from "../../services/utility.service";
+import { CinchyQueryService } from "../../services/cinchy-query.service";
+import { ErrorService } from "../../services/error.service";
+import { NotificationService } from "../../services/notification.service";
 
 import { IFormMetadata } from "../../models/form-metadata-model";
 import { IFormSectionMetadata } from "../../models/form-section-metadata.model";
@@ -57,8 +58,9 @@ export class FormWrapperComponent implements OnInit {
   constructor(
     private _appStateService: AppStateService,
     private _cinchyQueryService: CinchyQueryService,
+    private _errorService: ErrorService,
+    private _notificationService: NotificationService,
     private _spinnerService: NgxSpinnerService,
-    private _utilityService: UtilityService,
     public changeDetectorRef: ChangeDetectorRef,
     public media: MediaMatcher
   ) {
@@ -114,10 +116,13 @@ export class FormWrapperComponent implements OnInit {
       this.lookupRecords = [];
 
       await this.loadFormSections();
-    } catch (error: any) {
-      await this._spinnerService.hide();
+    }
+    catch (error: any) {
+      this._notificationService.displayErrorMessage(
+        `Error getting form metadata. ${ this._errorService.getErrorMessage(error) }`
+      );
 
-      this._utilityService.displayErrorMessage("Error getting form metadata", error);
+      await this._spinnerService.hide();
     }
   }
 
@@ -125,6 +130,8 @@ export class FormWrapperComponent implements OnInit {
   async loadFormSections(): Promise<void> {
 
     try {
+      await this._spinnerService.show();
+
       const formSections: Array<IFormSectionMetadata> = await this._cinchyQueryService.getFormSectionsMetadata().toPromise();
 
       this.formSectionsMetadata = formSections;
@@ -134,9 +141,12 @@ export class FormWrapperComponent implements OnInit {
       await this._spinnerService.hide();
     }
     catch (error: any) {
+
       await this._spinnerService.hide();
 
-      this._utilityService.displayErrorMessage("Error getting section metadata", error);
+      this._notificationService.displayErrorMessage(
+        `Error getting section metadata. ${ this._errorService.getErrorMessage(error) }`
+      );
     }
   }
 
@@ -154,13 +164,17 @@ export class FormWrapperComponent implements OnInit {
       takeUntil(this._cinchyQueryService.resetLookupRecords)
     ).subscribe(
       {
-        next: (response: Array<ILookupRecord>) => {
+        next: (response: Array<ILookupRecord>): void => {
 
           this.lookupRecords = response;
         },
-        error: (error: any): void => {
+        error: async (error: any): Promise<void> => {
 
-          this._utilityService.displayErrorMessage("Error getting lookup records", error);
+          await this._spinnerService.hide();
+
+          this._notificationService.displayErrorMessage(
+            `Error getting lookup records. ${ this._errorService.getErrorMessage(error) }`
+          );
         }
       }
     );

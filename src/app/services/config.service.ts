@@ -6,7 +6,7 @@ import { HttpClient } from "@angular/common/http";
 
 import { CinchyConfig } from "@cinchy-co/angular-sdk";
 
-import { UtilityService } from "./utility.service";
+import { ErrorService } from "./error.service";
 
 import { IframeUtil } from "../util/iframe-util";
 
@@ -33,7 +33,7 @@ export class ConfigService {
   constructor(
     @Inject("BASE_URL") private baseUrl: string,
     private http: HttpClient,
-    private _utilityService: UtilityService
+    private _errorService: ErrorService
   ) {
 
     window.addEventListener("message", this.receiveMessage, false);
@@ -72,7 +72,7 @@ export class ConfigService {
                 catchError(
                   (error: any) => {
 
-                    console.warn("Could not execute healthcheck endpoint", this._utilityService.getErrorMessage(error));
+                    console.warn("Could not execute healthcheck endpoint", this._errorService.getErrorMessage(error));
 
                     return of(null);
                   }

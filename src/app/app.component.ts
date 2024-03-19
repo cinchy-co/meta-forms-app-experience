@@ -3,7 +3,8 @@ import { Component, OnInit } from "@angular/core";
 import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
 
 import { AppStateService } from "./services/app-state.service";
-import { UtilityService } from "./services/utility.service";
+import { ErrorService } from "./services/error.service";
+import { NotificationService } from "./services/notification.service";
 
 
 @Component({
@@ -19,7 +20,8 @@ export class AppComponent implements OnInit {
   constructor(
       private cinchyService: CinchyService,
       private appStateService: AppStateService,
-      private _utilityService: UtilityService
+      private _errorService: ErrorService,
+      private _notificationService: NotificationService
   ) {}
 
 
@@ -42,7 +44,9 @@ export class AppComponent implements OnInit {
           },
           (error: any): void => {
 
-            this._utilityService.displayErrorMessage("Could not login", error);
+            this._notificationService.displayErrorMessage(
+              `Could not login. ${this._errorService.getErrorMessage(error)}`
+            );
           }
         );
       }
@@ -96,7 +100,7 @@ export class AppComponent implements OnInit {
 
     // Ensure that the window's location is stable before trying to access the query params
     setTimeout(
-      async () => {
+      async (): Promise<void> => {
 
         this.setRowAndFormId();
 

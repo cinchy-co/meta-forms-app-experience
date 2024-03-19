@@ -20,7 +20,8 @@ import { IQuery } from "../../models/cinchy-query.model";
 import { AppStateService } from "../../../services/app-state.service";
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
 import { ConfigService } from "../../../services/config.service";
-import { UtilityService } from "../../../services/utility.service";
+import { ErrorService } from "../../../services/error.service";
+import { NotificationService } from "../../../services/notification.service";
 
 import { isNullOrUndefined } from "util";
 
@@ -35,7 +36,8 @@ export class FormHelperService {
     private _cinchyService: CinchyService,
     private _cinchyQueryService: CinchyQueryService,
     private _configService: ConfigService,
-    private _utilityService: UtilityService
+    private _errorService: ErrorService,
+    private _notificationService: NotificationService
   ) {}
 
 
@@ -45,7 +47,7 @@ export class FormHelperService {
    *
    * @param form The model of the *completed* form.
    *
-   * TODO: Failure logic and a mechanism to roll back the view if any step fails.
+   * TODO: Mechanism to roll back the view if any step fails.
    */
   async addOptionToLinkedTable(form: Form): Promise<void> {
 
@@ -69,11 +71,16 @@ export class FormHelperService {
             },
             error: (error: any): void => {
 
-              this._utilityService.displayErrorMessage("Unable to save the new record", error);
+              this._notificationService.displayErrorMessage("Unable to save the new record", error);
             }
           }
         );
       }
+    }
+    else {
+      this._notificationService.displayErrorMessage(
+        `Could not save the new record because the form was not valid. ${formValidation.message}`
+      );
     }
   }
 
@@ -430,7 +437,9 @@ export class FormHelperService {
         "Selected row is either deleted or doesn't exist" :
         "Error while fetching data from the table. Please make sure you have the correct entitlements to view the data";
 
-      this._utilityService.displayErrorMessage(message, error);
+      this._notificationService.displayErrorMessage(
+        `{message}. ${this._errorService.getErrorMessage(error)}`
+      );
 
       return false;
     }
@@ -472,7 +481,7 @@ export class FormHelperService {
     }
     catch (error) {
 
-      this._utilityService.displayErrorMessage(
+      this._notificationService.displayErrorMessage(
         "Error while checking the entitlements for the form fields. You may face issues upon saving the form",
         error
       );
