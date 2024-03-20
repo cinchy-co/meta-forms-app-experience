@@ -20,6 +20,7 @@ import { PagesModule } from "./pages/pages.module";
 import { ConfigService } from "./services/config.service";
 
 import { AppComponent } from "./app.component";
+import {ToastrModule} from "ngx-toastr";
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -52,7 +53,11 @@ export function getBaseUrl() {
     AceEditorModule,
     MatDatepickerModule,
     MatInputModule,
-    NumeralModule.forRoot()
+    NumeralModule.forRoot(),
+    ToastrModule.forRoot({
+      enableHtml: true,
+      preventDuplicates: true
+    })
   ],
   providers: [
     {
