@@ -438,7 +438,7 @@ export class FormHelperService {
         "Error while fetching data from the table. Please make sure you have the correct entitlements to view the data";
 
       this._notificationService.displayErrorMessage(
-        `{message}. ${this._errorService.getErrorMessage(error)}`
+        `${message}. ${this._errorService.getErrorMessage(error)}`
       );
 
       return false;

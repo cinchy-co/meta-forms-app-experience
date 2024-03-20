@@ -20,11 +20,11 @@ export class NotificationService {
   /**
    * Displays the given error message as a toast
    */
-  displayErrorMessage(message: string, title?: string, timeout?: number): void {
+  displayErrorMessage(message: string, title: string = "Error", timeout?: number): void {
 
     this._toastrService.error(
       `${message}`,
-      title || "Error",
+      title,
       {
         timeOut: timeout || NotificationService._DEFAULT_TIMEOUT,
         extendedTimeOut: timeout || NotificationService._DEFAULT_EXTENDED_TIMEOUT
@@ -36,11 +36,11 @@ export class NotificationService {
   /**
    * Displays the given info message as a toast
    */
-  displayInfoMessage(message: string, title?: string, timeout?: number): void {
+  displayInfoMessage(message: string, title: string = "Info", timeout?: number): void {
 
     this._toastrService.info(
       `${message}`,
-      title || "Error",
+      title,
       {
         timeOut: timeout || NotificationService._DEFAULT_TIMEOUT,
         extendedTimeOut: timeout || NotificationService._DEFAULT_EXTENDED_TIMEOUT
@@ -52,11 +52,11 @@ export class NotificationService {
   /**
    * Displays the given success message as a toast
    */
-  displaySuccessMessage(message: string, title?: string, timeout?: number): void {
+  displaySuccessMessage(message: string, title: string = "Success", timeout?: number): void {
 
     this._toastrService.success(
       `${message}`,
-      title || "Success",
+      title,
       {
         timeOut: timeout || NotificationService._DEFAULT_TIMEOUT,
         extendedTimeOut: timeout || NotificationService._DEFAULT_EXTENDED_TIMEOUT
@@ -68,11 +68,11 @@ export class NotificationService {
   /**
    * Displays the given warning message as a toast
    */
-  displayWarningMessage(message: string, title?: string, timeout?: number): void {
+  displayWarningMessage(message: string, title: string = "Warning", timeout?: number): void {
 
     this._toastrService.warning(
       `${message}`,
-      title || "Error",
+      title,
       {
         timeOut: timeout || NotificationService._DEFAULT_TIMEOUT,
         extendedTimeOut: timeout || NotificationService._DEFAULT_EXTENDED_TIMEOUT
