@@ -17,9 +17,6 @@ export class ErrorService {
       message += `${message ? "<br /><br />" : ""}${error.cinchyException.data.details}`;
     }
 
-    // DEBUG
-    console.log(error);
-
     return message;
   }
 }

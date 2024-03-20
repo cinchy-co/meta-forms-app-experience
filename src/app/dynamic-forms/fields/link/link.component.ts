@@ -449,7 +449,8 @@ export class LinkComponent implements OnChanges, OnInit {
 
     if ((event?.target as HTMLInputElement)?.files?.length) {
       if (this.form.rowId) {
-        const uploadUrl = this._configService.envConfig.cinchyRootUrl + this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.form.rowId.toString());
+        const uploadUrl: string = this._configService.envConfig.cinchyRootUrl +
+          this.field.cinchyColumn.uploadUrl.replace("@cinchyid", this.form.rowId.toString());
 
         this._cinchyQueryService.uploadFiles(Array.from((event.target as HTMLInputElement).files), uploadUrl).subscribe(
           {
@@ -458,6 +459,7 @@ export class LinkComponent implements OnChanges, OnInit {
               this._notificationService.displaySuccessMessage("File Uploaded");
 
               this.fileInput.nativeElement.value = "";
+
               this.getAndSetLatestFileValue();
             },
             error: (): void => {
@@ -468,11 +470,12 @@ export class LinkComponent implements OnChanges, OnInit {
         );
       }
       else {
-        console.error("No rowId was provided, so attempting to upload the selected file will result in an error");
+        this._notificationService.displayErrorMessage("No rowId was provided, so attempting to upload the selected file will result in an error");
       }
     }
     else {
-      console.warn("The application attempted to upload an empty file set.");
+      this._notificationService.displayWarningMessage("The application attempted to upload an empty file set.");
+
       console.warn(event);
     }
   }
