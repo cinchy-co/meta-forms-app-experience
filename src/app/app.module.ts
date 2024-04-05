@@ -10,6 +10,9 @@ import { CinchyConfig, CinchyModule, CinchyService } from "@cinchy-co/angular-sd
 import { AceEditorModule } from "ng2-ace-editor";
 import { NumeralModule } from "ngx-numeral";
 import { NgxSpinnerModule } from "ngx-spinner";
+import { ToastrModule } from "ngx-toastr";
+
+import { AppComponent } from "./app.component";
 
 import { AppRoutingModule } from "./app-routing.module";
 import { CinchyDynamicFormsModule } from "./dynamic-forms/cinchy-dynamic-forms.module";
@@ -18,9 +21,6 @@ import { CustomMaterialModule } from "./custom-material.module";
 import { PagesModule } from "./pages/pages.module";
 
 import { ConfigService } from "./services/config.service";
-
-import { AppComponent } from "./app.component";
-import {ToastrModule} from "ngx-toastr";
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -55,8 +55,10 @@ export function getBaseUrl() {
     MatInputModule,
     NumeralModule.forRoot(),
     ToastrModule.forRoot({
+      closeButton: true,
       enableHtml: true,
-      preventDuplicates: true
+      preventDuplicates: true,
+      tapToDismiss: false
     })
   ],
   providers: [
@@ -77,7 +79,10 @@ export function getBaseUrl() {
         ConfigService
       ]
     },
-    { provide: "BASE_URL", useFactory: getBaseUrl },
+    {
+      provide: "BASE_URL",
+      useFactory: getBaseUrl
+    },
   ],
   bootstrap: [
     AppComponent

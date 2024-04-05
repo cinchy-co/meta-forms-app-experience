@@ -18,16 +18,15 @@ export class NotificationService {
 
 
   /**
-   * Displays the given error message as a toast
+   * Displays the given error message as a toast. Error notifications must be manually dismissed.
    */
-  displayErrorMessage(message: string, title: string = "Error", timeout?: number): void {
+  displayErrorMessage(message: string, title: string = "Error"): void {
 
     this._toastrService.error(
       `${message}`,
       title,
       {
-        timeOut: timeout || NotificationService._DEFAULT_TIMEOUT,
-        extendedTimeOut: timeout || NotificationService._DEFAULT_EXTENDED_TIMEOUT
+        disableTimeOut: true
       }
     );
   }

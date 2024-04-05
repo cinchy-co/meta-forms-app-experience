@@ -11,12 +11,16 @@ export class ErrorService {
    */
   getErrorMessage(error: any): string {
 
-    let message = error?.cinchyException?.message ?? error?.message ?? "";
+    const message = error?.cinchyException?.data?.details || null;
+    const details = error?.cinchyException?.message || error?.message || null;
 
-    if (error?.cinchyException?.data?.details) {
-      message += `${message ? "<br /><br />" : ""}${error.cinchyException.data.details}`;
+    const messageId = new Date().valueOf();
+
+    if (message && details) {
+      return `${message}<br /><br />${details}`;
     }
-
-    return message;
+    else {
+      return `${message || details}`;
+    }
   }
 }
