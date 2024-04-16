@@ -408,7 +408,7 @@ export class Form {
               break;
             case "Binary":
               if (field.hasValue && isNullOrUndefined(this.rowId)) {
-                params[paramName] = field.value;
+                params[paramName] = field.value ?? "";
 
                 assignmentColumns.push(`[${field.cinchyColumn.name}]`);
                 assignmentValues.push(paramName);
