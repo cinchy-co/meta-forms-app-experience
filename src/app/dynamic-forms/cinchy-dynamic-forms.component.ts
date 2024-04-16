@@ -44,12 +44,12 @@ import { AppStateService } from "../services/app-state.service";
 import { ConfigService } from "../services/config.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
 import { ErrorService } from "../services/error.service";
+import { NotificationService } from "../services/notification.service";
 
 import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
-import {NotificationService} from "../services/notification.service";
 
 
 @Component({
@@ -81,13 +81,17 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   @Output() closeAddNewDialog = new EventEmitter<INewEntityDialogResponse>();
   @Output() onLookupRecordFilter: EventEmitter<string> = new EventEmitter<string>();
-
+q
 
   form: Form = null;
-  rowId: number;
   fieldsWithErrors: Array<any>;
   lookupRecordsList: ILookupRecord[];
   currentRow: ILookupRecord;
+
+  // TODO: This property is not necessary. Any references to it can be references to the form object instead. Using
+  //       a view property instead of referencing the Form model directly can lead to a desynchronization of the data
+  //       and the view displaying it. (see CIN-09075)
+  rowId: number;
 
   canInsert: boolean;
   enableSaveBtn: boolean = false;
@@ -698,6 +702,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                     // Technically this will also be done by the setRecordSelected handlers, but by doing it manually now we can use this immediately and won't
                     // need to wait for it to propagate
                     this.rowId = response.queryResult._jsonResult.data[0][0];
+
+                    formData.updateRootProperty(
+                      {
+                        propertyName: "rowId",
+                        propertyValue: this.rowId
+                      }
+                    );
 
                     this._appStateService.setRecordSelected(this.rowId, true);
 
