@@ -1,4 +1,4 @@
-import { debounceTime } from "rxjs/operators";
+import { throttleTime } from "rxjs/operators";
 
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 
@@ -15,8 +15,6 @@ import { AppStateService } from "../../services/app-state.service";
 import { DialogService } from "../../services/dialog.service";
 
 import { NgxSpinnerService } from "ngx-spinner";
-import {NotificationService} from "../../services/notification.service";
-import {ErrorService} from "../../services/error.service";
 
 
 @Component({
@@ -50,18 +48,16 @@ export class SidenavComponent implements OnInit {
   constructor(
     private _appStateService: AppStateService,
     private _dialogService: DialogService,
-    private _errorService: ErrorService,
     private _formHelperService: FormHelperService,
-    private _notificationService: NotificationService,
     private _spinnerService: NgxSpinnerService
   ) {}
 
 
   ngOnInit(): void {
 
-    // This has the potential to fire multiple times when the form first loads
+    // This has the potential to fire multiple times when the form first loads if auto-expand is enabled
     this._appStateService.currentSection$.pipe(
-      debounceTime(300)
+      throttleTime(100)
     ).subscribe((sectionLabel: string) => {
 
       this.selectedSection = sectionLabel ?? this.selectedSection;
@@ -70,7 +66,7 @@ export class SidenavComponent implements OnInit {
 
     // When the section metadata is loaded, save it and expand the first section by default
     this._appStateService.latestRenderedSections$.pipe(
-      debounceTime(300)
+      throttleTime(100)
     ).subscribe((sectionMetadata: Array<IFormSectionMetadata>) => {
 
       this.formSectionsMetadata = sectionMetadata;
@@ -132,6 +128,7 @@ export class SidenavComponent implements OnInit {
   sectionClicked(section: IFormSectionMetadata): void {
 
     this.selectedSection = section.name;
+
     const sectionElement = document.getElementById(`section-${section.name}`);
     const expansionHeader: any = sectionElement ? sectionElement.children[0] : null;
     const expansionContent: any = sectionElement ? sectionElement.children[1] : null;
