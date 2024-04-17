@@ -60,7 +60,16 @@ export class SidenavComponent implements OnInit {
       throttleTime(100)
     ).subscribe((sectionLabel: string) => {
 
-      this.selectedSection = sectionLabel ?? this.selectedSection;
+      const targetSection = this.formSectionsMetadata.find(
+        (metadata: IFormSectionMetadata) => {
+
+          return (metadata.name === sectionLabel);
+        }
+      );
+
+      if (targetSection) {
+        this.sectionClicked(targetSection, false);
+      }
     });
 
 
@@ -70,10 +79,6 @@ export class SidenavComponent implements OnInit {
     ).subscribe((sectionMetadata: Array<IFormSectionMetadata>) => {
 
       this.formSectionsMetadata = sectionMetadata;
-
-      if (this.formSectionsMetadata?.length) {
-        this.sectionClicked(this.formSectionsMetadata[0]);
-      }
     });
   }
 
@@ -126,7 +131,7 @@ export class SidenavComponent implements OnInit {
    *
    * @param section the metadata of the clicked section
    */
-  sectionClicked(section: IFormSectionMetadata): void {
+  sectionClicked(section: IFormSectionMetadata, expand: boolean): void {
 
     this.selectedSection = section.name;
 
@@ -135,7 +140,7 @@ export class SidenavComponent implements OnInit {
     const expansionContent: any = sectionElement ? sectionElement.children[1] : null;
     const isHidden = expansionContent?.style?.visibility === "hidden";
 
-    if (expansionHeader && isHidden) {
+    if (expansionHeader && isHidden && expand) {
       expansionHeader.click();
       expansionHeader.focus();
     }
