@@ -6,7 +6,7 @@
     <div class="sidenav-option">
       <div class="mt-10">
         <ul>
-          <li *ngFor="let section of formSectionsMetadata" (click)="sectionClicked(section)">
+          <li *ngFor="let section of formSectionsMetadata" (click)="sectionClicked(section, true)">
             <div class="bullet-point" [class.bullet-point--selected]="isSelected(section.name)"></div>
             <span class="section-item" [class.section-item--selected]="isSelected(section.name)">
               {{section.name}}
