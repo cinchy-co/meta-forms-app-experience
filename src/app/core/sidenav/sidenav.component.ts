@@ -1,4 +1,4 @@
-import { throttleTime } from "rxjs/operators";
+import { tap, throttleTime } from "rxjs/operators";
 
 import { Component, EventEmitter, Input, OnInit, Output } from "@angular/core";
 
@@ -35,6 +35,8 @@ export class SidenavComponent implements OnInit {
   selectedSection: string;
   toggleMenu: boolean;
 
+  private _sectionRenderCompleted = false;
+
 
   /**
    * Used to display the correct entity on the create button
@@ -55,17 +57,24 @@ export class SidenavComponent implements OnInit {
 
   ngOnInit(): void {
 
-    // This has the potential to fire multiple times when the form first loads if auto-expand is enabled
+    // Store the section that the user selected. This is behind a guard to ensure that the first section is always
+    // selected when the form is first populated
     this._appStateService.currentSection$.pipe(
       throttleTime(100)
     ).subscribe((sectionLabel: string) => {
 
-      this.selectedSection = sectionLabel ?? this.selectedSection;
+      if (this._sectionRenderCompleted) {
+        this.selectedSection = sectionLabel ?? this.selectedSection;
+      }
     });
 
 
     // When the section metadata is loaded, save it and expand the first section by default
     this._appStateService.latestRenderedSections$.pipe(
+      tap(() => {
+
+        this._sectionRenderCompleted = false;
+      }),
       throttleTime(100)
     ).subscribe((sectionMetadata: Array<IFormSectionMetadata>) => {
 
@@ -74,6 +83,8 @@ export class SidenavComponent implements OnInit {
       if (this.formSectionsMetadata?.length) {
         this.sectionClicked(this.formSectionsMetadata[0]);
       }
+
+      this._sectionRenderCompleted = true;
     });
   }
 
