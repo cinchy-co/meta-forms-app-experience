@@ -44,12 +44,12 @@ import { AppStateService } from "../services/app-state.service";
 import { ConfigService } from "../services/config.service";
 import { CinchyQueryService } from "../services/cinchy-query.service";
 import { ErrorService } from "../services/error.service";
+import { NotificationService } from "../services/notification.service";
 
 import { FormHelperService } from "./service/form-helper/form-helper.service";
 import { PrintService } from "./service/print/print.service";
 
 import { SearchDropdownComponent } from "../shared/search-dropdown/search-dropdown.component";
-import {NotificationService} from "../services/notification.service";
 
 
 @Component({
@@ -87,11 +87,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   fieldsWithErrors: Array<any>;
   lookupRecordsList: ILookupRecord[];
   currentRow: ILookupRecord;
-
-  // TODO: This property is not necessary. Any references to it can be references to the form object instead. Using
-  //       a view property instead of referencing the Form model directly can lead to a desynchronization of the data
-  //       and the view displaying it. (see CIN-09075)
-  rowId: number;
 
   canInsert: boolean;
   enableSaveBtn: boolean = false;
@@ -153,7 +148,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
       }
 
       if (!this.formHasDataLoaded) {
-        await this.loadForm();
+        await this.loadForm(this.form?.rowId);
       }
     }
   }
@@ -230,6 +225,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     this._pendingChildFormQueries = new Array<IChildFormQuery>();
 
     this.form.restoreFormReferenceOnAllFields();
+
     this._appStateService.setRecordSelected(null, true);
 
     this._notificationService.displayInfoMessage(
@@ -356,11 +352,12 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    * Gets called upon load, save, and row changes
    */
   async loadForm(
+      rowId: number,
       childData?: {
         childForm: Form,
         presetValues?: { [key: string]: any },
         title: string
-      }
+      },
   ): Promise<void> {
 
     if (!this._formIsLoading) {
@@ -383,7 +380,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
         this.canInsert = tableEntitlements.canAddRows;
 
-        const form: Form = await this._formHelperService.generateForm(this.formMetadata, this.rowId, tableEntitlements);
+        const form: Form = await this._formHelperService.generateForm(this.formMetadata, rowId, tableEntitlements);
 
         form.populateSectionsFromFormMetadata(this.formSectionsMetadata);
 
@@ -395,13 +392,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 const selectedLookupRecord: ILookupRecord = this.lookupRecordsList.find(
                   (record: ILookupRecord): boolean => {
 
-                    return (record.id === this.rowId);
+                    return (record.id === form.rowId);
                   }
                 );
 
                 await this._formHelperService.fillWithFields(
                   form,
-                  this.rowId,
+                  form.rowId,
                   this.formMetadata,
                   formFieldsMetadata,
                   selectedLookupRecord,
@@ -411,7 +408,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
                 if (selectedLookupRecord){
                   const success: boolean = await this._formHelperService.fillWithData(
                     form,
-                    this.rowId,
+                    form.rowId,
                     selectedLookupRecord,
                     null,
                     null
@@ -609,14 +606,14 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
     this.currentRow = row ?? this.currentRow;
 
-    this._appStateService.setRecordSelected(row?.id ?? this.rowId);
+    this._appStateService.setRecordSelected(row?.id ?? this.form?.rowId);
   }
 
 
   async saveChildForm(rowId: number, recursionCounter: number): Promise<void> {
 
     if (!this._pendingChildFormQueries.length && !isNullOrUndefined(rowId)) {
-      await this.loadForm();
+      await this.loadForm(this.form?.rowId);
     }
     else if (this._pendingChildFormQueries.length > recursionCounter) {
       await this._spinnerService.show();
@@ -640,7 +637,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
               if (this._pendingChildFormQueries.length === (recursionCounter + 1)) {
                 this._pendingChildFormQueries = new Array<IChildFormQuery>();
 
-                await this.loadForm();
+                await this.loadForm(this.form?.rowId);
 
                 this._notificationService.displaySuccessMessage("Child form saved successfully");
               }
@@ -665,7 +662,6 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
   async saveForm(
       formData: Form,
-      rowId: number,
       childData?: {
         childForm: Form,
         presetValues?: { [key: string]: any },
@@ -682,7 +678,8 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
         await this._spinnerService.show();
 
         const insertQuery: IQuery = formData.generateSaveQuery(
-          rowId, this._configService.cinchyVersion,
+          formData.rowId,
+          this._configService.cinchyVersion,
           this.form.isClone
         );
 
@@ -691,26 +688,26 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           if (insertQuery.query) {
             this._cinchyService.executeCsql(insertQuery.query, insertQuery.params).subscribe(
               {
-                next: (response: {
-                  queryResult: Cinchy.QueryResult,
-                  callbackState?: any
-                }): void => {
+                next: (
+                  response: {
+                    queryResult: Cinchy.QueryResult,
+                    callbackState?: any
+                  }
+                ): void => {
 
                   this._spinnerService.hide();
 
-                if (isNullOrUndefined(this.rowId)) {
-                  // Technically this will also be done by the setRecordSelected handlers, but by doing it manually now we can use this immediately and won't
-                  // need to wait for it to propagate
-                  this.rowId = response.queryResult._jsonResult.data[0][0];
-
+                  if (!this.form.rowId) {
+                    // Technically this will also be done by the setRecordSelected handlers, but by doing it manually now we can use this immediately and won't
+                    // need to wait for it to propagate
                     formData.updateRootProperty(
                       {
                         propertyName: "rowId",
-                        propertyValue: this.rowId
+                        propertyValue: response.queryResult._jsonResult.data[0][0]
                       }
                     );
 
-                    this._appStateService.setRecordSelected(this.rowId, true);
+                    this._appStateService.setRecordSelected(this.form.rowId, true);
 
                     if (this.form.isClone) {
                       this.form = this.form.clone(null, true);
@@ -774,15 +771,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
    */
   private async _handleRecordSelection(record: { rowId: number | null, doNotReloadForm: boolean }): Promise<void> {
 
-    this.rowId = record?.rowId;
-
-    if (this.rowId) {
+    if (record.rowId) {
       this.setLookupRecords(this.lookupRecordsList);
 
       this.currentRow = this.lookupRecordsList?.find(
-        (record: ILookupRecord): boolean => {
+        (lookupRecord: ILookupRecord): boolean => {
 
-          return (record.id === this.rowId);
+          return (lookupRecord.id === this.form?.rowId);
         }
       ) ?? this.currentRow ?? null;
     }
@@ -791,7 +786,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
     }
 
     if (!record?.doNotReloadForm) {
-      await this.loadForm();
+      await this.loadForm(record.rowId);
     }
   }
 
@@ -813,13 +808,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   ): Promise<void> {
 
     if (this._pendingChildFormQueries?.length) {
-      await this.saveChildForm(this.rowId, 0);
+      await this.saveChildForm(this.form.rowId, 0);
     }
     else {
       await this._spinnerService.hide();
 
-      if (!isNullOrUndefined(this.rowId) && childData) {
-        await this.loadForm(childData);
+      if (!!this.form.rowId && childData) {
+        await this.loadForm(this.form?.rowId, childData);
       }
 
       if (!response) {
@@ -843,11 +838,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
             UPDATE t
             SET t.[${fileDetails.column}] = @p0
             FROM [${fileDetails.domain}].[${fileDetails.table}] t
-            WHERE t.[Cinchy ID] = ${childCinchyId ? childCinchyId : this.rowId}
+            WHERE t.[Cinchy ID] = ${childCinchyId ? childCinchyId : this.form.rowId}
               AND t.[Deleted] IS NULL`;
 
           const updateParams: any = {
-            "@rowId": childCinchyId ? childCinchyId : this.rowId,
+            "@rowId": childCinchyId ? childCinchyId : this.form.rowId,
             "@fieldValue": fileDetails.value
           };
 
@@ -862,7 +857,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           const query: string = `UPDATE t
                          SET t.[${fileDetails.column}] = @p0
                          FROM [${fileDetails.domain}].[${fileDetails.table}] t
-                         WHERE t.[Cinchy ID] = ${this.rowId}
+                         WHERE t.[Cinchy ID] = ${this.form.rowId}
                           AND t.[Deleted] IS NULL;`;
 
           await this._cinchyService.executeCsql(query, params).toPromise();
