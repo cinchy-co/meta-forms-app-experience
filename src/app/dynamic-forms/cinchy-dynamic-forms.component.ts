@@ -697,7 +697,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
 
                   this._spinnerService.hide();
 
-                  if (!this.form.rowId) {
+                  if (!this.form?.rowId) {
                     // Technically this will also be done by the setRecordSelected handlers, but by doing it manually now we can use this immediately and won't
                     // need to wait for it to propagate
                     formData.updateRootProperty(
@@ -808,13 +808,13 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
   ): Promise<void> {
 
     if (this._pendingChildFormQueries?.length) {
-      await this.saveChildForm(this.form.rowId, 0);
+      await this.saveChildForm(this.form?.rowId, 0);
     }
     else {
       await this._spinnerService.hide();
 
-      if (!!this.form.rowId && childData) {
-        await this.loadForm(this.form?.rowId, childData);
+      if (!!this.form?.rowId && childData) {
+        await this.loadForm(this.form.rowId, childData);
       }
 
       if (!response) {
@@ -838,11 +838,11 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
             UPDATE t
             SET t.[${fileDetails.column}] = @p0
             FROM [${fileDetails.domain}].[${fileDetails.table}] t
-            WHERE t.[Cinchy ID] = ${childCinchyId ? childCinchyId : this.form.rowId}
+            WHERE t.[Cinchy ID] = ${childCinchyId ? childCinchyId : this.form?.rowId}
               AND t.[Deleted] IS NULL`;
 
           const updateParams: any = {
-            "@rowId": childCinchyId ? childCinchyId : this.form.rowId,
+            "@rowId": childCinchyId ? childCinchyId : this.form?.rowId,
             "@fieldValue": fileDetails.value
           };
 
@@ -857,7 +857,7 @@ export class CinchyDynamicFormsComponent implements OnInit, OnChanges {
           const query: string = `UPDATE t
                          SET t.[${fileDetails.column}] = @p0
                          FROM [${fileDetails.domain}].[${fileDetails.table}] t
-                         WHERE t.[Cinchy ID] = ${this.form.rowId}
+                         WHERE t.[Cinchy ID] = ${this.form?.rowId}
                           AND t.[Deleted] IS NULL;`;
 
           await this._cinchyService.executeCsql(query, params).toPromise();
