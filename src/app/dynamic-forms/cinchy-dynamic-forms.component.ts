@@ -106,7 +106,7 @@ export class CinchyDynamicFormsComponent implements OnInit {
    */
   get canCreateNewRecord(): boolean {
 
-    return coerceBooleanProperty(this.canInsert && this._appStateService.rowId);
+    return coerceBooleanProperty(this.canInsert && this.form?.rowId);
   }
 
 
@@ -702,6 +702,8 @@ export class CinchyDynamicFormsComponent implements OnInit {
                       }
                     );
 
+                    this._updateFilteredTableUrl();
+
                     this._loadLookupRecords("", this.form.rowId);
 
                     if (this.form.isClone) {
@@ -775,6 +777,13 @@ export class CinchyDynamicFormsComponent implements OnInit {
 
     if (!record?.doNotReloadForm) {
       await this.loadForm(record.rowId);
+    }
+
+    if (this.currentRow?.id) {
+      this._appStateService.updateRowIdInQueryParams(this.currentRow.id);
+    }
+    else {
+      this._appStateService.deleteRowIdInQueryParams();
     }
   }
 
@@ -911,8 +920,8 @@ export class CinchyDynamicFormsComponent implements OnInit {
    */
   private _updateFilteredTableUrl(): void {
 
-    this.filteredTableUrl = this._appStateService.rowId ?
-      `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this._appStateService.rowId}` :
+    this.filteredTableUrl = this.form?.rowId ?
+      `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this.form.rowId}` :
       "";
   }
 }
