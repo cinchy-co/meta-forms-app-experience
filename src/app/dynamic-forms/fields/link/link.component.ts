@@ -582,13 +582,7 @@ export class LinkComponent implements OnChanges, OnInit {
     this.form.updateFieldValue(
       this.sectionIndex,
       this.fieldIndex,
-      this.form.rowId,
-      [
-        {
-          propertyName: "hasChanged",
-          propertyValue: true
-        }
-      ]
+      this.form.rowId
     );
 
     this.isDisabled = true;

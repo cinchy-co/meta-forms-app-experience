@@ -294,26 +294,32 @@ export class CinchyDynamicFormsComponent implements OnInit {
     ) {
       event.form.childFieldsLinkedToColumnName[event.targetColumnName].forEach((field: FormField, fieldIndex: number): void => {
 
-        let childFormSectionIdx: number = 0;
+        let childFormSectionIndex: number = 0;
         for (let i = 0; i < field.form.sections.length; i++) {
-          let innerFieldIdx: number = field.form.sections[i].fields.findIndex(
+          let innerFieldIndex: number = field.form.sections[i].fields.findIndex(
             (formField: FormField): boolean => {
 
               return (formField.id === field.id);
             }
           );
 
-          if (innerFieldIdx > -1) {
-            childFormSectionIdx = i;
+          if (innerFieldIndex > -1) {
+            childFormSectionIndex = i;
 
             break;
           }
         }
 
-        field.form.updateFieldValue(childFormSectionIdx, fieldIndex, event.newValue);
+        field.form.updateFieldValue(
+          childFormSectionIndex,
+          fieldIndex,
+          event.newValue,
+          null,
+          true
+        );
 
         this.afterChildFormEdit(
-          field.form.rowId ?? -1,
+          field.form?.rowId ?? -1,
           field.form
         );
       });
@@ -712,6 +718,7 @@ export class CinchyDynamicFormsComponent implements OnInit {
 
                   formData.updateRootProperty(
                     {
+                      ignoreChange: true,
                       propertyName: "hasChanged",
                       propertyValue: false
                     }

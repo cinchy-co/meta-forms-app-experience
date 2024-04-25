@@ -1136,25 +1136,34 @@ export class Form {
    * Updates the value of the given field and marks it as touched. If any additional properties are provided, those properties will be updated on
    * the same field after the value has been updated.
    */
-  updateFieldValue(sectionIndex: number, fieldIndex: number, newValue: any, additionalPropertiesToUpdate?: Array<IAdditionalProperty>): void {
+  updateFieldValue(
+    sectionIndex: number,
+    fieldIndex: number,
+    newValue: any,
+    additionalPropertiesToUpdate?: Array<IAdditionalProperty>,
+    ignoreChange = false
+  ): void {
 
     if (this._sections?.length > sectionIndex && this._sections[sectionIndex].fields?.length > fieldIndex) {
-      // Since we don't store the field's original value, we will mark it as changed if the current value is different from the
-      // value immediately prior, or if the field has already been marked as changed
-      const valueChanged: boolean = this._valuesAreDifferent(newValue, this._sections[sectionIndex].fields[fieldIndex].value);
+      if (!ignoreChange) {
+        // Since we don't store the field's original value, we will mark it as changed if the current value is different from the
+        // value immediately prior, or if the field has already been marked as changed
+        const valueChanged: boolean = this._valuesAreDifferent(newValue, this._sections[sectionIndex].fields[fieldIndex].value);
 
-      this.hasChanged = this.hasChanged || valueChanged;
+        this.hasChanged = this.hasChanged || valueChanged;
 
-      if (this.parentForm && this.hasChanged) {
-        this.parentForm.updateRootProperty(
-          {
-            propertyName: "hasChanged",
-            propertyValue: true
-          }
-        );
+        if (this.parentForm && this.hasChanged) {
+          this.parentForm.updateRootProperty(
+            {
+              propertyName: "hasChanged",
+              propertyValue: true
+            }
+          );
+        }
+
+        this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged = this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged || valueChanged;
       }
 
-      this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged = this._sections[sectionIndex].fields[fieldIndex].cinchyColumn.hasChanged || valueChanged;
       this._sections[sectionIndex].fields[fieldIndex].value = newValue;
 
       additionalPropertiesToUpdate?.forEach((property: IAdditionalProperty) => {
@@ -1170,7 +1179,9 @@ export class Form {
    */
   updateRootProperty(property: IAdditionalProperty): void {
 
-    this.hasChanged = this.hasChanged || this._valuesAreDifferent(property.propertyValue, this[property.propertyName]);
+    if (!property.ignoreChange) {
+      this.hasChanged = this.hasChanged || this._valuesAreDifferent(property.propertyValue, this[property.propertyName]);
+    }
 
     this[property.propertyName] = property.propertyValue;
   }
@@ -1181,7 +1192,9 @@ export class Form {
    */
   updateSectionProperty(sectionIndex: number, property: IAdditionalProperty): void {
 
-    this.hasChanged = this.hasChanged || this._valuesAreDifferent(property.propertyValue, this.sections[sectionIndex][property.propertyName]);
+    if (!property.ignoreChange) {
+      this.hasChanged = this.hasChanged || this._valuesAreDifferent(property.propertyValue, this.sections[sectionIndex][property.propertyName]);
+    }
 
     if (this._sections?.length > sectionIndex) {
       this._sections[sectionIndex][property.propertyName] = property.propertyValue;

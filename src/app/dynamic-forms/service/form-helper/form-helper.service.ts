@@ -120,6 +120,7 @@ export class FormHelperService {
 
     result.updateRootProperty(
       {
+        ignoreChange: true,
         propertyName: "tableMetadata",
         propertyValue: JSON.parse(formMetadata.tableJson)
       }
@@ -127,6 +128,7 @@ export class FormHelperService {
 
     result.updateRootProperty(
       {
+        ignoreChange: true,
         propertyName: "parentForm",
         propertyValue: parentForm
       }
@@ -134,6 +136,7 @@ export class FormHelperService {
 
     result.updateRootProperty(
       {
+        ignoreChange: true,
         propertyName: "rowId",
         propertyValue: rowId
       }
@@ -353,6 +356,7 @@ export class FormHelperService {
 
       form.updateRootProperty(
         {
+          ignoreChange: true,
           propertyName: "fieldsByColumnName",
           propertyValue: parentFieldsByColumn
         }
@@ -386,6 +390,7 @@ export class FormHelperService {
 
       form.updateRootProperty(
         {
+          ignoreChange: true,
           propertyName: "childFieldsLinkedToColumnName",
           propertyValue: parentChildLinkedColumns
         }
