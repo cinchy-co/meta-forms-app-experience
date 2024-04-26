@@ -154,8 +154,6 @@ export class CinchyDynamicFormsComponent implements OnInit {
         else {
           this._queuedRecordSelection = record;
         }
-
-        this._updateFilteredTableUrl();
       }
     );
   }
@@ -696,16 +694,16 @@ export class CinchyDynamicFormsComponent implements OnInit {
                   if (!this.form?.rowId) {
                     // Technically this will also be done by the setRecordSelected handlers, but by doing it manually now we can use this immediately and won't
                     // need to wait for it to propagate
-                    formData.updateRootProperty(
+                    this.form.updateRootProperty(
                       {
                         propertyName: "rowId",
                         propertyValue: response.queryResult._jsonResult.data[0][0]
                       }
                     );
 
-                    this._updateFilteredTableUrl();
-
                     this._loadLookupRecords("", this.form.rowId);
+
+                    this._updateFilteredTableUrl(this.form.rowId);
 
                     if (this.form.isClone) {
                       this.form = this.form.clone(null, true);
@@ -715,6 +713,7 @@ export class CinchyDynamicFormsComponent implements OnInit {
                   }
 
                   await this._saveMethodLogic(response, childData);
+
                   this._updateFileAndSaveFileNames(insertQuery.attachedFilesInfo);
 
                   this._notificationService.displaySuccessMessage("Data Saved Successfully");
@@ -786,6 +785,10 @@ export class CinchyDynamicFormsComponent implements OnInit {
     else {
       this._appStateService.deleteRowIdInQueryParams();
     }
+
+    // Using record.rowId instead of this.form?.rowId because the network calls inside the loadForm function cause
+    // the logic of this function to continue asynchronously despite the await
+    this._updateFilteredTableUrl(record.rowId);
   }
 
 
@@ -919,10 +922,10 @@ export class CinchyDynamicFormsComponent implements OnInit {
   /**
    * Adds the current row information to the querystring of the table URL
    */
-  private _updateFilteredTableUrl(): void {
+  private _updateFilteredTableUrl(rowId: number): void {
 
-    this.filteredTableUrl = this.form?.rowId ?
-      `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${this.form.rowId}` :
+    this.filteredTableUrl = rowId ?
+      `${this.formMetadata.tableUrl}?viewId=0&fil[Cinchy%20Id].Op=Equals&fil[Cinchy%20Id].Val=${rowId}` :
       "";
   }
 }
