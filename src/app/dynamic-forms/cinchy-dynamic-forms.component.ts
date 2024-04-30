@@ -143,13 +143,21 @@ export class CinchyDynamicFormsComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this._loadLookupRecords("", this.form?.rowId);
+    // DEBUG
+    // console.log("calling _loadLookupRecords from ngOnInit");
+
+    // this._loadLookupRecords("", this.form?.rowId);
 
     this._appStateService.onRecordSelected$.subscribe(
       (record: { rowId: number | null, doNotReloadForm: boolean }): void => {
 
+        // DEBUG
+        console.log("onRecordSelected$", record, this.lookupRecordsListPopulated, this.lookupRecords);
+
         if (this.lookupRecordsListPopulated) {
           this._handleRecordSelection(record);
+
+          this._queuedRecordSelection = null;
         }
         else {
           this._queuedRecordSelection = record;
@@ -343,6 +351,9 @@ export class CinchyDynamicFormsComponent implements OnInit {
     if (resolvedFilter && this.formMetadata.lookupFilter) {
       resolvedFilter += ` AND ${this.formMetadata.lookupFilter}`;
     }
+
+    // DEBUG
+    console.log("calling _loadLookupRecords from handleOnFilter");
 
     this._loadLookupRecords(resolvedFilter ?? this.formMetadata.lookupFilter);
   }
@@ -701,6 +712,9 @@ export class CinchyDynamicFormsComponent implements OnInit {
                       }
                     );
 
+                    // DEBUG
+                    console.log("calling _loadLookupRecords from saveForm");
+
                     this._loadLookupRecords("", this.form.rowId);
 
                     this._updateFilteredTableUrl(this.form.rowId);
@@ -808,6 +822,10 @@ export class CinchyDynamicFormsComponent implements OnInit {
       {
         next: async (response: Array<ILookupRecord>): Promise<void> => {
 
+          // DEBUG
+          console.log("_loadLookupRecords", response);
+          console.log(this._queuedRecordSelection, rowIdToSelect, this.form?.rowId);
+
           this.lookupRecords = this.checkNoRecord(response);
 
           await this._handleRecordSelection(
@@ -818,8 +836,6 @@ export class CinchyDynamicFormsComponent implements OnInit {
           if (!this.formHasDataLoaded) {
             await this.loadForm(this.form?.rowId);
           }
-
-          this._queuedRecordSelection = null;
         },
         error: async (error: any): Promise<void> => {
 

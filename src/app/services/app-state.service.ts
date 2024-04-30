@@ -108,6 +108,9 @@ export class AppStateService {
    */
   setRecordSelected(rowId: number | null, doNotReloadForm: boolean = false): void {
 
+    // DEBUG
+    console.log("setRecordSelected", rowId, doNotReloadForm);
+
     this.onRecordSelected$.next(
       {
         rowId: rowId,
