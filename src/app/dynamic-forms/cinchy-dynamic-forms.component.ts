@@ -148,8 +148,6 @@ export class CinchyDynamicFormsComponent implements OnInit {
 
         if (this.lookupRecordsListPopulated) {
           this._handleRecordSelection(record);
-
-          this._queuedRecordSelection = null;
         }
         else {
           this._queuedRecordSelection = record;
@@ -789,6 +787,8 @@ export class CinchyDynamicFormsComponent implements OnInit {
     // Using record.rowId instead of this.form?.rowId because the network calls inside the loadForm function cause
     // the logic of this function to continue asynchronously despite the await
     this._updateFilteredTableUrl(record.rowId);
+
+    this._queuedRecordSelection = null;
   }
 
 
