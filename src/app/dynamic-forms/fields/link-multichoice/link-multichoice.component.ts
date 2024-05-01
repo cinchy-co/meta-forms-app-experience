@@ -14,7 +14,7 @@ import {
   ViewChild
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
-import { FormControl } from "@angular/forms";
+import { UntypedFormControl } from "@angular/forms";
 import { MatSelect } from "@angular/material/select";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
@@ -78,7 +78,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   DROPDOWN_OPTION_SIZE = 42;
 
-  multiFilterCtrl: FormControl = new FormControl();
+  multiFilterCtrl: UntypedFormControl = new UntypedFormControl();
 
   selectedValues = [];
 

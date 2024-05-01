@@ -1,5 +1,5 @@
 import {Component, EventEmitter, forwardRef, Input, OnInit, Output} from '@angular/core';
-import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {ControlValueAccessor, UntypedFormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {startWith} from 'rxjs/operators';
 import {IContact} from "../../models/state.model";
 
@@ -33,7 +33,7 @@ export class TypeaheadComponent implements OnInit, ControlValueAccessor {
 
   @Output() addNewItemClicked = new EventEmitter();
 
-  myControl = new FormControl();
+  myControl = new UntypedFormControl();
   listWithAddNew;
   filteredOptions;
   toolTipMessage
