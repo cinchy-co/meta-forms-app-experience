@@ -31,7 +31,7 @@
   width: 100%;
   padding-left: 10px;
   padding-right: 10px;
-
+  /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
   .mat-form-field-wrapper {
     padding-bottom: 0;
   }
@@ -170,7 +170,7 @@
 }
 
 
-.mat-input-element {
+.mat-mdc-input-element {
   display: block;
   width: 100%;
   padding: .375rem .75rem;
@@ -191,11 +191,13 @@
 //Remove Default underline
 
 /* To remove the default underline */
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 .mat-input-underline.mat-form-field-underline {
   background: transparent;
 }
 
 /* To remove the underline ripple */
+/* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
 .mat-input-ripple.mat-form-field-ripple {
   background-color: transparent;
 }
@@ -208,6 +210,7 @@
   border-top: 1px solid gray;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of checkbox that may no longer apply for the MDC version. */
 .mat-checkbox-checked.mat-accent .mat-checkbox-background, .mat-checkbox-indeterminate.mat-accent .mat-checkbox-background {
   background-color: gray;
 }
@@ -251,16 +254,17 @@ article label {
   margin-bottom: 8px;
 }
 
-.mat-dialog-title {
+.mat-mdc-dialog-title {
   margin: 0 0 5px;
 }
 
-.mat-dialog-actions {
+.mat-mdc-dialog-actions {
   justify-content: flex-end;
   padding-top: 10px;
   padding-bottom: 24px;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of checkbox that may no longer apply for the MDC version. */
 .mat-checkbox-layout .mat-checkbox-label {
   line-height: 24px;
   color: rgba(0, 0, 0, .54);
@@ -289,7 +293,7 @@ article label {
   font-size: 18px;
 }
 
-.mat-checkbox label {
+.mat-mdc-checkbox label {
   margin-bottom: 0px;
 }
 
@@ -297,7 +301,7 @@ article label {
   padding-bottom: 0px;
 }
 
-.mat-input-element:focus {
+.mat-mdc-input-element:focus {
   // outline: none;
   border-width: 1.5px;
   border-color: #434343
@@ -325,7 +329,7 @@ article label {
   font-size: 14px;
 }
 
-.mat-dialog-content {
+.mat-mdc-dialog-content {
   /*
    * Removes phantom scrollbars
    *
@@ -360,7 +364,7 @@ article label {
   font-family: 'Muli', sans-serif;
 }
 
-button.btnSave.mat-raised-button {
+button.btnSave.mat-mdc-raised-button {
   margin-right: 10px;
   height: 40px;
 
@@ -388,7 +392,7 @@ button.btnSave.mat-raised-button {
   .mat-expansion-panel-body {
     padding-top: 20px;
   }
-
+  /* TODO(mdc-migration): The following rule targets internal classes of form-field that may no longer apply for the MDC version. */
   .mat-form-field-wrapper {
     padding-bottom: 0;
   }
@@ -461,6 +465,7 @@ button.btnSave.mat-raised-button {
   padding: 5px 20px;
 }
 
+/* TODO(mdc-migration): The following rule targets internal classes of select that may no longer apply for the MDC version. */
 .mat-select-disabled, .mat-select-disabled:hover, .mat-select-disabled:focus {
   background-color: #e9ecef;
   opacity: 1;
@@ -470,7 +475,7 @@ button.btnSave.mat-raised-button {
   }
 }
 
-.mat-select-panel {
+.mat-mdc-select-panel {
     max-width: 100% !important;
 }
 
@@ -510,7 +515,7 @@ button.btnSave.mat-raised-button {
   margin-top: 5px;
 }
 
-.mat-form-field-prefix .mat-icon-button,
+.mat-form-field-prefix .mat-mdc-icon-button,
 .mat-form-field-suffix .mat-icon-button {
   height: 2em;
   width: 2.5em !important;

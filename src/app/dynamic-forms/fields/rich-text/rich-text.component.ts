@@ -10,9 +10,9 @@ import {
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import {
-  MatLegacyDialog as MatDialog,
-  MatLegacyDialogRef as MatDialogRef
-} from "@angular/material/legacy-dialog";
+  MatDialog,
+  MatDialogRef
+} from "@angular/material/dialog";
 
 import { faFileCode } from "@fortawesome/free-regular-svg-icons";
 import {

@@ -14,7 +14,7 @@ import {
   ViewChild
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
-import { MatLegacySelectChange as MatSelectChange } from "@angular/material/legacy-select";
+import { MatSelectChange } from "@angular/material/select";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 

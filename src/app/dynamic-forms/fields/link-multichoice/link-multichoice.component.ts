@@ -15,7 +15,7 @@ import {
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 import { UntypedFormControl } from "@angular/forms";
-import { MatLegacySelect as MatSelect } from "@angular/material/legacy-select";
+import { MatSelect } from "@angular/material/select";
 
 import { CinchyService } from "@cinchy-co/angular-sdk";
 
