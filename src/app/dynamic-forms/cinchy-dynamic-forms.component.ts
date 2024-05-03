@@ -10,7 +10,7 @@ import {
   ViewChild,
   ViewEncapsulation
 } from "@angular/core";
-import { MatDialog, MatDialogRef } from "@angular/material/dialog";
+import { MatLegacyDialog as MatDialog, MatLegacyDialogRef as MatDialogRef } from "@angular/material/legacy-dialog";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
 
 import { Cinchy, CinchyService } from "@cinchy-co/angular-sdk";
