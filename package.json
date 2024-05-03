@@ -12,10 +12,6 @@
     "e2e": "ng e2e"
   },
   "private": true,
-  "engines": {
-    "node": ">=14 <15",
-    "npm": "6.14.17"
-  },
   "dependencies": {
     "@angular/animations": "^14.3.0",
     "@angular/cdk": "^14.2.7",
@@ -30,11 +26,12 @@
     "@angular/platform-browser-dynamic": "^14.3.0",
     "@angular/router": "^14.3.0",
     "@cinchy-co/angular-sdk": "^5.1.4",
-    "@fortawesome/angular-fontawesome": "^0.11.1",
+    "@fortawesome/angular-fontawesome": "^0.14.1",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-regular-svg-icons": "^6.2.0",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
-    "@ng-bootstrap/ng-bootstrap": "^14.1.1",
+    "@ng-bootstrap/ng-bootstrap": "^16.0.0",
+    "@popperjs/core": "^2.11.8",
     "@tiptap/core": "2.3.1",
     "@tiptap/extension-code-block-lowlight": "2.3.1",
     "@tiptap/extension-image": "2.3.1",
@@ -62,14 +59,14 @@
     "ngx-filter-pipe": "^2.1.2",
     "ngx-mat-select-search": "^4.0.1",
     "ngx-numeral": "^1.0.0",
-    "ngx-spinner": "^13.1.1",
-    "ngx-toastr": "^15.2.2",
+    "ngx-spinner": "^16.0.2",
+    "ngx-toastr": "^18.0.0",
     "pdfmake": "^0.1.70",
     "ramda": "^0.27.2",
     "rxjs": "~6.5.4",
     "tslib": "^2.0.0",
     "util": "^0.12.4",
-    "zone.js": "~0.14.4"
+    "zone.js": "~0.12.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^14.2.13",
@@ -89,8 +86,8 @@
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
     "protractor": "~7.0.0",
-    "ts-node": "~8.3.0",
+    "ts-node": "^10.9.2",
     "tslint": "~6.1.0",
-    "typescript": "~4.6.4"
+    "typescript": "^5.3.2"
   }
 }
