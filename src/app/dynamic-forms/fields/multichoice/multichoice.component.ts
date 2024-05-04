@@ -1,12 +1,18 @@
+import { BehaviorSubject, Subject } from "rxjs";
+import { debounceTime, takeUntil } from "rxjs/operators";
+
 import {
   Component,
   EventEmitter,
   Input,
   OnChanges,
+  OnDestroy,
+  OnInit,
   Output,
   SimpleChanges
 } from "@angular/core";
 import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { UntypedFormControl } from "@angular/forms";
 
 import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
@@ -25,7 +31,7 @@ import { faListUl } from "@fortawesome/free-solid-svg-icons";
     templateUrl: "./multichoice.component.html",
     styleUrls: ["./multichoice.component.scss"]
 })
-export class MultichoiceComponent implements OnChanges {
+export class MultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   @Input() fieldIndex: number;
   @Input() form: Form;
@@ -45,10 +51,15 @@ export class MultichoiceComponent implements OnChanges {
 
   @Output() onChange = new EventEmitter<IFieldChangedEvent>();
 
-  choiceFilter: string;
   showError: boolean;
   value: Array<string>;
   options: Array<string>;
+
+  displayOptions = new BehaviorSubject<Array<string>>(new Array<string>());
+
+  filterCtrl: UntypedFormControl = new UntypedFormControl();
+
+  onDestroy = new Subject<void>();
 
   faListUl = faListUl;
 
@@ -70,6 +81,12 @@ export class MultichoiceComponent implements OnChanges {
     if (changes?.field) {
       this._setValue();
     }
+  }
+
+
+  ngOnDestroy(): void {
+
+    this.onDestroy.next();
   }
 
 
@@ -96,15 +113,31 @@ export class MultichoiceComponent implements OnChanges {
         else if (option) {
           allOptions.push(option);
         }
-      })
+      });
     }
+
     this.options = allOptions.slice();
+
+    this.filterCtrl.valueChanges
+      .pipe(
+        debounceTime(100),
+        takeUntil(this.onDestroy)
+      )
+      .subscribe(() => {
+
+        this.filter();
+      });
   }
 
 
-  resetFilter() {
+  filter(): void {
 
-    this.choiceFilter = "";
+  }
+
+
+  resetFilter(): void {
+
+    this.filterCtrl.setValue("");
   }
 
   toggleSelectAll(selectAll: boolean): void {
@@ -112,6 +145,7 @@ export class MultichoiceComponent implements OnChanges {
     this.value = selectAll ?
       this.options.slice():
       [];
+
     this.valueChanged();
   }
 

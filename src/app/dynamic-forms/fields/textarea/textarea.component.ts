@@ -1,25 +1,16 @@
-import {
-  AfterViewInit,
-  Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  OnInit,
-  Output,
-  SimpleChanges,
-  ViewChild
-} from "@angular/core";
-import { coerceBooleanProperty } from "@angular/cdk/coercion";
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import {AfterViewInit, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from "@angular/core";
+import {coerceBooleanProperty} from "@angular/cdk/coercion";
+import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 
-import { DataFormatType } from "../../enums/data-format-type.enum";
+import {DataFormatType} from "../../enums/data-format-type.enum";
 
-import { IFieldChangedEvent } from "../../interface/field-changed-event";
+import {IFieldChangedEvent} from "../../interface/field-changed-event";
 
-import { Form } from "../../models/cinchy-form.model";
-import { FormField } from "../../models/cinchy-form-field.model";
+import {Form} from "../../models/cinchy-form.model";
+import {FormField} from "../../models/cinchy-form-field.model";
 
-import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
+import {faAlignLeft} from "@fortawesome/free-solid-svg-icons";
+import {DEFAULT_EDITOR_CONFIG} from "../../../constants/default-editor-config.constant";
 
 
 /**
@@ -31,8 +22,6 @@ import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
   styleUrls: ["./textarea.component.scss"]
 })
 export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
-
-  @ViewChild("editor") editor;
 
   @Input() fieldIndex: number;
   @Input() form: Form;
@@ -64,6 +53,8 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
   showLinkUrl: boolean;
   urlSafe: SafeResourceUrl;
   value: string;
+
+  codeEditorOptions: { [key: string]: unknown };
 
   faAlignLeft = faAlignLeft;
 
@@ -127,48 +118,44 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
   ngAfterViewInit() {
 
     if (this.isFormatted) {
-      this.editor.getEditor().setOptions({
-        showLineNumbers: true,
-        tabSize: 4,
-        theme: "ace/theme/sqlserver",
-        enableBasicAutocompletion: true,
-        enableSnippets: true,
-        enableLiveAutocompletion: true,
-        highlightGutterLine: true
-      });
+      let mode: string;
+      let json: boolean;
 
-      switch (this.field.cinchyColumn.dataFormatType) {
-        case "XML":
-          this.editor.mode = "xml";
+      switch(this.field.cinchyColumn.dataFormatType) {
+        case DataFormatType.CQL:
+          mode = "sql";
+
           break;
-        case "Javascript":
-          this.editor.mode = "javascript";
+        case DataFormatType.XML:
+          mode = "xml";
+
           break;
-        case "CQL":
-          this.editor.mode = "sqlserver";
+        case DataFormatType.JSON:
+          json = true;
+
+          // falls through
+        case DataFormatType.Javascript:
+          mode = "javascript";
+
           break;
         default:
-          this.editor.mode = this.field.cinchyColumn.dataFormatType.toLowerCase();
+          mode = "null";
       }
 
-      this.editor.value = this.value;
-
-      this.editor.setReadOnly(!this.canEdit);
-
-      this.editor.getEditor().commands.addCommand({
-        name: "showOtherCompletions",
-        bindKey: "Ctrl-.",
-        exec: function (editor) {
-
-        }
-      })
+      this.codeEditorOptions = {
+        ...DEFAULT_EDITOR_CONFIG,
+        json: json,
+        mode: mode,
+        readOnly: !this.canEdit,
+        value: this.value
+      };
     }
   }
 
 
-  isValidHttpUrl(str: string) {
+  isValidHttpUrl(str: string): boolean {
 
-    let url;
+    let url: URL;
 
     try {
       url = new URL(str);
@@ -185,7 +172,7 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
     this.onChange.emit({
       form: this.form,
       fieldIndex: this.fieldIndex,
-      newValue: this.isFormatted ? this.editor.value : this.value,
+      newValue: this.isFormatted ? this.value : this.value,
       sectionIndex: this.sectionIndex,
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
@@ -205,7 +192,7 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
         case DataFormatType.ImageUrlLarge:
 
           return "cinchy-images-large";
-        case DataFormatType.ImageUrlSmall:
+        case DataFormatType.ImageUrlMedium:
           // falls through
         case DataFormatType.ImageUrl:
 

@@ -1,5 +1,5 @@
 import { BehaviorSubject, Subject } from "rxjs";
-import { takeUntil } from "rxjs/operators";
+import { debounceTime, takeUntil } from "rxjs/operators";
 
 import {
   Component,
@@ -504,7 +504,10 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
     }
 
     this.multiFilterCtrl.valueChanges
-      .pipe(takeUntil(this.onDestroy))
+      .pipe(
+        debounceTime(100),
+        takeUntil(this.onDestroy)
+      )
       .subscribe(() => {
 
         this.filterMulti();

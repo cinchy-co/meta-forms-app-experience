@@ -7,7 +7,6 @@ import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
 import { CinchyConfig, CinchyModule, CinchyService } from "@cinchy-co/angular-sdk";
 
-import { AceEditorModule } from "ng2-ace-editor";
 import { NumeralModule } from "ngx-numeral";
 import { NgxSpinnerModule } from "ngx-spinner";
 import { ToastrModule } from "ngx-toastr";
@@ -40,20 +39,19 @@ export function getBaseUrl() {
     AppComponent
   ],
   imports: [
+    AppRoutingModule,
     BrowserModule,
     BrowserAnimationsModule,
-    AppRoutingModule,
-    HttpClientModule,
     CoreModule,
-    PagesModule,
     CustomMaterialModule,
     CinchyDynamicFormsModule,
     CinchyModule.forRoot(),
+    HttpClientModule,
     NgxSpinnerModule,
-    AceEditorModule,
     MatDatepickerModule,
     MatInputModule,
     NumeralModule.forRoot(),
+    PagesModule,
     ToastrModule.forRoot({
       closeButton: true,
       enableHtml: true,
@@ -82,7 +80,7 @@ export function getBaseUrl() {
     {
       provide: "BASE_URL",
       useFactory: getBaseUrl
-    },
+    }
   ],
   bootstrap: [
     AppComponent

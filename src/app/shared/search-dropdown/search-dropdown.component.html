@@ -4,14 +4,20 @@
               (ngModelChange)="onSelect($event)"
               panelClass="fix-width-470">
     <mat-option>
-      <ngx-mat-select-search [formControl]="filterCtrl"
-                             placeholderLabel="Search...">
-      </ngx-mat-select-search>
+      <input matInput type="text" class="multi-search"
+             placeholder="Search..."
+             [formControl]="filterCtrl" />
     </mat-option>
+
+    <mat-option *ngIf="!displayItems?.length && filterCtrl.value" [disabled]="true">
+      No entries matched your search
+    </mat-option>
+
     <mat-option *ngFor="let item of displayItems" [value]="item.id" [title]="item.label" [disabled]="item.id === -1">
       {{ item.label }}
     </mat-option>
-    <mat-option *ngIf="hasAdditionalRecords" disabled>
+
+    <mat-option *ngIf="hasAdditionalRecords" [disabled]="true">
       Refine your search to see other options
     </mat-option>
   </mat-select>
