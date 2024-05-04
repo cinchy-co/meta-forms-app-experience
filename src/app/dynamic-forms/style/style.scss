@@ -297,10 +297,6 @@ article label {
   margin-bottom: 0px;
 }
 
-.mat-card {
-  padding-bottom: 0px;
-}
-
 .mat-mdc-input-element:focus {
   // outline: none;
   border-width: 1.5px;
@@ -349,20 +345,20 @@ article label {
 }
 
 
-.mat-card-header-child {
-  margin: 0em 0 0.5em 0;
-  font-weight: normal;
-  position: relative;
-  font-size: 12px;
-  line-height: 18px;
-  background: #5a5858;
-  border: 1px solid #fff;
-  padding: 5px 12px;
-  color: white;
-  border-radius: 0 10px 0 10px;
-  box-shadow: inset 0 0 5px rgba(53, 86, 129, 0.5);
-  font-family: 'Muli', sans-serif;
-}
+//.mat-card-header-child {
+//  margin: 0em 0 0.5em 0;
+//  font-weight: normal;
+//  position: relative;
+//  font-size: 12px;
+//  line-height: 18px;
+//  background: #5a5858;
+//  border: 1px solid #fff;
+//  padding: 5px 12px;
+//  color: white;
+//  border-radius: 0 10px 0 10px;
+//  box-shadow: inset 0 0 5px rgba(53, 86, 129, 0.5);
+//  font-family: 'Muli', sans-serif;
+//}
 
 button.btnSave.mat-mdc-raised-button {
   margin-right: 10px;

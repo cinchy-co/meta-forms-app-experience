@@ -86,18 +86,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "edit-form:build"
+            "buildTarget": "edit-form:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "edit-form:build:production"
+              "buildTarget": "edit-form:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "edit-form:build"
+            "buildTarget": "edit-form:build"
           }
         },
         "test": {

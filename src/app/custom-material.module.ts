@@ -5,7 +5,6 @@ import { CdkTableModule } from "@angular/cdk/table";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { MatButtonModule } from "@angular/material/button";
 import { MatButtonToggleModule } from "@angular/material/button-toggle";
-import { MatLegacyCardModule as MatCardModule } from "@angular/material/legacy-card";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatDatepickerModule } from "@angular/material/datepicker";
 import { MatDialogModule } from "@angular/material/dialog";
@@ -14,14 +13,13 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatMenuModule } from "@angular/material/menu";
-import { MatLegacyPaginatorModule as MatPaginatorModule } from "@angular/material/legacy-paginator";
+import { MatPaginatorModule } from "@angular/material/paginator";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatLegacyRadioModule as MatRadioModule } from "@angular/material/legacy-radio";
+import { MatRadioModule } from "@angular/material/radio";
 import { MatSelectModule } from "@angular/material/select";
 import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatSortModule } from "@angular/material/sort";
 import { MatTableModule } from "@angular/material/table";
-import { MatLegacyTabsModule as MatTabsModule } from "@angular/material/legacy-tabs";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatTooltipModule } from "@angular/material/tooltip";
 
@@ -32,7 +30,6 @@ import { MatTooltipModule } from "@angular/material/tooltip";
     MatAutocompleteModule,
     MatButtonModule,
     MatButtonToggleModule,
-    MatCardModule,
     MatCheckboxModule,
     MatDatepickerModule,
     MatDialogModule,
@@ -49,7 +46,6 @@ import { MatTooltipModule } from "@angular/material/tooltip";
     MatSidenavModule,
     MatSortModule,
     MatTableModule,
-    MatTabsModule,
     MatToolbarModule,
     MatTooltipModule
   ],
@@ -60,7 +56,6 @@ import { MatTooltipModule } from "@angular/material/tooltip";
     MatAutocompleteModule,
     MatButtonModule,
     MatButtonToggleModule,
-    MatCardModule,
     MatCheckboxModule,
     MatDatepickerModule,
     MatDialogModule,
@@ -77,7 +72,6 @@ import { MatTooltipModule } from "@angular/material/tooltip";
     MatSidenavModule,
     MatSortModule,
     MatTableModule,
-    MatTabsModule,
     MatToolbarModule,
     MatTooltipModule
   ]
