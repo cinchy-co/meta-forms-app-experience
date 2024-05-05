@@ -17,9 +17,9 @@ import { AppRoutingModule } from "./app-routing.module";
 import { CinchyDynamicFormsModule } from "./dynamic-forms/cinchy-dynamic-forms.module";
 import { CoreModule } from "./core/core.module";
 import { CustomMaterialModule } from "./custom-material.module";
-import { PagesModule } from "./pages/pages.module";
 
 import { ConfigService } from "./services/config.service";
+import {FormWrapperComponent} from "./pages/form-wrapper/form-wrapper.component";
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -36,7 +36,8 @@ export function getBaseUrl() {
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    FormWrapperComponent
   ],
   imports: [
     AppRoutingModule,
@@ -51,7 +52,6 @@ export function getBaseUrl() {
     MatDatepickerModule,
     MatInputModule,
     NumeralModule.forRoot(),
-    PagesModule,
     ToastrModule.forRoot({
       closeButton: true,
       enableHtml: true,

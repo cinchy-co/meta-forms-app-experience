@@ -143,12 +143,13 @@ export class CinchyDynamicFormsComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this._loadLookupRecords("", this.form?.rowId);
-
     this._appStateService.onRecordSelected$.subscribe(
       (record: { rowId: number | null, doNotReloadForm: boolean }): void => {
 
         if (this.lookupRecordsListPopulated) {
+          // DEBUG
+          console.log("calling _handleRecordSelection from onRecordSelected$", record);
+
           this._handleRecordSelection(record);
         }
         else {
@@ -763,6 +764,9 @@ export class CinchyDynamicFormsComponent implements OnInit {
    */
   private async _handleRecordSelection(record: { rowId: number | null, doNotReloadForm: boolean }): Promise<void> {
 
+    // DEBUG
+    console.log("_handleRecordSelection", record, this.form?.rowId);
+
     if (record.rowId) {
       this.currentRow = this.lookupRecords?.find(
         (lookupRecord: ILookupRecord): boolean => {
@@ -809,6 +813,9 @@ export class CinchyDynamicFormsComponent implements OnInit {
         next: async (response: Array<ILookupRecord>): Promise<void> => {
 
           this.lookupRecords = this.checkNoRecord(response);
+
+          // DEBUG
+          console.log("calling _handleRecordSelection from _loadLookupRecords", response, this._queuedRecordSelection, rowIdToSelect, this.form?.rowId);
 
           await this._handleRecordSelection(
             this._queuedRecordSelection ??

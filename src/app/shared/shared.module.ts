@@ -9,13 +9,11 @@ import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { CustomMaterialModule } from "../custom-material.module";
 
 import { SearchDropdownComponent } from "./search-dropdown/search-dropdown.component";
-import { TypeaheadComponent } from "./typeahead/typeahead.component";
 
 
 @NgModule({
   declarations: [
-    SearchDropdownComponent,
-    TypeaheadComponent
+    SearchDropdownComponent
   ],
   imports: [
     BrowserModule, // Used for async pipes
@@ -27,7 +25,6 @@ import { TypeaheadComponent } from "./typeahead/typeahead.component";
     ScrollingModule
   ],
   exports: [
-    TypeaheadComponent,
     SearchDropdownComponent
   ],
   providers: []
