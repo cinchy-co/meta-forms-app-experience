@@ -1,8 +1,11 @@
 import { NgModule } from "@angular/core";
+import { OverlayModule } from "@angular/cdk/overlay";
 import { ScrollingModule } from "@angular/cdk/scrolling";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { RouterModule } from "@angular/router";
+
+import { NgxMatSelectSearchModule } from "ngx-mat-select-search";
 
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 
@@ -20,9 +23,11 @@ import { SearchDropdownComponent } from "./search-dropdown/search-dropdown.compo
     CustomMaterialModule,
     FontAwesomeModule,
     FormsModule,
+    OverlayModule,
     ReactiveFormsModule,
     RouterModule,
-    ScrollingModule
+    ScrollingModule,
+    NgxMatSelectSearchModule
   ],
   exports: [
     SearchDropdownComponent

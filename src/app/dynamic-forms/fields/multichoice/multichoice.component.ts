@@ -20,6 +20,7 @@ import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 
 import { faListUl } from "@fortawesome/free-solid-svg-icons";
+import {DropdownOption} from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
 
 
 /**
@@ -117,6 +118,7 @@ export class MultichoiceComponent implements OnChanges, OnDestroy, OnInit {
     }
 
     this.options = allOptions.slice();
+    this.displayOptions.next(this.options);
 
     this.filterCtrl.valueChanges
       .pipe(
@@ -132,6 +134,27 @@ export class MultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   filter(): void {
 
+    if (this.options) {
+      // get the search keyword
+      let search = this.filterCtrl.value;
+
+      if (!search) {
+        this.displayOptions.next(this.options);
+      }
+      else {
+        search = search.toLowerCase();
+
+        // filter the list
+        this.displayOptions.next(
+          this.options.filter(
+            (item: string) => {
+
+              return (item.toLowerCase().indexOf(search) > -1)
+            }
+          )
+        );
+      }
+    }
   }
 
 

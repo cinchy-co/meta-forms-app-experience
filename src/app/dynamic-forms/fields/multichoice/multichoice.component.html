@@ -27,19 +27,18 @@
           (openedChange)="resetFilter()"
           (selectionChange)="valueChanged()">
         <mat-option>
-          <input matInput type="text" class="multi-search"
-                 placeholder="Search..."
-                 [formControl]="filterCtrl" />
-        </mat-option>
-
-        <mat-option *ngIf="!displayOptions.value?.length && filterCtrl.value" [disabled]="true">
-          No entries matched your search
+          <ngx-mat-select-search [formControl]="filterCtrl"
+                                 [showToggleAllCheckbox]="true"
+                                 (toggleAll)="toggleSelectAll($event)"
+                                 noEntriesFoundLabel="No entries matched your search"
+                                 placeholderLabel="Search...">
+          </ngx-mat-select-search>
         </mat-option>
 
         <mat-option
           *ngFor="let option of displayOptions | async"
-          [value]="options">
-          {{ options }}
+          [value]="option">
+          {{ option }}
         </mat-option>
       </mat-select>
     </div>

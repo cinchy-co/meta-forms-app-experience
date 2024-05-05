@@ -1,7 +1,5 @@
 import { APP_INITIALIZER, NgModule } from "@angular/core";
 import { HttpClientModule } from "@angular/common/http";
-import { MatDatepickerModule } from "@angular/material/datepicker";
-import { MatInputModule } from "@angular/material/input";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
@@ -18,8 +16,9 @@ import { CinchyDynamicFormsModule } from "./dynamic-forms/cinchy-dynamic-forms.m
 import { CoreModule } from "./core/core.module";
 import { CustomMaterialModule } from "./custom-material.module";
 
+import { FormWrapperComponent } from "./pages/form-wrapper/form-wrapper.component";
+
 import { ConfigService } from "./services/config.service";
-import {FormWrapperComponent} from "./pages/form-wrapper/form-wrapper.component";
 
 
 export function appLoadFactory(config: ConfigService) {
@@ -49,8 +48,6 @@ export function getBaseUrl() {
     CinchyModule.forRoot(),
     HttpClientModule,
     NgxSpinnerModule,
-    MatDatepickerModule,
-    MatInputModule,
     NumeralModule.forRoot(),
     ToastrModule.forRoot({
       closeButton: true,

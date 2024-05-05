@@ -53,6 +53,9 @@ export class NotificationService {
    */
   displaySuccessMessage(message: string, title: string = "Success", timeout?: number): void {
 
+    // DEBUG
+    console.log("displaySuccessMessage", message, title, timeout);
+
     this._toastrService.success(
       `${message}`,
       title,

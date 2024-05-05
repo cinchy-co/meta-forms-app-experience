@@ -147,9 +147,6 @@ export class CinchyDynamicFormsComponent implements OnInit {
       (record: { rowId: number | null, doNotReloadForm: boolean }): void => {
 
         if (this.lookupRecordsListPopulated) {
-          // DEBUG
-          console.log("calling _handleRecordSelection from onRecordSelected$", record);
-
           this._handleRecordSelection(record);
         }
         else {
@@ -664,9 +661,15 @@ export class CinchyDynamicFormsComponent implements OnInit {
       }
   ): Promise<void> {
 
+    // DEBUG
+    console.log("saveForm", formData);
+
     if (formData) {
       // check validations for the form eg: Required, Regular expression
       const formValidation: { isValid: boolean, message: string } = formData.checkFormValidation();
+
+      // DEBUG
+      console.log(formValidation);
 
       if (formValidation.isValid) {
         // Generate dynamic query using dynamic form meta data
@@ -764,9 +767,6 @@ export class CinchyDynamicFormsComponent implements OnInit {
    */
   private async _handleRecordSelection(record: { rowId: number | null, doNotReloadForm: boolean }): Promise<void> {
 
-    // DEBUG
-    console.log("_handleRecordSelection", record, this.form?.rowId);
-
     if (record.rowId) {
       this.currentRow = this.lookupRecords?.find(
         (lookupRecord: ILookupRecord): boolean => {
@@ -815,9 +815,6 @@ export class CinchyDynamicFormsComponent implements OnInit {
         next: async (response: Array<ILookupRecord>): Promise<void> => {
 
           this.lookupRecords = this.checkNoRecord(response);
-
-          // DEBUG
-          console.log("calling _handleRecordSelection from _loadLookupRecords", response, this._queuedRecordSelection, rowIdToSelect, this.form?.rowId);
 
           await this._handleRecordSelection(
             this._queuedRecordSelection ??

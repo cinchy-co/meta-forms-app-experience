@@ -95,22 +95,7 @@ export class FieldsWrapperComponent {
 
   useRichText(field: FormField): boolean {
 
-    return (
-      field.cinchyColumn.dataType === "Text" &&
-      (
-        !!(field.cinchyColumn.textFormat) ||
-        (
-          field.cinchyColumn.dataFormatType &&
-          !field.cinchyColumn.dataFormatType?.startsWith(DataFormatType.ImageUrl) &&
-          ![
-            DataFormatType.IFrame,
-            DataFormatType.IFrameSandbox,
-            DataFormatType.IFrameSandboxStrict,
-            DataFormatType.LinkUrl
-          ].includes(field.cinchyColumn.dataFormatType)
-        )
-      )
-    );
+    return (field.cinchyColumn.dataType === "Text" && !!(field.cinchyColumn.textFormat));
   }
 
 

@@ -43,6 +43,7 @@ import { TextboxComponent } from "./fields/textbox/textbox.component";
 import { TextareaComponent } from "./fields/textarea/textarea.component";
 
 import { KeysPipe } from "./pipes/cinchy-column-key.pipe";
+import {NgxMatSelectSearchModule} from "ngx-mat-select-search";
 
 
 @NgModule({
@@ -72,7 +73,6 @@ import { KeysPipe } from "./pipes/cinchy-column-key.pipe";
     CinchyModule.forRoot(),
     BrowserAnimationsModule,
     BrowserModule,
-    CodemirrorModule,
     CustomMaterialModule,
     DigitOnlyModule,
     FontAwesomeModule,
@@ -81,7 +81,9 @@ import { KeysPipe } from "./pipes/cinchy-column-key.pipe";
     NgxSpinnerModule,
     ReactiveFormsModule,
     ScrollingModule,
-    SharedModule
+    SharedModule,
+    CodemirrorModule,
+    NgxMatSelectSearchModule
   ],
   exports: [
     CinchyDynamicFormsComponent

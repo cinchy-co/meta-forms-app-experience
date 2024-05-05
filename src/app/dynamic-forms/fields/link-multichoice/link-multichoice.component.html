@@ -94,13 +94,17 @@
                   [(ngModel)]="selectedValues" [ngModelOptions]="{ standalone: true }"
                   [compareWith]="compareFn"
                   [disabled]="!canEdit"
+                  [disableOptionCentering]="true"
                   (selectionChange)="valueChanged()"
-                  disableOptionCentering>
-        <ng-container *ngIf="dropdownSetOptions">
+      >
+        <ng-container *ngIf="dropdownSetOptions?.length">
           <mat-option>
-            <input matInput type="text" class="multi-search"
-                   placeholder="Search..."
-                   [formControl]="multiFilterCtrl" />
+            <ngx-mat-select-search [formControl]="filterCtrl"
+                                   [showToggleAllCheckbox]="true"
+                                   (toggleAll)="toggleSelectAll($event)"
+                                   noEntriesFoundLabel="No entries matched your search"
+                                   placeholderLabel="Search...">
+            </ngx-mat-select-search>
           </mat-option>
 
           <cdk-virtual-scroll-viewport
@@ -109,10 +113,6 @@
               [minBufferPx]="300"
               [maxBufferPx]="600"
           >
-            <mat-option *ngIf="!filteredListMulti.value?.length && multiFilterCtrl.value" [disabled]="true">
-              No entries matched your search
-            </mat-option>
-
             <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
                         [value]="dropdownOption"
                         [title]="dropdownOption.label">
