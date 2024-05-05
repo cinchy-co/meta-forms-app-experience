@@ -32,16 +32,11 @@
               "./node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "src/assets/styles/atelier-cave-light.min.css",
               "src/styles.scss",
-              "src/global-styles/variables.scss",
-              "./node_modules/codemirror/lib/codemirror.css",
-              "./node_modules/codemirror/theme/neat.css"
+              "src/global-styles/variables.scss"
             ],
             "scripts": [
               "./node_modules/iframe-resizer/js/iframeResizer.js",
-              "./node_modules/iframe-resizer/js/iframeResizer.contentWindow.js",
-              "./node_modules/codemirror/mode/javascript/javascript.js",
-              "./node_modules/codemirror/mode/sql/sql.js",
-              "./node_modules/codemirror/mode/xml/xml.js"
+              "./node_modules/iframe-resizer/js/iframeResizer.contentWindow.js"
             ],
             "vendorChunk": true,
             "extractLicenses": false,

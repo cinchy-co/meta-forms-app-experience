@@ -7,7 +7,6 @@ import { CinchyConfig, CinchyModule, CinchyService } from "@cinchy-co/angular-sd
 
 import { NumeralModule } from "ngx-numeral";
 import { NgxSpinnerModule } from "ngx-spinner";
-import { ToastrModule } from "ngx-toastr";
 
 import { AppComponent } from "./app.component";
 
@@ -48,13 +47,7 @@ export function getBaseUrl() {
     CinchyModule.forRoot(),
     HttpClientModule,
     NgxSpinnerModule,
-    NumeralModule.forRoot(),
-    ToastrModule.forRoot({
-      closeButton: true,
-      enableHtml: true,
-      preventDuplicates: true,
-      tapToDismiss: false
-    })
+    NumeralModule.forRoot()
   ],
   providers: [
     {

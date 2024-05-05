@@ -5,6 +5,11 @@ import { AppModule } from "./app/app.module";
 import { environment } from "./environments/environment";
 
 
+import "codemirror/mode/javascript/javascript";
+import "codemirror/mode/sql/sql";
+import "codemirror/mode/xml/xml";
+
+
 if (environment.production) {
   enableProdMode();
 }

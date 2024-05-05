@@ -661,15 +661,9 @@ export class CinchyDynamicFormsComponent implements OnInit {
       }
   ): Promise<void> {
 
-    // DEBUG
-    console.log("saveForm", formData);
-
     if (formData) {
       // check validations for the form eg: Required, Regular expression
       const formValidation: { isValid: boolean, message: string } = formData.checkFormValidation();
-
-      // DEBUG
-      console.log(formValidation);
 
       if (formValidation.isValid) {
         // Generate dynamic query using dynamic form meta data

@@ -25,7 +25,7 @@
               (blur)="valueChanged()">
          </textarea>
 
-    <ngx-codemirror *ngIf="isFormatted" [(ngModel)]="value" [options]="codeEditorOptions"></ngx-codemirror>
+    <ngx-codemirror *ngIf="isFormatted && showEditor" [(ngModel)]="value" [options]="codeEditorOptions"></ngx-codemirror>
 
     <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !value">
       *{{field.label}} is Required.
@@ -35,7 +35,7 @@
   <ng-container *ngIf="!canEdit">
     <label class="pre-formatted" *ngIf="!isFormatted && showActualField" [innerHTML]="value || '-'"></label>
 
-    <ngx-codemirror *ngIf="isFormatted" [(ngModel)]="value" [options]="codeEditorOptions"></ngx-codemirror>
+    <ngx-codemirror *ngIf="isFormatted && showEditor" [(ngModel)]="value" [options]="codeEditorOptions"></ngx-codemirror>
   </ng-container>
 
   <ng-container *ngIf="showImage">

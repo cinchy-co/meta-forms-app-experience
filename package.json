@@ -54,7 +54,6 @@
     "ngx-mat-select-search": "^7.0.6",
     "ngx-numeral": "^1.0.0",
     "ngx-spinner": "^16.0.2",
-    "ngx-toastr": "^18.0.0",
     "pdfmake": "^0.1.70",
     "ramda": "^0.27.2",
     "rxjs": "~6.5.4",

@@ -45,6 +45,7 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
   iframeHeightStyle: number = 300;
   isFormatted: boolean;
   showActualField: boolean;
+  showEditor: boolean;
   showError: boolean;
   showIframe: boolean;
   showIframeSandbox: boolean;
@@ -149,6 +150,8 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
         readOnly: !this.canEdit,
         value: this.value
       };
+
+      this.showEditor = true;
     }
   }
 
