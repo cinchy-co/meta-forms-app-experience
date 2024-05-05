@@ -108,6 +108,13 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges, OnDest
   ngOnChanges(changes: SimpleChanges): void {
 
     if (changes.items) {
+      if (this.items?.length && this.items[0].id !== -1 && this.selectedRecordId) {
+        this.selectedRecord = this.items.find((item: ILookupRecord) => {
+
+          return (item.id === this.selectedRecordId);
+        });
+      }
+
       this.setDisplayItems();
     }
   }
@@ -122,7 +129,7 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges, OnDest
   /**
    * Runs when the user selects an item from the dropdown
    */
-  onSelect(event: number) {
+  onSelect(): void {
 
     this.selectedRecord = this.displayItems.find((value: ILookupRecord) => {
 
@@ -138,7 +145,7 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges, OnDest
   /**
    * Sets up the set of options to be displayed
    */
-  setDisplayItems() {
+  setDisplayItems(): void {
 
     if (this.noRecordsAfterFilter) {
       this.displayItems = this.items.slice();
@@ -146,7 +153,7 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges, OnDest
     else {
       let displayItems = this.selectedRecord ? [Object.assign({}, this.selectedRecord)] : [];
 
-      if (this.items) {
+      if (this.items?.length) {
         const resolvedItems = this.items.slice(0, CinchyQueryService.LOOKUP_RECORD_LABEL_COUNT);
 
         resolvedItems.forEach((value: ILookupRecord) => {

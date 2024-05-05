@@ -2,7 +2,7 @@
   <mat-label>Search Records</mat-label>
 
   <mat-select [(ngModel)]="selectedRecordId"
-              (ngModelChange)="onSelect($event)"
+              (ngModelChange)="onSelect()"
               panelClass="fix-width-470">
     <mat-option>
       <input matInput type="text" class="multi-search"

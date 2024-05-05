@@ -793,6 +793,8 @@ export class CinchyDynamicFormsComponent implements OnInit {
     // Using record.rowId instead of this.form?.rowId because the network calls inside the loadForm function cause
     // the logic of this function to continue asynchronously despite the await
     this._updateFilteredTableUrl(record.rowId);
+
+    this._queuedRecordSelection = null;
   }
 
 
@@ -825,8 +827,6 @@ export class CinchyDynamicFormsComponent implements OnInit {
           if (!this.formHasDataLoaded) {
             await this.loadForm(this.form?.rowId);
           }
-
-          this._queuedRecordSelection = null;
         },
         error: async (error: any): Promise<void> => {
 
