@@ -54,9 +54,9 @@
     "ngx-mat-select-search": "^7.0.6",
     "ngx-numeral": "^1.0.0",
     "ngx-spinner": "^16.0.2",
-    "pdfmake": "^0.1.70",
-    "ramda": "^0.27.2",
-    "rxjs": "~6.5.4",
+    "pdfmake": "^0.2.7",
+    "ramda": "^0.28.0",
+    "rxjs": "^6.6.7",
     "tslib": "^2.0.0",
     "util": "^0.12.4",
     "zone.js": "~0.14.4"
