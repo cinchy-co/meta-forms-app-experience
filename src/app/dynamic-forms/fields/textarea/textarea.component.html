@@ -25,7 +25,11 @@
               (blur)="valueChanged()">
          </textarea>
 
-    <ngx-codemirror *ngIf="isFormatted && showEditor" [(ngModel)]="value" [options]="codeEditorOptions"></ngx-codemirror>
+    <ngx-codemirror *ngIf="isFormatted && showEditor"
+                    [(ngModel)]="value"
+                    [options]="codeEditorOptions"
+                    (ngModelChange)="valueChanged()"
+    ></ngx-codemirror>
 
     <mat-error *ngIf="showError && field.cinchyColumn.isMandatory && !value">
       *{{field.label}} is Required.
