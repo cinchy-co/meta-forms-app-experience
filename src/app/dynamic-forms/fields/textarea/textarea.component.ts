@@ -1,16 +1,27 @@
-import {AfterViewInit, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from "@angular/core";
-import {coerceBooleanProperty} from "@angular/cdk/coercion";
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
+import {
+  AfterViewInit,
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  ViewChild
+} from "@angular/core";
+import { coerceBooleanProperty } from "@angular/cdk/coercion";
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
-import {DataFormatType} from "../../enums/data-format-type.enum";
+import { DEFAULT_EDITOR_CONFIG } from "../../../constants/default-editor-config.constant";
 
-import {IFieldChangedEvent} from "../../interface/field-changed-event";
+import { DataFormatType } from "../../enums/data-format-type.enum";
 
-import {Form} from "../../models/cinchy-form.model";
-import {FormField} from "../../models/cinchy-form-field.model";
+import { IFieldChangedEvent } from "../../interface/field-changed-event";
 
-import {faAlignLeft} from "@fortawesome/free-solid-svg-icons";
-import {DEFAULT_EDITOR_CONFIG} from "../../../constants/default-editor-config.constant";
+import { Form } from "../../models/cinchy-form.model";
+import { FormField } from "../../models/cinchy-form-field.model";
+
+import { faAlignLeft } from "@fortawesome/free-solid-svg-icons";
 
 
 /**
@@ -175,7 +186,7 @@ export class TextareaComponent implements AfterViewInit, OnChanges, OnInit {
     this.onChange.emit({
       form: this.form,
       fieldIndex: this.fieldIndex,
-      newValue: this.isFormatted ? this.value : this.value,
+      newValue: this.value,
       sectionIndex: this.sectionIndex,
       targetColumnName: this.field.cinchyColumn.name,
       targetTableName: this.targetTableName
