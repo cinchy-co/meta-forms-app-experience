@@ -8,6 +8,12 @@ export interface IAdditionalProperty {
   cinchyColumn?: boolean;
 
   /**
+   * Indicates that the hasChanged value should not be flagged as part of this update, which is useful in cases where
+   * data that is meaningful to the application but not meaningful to the form is added
+   */
+  ignoreChange?: boolean;
+
+  /**
    * The name of the property to be updated
    */
   propertyName: string;

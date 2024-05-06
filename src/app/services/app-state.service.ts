@@ -1,6 +1,5 @@
 import {
   BehaviorSubject,
-  Observable,
   Subject
 } from "rxjs";
 
@@ -23,8 +22,8 @@ export class AppStateService {
 
   addNewEntityDialogClosed$ = new Subject<INewEntityDialogResponse>();
   childRecordUpdated$ = new Subject<void>();
-  currentSection$ = new BehaviorSubject<string>(null);
-  latestRenderedSections$ = new BehaviorSubject<IFormSectionMetadata[]>(null);
+  sectionExpanded$ = new BehaviorSubject<string>(null);
+  latestRenderedSections$ = new BehaviorSubject<Array<IFormSectionMetadata>>(null);
 
   parentFormSavedFromChild$ = new Subject<{
     childForm: Form,
@@ -45,7 +44,7 @@ export class AppStateService {
 
 
   /**
-   * The ID of the primary form, as provided by the query params when the application is bootstrapped. If there is a secondary form present,
+   * The ID of the root form, as provided by the query params when the application is bootstrapped. If there is a secondary form present,
    * either from the add new option dialog or because a child form is present, that ID is tracked independently
    */
   get formId(): string {
@@ -56,19 +55,8 @@ export class AppStateService {
 
 
   /**
-   * The ID of the currently-selected record on the root form in the main view container. The concept of a selected record is meaningless in the context of
-   * creating a new record, and child forms will track their own selected record ID independently, if present.
-   */
-  get rowId(): number {
-
-    return this._rowId;
-  }
-  private _rowId: number;
-
-
-  /**
-   * Removes the rowId parameter from the querystring of the application and, if the app is embedded in an iframe, the wrapping view. If the app is not
-   * embedded, then posting the message will have no effect.
+   * Removes the rowId parameter from the querystring of the application and, if the app is embedded in an iframe, the
+   * wrapping view. If the app is not embedded, then posting the message will have no effect.
    */
   deleteRowIdInQueryParams() {
 
@@ -101,7 +89,8 @@ export class AppStateService {
 
 
   /**
-   * Stores the ID of the root form at the application level. Child forms load their IDs locally, and should not affect hte application state
+   * Stores the ID of the root form at the application level. Child forms load their IDs locally, and should not affect
+   * the application state
    */
   setRootFormId(id: string): void {
 
@@ -112,30 +101,29 @@ export class AppStateService {
 
 
   /**
-   * Stores the selected record in the service and updates the application state to match it
+   * Notifies the application that a new record has been selected
    *
    * @param rowId The Cinchy ID of the selected record. If null, the selected record has been cleared
    * @param doNotReloadForm Indicates that a refresh is not required
    */
   setRecordSelected(rowId: number | null, doNotReloadForm: boolean = false): void {
 
-    this._rowId = rowId;
-
-    this.onRecordSelected$.next({
-      rowId: rowId,
-      doNotReloadForm: doNotReloadForm
-    });
-
-    if (rowId === null) {
-      this.deleteRowIdInQueryParams();
-    }
-    else {
-      this.updateRowIdInQueryParams(rowId);
-    }
+    this.onRecordSelected$.next(
+      {
+        rowId: rowId,
+        doNotReloadForm: doNotReloadForm
+      }
+    );
   }
 
 
-  updateRowIdInQueryParams(rowId: number) {
+  /**
+   * Updates the queryParams of both the application and (if present) its wrapper with the given rowId. If the rowId
+   * argument is not present in the URL already, it will be added.
+   *
+   * @param rowId The rowId to be inserted
+   */
+  updateRowIdInQueryParams(rowId: number): void {
 
     const messageJSON = {
       updateCinchyURLParams:
@@ -158,7 +146,7 @@ export class AppStateService {
       const [key, value] = paramString.split("=");
 
       // Because the key here will be an empty string in the case the queryParams are empty or malformed,
-      // we explicitly need to check that it is truthy. Optional chaining would yield a false position
+      // we explicitly need to check that it is truthy. Optional chaining would yield a false positive
       if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }

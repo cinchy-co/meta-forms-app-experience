@@ -75,7 +75,7 @@ export class FieldsWrapperComponent {
 
   onPanelExpanded(section: FormSection): void {
 
-    this._appStateService.currentSection$.next(section.label);
+    this._appStateService.sectionExpanded$.next(section.label);
   }
 
 

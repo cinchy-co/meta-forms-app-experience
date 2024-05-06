@@ -118,9 +118,29 @@ export class FormHelperService {
       childFormSort
     );
 
-    result.tableMetadata = JSON.parse(formMetadata.tableJson);
-    result.parentForm = parentForm
-    result.rowId = rowId;
+    result.updateRootProperty(
+      {
+        ignoreChange: true,
+        propertyName: "tableMetadata",
+        propertyValue: JSON.parse(formMetadata.tableJson)
+      }
+    );
+
+    result.updateRootProperty(
+      {
+        ignoreChange: true,
+        propertyName: "parentForm",
+        propertyValue: parentForm
+      }
+    );
+
+    result.updateRootProperty(
+      {
+        ignoreChange: true,
+        propertyName: "rowId",
+        propertyValue: rowId
+      }
+    );
 
     return result;
   }
@@ -334,7 +354,13 @@ export class FormHelperService {
         }
       }
 
-      form.fieldsByColumnName = parentFieldsByColumn;
+      form.updateRootProperty(
+        {
+          ignoreChange: true,
+          propertyName: "fieldsByColumnName",
+          propertyValue: parentFieldsByColumn
+        }
+      );
 
       // TODO: this should be a forEach
       for (let i: number = 0; i < allChildForms.length; i++) {
@@ -362,7 +388,13 @@ export class FormHelperService {
         }
       }
 
-      form.childFieldsLinkedToColumnName = parentChildLinkedColumns;
+      form.updateRootProperty(
+        {
+          ignoreChange: true,
+          propertyName: "childFieldsLinkedToColumnName",
+          propertyValue: parentChildLinkedColumns
+        }
+      );
     }
   }
 
