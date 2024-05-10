@@ -5,6 +5,9 @@ import { CinchyService } from "@cinchy-co/angular-sdk";
 import { DropdownDataset } from "./cinchy-dropdown-dataset";
 import { DropdownOption } from "./cinchy-dropdown-options";
 
+import { ErrorService } from "../../../services/error.service";
+import { NotificationService } from "../../../services/notification.service";
+
 
 @Injectable({
   providedIn: "root"
@@ -15,7 +18,9 @@ export class DropdownDatasetService {
 
 
   constructor(
-    private _cinchyService: CinchyService
+    private _cinchyService: CinchyService,
+    private _errorService: ErrorService,
+    private _notificationService: NotificationService
   ) {}
 
 
@@ -122,6 +127,9 @@ export class DropdownDatasetService {
           if (row[`display-${displayIndex}`]) {
             label += `, ${row[`display-${displayIndex}`]}`;
           }
+          else {
+            break;
+          }
         }
         while (++displayIndex);
 
@@ -146,7 +154,7 @@ export class DropdownDatasetService {
         const displayColumnsFoundInErrorResponse = displayColumnsToIgnore?.slice() ?? new Array<string>();
 
         do {
-          // WIll match a column name in the form of `[COLUMN_NAME]`, resulting in an array with [`[COLUMN_NAME]`]
+          // Will match a column name in the form of `[COLUMN_NAME]`, resulting in an array with [`[COLUMN_NAME]`]
           columnMatch = errorMessage.substring(startingIndex).match(/\[([^\[\]]+)]/g);
 
           if (columnMatch?.length) {
@@ -161,6 +169,11 @@ export class DropdownDatasetService {
         // errorMessage.matchAll(/\[([^\[\]]+)]/g); -> [[`[COLUMN_NAME]`, `COLUMN_NAME`]], ... ]
 
         return await this.getDropdownDataset(linkTargetColumnId, currentFieldJson, dropdownFilter, rowId, needUpdate, displayColumnsFoundInErrorResponse);
+      }
+      else {
+        this._notificationService.displayErrorMessage(
+          `Could not retrieve linked options for [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}]. ${this._errorService.getErrorMessage(error)}`
+        );
       }
     }
   }
