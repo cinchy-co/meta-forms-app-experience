@@ -196,7 +196,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       if (this.field.cinchyColumn.linkTargetColumnId) {
         dropdownDataset = await this._dropdownDatasetService.getDropdownDataset(
           this.field.cinchyColumn.linkTargetColumnId,
-          this.field.label,
           currentFieldJson,
           this.field.cinchyColumn.dropdownFilter,
           this.form.rowId

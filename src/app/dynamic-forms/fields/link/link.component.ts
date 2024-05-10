@@ -385,7 +385,6 @@ export class LinkComponent implements OnChanges, OnInit {
       if (!isNullOrUndefined(this.field.cinchyColumn.linkTargetColumnId)) {
         dropdownDataset = await this._dropdownDatasetService.getDropdownDataset(
           this.field.cinchyColumn.linkTargetColumnId,
-          this.field.label,
           currentFieldJson,
           this.field.cinchyColumn.dropdownFilter,
           this.form.rowId,
