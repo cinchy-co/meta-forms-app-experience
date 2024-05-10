@@ -114,8 +114,16 @@ export class DropdownDatasetService {
     try {
       (await this._cinchyService.executeCsql(dataSetQuery, params).toPromise()).queryResult.toObjectArray().forEach(function (row) {
 
-        // TODO For now only showing one display column (display-0)
-        const label = row["display-0"] ? `${row["Label"]}, ${row["display-0"]}` : row["Label"];
+        let label = row["Label"];
+
+        let displayIndex = 0;
+
+        do {
+          if (row[`display-${displayIndex}`]) {
+            label += `, ${row[`display-${displayIndex}`]}`;
+          }
+        }
+        while (++displayIndex);
 
         optionArray.push(new DropdownOption(row["Id"].toString(), row["Label"]?.toString(), label));
       });
