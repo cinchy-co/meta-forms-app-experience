@@ -67,7 +67,7 @@ export class DropdownDatasetService {
       return null;
     }
 
-    let dataSetQuery: string = "";
+    let dataSetQuery: string;
 
     if (metadataQueryResult[0]["Domain"] === "Reference Data" && metadataQueryResult[0]["Table"] === "Employees") {
       dataSetQuery = `
@@ -77,7 +77,7 @@ export class DropdownDatasetService {
         FROM [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] t
         WHERE t.[Deleted] IS NULL`;
     }
-    else{
+    else {
       const setDisplayColumnQuery = currentFieldJson ? this._getDisplayColumnQuery(currentFieldJson, displayColumnsToIgnore) : '';
       const linkFilterExpression = currentFieldJson.linkFilterExpression;
 
@@ -123,15 +123,11 @@ export class DropdownDatasetService {
 
         let displayIndex = 0;
 
-        do {
-          if (row[`display-${displayIndex}`]) {
-            label += `, ${row[`display-${displayIndex}`]}`;
-          }
-          else {
-            break;
-          }
+        while (row[`display-${displayIndex}`]) {
+          label += `, ${row[`display-${displayIndex}`]}`;
+
+          displayIndex++;
         }
-        while (++displayIndex);
 
         optionArray.push(new DropdownOption(row["Id"].toString(), row["Label"]?.toString(), label));
       });
@@ -146,24 +142,21 @@ export class DropdownDatasetService {
       if (error.cinchyException?.data.status === 400 && error.cinchyException?.data.details.includes("could not be found")) {
         const errorMessage = error.cinchyException.data.details as string;
 
-        let columnMatch: Array<string> | null;
+        let columnMatch: Array<string> | null = errorMessage.substring(0).match(/\[([^\[\]]+)]/g);
         let startingIndex = 0;
 
         // If this process needs to repeat for multiple display columns (and those display columns aren't all included
         // in the error), then use what was already provided and build on it
         const displayColumnsFoundInErrorResponse = displayColumnsToIgnore?.slice() ?? new Array<string>();
 
-        do {
-          // Will match a column name in the form of `[COLUMN_NAME]`, resulting in an array with [`[COLUMN_NAME]`]
+        // Will match a column name in the form of `[COLUMN_NAME]`, resulting in an array with [`[COLUMN_NAME]`]
+        while (columnMatch?.length) {
+          startingIndex = errorMessage.indexOf(columnMatch[0]) + columnMatch[0].length;
+
+          displayColumnsFoundInErrorResponse.push(columnMatch[0].replace("[", "").replace("]", ""));
+
           columnMatch = errorMessage.substring(startingIndex).match(/\[([^\[\]]+)]/g);
-
-          if (columnMatch?.length) {
-            startingIndex = errorMessage.indexOf(columnMatch[0]) + columnMatch[0].length;
-
-            displayColumnsFoundInErrorResponse.push(columnMatch[0].replace("[", "").replace("]", ""));
-          }
         }
-        while (columnMatch);
 
         // Can use matchAll to avoid the loop when targeting ES2020 or later
         // errorMessage.matchAll(/\[([^\[\]]+)]/g); -> [[`[COLUMN_NAME]`, `COLUMN_NAME`]], ... ]
