@@ -186,6 +186,7 @@ export class CinchyQueryService {
       FROM [${domain}].[${table}]
       WHERE [Deleted] IS NULL
         AND [${subCol}] IS NOT NULL
+        AND trim([${subCol}]) != ''
         ${lookupFilter ? `AND ${lookupFilter}` : ''}
       ORDER BY [${subCol}];`;
 
