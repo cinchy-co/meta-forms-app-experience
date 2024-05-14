@@ -142,18 +142,23 @@ export class DropdownDatasetService {
       if (error.cinchyException?.data.status === 400 && error.cinchyException?.data.details.includes("could not be found")) {
         const errorMessage = error.cinchyException.data.details as string;
 
-        let columnMatch: Array<string> | null = errorMessage.substring(0).match(/\[([^\[\]]+)]/g);
+        let columnMatch: Array<string> | null = errorMessage.substring(0).match(/"([a-zA-Z0-9\s]+)"/g);
         let startingIndex = 0;
 
         // If this process needs to repeat for multiple display columns (and those display columns aren't all included
         // in the error), then use what was already provided and build on it
         const displayColumnsFoundInErrorResponse = displayColumnsToIgnore?.slice() ?? new Array<string>();
 
-        // Will match a column name in the form of `[COLUMN_NAME]`, resulting in an array with [`[COLUMN_NAME]`]
+        // Will match a column name in the form of `"COLUMN_NAME"`, resulting in an array with [`"COLUMN_NAME"`]
         while (columnMatch?.length) {
           startingIndex = errorMessage.indexOf(columnMatch[0]) + columnMatch[0].length;
 
-          displayColumnsFoundInErrorResponse.push(columnMatch[0].replace("[", "").replace("]", ""));
+          displayColumnsFoundInErrorResponse.push(
+            columnMatch[0]
+              // Needs to be done twice because we can't yet use .replaceAll
+              .replace("\"", "")
+              .replace("\"", "")
+          );
 
           columnMatch = errorMessage.substring(startingIndex).match(/\[([^\[\]]+)]/g);
         }
