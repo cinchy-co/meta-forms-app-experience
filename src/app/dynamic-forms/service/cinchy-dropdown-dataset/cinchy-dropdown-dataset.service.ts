@@ -5,6 +5,8 @@ import { CinchyService } from "@cinchy-co/angular-sdk";
 import { DropdownDataset } from "./cinchy-dropdown-dataset";
 import { DropdownOption } from "./cinchy-dropdown-options";
 
+import { REGEX_COLUMN_NAME_IN_ERROR } from "../../../constants/regex-column-name-in-error.constant";
+
 import { ErrorService } from "../../../services/error.service";
 import { NotificationService } from "../../../services/notification.service";
 
@@ -142,25 +144,26 @@ export class DropdownDatasetService {
       if (error.cinchyException?.data.status === 400 && error.cinchyException?.data.details.includes("could not be found")) {
         const errorMessage = error.cinchyException.data.details as string;
 
-        let columnMatch: Array<string> | null = errorMessage.substring(0).match(/"([a-zA-Z0-9\s]+)"/g);
+        let columnMatch: Array<string> | null = errorMessage.substring(0).match(REGEX_COLUMN_NAME_IN_ERROR);
         let startingIndex = 0;
 
         // If this process needs to repeat for multiple display columns (and those display columns aren't all included
         // in the error), then use what was already provided and build on it
         const displayColumnsFoundInErrorResponse = displayColumnsToIgnore?.slice() ?? new Array<string>();
 
-        // Will match a column name in the form of `"COLUMN_NAME"`, resulting in an array with [`"COLUMN_NAME"`]
         while (columnMatch?.length) {
           startingIndex = errorMessage.indexOf(columnMatch[0]) + columnMatch[0].length;
 
           displayColumnsFoundInErrorResponse.push(
             columnMatch[0]
+              .replace("[", "")
+              .replace("]", "")
               // Needs to be done twice because we can't yet use .replaceAll
               .replace("\"", "")
               .replace("\"", "")
           );
 
-          columnMatch = errorMessage.substring(startingIndex).match(/\[([^\[\]]+)]/g);
+          columnMatch = errorMessage.substring(startingIndex).match(REGEX_COLUMN_NAME_IN_ERROR);
         }
 
         // Can use matchAll to avoid the loop when targeting ES2020 or later
