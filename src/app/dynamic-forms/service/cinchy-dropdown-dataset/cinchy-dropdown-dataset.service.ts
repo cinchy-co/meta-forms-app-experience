@@ -140,7 +140,8 @@ export class DropdownDatasetService {
     }
     catch (error: any) {
       // Target the specific response of "Column [COLUMN_NAME] could not be found", indicating that a display
-      // column is not available or has been deleted. If that error occurs, compile a set of
+      // column is not available or has been deleted. If that error occurs, compile a set of affected column names and
+      // remove those from the set of requested display columns before resending hte response
       if (error.cinchyException?.data.status === 400 && error.cinchyException?.data.details.includes("could not be found")) {
         const errorMessage = error.cinchyException.data.details as string;
 
