@@ -53,7 +53,7 @@ import * as R from "ramda";
 export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   @ViewChild("fileInput") fileInput: ElementRef;
-  @ViewChild("multiSelect", {static: true}) multiSelect: MatSelect;
+  @ViewChild("multiSelect", { static: true }) multiSelect: MatSelect;
   @ViewChild("t") public tooltip: NgbTooltip;
 
   @Input() fieldIndex: number;
@@ -268,6 +268,19 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   compareFn(a: DropdownOption, b: DropdownOption): boolean {
 
     return (a?.id === b?.id);
+  }
+
+
+  /**
+   * Ensures that any display columns used to identify options in this set are ignored when showing the value of
+   * any options which are currently selected
+   */
+  displayFn(): string {
+
+    return this.selectedValues?.map((value: DropdownOption) => {
+
+      return value?.label;
+    })?.join(". ");
   }
 
 

@@ -193,13 +193,15 @@ export class DropdownDatasetService {
     let displayColumnQueryItems: Array<string> = new Array<string>();
 
     if (currentFieldJson.SearchDisplayColumns?.length) {
+      let displayIndex = 0;
+
       currentFieldJson.SearchDisplayColumns.forEach(
         (column: { name: string }, index: number) => {
 
           const key: string = column.name ? column.name.split(".")[0] : "";
 
           if (key && !displayColumnsToIgnore.includes(key)) {
-            displayColumnQueryItems.push(`[${key}] as 'display-${index}'`)
+            displayColumnQueryItems.push(`[${key}] as 'display-${displayIndex++}'`)
           }
         }
       );
