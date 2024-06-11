@@ -29,8 +29,7 @@ import { IQuery } from "../../models/cinchy-query.model";
 
 import { AppStateService } from "../../../services/app-state.service";
 import { ChildFormService } from "../../service/child-form/child-form.service";
-
-import { ToastrService } from "ngx-toastr";
+import { NotificationService } from "../../../services/notification.service";
 
 
 /**
@@ -48,9 +47,10 @@ import { ToastrService } from "ngx-toastr";
 })
 export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
-  @Input() field: FormField;
   @Input() fieldIndex: number;
+
   @Input() form: Form;
+
   @Input() sectionIndex: number;
 
   @Output() childFormOpened = new EventEmitter<{
@@ -58,10 +58,12 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
     presetValues?: { [key: string]: any },
     title: string
   }>();
+
   @Output() childRowDeleted = new EventEmitter<{
     childForm: Form,
     rowId: number
   }>();
+
 
   fieldSet: Array<FormField> = new Array<FormField>();
   fieldKeys: Array<string> = new Array<string>();
@@ -95,12 +97,18 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   }
 
 
+  get field(): FormField {
+
+    return this.form?.sections[this.sectionIndex]?.fields[this.fieldIndex];
+  }
+
+
   constructor(
     private _appStateService: AppStateService,
     private _childFormService: ChildFormService,
     private _cinchyService: CinchyService,
     private _dialog: MatDialog,
-    private _toastr: ToastrService,
+    private _notificationService: NotificationService
   ) {}
 
 
@@ -211,7 +219,9 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
   deleteRow(rowData: { [key: string]: any }): void {
 
     if (!rowData["Cinchy ID"]) {
-      this._toastr.error("You are attempting to delete a record without a proper ID. The data may be corrupted or configured incorrectly.");
+      this._notificationService.displayErrorMessage(
+        "You are attempting to delete a record without a proper ID. The data may be corrupted or configured incorrectly."
+      );
     }
     else {
       const dialogRef = this._dialog.open(
@@ -393,10 +403,7 @@ export class ChildFormTableComponent implements OnChanges, OnInit, OnDestroy {
 
     this.loadFieldKeysAndPopulateDisplayValues();
 
-    this._toastr.success(
-      "Record deleted successfully",
-      "Success"
-    );
+    this._notificationService.displaySuccessMessage("Record deleted successfully");
   }
 
 

@@ -29,13 +29,12 @@ import { Form } from "../../models/cinchy-form.model";
 import { FormField } from "../../models/cinchy-form-field.model";
 
 import { CinchyQueryService } from "../../../services/cinchy-query.service";
+import { ConfigService } from "../../../services/config.service";
+import { NotificationService } from "../../../services/notification.service";
 
 import { DropdownDataset } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset";
 import { DropdownDatasetService } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-dataset.service";
 import { DropdownOption } from "../../service/cinchy-dropdown-dataset/cinchy-dropdown-options";
-import { ConfigService } from "../../../services/config.service";
-
-import { ToastrService } from "ngx-toastr";
 
 import * as R from "ramda";
 
@@ -57,7 +56,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   @ViewChild("multiSelect", {static: true}) multiSelect: MatSelect;
   @ViewChild("t") public tooltip: NgbTooltip;
 
-  @Input() field: FormField;
   @Input() fieldIndex: number;
   @Input() form: Form;
   @Input() isInChildForm: boolean;
@@ -111,6 +109,12 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   }
 
 
+  get field(): FormField {
+
+    return this.form?.sections[this.sectionIndex]?.fields[this.fieldIndex];
+  }
+
+
   get rowIdIsValid(): boolean {
 
     return (this.form.rowId && this.form.rowId > -1);
@@ -133,7 +137,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
     private _cinchyService: CinchyService,
     private _configService: ConfigService,
     private _cinchyQueryService: CinchyQueryService,
-    private _toastr: ToastrService
+    private _notificationService: NotificationService
   ) {}
 
 
@@ -393,7 +397,10 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
             next: (): void => {
 
               this.fileInput.nativeElement.value = null;
-              this._toastr.success("File(s) uploaded", "Success");
+
+              this._notificationService.displaySuccessMessage(
+                `${(this.downloadableLinks.length > 1) ? "Files" : "File"} uploaded`
+              );
             }
           }
         );
@@ -464,7 +471,9 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         {
           error: () => {
 
-            this._toastr.error("Could not upload the file(s)", "Error");
+            this._notificationService.displayErrorMessage(
+              `Could not upload the ${(this.downloadableLinks.length > 1) ? "files" : "file"}`
+            );
           },
           next: () => {
 

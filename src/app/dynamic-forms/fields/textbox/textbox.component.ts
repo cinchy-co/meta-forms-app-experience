@@ -30,7 +30,6 @@ import { coerceBooleanProperty } from "@angular/cdk/coercion";
 })
 export class TextboxComponent implements OnChanges, OnInit {
 
-  @Input() field: FormField;
   @Input() fieldIndex: number;
   @Input() form: Form;
   @Input() isDisabled: boolean;
@@ -41,14 +40,14 @@ export class TextboxComponent implements OnChanges, OnInit {
   @Input("fieldsWithErrors") set fieldsWithErrors(errorFields: any) {
 
     this.showError = coerceBooleanProperty(
-      errorFields?.find((item: string) => {
+      errorFields?.find((item: string): boolean => {
 
         return (item === this.field?.label);
       })
     );
   };
 
-  @Output() onChange = new EventEmitter<IFieldChangedEvent>();
+  @Output() onChange: EventEmitter<IFieldChangedEvent> = new EventEmitter<IFieldChangedEvent>();
 
 
   iframeHeightStyle: number = 300;
@@ -68,6 +67,12 @@ export class TextboxComponent implements OnChanges, OnInit {
   get canEdit(): boolean {
 
     return (!this.isDisabled && this.field.cinchyColumn.canEdit && !this.field.cinchyColumn.isViewOnly);
+  }
+
+
+  get field(): FormField {
+
+    return this.form?.sections[this.sectionIndex]?.fields[this.fieldIndex];
   }
 
 
@@ -136,7 +141,7 @@ export class TextboxComponent implements OnChanges, OnInit {
   }
 
 
-  isValidHttpUrl(str: string) {
+  isValidHttpUrl(str: string): boolean {
 
     let url;
 

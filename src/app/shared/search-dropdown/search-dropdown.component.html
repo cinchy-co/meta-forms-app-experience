@@ -1,7 +1,7 @@
 <mat-form-field class="search-dropdown" appearance="outline">
   <mat-label>Search Records</mat-label>
   <mat-select [(ngModel)]="selectedRecordId"
-              (ngModelChange)="onSelect($event)"
+              (ngModelChange)="onSelect()"
               panelClass="fix-width-470">
     <mat-option>
       <ngx-mat-select-search [formControl]="filterCtrl"
