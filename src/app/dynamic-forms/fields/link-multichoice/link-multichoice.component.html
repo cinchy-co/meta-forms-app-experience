@@ -91,11 +91,15 @@
 
       <mat-select class="form-control" multiple #multiSelect
                   *ngIf="!isLoading && !downloadLink"
-                  [(ngModel)]="selectedValues" [ngModelOptions]="{standalone: true}"
+                  [(ngModel)]="selectedValues" [ngModelOptions]="{ standalone: true }"
                   [compareWith]="compareFn"
                   [disabled]="!canEdit"
                   (selectionChange)="valueChanged()"
                   disableOptionCentering>
+        <mat-select-trigger>
+          {{ displayFn() }}
+        </mat-select-trigger>
+
         <ng-container *ngIf="dropdownSetOptions">
           <mat-option>
             <ngx-mat-select-search class="multi-search"
@@ -115,7 +119,7 @@
             <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
                         [value]="dropdownOption"
                         [title]="dropdownOption.label">
-              {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
+              {{ dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? "" }}
             </mat-option>
 
             <!--
