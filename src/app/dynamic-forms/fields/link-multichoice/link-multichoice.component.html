@@ -94,9 +94,12 @@
                   [(ngModel)]="selectedValues" [ngModelOptions]="{ standalone: true }"
                   [compareWith]="compareFn"
                   [disabled]="!canEdit"
-                  [disableOptionCentering]="true"
                   (selectionChange)="valueChanged()"
-      >
+                  disableOptionCentering>
+        <mat-select-trigger>
+          {{ displayFn() }}
+        </mat-select-trigger>
+
         <ng-container *ngIf="dropdownSetOptions?.length">
           <mat-option>
             <ngx-mat-select-search [formControl]="filterCtrl"
@@ -116,7 +119,7 @@
             <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
                         [value]="dropdownOption"
                         [title]="dropdownOption.label">
-              {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
+              {{ dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? "" }}
             </mat-option>
 
             <!--
