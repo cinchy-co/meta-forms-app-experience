@@ -82,7 +82,7 @@ export class DropdownDatasetService {
         whereCondition += ` AND ${linkFilterExpression}`;
       }
 
-      if (dropdownFilter && rowId) {
+      if (dropdownFilter) {
         whereCondition += ` AND ${dropdownFilter}`;
       }
 
