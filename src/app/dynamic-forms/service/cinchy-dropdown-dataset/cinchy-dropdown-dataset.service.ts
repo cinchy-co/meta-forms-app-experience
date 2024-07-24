@@ -89,7 +89,7 @@ export class DropdownDatasetService {
         whereCondition += ` AND ${linkFilterExpression}`;
       }
 
-      if (dropdownFilter) {
+      if (dropdownFilter && !displayColumnsToIgnore?.some(column => dropdownFilter.includes(column))) {
         whereCondition += ` AND ${dropdownFilter}`;
       }
 
