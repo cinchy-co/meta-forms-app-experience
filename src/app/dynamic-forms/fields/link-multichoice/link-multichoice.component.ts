@@ -53,7 +53,7 @@ import * as R from "ramda";
 export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   @ViewChild("fileInput") fileInput: ElementRef;
-  @ViewChild("multiSelect", {static: true}) multiSelect: MatSelect;
+  @ViewChild("multiSelect", { static: true }) multiSelect: MatSelect;
   @ViewChild("t") public tooltip: NgbTooltip;
 
   @Input() fieldIndex: number;
@@ -175,7 +175,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
       let tableColumnQuery: string = `
         SELECT
-          tc.[Table].[Domain].[Name] AS 'Domain',
+          tc.[Table].[Data Product].[Name] AS 'DataProduct',
           tc.[Table].[Name] AS 'Table',
           tc.[Name] AS 'Column'
         FROM
@@ -196,7 +196,6 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
       if (this.field.cinchyColumn.linkTargetColumnId) {
         dropdownDataset = await this._dropdownDatasetService.getDropdownDataset(
           this.field.cinchyColumn.linkTargetColumnId,
-          this.field.label,
           currentFieldJson,
           this.field.cinchyColumn.dropdownFilter,
           this.form.rowId
@@ -269,6 +268,19 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
   compareFn(a: DropdownOption, b: DropdownOption): boolean {
 
     return (a?.id === b?.id);
+  }
+
+
+  /**
+   * Ensures that any display columns used to identify options in this set are ignored when showing the value of
+   * any options which are currently selected
+   */
+  displayFn(): string {
+
+    return this.selectedValues?.map((value: DropdownOption) => {
+
+      return value?.label;
+    })?.join(". ");
   }
 
 
@@ -367,7 +379,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
 
   getAndSetLatestFileValue(): void {
 
-    this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.domainName, this.field.cinchyColumn.tableName, this.form.rowId).subscribe((resp: Array<{ fileId: any, fileName: string }>) => {
+    this._cinchyQueryService.getFilesInCell(this.field.cinchyColumn.name, this.field.cinchyColumn.dataProduct, this.field.cinchyColumn.tableName, this.form.rowId).subscribe((resp: Array<{ fileId: any, fileName: string }>) => {
 
       if (resp?.length) {
         this.field.value = (this.field.value ?? []).concat(resp.map(x => x.fileId));
@@ -389,7 +401,7 @@ export class LinkMultichoiceComponent implements OnChanges, OnDestroy, OnInit {
         this._cinchyQueryService.updateFilesInCell(
             this.downloadableLinks.map(x => x.fileId),
             this.field.cinchyColumn.name,
-            this.field.cinchyColumn.domainName,
+            this.field.cinchyColumn.dataProduct,
             this.field.cinchyColumn.tableName,
             this.form.rowId
         ).subscribe(

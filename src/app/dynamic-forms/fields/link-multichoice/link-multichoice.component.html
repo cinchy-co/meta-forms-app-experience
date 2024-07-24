@@ -66,14 +66,14 @@
 
           From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the
 
-          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
+          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDataProductName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
 
           table.
         </ng-template>
         <ng-template #withoutcaptiont>
           From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the
 
-          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
+          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDataProductName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
 
           table.
         </ng-template>
@@ -82,20 +82,24 @@
 
           <br /> <br />
 
-          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{this.field.cinchyColumn.linkTableDomainName}} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
+          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{this.field.cinchyColumn.linkTableDataProductName}} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
         </ng-template>
         <ng-template #hierarchyWithoutCaption>
-          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
+          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{ this.field.cinchyColumn.linkTableDataProductName }} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
         </ng-template>
       </div>
 
       <mat-select class="form-control" multiple #multiSelect
                   *ngIf="!isLoading && !downloadLink"
-                  [(ngModel)]="selectedValues" [ngModelOptions]="{standalone: true}"
+                  [(ngModel)]="selectedValues" [ngModelOptions]="{ standalone: true }"
                   [compareWith]="compareFn"
                   [disabled]="!canEdit"
                   (selectionChange)="valueChanged()"
                   disableOptionCentering>
+        <mat-select-trigger>
+          {{ displayFn() }}
+        </mat-select-trigger>
+
         <ng-container *ngIf="dropdownSetOptions">
           <mat-option>
             <ngx-mat-select-search class="multi-search"
@@ -115,7 +119,7 @@
             <mat-option class="all-options" *cdkVirtualFor="let dropdownOption of filteredListMulti | async"
                         [value]="dropdownOption"
                         [title]="dropdownOption.label">
-              {{dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? ""}}
+              {{ dropdownOption.displayOnlyLabel ?? dropdownOption.label ?? "" }}
             </mat-option>
 
             <!--

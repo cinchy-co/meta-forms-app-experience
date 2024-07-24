@@ -323,7 +323,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
     this._cinchyQueryService.getFilesInCell(
       this.field.cinchyColumn.name,
-      this.field.cinchyColumn.domainName,
+      this.field.cinchyColumn.dataProduct,
       this.field.cinchyColumn.tableName,
       this.form.rowId
     ).subscribe(
@@ -366,7 +366,7 @@ export class LinkComponent implements OnChanges, OnInit {
 
       let tableColumnQuery: string = `
         SELECT
-          tc.[Table].[Domain].[Name] AS 'Domain',
+          tc.[Table].[Data Product].[Name] AS 'Data Product',
           tc.[Table].[Name] AS 'Table',
           tc.[Name] AS 'Column'
         FROM [Cinchy].[Cinchy].[Table Columns] tc
@@ -385,7 +385,6 @@ export class LinkComponent implements OnChanges, OnInit {
       if (!isNullOrUndefined(this.field.cinchyColumn.linkTargetColumnId)) {
         dropdownDataset = await this._dropdownDatasetService.getDropdownDataset(
           this.field.cinchyColumn.linkTargetColumnId,
-          this.field.label,
           currentFieldJson,
           this.field.cinchyColumn.dropdownFilter,
           this.form.rowId,
