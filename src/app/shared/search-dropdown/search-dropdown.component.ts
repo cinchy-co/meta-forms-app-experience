@@ -98,8 +98,10 @@ export class SearchDropdownComponent implements AfterViewInit, OnChanges, OnDest
         debounceTime(500),
       )
       .subscribe(() => {
-
-        this.onFilter.emit(this.filterCtrl.value);
+        // Explicitly checking for an empty string here because the filter value can be set to null and we want that to go through
+        if (this.filterCtrl.value !== "") {
+          this.onFilter.emit(this.filterCtrl.value);
+        }
       })
     );
   }

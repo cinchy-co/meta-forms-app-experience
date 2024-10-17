@@ -5,43 +5,50 @@ import { CinchyService } from "@cinchy-co/angular-sdk";
 import { DropdownDataset } from "./cinchy-dropdown-dataset";
 import { DropdownOption } from "./cinchy-dropdown-options";
 
+import { REGEX_COLUMN_NAME_IN_ERROR } from "../../../constants/regex-column-name-in-error.constant";
+
+import { ErrorService } from "../../../services/error.service";
+import { NotificationService } from "../../../services/notification.service";
+
 
 @Injectable({
   providedIn: "root"
 })
 export class DropdownDatasetService {
 
-  private _dropdownDatasets: { [key: number]: DropdownDataset } = {};
+  private _cachedDatasets: { [key: number]: DropdownDataset } = {};
+
 
   constructor(
-    private _cinchyService: CinchyService
+    private _cinchyService: CinchyService,
+    private _errorService: ErrorService,
+    private _notificationService: NotificationService
   ) {}
 
 
   /**
    * Bind dropdownList (Link Type) from database
    *
-   * @param linkTargetColumnId (parameter of the link type column Cinchy ID)
-   * @param fieldName: string
-   * @param currentFieldJson: any
-   * @param dropdownFilter?:string -- Manual filter coming from Form fields table
-   * @param rowId for dropdownFilter param
-   * @param needUpdate for always reset list
+   * @param linkTargetColumnId parameter of the link type column Cinchy ID
+   * @param currentFieldJson
+   * @param dropdownFilter Manual filter coming from Form fields table
+   * @param rowId The current selected record of the form, used for filtering
+   * @param needUpdate If not set, then a cached version of the set will be used if available
+   * @param displayColumnsToIgnore in the case that the query fails because a particular display column was deleted, we
+   *                             will want to try again without those columns
    */
   async getDropdownDataset(
       linkTargetColumnId: number,
-      fieldName: string,
       currentFieldJson: any,
       dropdownFilter?: string,
       rowId?: any,
-      needUpdate?: boolean
+      needUpdate?: boolean,
+      displayColumnsToIgnore?: Array<string>
   ): Promise<DropdownDataset> {
 
     if (!needUpdate) {
-      const cachedDataset: DropdownDataset = this._dropdownDatasets[linkTargetColumnId];
-
-      if (cachedDataset) {
-        return cachedDataset;
+      if (this._cachedDatasets[linkTargetColumnId]) {
+        return this._cachedDatasets[linkTargetColumnId];
       }
     }
 
@@ -62,18 +69,18 @@ export class DropdownDatasetService {
       return null;
     }
 
-    let dataSetQuery: string = "";
+    let dataSetQuery: string;
 
     if (metadataQueryResult[0]["Domain"] === "Reference Data" && metadataQueryResult[0]["Table"] === "Employees") {
       dataSetQuery = `
         SELECT
           t.[Cinchy ID] AS 'Id',
-          t.[${metadataQueryResult[0]["Column"]}] + ' (\' + [Role].[Name] +\')' AS 'Label'
+          t.[${metadataQueryResult[0]["Column"]}] + ' (\' + [Role].[Name] + \')' AS 'Label'
         FROM [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}] t
         WHERE t.[Deleted] IS NULL`;
     }
-    else{
-      const setDisplayColumnQuery = currentFieldJson ? this.getDisplayColumnQuery(currentFieldJson) : '';
+    else {
+      const setDisplayColumnQuery = currentFieldJson ? this._getDisplayColumnQuery(currentFieldJson, displayColumnsToIgnore) : '';
       const linkFilterExpression = currentFieldJson.linkFilterExpression;
 
       let whereCondition: string = `WHERE [Deleted] IS NULL`;
@@ -82,7 +89,7 @@ export class DropdownDatasetService {
         whereCondition += ` AND ${linkFilterExpression}`;
       }
 
-      if (dropdownFilter && rowId) {
+      if (dropdownFilter && !displayColumnsToIgnore?.some(column => dropdownFilter.includes(column))) {
         whereCondition += ` AND ${dropdownFilter}`;
       }
 
@@ -111,39 +118,95 @@ export class DropdownDatasetService {
 
     let optionArray: DropdownOption[] = [];
 
-    (await this._cinchyService.executeCsql(dataSetQuery, params).toPromise()).queryResult.toObjectArray().forEach(function (row) {
+    try {
+      (await this._cinchyService.executeCsql(dataSetQuery, params).toPromise()).queryResult.toObjectArray().forEach(function (row) {
 
-      // TODO For now only showing one display column (display-0)
-      const label = row["display-0"] ? `${row["Label"]}, ${row["display-0"]}` : row["Label"];
+        let label = row["Label"];
 
-      optionArray.push(new DropdownOption(row["Id"].toString(), row["Label"]?.toString(), label));
-    });
+        let displayIndex = 0;
 
-    const result = new DropdownDataset(optionArray);
+        while (row[`display-${displayIndex}`]) {
+          label += `, ${row[`display-${displayIndex}`]}`;
 
-    this._dropdownDatasets[linkTargetColumnId] = result;
+          displayIndex++;
+        }
 
-    return result;
+        optionArray.push(new DropdownOption(row["Id"].toString(), row["Label"]?.toString(), label));
+      });
+
+      this._cachedDatasets[linkTargetColumnId] = new DropdownDataset(optionArray);
+
+      return this._cachedDatasets[linkTargetColumnId];
+    }
+    catch (error: any) {
+      // Target the specific response of "Column [COLUMN_NAME] could not be found", indicating that a display
+      // column is not available or has been deleted. If that error occurs, compile a set of affected column names and
+      // remove those from the set of requested display columns before resending the response
+      if (error.cinchyException?.data.status === 400 && error.cinchyException?.data.details.includes("could not be found")) {
+        const errorMessage = error.cinchyException.data.details as string;
+
+        let columnMatch: Array<string> | null = errorMessage.substring(0).match(REGEX_COLUMN_NAME_IN_ERROR);
+        let startingIndex = 0;
+
+        // If this process needs to repeat for multiple display columns (and those display columns aren't all included
+        // in the error), then use what was already provided and build on it
+        const displayColumnsFoundInErrorResponse = displayColumnsToIgnore?.slice() ?? new Array<string>();
+
+        while (columnMatch?.length) {
+          startingIndex = errorMessage.indexOf(columnMatch[0]) + columnMatch[0].length;
+
+          displayColumnsFoundInErrorResponse.push(
+            columnMatch[0]
+              .replace("[", "")
+              .replace("]", "")
+              // Needs to be done twice because we can't yet use .replaceAll
+              .replace("\"", "")
+              .replace("\"", "")
+          );
+
+          columnMatch = errorMessage.substring(startingIndex).match(REGEX_COLUMN_NAME_IN_ERROR);
+        }
+
+        // Can use matchAll to avoid the loop when targeting ES2020 or later
+        // errorMessage.matchAll(/\[([^\[\]]+)]/g); -> [[`[COLUMN_NAME]`, `COLUMN_NAME`]], ... ]
+
+        return await this.getDropdownDataset(linkTargetColumnId, currentFieldJson, dropdownFilter, rowId, needUpdate, displayColumnsFoundInErrorResponse);
+      }
+      else {
+        this._notificationService.displayErrorMessage(
+          `Could not retrieve linked options for [${metadataQueryResult[0]["Domain"]}].[${metadataQueryResult[0]["Table"]}]. ${this._errorService.getErrorMessage(error)}`
+        );
+      }
+    }
   }
 
 
-  getDisplayColumnQuery(currentFieldJson) {
+  /**
+   * Generates a series of SELECT clauses to match the display columns associated with the target field
+   *
+   * @param currentFieldJson A JSON construct representing metadata associated with the target field
+   * @param displayColumnsToIgnore Any display columns to not generate statements for. Used when a particular column
+   *                               is known to be erroneous
+   */
+  private _getDisplayColumnQuery(currentFieldJson: { [key: string]: any }, displayColumnsToIgnore: Array<string> = []): string {
 
-    const displayColumns = currentFieldJson.SearchDisplayColumns;
+    let displayColumnQueryItems: Array<string> = new Array<string>();
 
-    let displayStrngArr = [];
+    if (currentFieldJson.SearchDisplayColumns?.length) {
+      let displayIndex = 0;
 
-    if (displayColumns?.length) {
-      displayColumns.forEach((item, index) => {
+      currentFieldJson.SearchDisplayColumns.forEach(
+        (column: { name: string }, index: number) => {
 
-        const firstKey = item.name ? item.name.split(".")[0] : "";
+          const key: string = column.name ? column.name.split(".")[0] : "";
 
-        if (firstKey) {
-          displayStrngArr.push(`[${firstKey}] as 'display-${index}'`)
+          if (key && !displayColumnsToIgnore.includes(key)) {
+            displayColumnQueryItems.push(`[${key}] as 'display-${displayIndex++}'`)
+          }
         }
-      });
+      );
     }
 
-    return displayStrngArr.join(",");
+    return displayColumnQueryItems.join(",");
   }
 }
