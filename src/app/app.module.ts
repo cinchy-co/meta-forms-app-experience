@@ -1,5 +1,5 @@
 import { APP_INITIALIZER, NgModule } from "@angular/core";
-import { HttpClientModule } from "@angular/common/http";
+import { provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
@@ -32,48 +32,42 @@ export function getBaseUrl() {
 }
 
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    FormWrapperComponent
-  ],
-  imports: [
-    AppRoutingModule,
-    BrowserModule,
-    BrowserAnimationsModule,
-    CoreModule,
-    CustomMaterialModule,
-    CinchyDynamicFormsModule,
-    CinchyModule.forRoot(),
-    HttpClientModule,
-    NgxSpinnerModule,
-    NumeralModule.forRoot()
-  ],
-  providers: [
-    {
-      provide: APP_INITIALIZER,
-      useFactory: appLoadFactory,
-      deps: [ConfigService],
-      multi: true
-    },
-    CinchyModule,
-    CinchyService,
-    {
-      provide: CinchyConfig,
-      useFactory: (config: ConfigService) => {
-        return config.envConfig;
-      },
-      deps: [
-        ConfigService
-      ]
-    },
-    {
-      provide: "BASE_URL",
-      useFactory: getBaseUrl
-    }
-  ],
-  bootstrap: [
-    AppComponent
-  ]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        FormWrapperComponent
+    ],
+    bootstrap: [
+        AppComponent
+    ], imports: [AppRoutingModule,
+        BrowserModule,
+        BrowserAnimationsModule,
+        CoreModule,
+        CustomMaterialModule,
+        CinchyDynamicFormsModule,
+        CinchyModule.forRoot(),
+        NgxSpinnerModule,
+        NumeralModule.forRoot()], providers: [
+        {
+            provide: APP_INITIALIZER,
+            useFactory: appLoadFactory,
+            deps: [ConfigService],
+            multi: true
+        },
+        CinchyModule,
+        CinchyService,
+        {
+            provide: CinchyConfig,
+            useFactory: (config: ConfigService) => {
+                return config.envConfig;
+            },
+            deps: [
+                ConfigService
+            ]
+        },
+        {
+            provide: "BASE_URL",
+            useFactory: getBaseUrl
+        },
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule {}
