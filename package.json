@@ -22,7 +22,7 @@
     "@angular/platform-browser": "^18.2.11",
     "@angular/platform-browser-dynamic": "^18.2.11",
     "@angular/router": "^18.2.11",
-    "@cinchy-co/angular-sdk": "^6.0.0-rc.2",
+    "@cinchy-co/angular-sdk": "^7.0.0-rc.0",
     "@ctrl/ngx-codemirror": "^7.0.0",
     "@fortawesome/angular-fontawesome": "^0.15.0",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
