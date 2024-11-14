@@ -215,10 +215,9 @@ article label {
   margin: 0 0 5px;
 }
 
-.mat-mdc-dialog-actions {
+div.mat-mdc-dialog-actions {
   justify-content: flex-end;
-  padding-top: 10px;
-  padding-bottom: 24px;
+  padding: 10px 24px 24px;
 }
 
 .checkBoxMargin {
@@ -275,15 +274,6 @@ article label {
   font-size: 14px;
 }
 
-.mat-mdc-dialog-content {
-  /*
-   * Removes phantom scrollbars
-   *
-   * https://github.com/angular/components/issues/20344
-   */
-  padding: 2px 24px !important;
-}
-
 .formMainDiv {
   background-color: #f1f1f1;
   display: flow-root;
@@ -292,23 +282,25 @@ article label {
 .cinchy-label {
   color: rgba(0, 0, 0, .54);
   font-size: 13px;
+  margin-bottom: .5rem;
 }
 
 
-//.mat-card-header-child {
-//  margin: 0em 0 0.5em 0;
-//  font-weight: normal;
-//  position: relative;
-//  font-size: 12px;
-//  line-height: 18px;
-//  background: #5a5858;
-//  border: 1px solid #fff;
-//  padding: 5px 12px;
-//  color: white;
-//  border-radius: 0 10px 0 10px;
-//  box-shadow: inset 0 0 5px rgba(53, 86, 129, 0.5);
-//  font-family: 'Muli', sans-serif;
-//}
+.mat-card-header-child {
+  display: inline;
+  margin: 0em 0 0.5em 0;
+  font-weight: normal;
+  position: relative;
+  font-size: 12px;
+  line-height: 18px;
+  background: #5a5858;
+  border: 1px solid #fff;
+  padding: 5px 12px;
+  color: white;
+  border-radius: 0 10px 0 10px;
+  box-shadow: inset 0 0 5px rgba(53, 86, 129, 0.5);
+  font-family: 'Muli', sans-serif;
+}
 
 button.btnSave.mat-mdc-raised-button {
   margin-right: 10px;
