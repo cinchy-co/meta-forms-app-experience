@@ -1,6 +1,6 @@
 {
   "name": "meta-forms",
-  "version": "5.15.2",
+  "version": "5.15.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 3000 --ssl",
