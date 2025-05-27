@@ -66,14 +66,14 @@
 
           From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the
 
-          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
+          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDataProductName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
 
           table.
         </ng-template>
         <ng-template #withoutcaptiont>
           From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the
 
-          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
+          <a [href]="tableSourceURL" target="_blank">{{ this.field.cinchyColumn.linkTableDataProductName }} - {{ this.field.cinchyColumn.linkTargetTableName }}</a>
 
           table.
         </ng-template>
@@ -82,10 +82,10 @@
 
           <br /> <br />
 
-          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{this.field.cinchyColumn.linkTableDomainName}} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
+          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{this.field.cinchyColumn.linkTableDataProductName}} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
         </ng-template>
         <ng-template #hierarchyWithoutCaption>
-          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{ this.field.cinchyColumn.linkTableDomainName }} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
+          From the <b>{{ this.field.cinchyColumn.linkTargetColumnName }}</b> field in the {{ this.field.cinchyColumn.linkTableDataProductName }} - {{ this.field.cinchyColumn.linkTargetTableName }} table.
         </ng-template>
       </div>
 
@@ -100,13 +100,13 @@
           {{ displayFn() }}
         </mat-select-trigger>
 
-        <ng-container *ngIf="dropdownSetOptions">
+        <ng-container *ngIf="dropdownSetOptions?.length">
           <mat-option>
-            <ngx-mat-select-search class="multi-search"
-                                   [showToggleAllCheckbox]="true" (toggleAll)="toggleSelectAll($event)"
-                                   [formControl]="multiFilterCtrl"
-                                   placeholderLabel="Search..."
-                                   noEntriesFoundLabel="No entries matched your search">
+            <ngx-mat-select-search [formControl]="filterCtrl"
+                                   [showToggleAllCheckbox]="true"
+                                   (toggleAll)="toggleSelectAll($event)"
+                                   noEntriesFoundLabel="No entries matched your search"
+                                   placeholderLabel="Search...">
             </ngx-mat-select-search>
           </mat-option>
 
