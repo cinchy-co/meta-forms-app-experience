@@ -1237,7 +1237,7 @@ export class Form {
     // Values the user has not modified retain the raw ISO representation from the database
     // rather than the column's display format
     if (!valueAsMoment.isValid()) {
-      valueAsMoment = moment(value, moment.ISO_8601);
+      valueAsMoment = moment(value, moment.ISO_8601, true);
     }
 
     if (!valueAsMoment.isValid()) {
