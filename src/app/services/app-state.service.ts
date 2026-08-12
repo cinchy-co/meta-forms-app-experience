@@ -73,14 +73,14 @@ export class AppStateService {
     // Modifies the app's URL
     const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
 
-      const [key, value] = paramString.split("=");
+      const [key, ...valueParts] = paramString.split("=");
 
       // Because the key here will be an empty string in the case the queryParams are empty or malformed,
       // we explicitly need to check that it is truthy. Optional chaining would yield a false position
       if (key && key.toLowerCase() !== "rowid") {
-        return `${key}=${value}`;
+        return `${key}=${valueParts.join("=")}`;
       }
-    }).join("");
+    }).filter(Boolean).join("&");
 
     const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
 
@@ -143,14 +143,14 @@ export class AppStateService {
 
     const queryParams = window.location.search?.substr(1).split("&").map((paramString: string) => {
 
-      const [key, value] = paramString.split("=");
+      const [key, ...valueParts] = paramString.split("=");
 
       // Because the key here will be an empty string in the case the queryParams are empty or malformed,
       // we explicitly need to check that it is truthy. Optional chaining would yield a false positive
       if (key && key.toLowerCase() !== "rowid") {
-        return `${key}=${value}`;
+        return `${key}=${valueParts.join("=")}`;
       }
-    }).join("");
+    }).filter(Boolean).join("&");
 
     if (queryParams?.length) {
       const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
