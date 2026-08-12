@@ -80,7 +80,7 @@ export class AppStateService {
       if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
-    }).join("");
+    }).filter(Boolean).join("&");
 
     const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
 
@@ -150,7 +150,7 @@ export class AppStateService {
       if (key && key.toLowerCase() !== "rowid") {
         return `${key}=${value}`;
       }
-    }).join("");
+    }).filter(Boolean).join("&");
 
     if (queryParams?.length) {
       const baseUrl = window.location.href.substr(0, window.location.href.indexOf("?"));
